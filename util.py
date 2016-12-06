@@ -34,12 +34,12 @@ import logging
 import tempfile
 import fnmatch
 
-from simple_settings import settings
-from ..ssl_commons import exceptions as ssl_commons_exceptions
-from . import hash as ssl_crypto_hash
-from . import formats as ssl_crypto_formats
+import securesystemslib.exceptions
+import securesystemslib.hash
+import securesystemslib.formats
 
 import six
+from simple_settings import settings
 
 # The algorithm used by the repository to generate the digests of the
 # target filepaths, which are included in metadata files and may be prepended
@@ -47,7 +47,7 @@ import six
 HASH_FUNCTION = 'sha256'
 
 # See 'log.py' to learn how logging is handled in TUF.
-logger = logging.getLogger('ssl_crypto.util')
+logger = logging.getLogger('securesystemslib.util')
 
 
 class TempFile(object):
@@ -65,10 +65,10 @@ class TempFile(object):
     """__init__ helper."""
     try:
       self.temporary_file = tempfile.NamedTemporaryFile(prefix=prefix)
-    
+
     except OSError as err: # pragma: no cover
       logger.critical('Cannot create a system temporary directory: '+repr(err))
-      raise ssl_commons_exceptions.Error(err)
+      raise securesystemslib.exceptions.Error(err)
 
 
   def __init__(self, prefix='tuf_temp_'):
@@ -81,18 +81,18 @@ class TempFile(object):
         A string argument to be used with tempfile.NamedTemporaryFile function.
 
     <Exceptions>
-      ssl_commons_exceptions.Error on failure to load temp dir.
+      securesystemslib.exceptions.Error on failure to load temp dir.
 
     <Return>
       None.
     """
 
     self._compression = None
-    
+
     # If compression is set then the original file is saved in 'self._orig_file'.
     self._orig_file = None
     temp_dir = settings.temporary_directory
-    if temp_dir is not None and ssl_crypto_formats.PATH_SCHEMA.matches(temp_dir):
+    if temp_dir is not None and securesystemslib.formats.PATH_SCHEMA.matches(temp_dir):
       try:
         self.temporary_file = tempfile.NamedTemporaryFile(prefix=prefix,
                                                           dir=temp_dir)
@@ -100,7 +100,7 @@ class TempFile(object):
         logger.error('Temp file in ' + temp_dir + ' failed: '+repr(err))
         logger.error('Will attempt to use system default temp dir.')
         self._default_temporary_directory(prefix)
-    
+
     else:
       self._default_temporary_directory(prefix)
 
@@ -155,7 +155,7 @@ class TempFile(object):
         Number of bytes to be read.
 
     <Exceptions>
-      ssl_commons_exceptions.FormatError: if 'size' is invalid.
+      securesystemslib.exceptions.FormatError: if 'size' is invalid.
 
     <Return>
       String of data.
@@ -165,13 +165,13 @@ class TempFile(object):
       self.temporary_file.seek(0)
       data = self.temporary_file.read()
       self.temporary_file.seek(0)
-      
+
       return data
-    
+
     else:
       if not (isinstance(size, int) and size > 0):
-        raise ssl_commons_exceptions.FormatError
-      
+        raise securesystemslib.exceptions.FormatError
+
       return self.temporary_file.read(size)
 
 
@@ -222,11 +222,11 @@ class TempFile(object):
     destination_file = open(destination_path, 'wb')
     shutil.copyfileobj(self.temporary_file, destination_file)
     # Force the destination file to be written to disk from Python's internal and
-    # the operation system's buffers.  os.fsync() should follow flush().         
+    # the operation system's buffers.  os.fsync() should follow flush().
     destination_file.flush()
-    os.fsync(destination_file.fileno()) 
+    os.fsync(destination_file.fileno())
     destination_file.close()
-    
+
     # 'self.close()' closes temporary file which destroys itself.
     self.close_temp_file()
 
@@ -277,11 +277,11 @@ class TempFile(object):
         a file.  Only gzip is allowed.
 
     <Exceptions>
-      ssl_commons_exceptions.FormatError: If 'compression' is improperly formatted.
+      securesystemslib.exceptions.FormatError: If 'compression' is improperly formatted.
 
-      ssl_commons_exceptions.Error: If an invalid compression is given.
+      securesystemslib.exceptions.Error: If an invalid compression is given.
 
-      ssl_commons_exceptions.DecompressionError: If the compression failed for any reason.
+      securesystemslib.exceptions.DecompressionError: If the compression failed for any reason.
 
     <Side Effects>
       'self._orig_file' is used to store the original data of 'temporary_file'.
@@ -291,14 +291,14 @@ class TempFile(object):
     """
 
     # Does 'compression' have the correct format?
-    # Raise 'ssl_commons_exceptions.FormatError' if there is a mismatch.
-    ssl_crypto_formats.NAME_SCHEMA.check_match(compression)
-    
+    # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
+    securesystemslib.formats.NAME_SCHEMA.check_match(compression)
+
     if self._orig_file is not None:
-      raise ssl_commons_exceptions.Error('Can only set compression on a TempFile once.')
+      raise securesystemslib.exceptions.Error('Can only set compression on a TempFile once.')
 
     if compression != 'gzip':
-      raise ssl_commons_exceptions.Error('Only gzip compression is supported.')
+      raise securesystemslib.exceptions.Error('Only gzip compression is supported.')
 
     self.seek(0)
     self._compression = compression
@@ -309,10 +309,10 @@ class TempFile(object):
       uncompressed_content = gzip_file_object.read()
       self.temporary_file = tempfile.NamedTemporaryFile()
       self.temporary_file.write(uncompressed_content)
-      self.flush() 
-    
+      self.flush()
+
     except Exception as exception:
-      raise ssl_commons_exceptions.DecompressionError(exception)
+      raise securesystemslib.exceptions.DecompressionError(exception)
 
 
   def close_temp_file(self):
@@ -358,25 +358,25 @@ def get_file_details(filepath, hash_algorithms=['sha256']):
     hash_algorithms:
 
   <Exceptions>
-    ssl_commons_exceptions.FormatError: If hash of the file does not match HASHDICT_SCHEMA.
+    securesystemslib.exceptions.FormatError: If hash of the file does not match HASHDICT_SCHEMA.
 
-    ssl_commons_exceptions.Error: If 'filepath' does not exist. 
+    securesystemslib.exceptions.Error: If 'filepath' does not exist.
 
   <Returns>
     A tuple (length, hashes) describing 'filepath'.
   """
-  
+
   # Making sure that the format of 'filepath' is a path string.
-  # 'ssl_commons_exceptions.FormatError' is raised on incorrect format.
-  ssl_crypto_formats.PATH_SCHEMA.check_match(filepath)
-  ssl_crypto_formats.HASHALGORITHMS_SCHEMA.check_match(hash_algorithms)
+  # 'securesystemslib.exceptions.FormatError' is raised on incorrect format.
+  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+  securesystemslib.formats.HASHALGORITHMS_SCHEMA.check_match(hash_algorithms)
 
   # The returned file hashes of 'filepath'.
   file_hashes = {}
 
   # Does the path exists?
   if not os.path.exists(filepath):
-    raise ssl_commons_exceptions.Error('Path ' + repr(filepath) + ' doest not exist.')
+    raise securesystemslib.exceptions.Error('Path ' + repr(filepath) + ' doest not exist.')
   filepath = os.path.abspath(filepath)
 
   # Obtaining length of the file.
@@ -384,12 +384,12 @@ def get_file_details(filepath, hash_algorithms=['sha256']):
 
   # Obtaining hash of the file.
   for algorithm in hash_algorithms:
-    digest_object = ssl_crypto_hash.digest_filename(filepath, algorithm)
+    digest_object = securesystemslib.hash.digest_filename(filepath, algorithm)
     file_hashes.update({algorithm: digest_object.hexdigest()})
 
   # Performing a format check to ensure 'file_hash' corresponds HASHDICT_SCHEMA.
-  # Raise 'ssl_commons_exceptions.FormatError' if there is a mismatch.
-  ssl_crypto_formats.HASHDICT_SCHEMA.check_match(file_hashes)
+  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
+  securesystemslib.formats.HASHDICT_SCHEMA.check_match(file_hashes)
 
   return file_length, file_hashes
 
@@ -408,7 +408,7 @@ def ensure_parent_dir(filename):
       A path string.
 
   <Exceptions>
-    ssl_commons_exceptions.FormatError: If 'filename' is improperly formatted.
+    securesystemslib.exceptions.FormatError: If 'filename' is improperly formatted.
 
   <Side Effects>
     A directory is created whenever the parent directory of 'filename' does not
@@ -419,8 +419,8 @@ def ensure_parent_dir(filename):
   """
 
   # Ensure 'filename' corresponds to 'PATH_SCHEMA'.
-  # Raise 'ssl_commons_exceptions.FormatError' on a mismatch.
-  ssl_crypto_formats.PATH_SCHEMA.check_match(filename)
+  # Raise 'securesystemslib.exceptions.FormatError' on a mismatch.
+  securesystemslib.formats.PATH_SCHEMA.check_match(filename)
 
   # Split 'filename' into head and tail, check if head exists.
   directory = os.path.split(filename)[0]
@@ -445,7 +445,7 @@ def file_in_confined_directories(filepath, confined_directories):
       A list, or a tuple, of directory strings.
 
   <Exceptions>
-   ssl_commons_exceptions.FormatError: On incorrect format of the input.
+   securesystemslib.exceptions.FormatError: On incorrect format of the input.
 
   <Return>
     Boolean.  True, if path is either the empty string
@@ -453,9 +453,9 @@ def file_in_confined_directories(filepath, confined_directories):
   """
 
   # Do the arguments have the correct format?
-  # Raise 'ssl_commons_exceptions.FormatError' if there is a mismatch.
-  ssl_crypto_formats.RELPATH_SCHEMA.check_match(filepath)
-  ssl_crypto_formats.RELPATHS_SCHEMA.check_match(confined_directories)
+  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
+  securesystemslib.formats.RELPATH_SCHEMA.check_match(filepath)
+  securesystemslib.formats.RELPATHS_SCHEMA.check_match(confined_directories)
 
   for confined_directory in confined_directories:
     # The empty string (arbitrarily chosen) signifies the client is confined
@@ -468,7 +468,7 @@ def file_in_confined_directories(filepath, confined_directories):
     # 'confined_directories'.
     filepath = os.path.normpath(filepath)
     confined_directory = os.path.normpath(confined_directory)
-    
+
     # A TUF client may restrict himself to specific directories on the
     # remote repository.  The list of paths in 'confined_path', not including
     # each path's subdirectories, are the only directories the client will
@@ -492,7 +492,7 @@ def find_delegated_role(roles, delegated_role):
       The name of the role to be found in the list of roles.
 
   <Exceptions>
-    ssl_commons_exceptions.RepositoryError, if the list of roles has invalid data.
+    securesystemslib.exceptions.RepositoryError, if the list of roles has invalid data.
 
   <Side Effects>
     No known side effects.
@@ -505,9 +505,9 @@ def find_delegated_role(roles, delegated_role):
   # Do the arguments have the correct format?
   # Ensure the arguments have the appropriate number of objects and object
   # types, and that all dict keys are properly named.
-  # Raise 'ssl_commons_exceptions.FormatError' if any are improperly formatted.
-  ssl_crypto_formats.ROLELIST_SCHEMA.check_match(roles)
-  ssl_crypto_formats.ROLENAME_SCHEMA.check_match(delegated_role)
+  # Raise 'securesystemslib.exceptions.FormatError' if any are improperly formatted.
+  securesystemslib.formats.ROLELIST_SCHEMA.check_match(roles)
+  securesystemslib.formats.ROLENAME_SCHEMA.check_match(delegated_role)
 
   # The index of a role, if any, with the same name.
   role_index = None
@@ -515,12 +515,12 @@ def find_delegated_role(roles, delegated_role):
   for index in six.moves.xrange(len(roles)):
     role = roles[index]
     name = role.get('name')
-    
+
     # This role has no name.
     if name is None:
       no_name_message = 'Role with no name.'
-      raise ssl_commons_exceptions.RepositoryError(no_name_message)
-    
+      raise securesystemslib.exceptions.RepositoryError(no_name_message)
+
     # Does this role have the same name?
     else:
       # This role has the same name, and...
@@ -528,12 +528,12 @@ def find_delegated_role(roles, delegated_role):
         # ...it is the only known role with the same name.
         if role_index is None:
           role_index = index
-        
+
         # ...there are at least two roles with the same name.
         else:
           duplicate_role_message = 'Duplicate role (' + str(delegated_role) + ').'
-          raise ssl_commons_exceptions.RepositoryError(duplicate_role_message)
-      
+          raise securesystemslib.exceptions.RepositoryError(duplicate_role_message)
+
       # This role has a different name.
       else:
         logger.debug('Skipping delegated role: ' + repr(delegated_role))
@@ -546,14 +546,14 @@ def ensure_all_targets_allowed(rolename, list_of_targets, parent_delegations):
   <Purpose>
     Ensure that the list of targets specified by 'rolename' are allowed; this is
     determined by inspecting the 'delegations' field of the parent role
-    of 'rolename'.  If a target specified by 'rolename' is not found in the 
+    of 'rolename'.  If a target specified by 'rolename' is not found in the
     delegations field of 'metadata_object_of_parent', raise an exception.  The
     top-level role 'targets' is allowed to list any target file, so this
     function does not raise an exception if 'rolename' is 'targets'.
- 
+
     Targets allowed are either exlicitly listed under the 'paths' field, or
     implicitly exist under a subdirectory of a parent directory listed
-    under 'paths'.  A parent role may delegate trust to all files under a 
+    under 'paths'.  A parent role may delegate trust to all files under a
     particular directory, including files in subdirectories, by simply
     listing the directory (e.g., '/packages/source/Django/', the equivalent
     of '/packages/source/Django/*').  Targets listed in hashed bins are
@@ -561,7 +561,7 @@ def ensure_all_targets_allowed(rolename, list_of_targets, parent_delegations):
     by the parent role).
 
     TODO: Should the TUF spec restrict the repository to one particular
-    algorithm when calcutating path hash prefixes (currently restricted to 
+    algorithm when calcutating path hash prefixes (currently restricted to
     SHA256)?  Should we allow the repository to specify in the role dictionary
     the algorithm used for these generated hashed paths?
 
@@ -576,22 +576,22 @@ def ensure_all_targets_allowed(rolename, list_of_targets, parent_delegations):
       metadata.  'list_of_targets' are target paths relative to the targets
       directory of the repository.  The delegations of the parent role are
       checked to verify that the targets of 'list_of_targets' are valid.
-    
+
     parent_delegations:
       The parent delegations of 'rolename'.  The metadata object stores
-      the allowed paths and path hash prefixes of child delegations in its 
+      the allowed paths and path hash prefixes of child delegations in its
       'delegations' attribute.
 
   <Exceptions>
-    ssl_commons_exceptions.FormatError:
+    securesystemslib.exceptions.FormatError:
       If any of the arguments are improperly formatted.
 
-    ssl_commons_exceptions.ForbiddenTargetError:
+    securesystemslib.exceptions.ForbiddenTargetError:
       If the targets of 'metadata_role' are not allowed according to
       the parent's metadata file.  The 'paths' and 'path_hash_prefixes'
       attributes are verified.
 
-    ssl_commons_exceptions.RepositoryError:
+    securesystemslib.exceptions.RepositoryError:
       If the parent of 'rolename' has not made a delegation to 'rolename'.
 
   <Side Effects>
@@ -600,20 +600,20 @@ def ensure_all_targets_allowed(rolename, list_of_targets, parent_delegations):
   <Returns>
     None.
   """
-  
+
   # Do the arguments have the correct format?
   # Ensure the arguments have the appropriate number of objects and object
   # types, and that all dict keys are properly named.
-  # Raise 'ssl_commons_exceptions.FormatError' if any are improperly formatted.
-  ssl_crypto_formats.ROLENAME_SCHEMA.check_match(rolename)
-  ssl_crypto_formats.RELPATHS_SCHEMA.check_match(list_of_targets)
-  ssl_crypto_formats.DELEGATIONS_SCHEMA.check_match(parent_delegations)
-  
+  # Raise 'securesystemslib.exceptions.FormatError' if any are improperly formatted.
+  securesystemslib.formats.ROLENAME_SCHEMA.check_match(rolename)
+  securesystemslib.formats.RELPATHS_SCHEMA.check_match(list_of_targets)
+  securesystemslib.formats.DELEGATIONS_SCHEMA.check_match(parent_delegations)
+
   # Return if 'rolename' is 'targets'.  'targets' is not a delegated role.  Any
   # target file listed in 'targets' is allowed.
   if rolename == 'targets':
     return
-  
+
   # The allowed targets of delegated roles are stored in the parent's metadata
   # file.  Iterate 'list_of_targets' and confirm they are trusted, or their root
   # parent directory exists in the role delegated paths, or path hash prefixes,
@@ -626,37 +626,37 @@ def ensure_all_targets_allowed(rolename, list_of_targets, parent_delegations):
   # the parent's 'paths', or trusted path hash prefixes from the parent's
   # 'path_hash_prefixes'.
   if role_index is not None:
-    role = roles[role_index] 
+    role = roles[role_index]
     allowed_child_paths = role.get('paths')
     allowed_child_path_hash_prefixes = role.get('path_hash_prefixes')
-    actual_child_targets = list_of_targets 
+    actual_child_targets = list_of_targets
 
     if allowed_child_path_hash_prefixes is not None:
       consistent = paths_are_consistent_with_hash_prefixes
-      
+
       # 'actual_child_tarets' (i.e., 'list_of_targets') should have lenth
       # greater than zero due to the format check above.
       if not consistent(actual_child_targets,
                         allowed_child_path_hash_prefixes):
         message =  repr(rolename) + ' specifies a target that does not' + \
           ' have a path hash prefix listed in its parent role.'
-        raise ssl_commons_exceptions.ForbiddenTargetError(message)
-    
-    elif allowed_child_paths is not None: 
+        raise securesystemslib.exceptions.ForbiddenTargetError(message)
+
+    elif allowed_child_paths is not None:
       # Check that each delegated target is either explicitly listed or a parent
       # directory is found under role['paths'], otherwise raise an exception.
       # If the parent role explicitly lists target file paths in 'paths',
       # this loop will run in O(n^2), the worst-case.  The repository
       # maintainer will likely delegate entire directories, and opt for
-      # explicit file paths if the targets in a directory are delegated to 
+      # explicit file paths if the targets in a directory are delegated to
       # different roles/developers.
       for child_target in actual_child_targets:
         for allowed_child_path in allowed_child_paths:
           if fnmatch.fnmatch(child_target, allowed_child_path):
             break
-        
-        else: 
-          raise ssl_commons_exceptions.ForbiddenTargetError('Role '+repr(rolename)+' specifies'+\
+
+        else:
+          raise securesystemslib.exceptions.ForbiddenTargetError('Role '+repr(rolename)+' specifies'+\
                                          ' target '+repr(child_target)+','+\
                                          ' which is not an allowed path'+\
                                          ' according to the delegations set'+\
@@ -666,14 +666,14 @@ def ensure_all_targets_allowed(rolename, list_of_targets, parent_delegations):
       # 'role' should have been validated when it was downloaded.
       # The 'paths' or 'path_hash_prefixes' attributes should not be missing,
       # so raise an error in case this clause is reached.
-      raise ssl_commons_exceptions.FormatError(repr(role) + ' did not contain one of ' +\
+      raise securesystemslib.exceptions.FormatError(repr(role) + ' did not contain one of ' +\
                             'the required fields ("paths" or ' +\
                             '"path_hash_prefixes").')
 
   # Raise an exception if the parent has not delegated to the specified
   # 'rolename' child role.
   else:
-    raise ssl_commons_exceptions.RepositoryError('The parent role has not delegated to '+\
+    raise securesystemslib.exceptions.RepositoryError('The parent role has not delegated to '+\
                               repr(rolename)+'.')
 
 
@@ -691,7 +691,7 @@ def paths_are_consistent_with_hash_prefixes(paths, path_hash_prefixes):
       The list of path hash prefixes with which to check the list of paths.
 
   <Exceptions>
-    ssl_commons_exceptions.FormatError:
+    securesystemslib.exceptions.FormatError:
       If the arguments are improperly formatted.
 
   <Side Effects>
@@ -701,13 +701,13 @@ def paths_are_consistent_with_hash_prefixes(paths, path_hash_prefixes):
     A Boolean indicating whether or not the paths are consistent with the
     hash prefix.
   """
-  
+
   # Do the arguments have the correct format?
   # Ensure the arguments have the appropriate number of objects and object
   # types, and that all dict keys are properly named.
-  # Raise 'ssl_commons_exceptions.FormatError' if any are improperly formatted.
-  ssl_crypto_formats.RELPATHS_SCHEMA.check_match(paths)
-  ssl_crypto_formats.PATH_HASH_PREFIXES_SCHEMA.check_match(path_hash_prefixes)
+  # Raise 'securesystemslib.exceptions.FormatError' if any are improperly formatted.
+  securesystemslib.formats.RELPATHS_SCHEMA.check_match(paths)
+  securesystemslib.formats.PATH_HASH_PREFIXES_SCHEMA.check_match(path_hash_prefixes)
 
   # Assume that 'paths' and 'path_hash_prefixes' are inconsistent until
   # proven otherwise.
@@ -717,7 +717,7 @@ def paths_are_consistent_with_hash_prefixes(paths, path_hash_prefixes):
   # have lengths greater than zero.
   for path in paths:
     path_hash = get_target_hash(path)
-    
+
     # Assume that every path is inconsistent until proven otherwise.
     consistent = False
 
@@ -739,10 +739,10 @@ def get_target_hash(target_filepath):
     Compute the hash of 'target_filepath'. This is useful in conjunction with
     the "path_hash_prefixes" attribute in a delegated targets role, which
     tells us which paths it is implicitly responsible for.
-    
+
     The repository may optionally organize targets into hashed bins to ease
     target delegations and role metadata management.  The use of consistent
-    hashing allows for a uniform distribution of targets into bins. 
+    hashing allows for a uniform distribution of targets into bins.
 
   <Arguments>
     target_filepath:
@@ -751,27 +751,27 @@ def get_target_hash(target_filepath):
 
   <Exceptions>
     None.
- 
+
   <Side Effects>
     None.
-  
+
   <Returns>
     The hash of 'target_filepath'.
   """
-  
+
   # Does 'target_filepath' have the correct format?
   # Ensure the arguments have the appropriate number of objects and object
   # types, and that all dict keys are properly named.
-  # Raise 'ssl_commons_exceptions.FormatError' if there is a mismatch.
-  ssl_crypto_formats.RELPATH_SCHEMA.check_match(target_filepath)
+  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
+  securesystemslib.formats.RELPATH_SCHEMA.check_match(target_filepath)
 
-  # Calculate the hash of the filepath to determine which bin to find the 
+  # Calculate the hash of the filepath to determine which bin to find the
   # target.  The client currently assumes the repository uses
   # 'HASH_FUNCTION' to generate hashes and 'utf-8'.
-  digest_object = ssl_crypto_hash.digest(HASH_FUNCTION)
+  digest_object = securesystemslib.hash.digest(HASH_FUNCTION)
   encoded_target_filepath = target_filepath.encode('utf-8')
   digest_object.update(encoded_target_filepath)
-  target_filepath_hash = digest_object.hexdigest() 
+  target_filepath_hash = digest_object.hexdigest()
 
   return target_filepath_hash
 
@@ -802,16 +802,16 @@ def import_json():
 
   if _json_module is not None:
     return _json_module
-  
+
   else:
     try:
       module = __import__('json')
-   
+
     # The 'json' module is available in Python > 2.6, and thus this exception
     # should not occur in all supported Python installations (> 2.6) of TUF.
     except ImportError: #pragma: no cover
       raise ImportError('Could not import the json module')
-    
+
     else:
       _json_module = module
       return module
@@ -827,9 +827,9 @@ def load_json_string(data):
   <Arguments>
     data:
       A JSON string.
-  
+
   <Exceptions>
-    ssl_commons_exceptions.Error, if 'data' cannot be deserialized to a Python object.
+    securesystemslib.exceptions.Error, if 'data' cannot be deserialized to a Python object.
 
   <Side Effects>
     None.
@@ -839,20 +839,20 @@ def load_json_string(data):
   """
 
   deserialized_object = None
-  
+
   try:
     deserialized_object = json.loads(data)
- 
+
   except TypeError:
     message = 'Invalid JSON string: ' + repr(data)
-    raise ssl_commons_exceptions.Error(message)
-  
+    raise securesystemslib.exceptions.Error(message)
+
   except ValueError:
     message = 'Cannot deserialize to a Python object: ' + repr(data)
-    raise ssl_commons_exceptions.Error(message)
-  
+    raise securesystemslib.exceptions.Error(message)
+
   else:
-    return deserialized_object    
+    return deserialized_object
 
 
 def load_json_file(filepath):
@@ -865,9 +865,9 @@ def load_json_file(filepath):
       Absolute path of JSON file.
 
   <Exceptions>
-    ssl_commons_exceptions.FormatError: If 'filepath' is improperly formatted.
+    securesystemslib.exceptions.FormatError: If 'filepath' is improperly formatted.
 
-    ssl_commons_exceptions.Error: If 'filepath' cannot be deserialized to a Python object.
+    securesystemslib.exceptions.Error: If 'filepath' cannot be deserialized to a Python object.
 
     IOError in case of runtime IO exceptions.
 
@@ -879,8 +879,8 @@ def load_json_file(filepath):
   """
 
   # Making sure that the format of 'filepath' is a path string.
-  # ssl_commons_exceptions.FormatError is raised on incorrect format.
-  ssl_crypto_formats.PATH_SCHEMA.check_match(filepath)
+  # securesystemslib.exceptions.FormatError is raised on incorrect format.
+  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
   deserialized_object = None
 
@@ -888,22 +888,22 @@ def load_json_file(filepath):
   if filepath.endswith('.gz'):
     logger.debug('gzip.open(' + str(filepath) + ')')
     fileobject = six.StringIO(gzip.open(filepath).read().decode('utf-8'))
-  
+
   else:
     logger.debug('open(' + str(filepath) + ')')
     fileobject = open(filepath)
 
   try:
     deserialized_object = json.load(fileobject)
-  
+
   except (ValueError, TypeError) as e:
     message = 'Cannot deserialize to a Python object: ' + repr(filepath)
-    raise ssl_commons_exceptions.Error(message)
-  
+    raise securesystemslib.exceptions.Error(message)
+
   else:
-    fileobject.close() 
+    fileobject.close()
     return deserialized_object
-  
+
   finally:
     fileobject.close()
 
@@ -922,7 +922,7 @@ def digests_are_equal(digest1, digest2):
       The second hexadecimal string value to compare.
 
   <Exceptions>
-    ssl_commons_exceptions.FormatError: If the arguments are improperly formatted.
+    securesystemslib.exceptions.FormatError: If the arguments are improperly formatted.
 
   <Side Effects>
     None.
@@ -930,18 +930,18 @@ def digests_are_equal(digest1, digest2):
   <Return>
     Return True if 'digest1' is equal to 'digest2', False otherwise.
   """
-  
+
   # Ensure the arguments have the appropriate number of objects and object
   # types, and that all dict keys are properly named.
-  # Raise 'ssl_commons_exceptions.FormatError' if there is a mismatch.
-  ssl_crypto_formats.HEX_SCHEMA.check_match(digest1)
-  ssl_crypto_formats.HEX_SCHEMA.check_match(digest2)
+  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
+  securesystemslib.formats.HEX_SCHEMA.check_match(digest1)
+  securesystemslib.formats.HEX_SCHEMA.check_match(digest2)
 
   if len(digest1) != len(digest2):
     return False
 
   are_equal = True
-  
+
   for element in range(len(digest1)):
     if digest1[element] != digest2[element]:
       are_equal = False
