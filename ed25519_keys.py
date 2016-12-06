@@ -16,7 +16,7 @@
   elliptic-curve public key signature scheme, its main strength being small
   signatures (64 bytes) and small public keys (32 bytes).
   http://ed25519.cr.yp.to/
-  
+
   'ssl_crypto/ed25519_keys.py' calls 'ed25519.py', which is the pure Python
   implementation of ed25519 optimized for a faster runtime.  The Python
   reference implementation is concise, but very slow (verifying signatures
@@ -25,20 +25,20 @@
 
   http://ed25519.cr.yp.to/software.html
   https://github.com/pyca/ed25519
-  
+
   Optionally, ed25519 cryptographic operations may be executed by PyNaCl, which
   is a Python binding to the NaCl library and is faster than the pure python
   implementation.  Verifying signatures can take approximately 0.0009 seconds.
   PyNaCl relies on the libsodium C library.  PyNaCl is required for key and
   signature generation.  Verifying signatures may be done in pure Python.
- 
+
   https://github.com/pyca/pynacl
   https://github.com/jedisct1/libsodium
   http://nacl.cr.yp.to/
   https://github.com/pyca/ed25519
-  
+
   The ed25519-related functions included here are generate(), create_signature()
-  and verify_signature().  The 'ed25519' and PyNaCl (i.e., 'nacl') modules used 
+  and verify_signature().  The 'ed25519' and PyNaCl (i.e., 'nacl') modules used
   by ed25519_keys.py perform the actual ed25519 computations and the functions
   listed above can be viewed as an easy-to-use public interface.
  """
@@ -81,7 +81,7 @@ import os
 # Import the PyNaCl library, if available.  It is recommended this library be
 # used over the pure python implementation of ed25519, due to its speedier
 # routines and side-channel protections available in the libsodium library.
-# 
+#
 # TODO: Version 0.2.3 of 'pynacl' prints: "UserWarning: reimporting '...' might
 # overwrite older definitions." when importing 'nacl.signing'.  Suppress user
 # warnings temporarily (at least until this issue is fixed by PyNaCl).
@@ -94,7 +94,7 @@ with warnings.catch_warnings():
   try:
     import nacl.signing
     import nacl.encoding
-  
+
   # PyNaCl's 'cffi' dependency may raise an 'IOError' exception when importing
   # 'nacl.signing'.
   except (ImportError, IOError): # pragma: no cover
@@ -102,48 +102,43 @@ with warnings.catch_warnings():
 
 # The optimized pure Python implementation of ed25519 provided by TUF.  If
 # PyNaCl cannot be imported and an attempt to use is made in this module, a
-# 'ssl_commons_exceptions.UnsupportedLibraryError' exception is raised.  
-from ._vendor.ed25519 import ed25519 as _vendor_ed25519_ed25519
+# 'securesystemslib.exceptions.UnsupportedLibraryError' exception is raised.
+import securesystemslib._vendor.ed25519.ed25519
 
-# Digest objects needed to generate hashes.
-from . import hash as ssl_crypto_hash
-
-# Perform object format-checking.
-from . import formats as ssl_crypto_formats
-
-from ..ssl_commons import exceptions as ssl_commons_exceptions
+import securesystemslib.formats
+import securesystemslib.exceptions
 
 # Supported ed25519 signing method: 'ed25519'.  The pure Python implementation
-# (i.e., ed25519') and PyNaCl (i.e., 'nacl', libsodium+Python bindings) modules
-# are currently supported in the creationg of 'ed25519' signatures.
+# (i.e., ed25519') and PyNaCl (i.e., 'nacl', libsodium + Python bindings)
+# modules are currently supported in the creationg of 'ed25519' signatures.
 # Previously, a distinction was made between signatures made by the pure Python
-# implementation and PyNaCl. 
+# implementation and PyNaCl.
 _SUPPORTED_ED25519_SIGNING_METHODS = ['ed25519']
 
 
 def generate_public_and_private():
   """
-  <Purpose> 
+  <Purpose>
     Generate a pair of ed25519 public and private keys with PyNaCl.  The public
-    and private keys returned conform to 'ssl_crypto_formats.ED25519PULIC_SCHEMA' and
-    'ssl_crypto_formats.ED25519SEED_SCHEMA', respectively, and have the form:
-    
+    and private keys returned conform to 'securesystemlib.formats.ED25519PULIC_SCHEMA' and
+    'securesystemlib.formats.ED25519SEED_SCHEMA', respectively, and have the form:
+
     '\xa2F\x99\xe0\x86\x80%\xc8\xee\x11\xb95T\xd9\...'
 
     An ed25519 seed key is a random 32-byte string.  Public keys are also 32
     bytes.
 
     >>> public, private = generate_public_and_private()
-    >>> ssl_crypto_formats.ED25519PUBLIC_SCHEMA.matches(public)
+    >>> securesystemlib.formats.ED25519PUBLIC_SCHEMA.matches(public)
     True
-    >>> ssl_crypto_formats.ED25519SEED_SCHEMA.matches(private)
+    >>> securesystemlib.formats.ED25519SEED_SCHEMA.matches(private)
     True
 
   <Arguments>
     None.
 
   <Exceptions>
-    ssl_commons_exceptions.UnsupportedLibraryError, if the PyNaCl ('nacl') module is unavailable.
+    securesystemslib.exceptions.UnsupportedLibraryError, if the PyNaCl ('nacl') module is unavailable.
 
     NotImplementedError, if a randomness source is not found by 'os.urandom'.
 
@@ -152,15 +147,15 @@ def generate_public_and_private():
     with os.urandom() and then calling PyNaCl's nacl.signing.SigningKey().
 
   <Returns>
-    A (public, private) tuple that conform to 'ssl_crypto_formats.ED25519PUBLIC_SCHEMA'
-    and 'ssl_crypto_formats.ED25519SEED_SCHEMA', respectively.
+    A (public, private) tuple that conform to 'securesystemlib.formats.ED25519PUBLIC_SCHEMA'
+    and 'securesystemlib.formats.ED25519SEED_SCHEMA', respectively.
   """
 
   # Generate ed25519's seed key by calling os.urandom().  The random bytes
   # returned should be suitable for cryptographic use and is OS-specific.
   # Raise 'NotImplementedError' if a randomness source is not found.
   # ed25519 seed keys are fixed at 32 bytes (256-bit keys).
-  # http://blog.mozilla.org/warner/2011/11/29/ed25519-keys/ 
+  # http://blog.mozilla.org/warner/2011/11/29/ed25519-keys/
   seed = os.urandom(32)
   public = None
 
@@ -169,11 +164,11 @@ def generate_public_and_private():
   try:
     nacl_key = nacl.signing.SigningKey(seed)
     public = nacl_key.verify_key.encode(encoder=nacl.encoding.RawEncoder())
-  
+
   except NameError: # pragma: no cover
     message = 'The PyNaCl library and/or its dependencies unavailable.'
-    raise ssl_commons_exceptions.UnsupportedLibraryError(message)
-  
+    raise securesystemslib.exceptions.UnsupportedLibraryError(message)
+
   return public, seed
 
 
@@ -185,8 +180,8 @@ def create_signature(public_key, private_key, data):
   <Purpose>
     Return a (signature, method) tuple, where the method is 'ed25519' and is
     always generated by PyNaCl (i.e., 'nacl').  The signature returned conforms
-    to 'ssl_crypto_formats.ED25519SIGNATURE_SCHEMA', and has the form:
-    
+    to 'securesystemlib.formats.ED25519SIGNATURE_SCHEMA', and has the form:
+
     '\xae\xd7\x9f\xaf\x95{bP\x9e\xa8YO Z\x86\x9d...'
 
     A signature is a 64-byte string.
@@ -195,13 +190,13 @@ def create_signature(public_key, private_key, data):
     >>> data = b'The quick brown fox jumps over the lazy dog'
     >>> signature, method = \
         create_signature(public, private, data)
-    >>> ssl_crypto_formats.ED25519SIGNATURE_SCHEMA.matches(signature)
+    >>> securesystemlib.formats.ED25519SIGNATURE_SCHEMA.matches(signature)
     True
     >>> method == 'ed25519'
     True
     >>> signature, method = \
         create_signature(public, private, data)
-    >>> ssl_crypto_formats.ED25519SIGNATURE_SCHEMA.matches(signature)
+    >>> securesystemlib.formats.ED25519SIGNATURE_SCHEMA.matches(signature)
     True
     >>> method == 'ed25519'
     True
@@ -209,7 +204,7 @@ def create_signature(public_key, private_key, data):
   <Arguments>
     public:
       The ed25519 public key, which is a 32-byte string.
-    
+
     private:
       The ed25519 private key, which is a 32-byte string.
 
@@ -217,9 +212,9 @@ def create_signature(public_key, private_key, data):
       Data object used by create_signature() to generate the signature.
 
   <Exceptions>
-    ssl_commons_exceptions.FormatError, if the arguments are improperly formatted.
+    securesystemslib.exceptions.FormatError, if the arguments are improperly formatted.
 
-    ssl_commons_exceptions.CryptoError, if a signature cannot be created.
+    securesystemslib.exceptions.CryptoError, if a signature cannot be created.
 
   <Side Effects>
     nacl.signing.SigningKey.sign() called to generate the actual signature.
@@ -229,40 +224,40 @@ def create_signature(public_key, private_key, data):
     ed25519 signatures are 64 bytes, however, the hexlified signature is
     stored in the dictionary returned.
   """
-  
+
   # Does 'public_key' have the correct format?
   # This check will ensure 'public_key' conforms to
-  # 'ssl_crypto_formats.ED25519PUBLIC_SCHEMA', which must have length 32 bytes.
-  # Raise 'ssl_commons_exceptions.FormatError' if the check fails.
-  ssl_crypto_formats.ED25519PUBLIC_SCHEMA.check_match(public_key)
+  # 'securesystemlib.formats.ED25519PUBLIC_SCHEMA', which must have length 32 bytes.
+  # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
+  securesystemlib.formats.ED25519PUBLIC_SCHEMA.check_match(public_key)
 
   # Is 'private_key' properly formatted?
-  ssl_crypto_formats.ED25519SEED_SCHEMA.check_match(private_key)
-  
+  securesystemlib.formats.ED25519SEED_SCHEMA.check_match(private_key)
+
   # Signing the 'data' object requires a seed and public key.
   # nacl.signing.SigningKey.sign() generates the signature.
   public = public_key
   private = private_key
 
-  method = None 
+  method = None
   signature = None
- 
-  # The private and public keys have been validated above by 'ssl_crypto_formats' and
+
+  # The private and public keys have been validated above by 'securesystemlib.formats' and
   # should be 32-byte strings.
   method = 'ed25519'
   try:
     nacl_key = nacl.signing.SigningKey(private)
     nacl_sig = nacl_key.sign(data)
     signature = nacl_sig.signature
-  
+
   except NameError: # pragma: no cover
     message = 'The PyNaCl library and/or its dependencies unavailable.'
-    raise ssl_commons_exceptions.UnsupportedLibraryError(message)
-  
+    raise securesystemslib.exceptions.UnsupportedLibraryError(message)
+
   except (ValueError, TypeError, nacl.exceptions.CryptoError) as e:
     message = 'An "ed25519" signature could not be created with PyNaCl.'
-    raise ssl_commons_exceptions.CryptoError(message + str(e))
-   
+    raise securesystemslib.exceptions.CryptoError(message + str(e))
+
   return signature, method
 
 
@@ -289,7 +284,7 @@ def verify_signature(public_key, method, signature, data, use_pynacl=False):
         create_signature(public, private, bad_data)
     >>> verify_signature(public, method, bad_signature, data, use_pynacl=False)
     False
-  
+
   <Arguments>
     public_key:
       The public key is a 32-byte string.
@@ -297,24 +292,24 @@ def verify_signature(public_key, method, signature, data, use_pynacl=False):
     method:
       'ed25519' signature method generated by either the pure python
       implementation (i.e., ed25519.py) or PyNacl (i.e., 'nacl').
-      
+
     signature:
-      The signature is a 64-byte string. 
-      
+      The signature is a 64-byte string.
+
     data:
       Data object used by ssl_crypto.ed25519_keys.create_signature() to generate
       'signature'.  'data' is needed here to verify the signature.
-    
+
     use_pynacl:
       True, if the ed25519 signature should be verified by PyNaCl.  False,
       if the signature should be verified with the pure Python implementation
       of ed25519 (slower).
 
   <Exceptions>
-    ssl_commons_exceptions.UnknownMethodError.  Raised if the signing method used by
+    securesystemslib.exceptions.UnknownMethodError.  Raised if the signing method used by
     'signature' is not one supported by ssl_crypto.ed25519_keys.create_signature().
-    
-    ssl_commons_exceptions.FormatError. Raised if the arguments are improperly formatted. 
+
+    securesystemslib.exceptions.FormatError. Raised if the arguments are improperly formatted.
 
   <Side Effects>
     ssl_crypto._vendor.ed25519.ed25519.checkvalid() called to do the actual
@@ -324,60 +319,60 @@ def verify_signature(public_key, method, signature, data, use_pynacl=False):
   <Returns>
     Boolean.  True if the signature is valid, False otherwise.
   """
-  
+
   # Does 'public_key' have the correct format?
   # This check will ensure 'public_key' conforms to
-  # 'ssl_crypto_formats.ED25519PUBLIC_SCHEMA', which must have length 32 bytes.
-  # Raise 'ssl_commons_exceptions.FormatError' if the check fails.
-  ssl_crypto_formats.ED25519PUBLIC_SCHEMA.check_match(public_key)
+  # 'securesystemlib.formats.ED25519PUBLIC_SCHEMA', which must have length 32 bytes.
+  # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
+  securesystemlib.formats.ED25519PUBLIC_SCHEMA.check_match(public_key)
 
   # Is 'method' properly formatted?
-  ssl_crypto_formats.NAME_SCHEMA.check_match(method)
-  
+  securesystemlib.formats.NAME_SCHEMA.check_match(method)
+
   # Is 'signature' properly formatted?
-  ssl_crypto_formats.ED25519SIGNATURE_SCHEMA.check_match(signature)
-  
+  securesystemlib.formats.ED25519SIGNATURE_SCHEMA.check_match(signature)
+
   # Is 'use_pynacl' properly formatted?
-  ssl_crypto_formats.BOOLEAN_SCHEMA.check_match(use_pynacl)
+  securesystemlib.formats.BOOLEAN_SCHEMA.check_match(use_pynacl)
 
   # Verify 'signature'.  Before returning the Boolean result,
   # ensure 'ed25519' was used as the signing method.
-  # Raise 'ssl_commons_exceptions.UnsupportedLibraryError' if 'use_pynacl' is True but 'nacl' is
+  # Raise 'securesystemslib.exceptions.UnsupportedLibraryError' if 'use_pynacl' is True but 'nacl' is
   # unavailable.
   public = public_key
   valid_signature = False
 
   if method in _SUPPORTED_ED25519_SIGNING_METHODS:
-    if use_pynacl: 
+    if use_pynacl:
       try:
         nacl_verify_key = nacl.signing.VerifyKey(public)
-        nacl_message = nacl_verify_key.verify(data, signature) 
+        nacl_message = nacl_verify_key.verify(data, signature)
         valid_signature = True
-      
+
       except NameError: # pragma: no cover
         message = 'The PyNaCl library and/or its dependencies unavailable.'
-        raise ssl_commons_exceptions.UnsupportedLibraryError(message)
-      
+        raise securesystemslib.exceptions.UnsupportedLibraryError(message)
+
       except nacl.exceptions.BadSignatureError:
-        pass 
-    
-    # Verify 'ed25519' signature with the pure Python implementation. 
+        pass
+
+    # Verify 'ed25519' signature with the pure Python implementation.
     else:
       try:
-        _vendor_ed25519_ed25519.checkvalid(signature, data, public)
+        securesystemslib._vendor.ed25519.ed25519.checkvalid(signature, data, public)
         valid_signature = True
-      
+
       # The pure Python implementation raises 'Exception' if 'signature' is
       # invalid.
       except Exception as e:
         pass
-  
+
   else:
     message = 'Unsupported ed25519 signing method: '+repr(method)+'.\n'+ \
       'Supported methods: '+repr(_SUPPORTED_ED25519_SIGNING_METHODS)+'.'
-    raise ssl_commons_exceptions.UnknownMethodError(message)
+    raise securesystemslib.exceptions.UnknownMethodError(message)
 
-  return valid_signature 
+  return valid_signature
 
 
 
