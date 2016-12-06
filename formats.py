@@ -25,7 +25,7 @@
 
   The first section deals with schemas and object matching based on format.
   There are two ways of checking the format of objects.  The first method
-  raises a 'ssl_commons_exceptions.FormatError' exception if the match fails and the other
+  raises a 'securesystemslib.exceptions.FormatError' exception if the match fails and the other
   returns a Boolean result.
 
   ssl_crypto.formats.<SCHEMA>.check_match(object)
@@ -34,7 +34,7 @@
   Example:
 
   rsa_key = {'keytype': 'rsa'
-             'keyid': 34892fc465ac76bc3232fab 
+             'keyid': 34892fc465ac76bc3232fab
              'keyval': {'public': 'public_key',
                         'private': 'private_key'}
 
@@ -48,7 +48,7 @@
   The second section deals with the role metadata classes.  There are
   multiple top-level roles, each with differing metadata formats.
   Example:
-  
+
   root_object = ssl_crypto.formats.RootFile.from_metadata(root_metadata_file)
   targets_metadata = ssl_crypto.formats.TargetsFile.make_metadata(...)
 
@@ -57,8 +57,8 @@
 
   The last section contains miscellaneous functions related to the format of
   TUF objects.
-  Example: 
-  
+  Example:
+
   signable_object = make_signable(unsigned_object)
 """
 
@@ -78,10 +78,8 @@ import datetime
 import time
 import six
 
-
-from ..ssl_commons import schema as SCHEMA
-from ..ssl_commons import exceptions as ssl_commons_exceptions
-
+import securesystemslib.schema as SCHEMA
+import securesystemslib.exceptions
 
 # Note that in the schema definitions below, the 'SCHEMA.Object' types allow
 # additional keys which are not defined. Thus, any additions to them will be
@@ -173,7 +171,7 @@ BOOLEAN_SCHEMA = SCHEMA.Boolean()
 # Must be 1 and greater.
 THRESHOLD_SCHEMA = SCHEMA.Integer(lo=1)
 
-# A string representing a role's name. 
+# A string representing a role's name.
 ROLENAME_SCHEMA = SCHEMA.AnyString()
 
 # The minimum number of bits for an RSA key.  Must be 2048 bits, or greater
@@ -186,7 +184,7 @@ RSAKEYBITS_SCHEMA = SCHEMA.Integer(lo=2048)
 # The number of hashed bins, or the number of delegated roles.  See
 # delegate_hashed_bins() in 'repository_tool.py' for an example.  Note:
 # Tools may require further restrictions on the number of bins, such
-# as requiring them to be a power of 2. 
+# as requiring them to be a power of 2.
 NUMBINS_SCHEMA = SCHEMA.Integer(lo=1)
 
 # A PyCrypto signature.
@@ -212,7 +210,7 @@ KEYVAL_SCHEMA = SCHEMA.Object(
   public = SCHEMA.AnyString(),
   private = SCHEMA.Optional(SCHEMA.AnyString()))
 
-# Supported TUF key types. 
+# Supported TUF key types.
 KEYTYPE_SCHEMA = SCHEMA.OneOf(
   [SCHEMA.String('rsa'), SCHEMA.String('ed25519')])
 
@@ -249,10 +247,10 @@ RSAKEY_SCHEMA = SCHEMA.Object(
 # An ED25519 raw public key, which must be 32 bytes.
 ED25519PUBLIC_SCHEMA = SCHEMA.LengthBytes(32)
 
-# An ED25519 raw seed key, which must be 32 bytes.  
+# An ED25519 raw seed key, which must be 32 bytes.
 ED25519SEED_SCHEMA = SCHEMA.LengthBytes(32)
 
-# An ED25519 raw signature, which must be 64 bytes.  
+# An ED25519 raw signature, which must be 64 bytes.
 ED25519SIGNATURE_SCHEMA = SCHEMA.LengthBytes(64)
 
 # Required installation libraries expected by the repository tools and other
@@ -283,7 +281,7 @@ FILEINFO_SCHEMA = SCHEMA.Object(
 # the snapshot role, but was switched to this object format to reduce the
 # amount of metadata that needs to be downloaded.  Listing version numbers in
 # "snapshot.json" also prevents rollback attacks for roles that clients have
-# not downloaded. 
+# not downloaded.
 VERSIONINFO_SCHEMA = SCHEMA.Object(
   object_name = 'VERSIONINFO_SCHEMA',
   version = METADATAVERSION_SCHEMA)
@@ -392,7 +390,7 @@ RECEIVECONFIG_SCHEMA = SCHEMA.Object(
     repository_directory = PATH_SCHEMA,
     metadata_directory = PATH_SCHEMA,
     targets_directory = PATH_SCHEMA,
-    backup_directory = PATH_SCHEMA)) 
+    backup_directory = PATH_SCHEMA))
 
 # A path hash prefix is a hexadecimal string.
 PATH_HASH_PREFIX_SCHEMA = HEX_SCHEMA
@@ -411,7 +409,7 @@ ROLE_SCHEMA = SCHEMA.Object(
   paths = SCHEMA.Optional(RELPATHS_SCHEMA),
   path_hash_prefixes = SCHEMA.Optional(PATH_HASH_PREFIXES_SCHEMA))
 
-# A dict of roles where the dict keys are role names and the dict values holding 
+# A dict of roles where the dict keys are role names and the dict values holding
 # the role data/information.
 ROLEDICT_SCHEMA = SCHEMA.DictOf(
   key_schema = ROLENAME_SCHEMA,
@@ -444,10 +442,10 @@ PATH_FILEINFO_SCHEMA = SCHEMA.DictOf(
 # TuF roledb
 ROLEDB_SCHEMA = SCHEMA.Object(
   object_name = 'ROLEDB_SCHEMA',
-  keyids = SCHEMA.Optional(KEYIDS_SCHEMA),                                                                          
-  signing_keyids = SCHEMA.Optional(KEYIDS_SCHEMA),                                                 
-  previous_keyids = SCHEMA.Optional(KEYIDS_SCHEMA),                                                                    
-  threshold = SCHEMA.Optional(THRESHOLD_SCHEMA), 
+  keyids = SCHEMA.Optional(KEYIDS_SCHEMA),
+  signing_keyids = SCHEMA.Optional(KEYIDS_SCHEMA),
+  previous_keyids = SCHEMA.Optional(KEYIDS_SCHEMA),
+  threshold = SCHEMA.Optional(THRESHOLD_SCHEMA),
   previous_threshold = SCHEMA.Optional(THRESHOLD_SCHEMA),
   version = SCHEMA.Optional(METADATAVERSION_SCHEMA),
   expires = SCHEMA.Optional(ISO8601_DATETIME_SCHEMA),
@@ -573,7 +571,7 @@ def _canonical_string_encoder(string):
   """
   <Purpose>
     Encode 'string' to canonical string format.
-    
+
   <Arguments>
     string:
       The string to encode.
@@ -589,7 +587,7 @@ def _canonical_string_encoder(string):
   """
 
   string = '"%s"' % re.sub(r'(["\\])', r'\\\1', string)
- 
+
   return string
 
 
@@ -630,7 +628,7 @@ def _encode_canonical(object, output_function):
       _encode_canonical(value, output_function)
     output_function("}")
   else:
-    raise ssl_commons_exceptions.FormatError('I cannot encode '+repr(object))
+    raise securesystemslib.exceptions.FormatError('I cannot encode '+repr(object))
 
 
 def encode_canonical(object, output_function=None):
@@ -663,7 +661,7 @@ def encode_canonical(object, output_function=None):
     '{"A":[99]}'
     >>> encode_canonical({"x" : 3, "y" : 2})
     '{"x":3,"y":2}'
-  
+
   <Arguments>
     object:
       The object to be encoded.
@@ -677,7 +675,7 @@ def encode_canonical(object, output_function=None):
     is not callable.
 
   <Side Effects>
-    The results are fed to 'output_function()' if 'output_function' is set.  
+    The results are fed to 'output_function()' if 'output_function' is set.
 
   <Returns>
     A string representing the 'object' encoded in canonical JSON form.
@@ -692,10 +690,10 @@ def encode_canonical(object, output_function=None):
 
   try:
     _encode_canonical(object, output_function)
-  
-  except (TypeError, ssl_commons_exceptions.FormatError) as  e:
+
+  except (TypeError, securesystemslib.exceptions.FormatError) as e:
     message = 'Could not encode ' + repr(object) + ': ' + str(e)
-    raise ssl_commons_exceptions.FormatError(message)
+    raise securesystemslib.exceptions.FormatError(message)
 
   # Return the encoded 'object' as a string.
   # Note: Implies 'output_function' is None,
