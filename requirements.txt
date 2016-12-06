@@ -1,0 +1,4 @@
+cryptography
+pynacl
+pycrypto
+tox
