@@ -25,10 +25,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import unicode_literals
 
+import logging
+
 import six
 
-import logging
-logger = logging.getLogger('ssl_commons.exceptions')
+logger = logging.getLogger('securesystemslib.exceptions')
 
 
 class Error(Exception):
@@ -216,7 +217,7 @@ class InvalidNameError(Error):
 
 class UnsignedMetadataError(Error):
   """Indicate metadata object with insufficient threshold of signatures."""
-  
+
   def __init__(self, message, signable):
     self.exception_message = message
     self.signable = signable
@@ -244,11 +245,11 @@ class NoWorkingMirrorError(Error):
       try:
         # http://docs.python.org/2/library/urlparse.html#urlparse.urlparse
         mirror_url_tokens = six.moves.urllib.parse.urlparse(mirror_url)
-      
+
       except:
         logger.exception('Failed to parse mirror URL: ' + repr(mirror_url))
         mirror_netloc = mirror_url
-      
+
       else:
         mirror_netloc = mirror_url_tokens.netloc
 
