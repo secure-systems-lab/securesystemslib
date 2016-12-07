@@ -1,0 +1,15 @@
+# root level directories
+dist/*
+build/*
+
+# global file patterns
+*.log
+*.pyc
+*.session
+*.swo
+*.swp
+*.egg-info
+.coverage
+.tox/*
+tests/htmlcov/*
+.DS_Store
