@@ -2,3 +2,5 @@ cryptography
 pynacl
 pycrypto
 tox
+coverage
+coveralls
