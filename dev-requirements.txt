@@ -1,0 +1,7 @@
+--editable .
+
+tox
+simple-settings==0.10.0
+cryptography==1.4.0
+pycrypto==2.6.1
+pynacl==1.0.1
