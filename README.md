@@ -1,2 +1,2 @@
 # securesystemslib
-Cryptography and general-purpose Python modules for Secure System Lab projects at NYU
+Cryptography and general-purpose Python modules for Secure Systems Lab projects at NYU
