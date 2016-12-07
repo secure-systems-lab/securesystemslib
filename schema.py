@@ -23,7 +23,7 @@
   the number of items included.
   For example:
   >>> good = {'first': 'Marty', 'last': 'McFly'}
-  >>> bad = {'sdfsfd': 'Biff', 'last': 'Tannen'} 
+  >>> bad = {'sdfsfd': 'Biff', 'last': 'Tannen'}
   >>> schema = Object(first=AnyString(), last=AnyString())
   >>> schema.matches(good)
   True
@@ -33,7 +33,7 @@
   ssl_commons.schema.Object() inspected the named keys of both dictionaries.
   In the case of the 'bad' dict, a 'first' dict key could not be found.
   As a result, 'bad' was flagged a mismatch.
-  
+
   'schema.py' provides additional schemas for testing objects based on other
   criteria.  See 'ssl_crypto.formats.py' and the rest of this module for extensive
   examples.  Anything related to the checking of TUF objects and their formats
@@ -53,7 +53,8 @@ import sys
 
 import six
 
-from . import exceptions as ssl_commons_exceptions
+import securesystemslib.exceptions
+
 
 class Schema:
   """
@@ -66,15 +67,15 @@ class Schema:
 
   def matches(self, object):
     """
-    <Purpose> 
+    <Purpose>
       Return True if 'object' matches this schema, False if it doesn't.
       If the caller wishes to signal an error on a failed match, check_match()
       should be called, which will raise a 'exceptions.FormatError' exception.
     """
-    
+
     try:
       self.check_match(object)
-    except ssl_commons_exceptions.FormatError:
+    except securesystemslib_exceptions.FormatError:
       return False
     else:
       return True
@@ -82,13 +83,13 @@ class Schema:
 
   def check_match(self, object):
     """
-    <Purpose> 
+    <Purpose>
       Abstract method.  Classes that inherit from 'Schema' must
       implement check_match().  If 'object' matches the schema, check_match()
       should simply return.  If 'object' does not match the schema,
       'exceptions.FormatError' should be raised.
     """
-    
+
     raise NotImplementedError()
 
 
@@ -106,7 +107,7 @@ class Any(Schema):
       matches(): returns a Boolean result.
       check_match(): passed
   <Example Use>
-    
+
     >>> schema = Any()
     >>> schema.matches('A String')
     True
@@ -136,7 +137,7 @@ class String(Schema):
       matches(): returns a Boolean result.
       check_match(): raises 'exceptions.FormatError' on a mismatch.
   <Example Use>
-    
+
     >>> schema = String('Hi')
     >>> schema.matches('Hi')
     True
@@ -146,14 +147,14 @@ class String(Schema):
 
   def __init__(self, string):
     if not isinstance(string, six.string_types):
-      raise ssl_commons_exceptions.FormatError('Expected a string but got '+repr(string))
-    
+      raise securesystemslib_exceptions.FormatError('Expected a string but got '+repr(string))
+
     self._string = string
 
 
   def check_match(self, object):
     if self._string != object:
-      raise ssl_commons_exceptions.FormatError('Expected '+repr(self._string)+' got '+repr(object))
+      raise securesystemslib_exceptions.FormatError('Expected '+repr(self._string)+' got '+repr(object))
 
 
 
@@ -169,7 +170,7 @@ class AnyString(Schema):
       matches(): returns a Boolean result.
       check_match(): raises 'exceptions.FormatError' on a mismatch.
   <Example Use>
-    
+
     >>> schema = AnyString()
     >>> schema.matches('')
     True
@@ -191,7 +192,7 @@ class AnyString(Schema):
 
   def check_match(self, object):
     if not isinstance(object, six.string_types):
-      raise ssl_commons_exceptions.FormatError('Expected a string but got '+repr(object))
+      raise securesystemslib_exceptions.FormatError('Expected a string but got '+repr(object))
 
 
 
@@ -207,7 +208,7 @@ class AnyBytes(Schema):
       matches(): returns a Boolean result.
       check_match(): raises 'exceptions.FormatError' on a mismatch.
   <Example Use>
-    
+
     >>> schema = AnyBytes()
     >>> schema.matches(b'')
     True
@@ -227,7 +228,7 @@ class AnyBytes(Schema):
 
   def check_match(self, object):
     if not isinstance(object, six.binary_type):
-      raise ssl_commons_exceptions.FormatError('Expected a byte string but got '+repr(object))
+      raise securesystemslib_exceptions.FormatError('Expected a byte string but got '+repr(object))
 
 
 
@@ -244,7 +245,7 @@ class LengthString(Schema):
       matches(): returns a Boolean result.
       check_match(): raises 'exceptions.FormatError' on a mismatch.
   <Example Use>
-    
+
     >>> schema = LengthString(5)
     >>> schema.matches('Hello')
     True
@@ -256,17 +257,17 @@ class LengthString(Schema):
     if isinstance(length, bool) or not isinstance(length, six.integer_types):
       # We need to check for bool as a special case, since bool
       # is for historical reasons a subtype of int.
-      raise ssl_commons_exceptions.FormatError('Got ' + repr(length) + ' instead of an integer.')
-    
-    self._string_length = length 
+      raise securesystemslib_exceptions.FormatError('Got ' + repr(length) + ' instead of an integer.')
+
+    self._string_length = length
 
 
   def check_match(self, object):
     if not isinstance(object, six.string_types):
-      raise ssl_commons_exceptions.FormatError('Expected a string but got ' + repr(object))
+      raise securesystemslib_exceptions.FormatError('Expected a string but got ' + repr(object))
 
     if len(object) != self._string_length:
-      raise ssl_commons_exceptions.FormatError('Expected a string of length ' + \
+      raise securesystemslib_exceptions.FormatError('Expected a string of length ' + \
                             repr(self._string_length))
 
 
@@ -284,7 +285,7 @@ class LengthBytes(Schema):
       matches(): returns a Boolean result.
       check_match(): raises 'exceptions.FormatError' on a mismatch.
   <Example Use>
-    
+
     >>> schema = LengthBytes(5)
     >>> schema.matches(b'Hello')
     True
@@ -296,17 +297,17 @@ class LengthBytes(Schema):
     if isinstance(length, bool) or not isinstance(length, six.integer_types):
       # We need to check for bool as a special case, since bool
       # is for historical reasons a subtype of int.
-      raise ssl_commons_exceptions.FormatError('Got ' + repr(length) + ' instead of an integer.')
-    
-    self._bytes_length = length 
+      raise securesystemslib_exceptions.FormatError('Got ' + repr(length) + ' instead of an integer.')
+
+    self._bytes_length = length
 
 
   def check_match(self, object):
     if not isinstance(object, six.binary_type):
-      raise ssl_commons_exceptions.FormatError('Expected a byte but got ' + repr(object))
+      raise securesystemslib_exceptions.FormatError('Expected a byte but got ' + repr(object))
 
     if len(object) != self._bytes_length:
-      raise ssl_commons_exceptions.FormatError('Expected a byte of length ' + \
+      raise securesystemslib_exceptions.FormatError('Expected a byte of length ' + \
                             repr(self._bytes_length))
 
 
@@ -342,11 +343,11 @@ class OneOf(Schema):
   def __init__(self, alternatives):
     # Ensure each item of the list contains the expected object type.
     if not isinstance(alternatives, list):
-      raise ssl_commons_exceptions.FormatError('Expected a list but got ' + repr(alternatives))
+      raise securesystemslib_exceptions.FormatError('Expected a list but got ' + repr(alternatives))
     for alternative in alternatives:
       if not isinstance(alternative, Schema):
-        raise ssl_commons_exceptions.FormatError('List contains an invalid item ' + repr(alternative))
-    
+        raise securesystemslib_exceptions.FormatError('List contains an invalid item ' + repr(alternative))
+
     self._alternatives = alternatives
 
 
@@ -356,7 +357,7 @@ class OneOf(Schema):
     for alternative in self._alternatives:
       if alternative.matches(object):
         return
-    raise ssl_commons_exceptions.FormatError('Object did not match a recognized alternative.')
+    raise securesystemslib_exceptions.FormatError('Object did not match a recognized alternative.')
 
 
 
@@ -364,11 +365,11 @@ class OneOf(Schema):
 
 class AllOf(Schema):
   """
-  <Purpose>  
+  <Purpose>
     Matches the intersection of a list of schemas.  The object being tested
     must match all of the required sub-schemas.  Unlike OneOf(), which can
     return a result as soon as a match is found in one of its supported
-    sub-schemas, AllOf() must verify each sub-schema before returning a 
+    sub-schemas, AllOf() must verify each sub-schema before returning a
     result.
     Supported methods include
       matches(): returns a Boolean result.
@@ -384,11 +385,11 @@ class AllOf(Schema):
   def __init__(self, required_schemas):
     # Ensure each item of the list contains the expected object type.
     if not isinstance(required_schemas, list):
-      raise ssl_commons_exceptions.FormatError('Expected a list but got'+repr(required_schemas))
+      raise securesystemslib_exceptions.FormatError('Expected a list but got'+repr(required_schemas))
     for schema in required_schemas:
       if not isinstance(schema, Schema):
-        raise ssl_commons_exceptions.FormatError('List contains an invalid item '+repr(schema))
-    
+        raise securesystemslib_exceptions.FormatError('List contains an invalid item '+repr(schema))
+
     self._required_schemas = required_schemas[:]
 
 
@@ -422,7 +423,7 @@ class Boolean(Schema):
 
   def check_match(self, object):
     if not isinstance(object, bool):
-      raise ssl_commons_exceptions.FormatError('Got '+repr(object)+' instead of a boolean.')
+      raise securesystemslib_exceptions.FormatError('Got '+repr(object)+' instead of a boolean.')
 
 
 
@@ -466,7 +467,7 @@ class ListOf(Schema):
 
   def __init__(self, schema, min_count=0, max_count=sys.maxsize, list_name='list'):
     """
-    <Purpose> 
+    <Purpose>
       Create a new ListOf schema.
     <Arguments>
       schema:  The pattern to match.
@@ -474,34 +475,34 @@ class ListOf(Schema):
       max_count: The maximum number of sub-schema in 'schema'.
       list_name: A string identifier for the ListOf object.
     """
-    
+
     if not isinstance(schema, Schema):
       message = 'Expected Schema type but got '+repr(schema)
-      raise ssl_commons_exceptions.FormatError(message)
-    
+      raise securesystemslib_exceptions.FormatError(message)
+
     self._schema = schema
     self._min_count = min_count
     self._max_count = max_count
     self._list_name = list_name
 
-  
+
   def check_match(self, object):
     if not isinstance(object, (list, tuple)):
       message = 'Expected '+repr(self._list_name)+' but got '+repr(object)
-      raise ssl_commons_exceptions.FormatError(message)
+      raise securesystemslib_exceptions.FormatError(message)
 
     # Check if all the items in the 'object' list
     # match 'schema'.
     for item in object:
       try:
         self._schema.check_match(item)
-      except ssl_commons_exceptions.FormatError as e:
-        raise ssl_commons_exceptions.FormatError(str(e)+' in '+repr(self._list_name))
+      except securesystemslib_exceptions.FormatError as e:
+        raise securesystemslib_exceptions.FormatError(str(e)+' in '+repr(self._list_name))
 
     # Raise exception if the number of items in the list is
     # not within the expected range.
     if not (self._min_count <= len(object) <= self._max_count):
-        raise ssl_commons_exceptions.FormatError('Length of '+repr(self._list_name)+' out of range')
+        raise securesystemslib_exceptions.FormatError('Length of '+repr(self._list_name)+' out of range')
 
 
 
@@ -534,13 +535,13 @@ class Integer(Schema):
 
   def __init__(self, lo = -2147483648, hi = 2147483647):
     """
-    <Purpose> 
+    <Purpose>
       Create a new Integer schema.
     <Arguments>
       lo: The minimum value the int object argument can be.
       hi: The maximum value the int object argument can be.
     """
-    
+
     self._lo = lo
     self._hi = hi
 
@@ -549,11 +550,11 @@ class Integer(Schema):
     if isinstance(object, bool) or not isinstance(object, six.integer_types):
       # We need to check for bool as a special case, since bool
       # is for historical reasons a subtype of int.
-      raise ssl_commons_exceptions.FormatError('Got '+repr(object)+' instead of an integer.')
-    
+      raise securesystemslib_exceptions.FormatError('Got '+repr(object)+' instead of an integer.')
+
     elif not (self._lo <= object <= self._hi):
       int_range = '['+repr(self._lo)+', '+repr(self._hi)+'].'
-      raise ssl_commons_exceptions.FormatError(repr(object)+' not in range '+int_range)
+      raise securesystemslib_exceptions.FormatError(repr(object)+' not in range '+int_range)
 
 
 
@@ -587,26 +588,26 @@ class DictOf(Schema):
 
   def __init__(self, key_schema, value_schema):
     """
-    <Purpose> 
+    <Purpose>
       Create a new DictOf schema.
     <Arguments>
       key_schema:  The dictionary's key.
       value_schema: The dictionary's value.
     """
-    
+
     if not isinstance(key_schema, Schema):
-      raise ssl_commons_exceptions.FormatError('Expected Schema but got '+repr(key_schema))
-   
+      raise securesystemslib_exceptions.FormatError('Expected Schema but got '+repr(key_schema))
+
     if not isinstance(value_schema, Schema):
-      raise ssl_commons_exceptions.FormatError('Expected Schema but got '+repr(value_schema))
-    
+      raise securesystemslib_exceptions.FormatError('Expected Schema but got '+repr(value_schema))
+
     self._key_schema = key_schema
     self._value_schema = value_schema
 
 
   def check_match(self, object):
-    if not isinstance(object, dict): 
-      raise ssl_commons_exceptions.FormatError('Expected a dict but got '+repr(object))
+    if not isinstance(object, dict):
+      raise securesystemslib_exceptions.FormatError('Expected a dict but got '+repr(object))
 
     for key, value in six.iteritems(object):
       self._key_schema.check_match(key)
@@ -618,7 +619,7 @@ class DictOf(Schema):
 
 class Optional(Schema):
   """
-  <Purpose> 
+  <Purpose>
     Provide a way for the Object() schema to accept optional
     dictionary keys.  The Object() schema outlines how a dictionary
     should look, such as the names for dict keys and the object type
@@ -628,7 +629,7 @@ class Optional(Schema):
     are not required to appear in the object's list of required keys.
     If an Optional() key IS found, Optional()'s sub-schemas are
     then verified.
-    
+
     Supported methods include
       matches(): returns a Boolean result.
       check_match(): raises 'exceptions.FormatError' on a mismatch.
@@ -644,10 +645,10 @@ class Optional(Schema):
 
   def __init__(self, schema):
     if not isinstance(schema, Schema):
-      raise ssl_commons_exceptions.FormatError('Expected Schema, but got '+repr(schema))
+      raise securesystemslib_exceptions.FormatError('Expected Schema, but got '+repr(schema))
     self._schema = schema
 
-  
+
   def check_match(self, object):
     self._schema.check_match(object)
 
@@ -663,7 +664,7 @@ class Object(Schema):
     should look, such as the names for dict keys and the object type of the
     dict values.  See schema.Optional() to learn how Object() incorporates
     optional sub-schemas.
-    
+
     Supported methods include
       matches(): returns a Boolean result.
       check_match(): raises 'exceptions.FormatError' on a mismatch.
@@ -681,18 +682,18 @@ class Object(Schema):
 
   def __init__(self, object_name='object', **required):
     """
-    <Purpose> 
+    <Purpose>
       Create a new Object schema.
     <Arguments>
       object_name: A string identifier for the object argument.
-      
+
       A variable number of keyword arguments is accepted.
     """
-  
-    # Ensure valid arguments. 
+
+    # Ensure valid arguments.
     for key, schema in six.iteritems(required):
       if not isinstance(schema, Schema):
-        raise ssl_commons_exceptions.FormatError('Expected Schema but got '+repr(schema))
+        raise securesystemslib_exceptions.FormatError('Expected Schema but got '+repr(schema))
 
     self._object_name = object_name
     self._required = list(required.items())
@@ -701,8 +702,8 @@ class Object(Schema):
   def check_match(self, object):
     if not isinstance(object, dict):
       message = 'Wanted a '+repr(self._object_name)+'.'
-      raise ssl_commons_exceptions.FormatError(message)
-    
+      raise securesystemslib_exceptions.FormatError(message)
+
     # (key, schema) = (a, AnyString()) = (a=AnyString())
     for key, schema in self._required:
       # Check if 'object' has all the required dict keys.
@@ -713,14 +714,14 @@ class Object(Schema):
         # If not an Optional schema, raise an exception.
         if not isinstance(schema, Optional):
           message = 'Missing key ' + repr(key) + ' in ' + repr(self._object_name)
-          raise ssl_commons_exceptions.FormatError(message)
+          raise securesystemslib_exceptions.FormatError(message)
       # Check that 'object's schema matches Object()'s schema for this
       # particular 'key'.
       else:
         try:
           schema.check_match(item)
-        except ssl_commons_exceptions.FormatError as e:
-          raise ssl_commons_exceptions.FormatError(str(e) + ' in ' + self._object_name + '.' + key)
+        except securesystemslib_exceptions.FormatError as e:
+          raise securesystemslib_exceptions.FormatError(str(e) + ' in ' + self._object_name + '.' + key)
 
 
 
@@ -783,7 +784,7 @@ class Struct(Schema):
   def __init__(self, sub_schemas, optional_schemas=[], allow_more=False,
                struct_name='list'):
     """
-    <Purpose> 
+    <Purpose>
       Create a new Struct schema.
     <Arguments>
       sub_schemas: The sub-schemas recognized.
@@ -791,15 +792,15 @@ class Struct(Schema):
       allow_more: Specifies that an optional list of types is allowed.
       struct_name: A string identifier for the Struct object.
     """
-    
+
     # Ensure each item of the list contains the expected object type.
     if not isinstance(sub_schemas, (list, tuple)):
       message = 'Expected Schema but got ' + repr(sub_schemas)
-      raise ssl_commons_exceptions.FormatError(message)
+      raise securesystemslib_exceptions.FormatError(message)
     for schema in sub_schemas:
       if not isinstance(schema, Schema):
-        raise ssl_commons_exceptions.FormatError('Expected Schema but got ' + repr(schema))
-    
+        raise securesystemslib_exceptions.FormatError('Expected Schema but got ' + repr(schema))
+
     self._sub_schemas = sub_schemas + optional_schemas
     self._min = len(sub_schemas)
     self._allow_more = allow_more
@@ -808,12 +809,12 @@ class Struct(Schema):
 
   def check_match(self, object):
     if not isinstance(object, (list, tuple)):
-      raise ssl_commons_exceptions.FormatError('Expected ' + repr(self._struct_name) + '; got ' + repr(object))
+      raise securesystemslib_exceptions.FormatError('Expected ' + repr(self._struct_name) + '; got ' + repr(object))
     elif len(object) < self._min:
-      raise ssl_commons_exceptions.FormatError('Too few fields in ' + self._struct_name)
+      raise securesystemslib_exceptions.FormatError('Too few fields in ' + self._struct_name)
     elif len(object) > len(self._sub_schemas) and not self._allow_more:
-      raise ssl_commons_exceptions.FormatError('Too many fields in ' + self._struct_name)
-    
+      raise securesystemslib_exceptions.FormatError('Too many fields in ' + self._struct_name)
+
     # Iterate through the items of 'object', checking against each schema
     # in the list of schemas allowed (i.e., the sub-schemas and also
     # any optional schemas.  The lenth of 'object' must be less than
@@ -833,7 +834,7 @@ class Struct(Schema):
 
 class RegularExpression(Schema):
   """
-  <Purpose> 
+  <Purpose>
     Matches any string that matches a given regular expression.
     The RE pattern set when RegularExpression is instantiated
     must not be None.  See __init__() for a complete list of
@@ -855,7 +856,7 @@ class RegularExpression(Schema):
 
   def __init__(self, pattern=None, modifiers=0, re_object=None, re_name=None):
     """
-    <Purpose> 
+    <Purpose>
       Create a new regular expression schema.
     <Arguments>
       pattern:  The pattern to match, or None if re_object is provided.
@@ -866,17 +867,17 @@ class RegularExpression(Schema):
 
     if not isinstance(pattern, six.string_types):
       if pattern is not None:
-        raise ssl_commons_exceptions.FormatError(repr(pattern) + ' is not a string.')
-        
+        raise securesystemslib_exceptions.FormatError(repr(pattern) + ' is not a string.')
+
     if re_object is None:
       if pattern is None:
         error = 'Cannot compare against an unset regular expression'
-        raise ssl_commons_exceptions.FormatError(error)
+        raise securesystemslib_exceptions.FormatError(error)
       if not pattern.endswith('$'):
         pattern += '$'
       re_object = re.compile(pattern, modifiers)
     self._re_object = re_object
-        
+
     if re_name is None:
       if pattern is not None:
         re_name = 'pattern /' + pattern + '/'
@@ -887,7 +888,7 @@ class RegularExpression(Schema):
 
   def check_match(self, object):
     if not isinstance(object, six.string_types) or not self._re_object.match(object):
-      raise ssl_commons_exceptions.FormatError(repr(object) + ' did not match ' + repr(self._re_name))
+      raise securesystemslib_exceptions.FormatError(repr(object) + ' did not match ' + repr(self._re_name))
 
 
 
