@@ -121,7 +121,7 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms
 # allowing the AES algorithm to perform cipher block operations on them.
 from cryptography.hazmat.primitives.ciphers import modes
 
-import securesystemlib.exceptions
+import securesystemslib.exceptions
 import securesystemslib.formats
 import securesystemslib.util
 

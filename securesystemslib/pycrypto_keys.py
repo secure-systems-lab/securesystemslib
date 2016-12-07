@@ -107,7 +107,7 @@ import Crypto.Util.Counter
 import securesystemslib.exceptions
 import securesystemslib.hash
 import securesystemslib.formats
-import secureystemslib.util
+import securesystemslib.util
 
 # Extract the cryptography library settings.
 from simple_settings import settings
