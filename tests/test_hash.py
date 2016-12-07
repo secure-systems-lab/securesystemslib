@@ -31,25 +31,27 @@ import logging
 import tempfile
 import unittest
 
-from ...ssl_commons import exceptions as ssl_commons_exceptions
-from .. import hash as ssl_crypto__hash
+import securesystemslib.exceptions
+import securesystemslib.hash
 
 import six
 
-logger = logging.getLogger('ssl_crypto__test_hash')
+logger = logging.getLogger('securesystemslib.test_hash')
 
 
-if not 'hashlib' in ssl_crypto__hash._supported_libraries:
+if not 'hashlib' in securesystemslib.hash._supported_libraries:
   logger.warn('Not testing hashlib: could not be imported.')
-if not 'pycrypto' in ssl_crypto__hash._supported_libraries:
+
+if not 'pycrypto' in securesystemslib.hash._supported_libraries:
   logger.warn('Not testing pycrypto: could not be imported.')
+
 
 class TestHash(unittest.TestCase):
 
   def _run_with_all_hash_libraries(self, test_func):
-    if 'hashlib' in ssl_crypto__hash._supported_libraries:
+    if 'hashlib' in securesystemslib.hash._supported_libraries:
       test_func('hashlib')
-    if 'pycrypto' in ssl_crypto__hash._supported_libraries:
+    if 'pycrypto' in securesystemslib.hash._supported_libraries:
       test_func('pycrypto')
 
 
@@ -58,7 +60,7 @@ class TestHash(unittest.TestCase):
 
 
   def _do_md5_update(self, library):
-    digest_object = ssl_crypto__hash.digest('md5', library)
+    digest_object = securesystemslib.hash.digest('md5', library)
     self.assertEqual(digest_object.hexdigest(),
                     'd41d8cd98f00b204e9800998ecf8427e')
     digest_object.update('a'.encode('utf-8'))
@@ -77,9 +79,9 @@ class TestHash(unittest.TestCase):
 
 
   def _do_sha1_update(self, library):
-    digest_object = ssl_crypto__hash.digest('sha1', library)
+    digest_object = securesystemslib.hash.digest('sha1', library)
 
-    self.assertEqual(digest_object.hexdigest(), 
+    self.assertEqual(digest_object.hexdigest(),
                     'da39a3ee5e6b4b0d3255bfef95601890afd80709')
     digest_object.update('a'.encode('utf-8'))
     self.assertEqual(digest_object.hexdigest(),
@@ -97,7 +99,7 @@ class TestHash(unittest.TestCase):
 
 
   def _do_sha224_update(self, library):
-    digest_object = ssl_crypto__hash.digest('sha224', library)
+    digest_object = securesystemslib.hash.digest('sha224', library)
 
     self.assertEqual(digest_object.hexdigest(),
                     'd14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f')
@@ -117,7 +119,7 @@ class TestHash(unittest.TestCase):
 
 
   def _do_sha256_update(self, library):
-    digest_object = ssl_crypto__hash.digest('sha256', library)
+    digest_object = securesystemslib.hash.digest('sha256', library)
     self.assertEqual(digest_object.hexdigest(),
             'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
     digest_object.update('a'.encode('utf-8'))
@@ -136,12 +138,12 @@ class TestHash(unittest.TestCase):
 
 
   def _do_sha384_update(self, library):
-    digest_object = ssl_crypto__hash.digest('sha384', library)
+    digest_object = securesystemslib.hash.digest('sha384', library)
     self.assertEqual(digest_object.hexdigest(),
     '38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe'
     '76f65fbd51ad2f14898b95b')
     digest_object.update('a'.encode('utf-8'))
-    self.assertEqual(digest_object.hexdigest(), 
+    self.assertEqual(digest_object.hexdigest(),
     '54a59b9f22b0b80880d8427e548b7c23abd873486e1f035dce9cd697e85175033caa88e6d'
     '57bc35efae0b5afd3145f31')
     digest_object.update('bbb'.encode('utf-8'))
@@ -159,13 +161,13 @@ class TestHash(unittest.TestCase):
 
 
   def _do_sha512_update(self, library):
-    digest_object = ssl_crypto__hash.digest('sha512', library)
+    digest_object = securesystemslib.hash.digest('sha512', library)
 
     self.assertEqual(digest_object.hexdigest(),
     'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5'
     'd85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e')
     digest_object.update('a'.encode('utf-8'))
-    self.assertEqual(digest_object.hexdigest(), 
+    self.assertEqual(digest_object.hexdigest(),
     '1f40fc92da241694750979ee6cf582f2d5d7d28e18335de05abc54d0560e0f5302860c652'
     'bf08d560252aa5e74210546f369fbbbce8c12cfc7957b2652fe9a75')
     digest_object.update('bbb'.encode('utf-8'))
@@ -183,7 +185,7 @@ class TestHash(unittest.TestCase):
 
 
   def _do_unsupported_algorithm(self, library):
-    self.assertRaises(ssl_commons_exceptions.UnsupportedAlgorithmError, ssl_crypto__hash.digest, 'bogus')
+    self.assertRaises(securesystemslib.exceptions.UnsupportedAlgorithmError, securesystemslib.hash.digest, 'bogus')
 
 
   def test_digest_size(self):
@@ -191,12 +193,12 @@ class TestHash(unittest.TestCase):
 
 
   def _do_digest_size(self, library):
-    self.assertEqual(16, ssl_crypto__hash.digest('md5', library).digest_size)
-    self.assertEqual(20, ssl_crypto__hash.digest('sha1', library).digest_size)
-    self.assertEqual(28, ssl_crypto__hash.digest('sha224', library).digest_size)
-    self.assertEqual(32, ssl_crypto__hash.digest('sha256', library).digest_size)
-    self.assertEqual(48, ssl_crypto__hash.digest('sha384', library).digest_size)
-    self.assertEqual(64, ssl_crypto__hash.digest('sha512', library).digest_size)
+    self.assertEqual(16, securesystemslib.hash.digest('md5', library).digest_size)
+    self.assertEqual(20, securesystemslib.hash.digest('sha1', library).digest_size)
+    self.assertEqual(28, securesystemslib.hash.digest('sha224', library).digest_size)
+    self.assertEqual(32, securesystemslib.hash.digest('sha256', library).digest_size)
+    self.assertEqual(48, securesystemslib.hash.digest('sha384', library).digest_size)
+    self.assertEqual(64, securesystemslib.hash.digest('sha512', library).digest_size)
 
 
   def test_update_filename(self):
@@ -210,11 +212,11 @@ class TestHash(unittest.TestCase):
       os.write(fd, data.encode('utf-8'))
       os.close(fd)
       for algorithm in ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512']:
-        digest_object_truth = ssl_crypto__hash.digest(algorithm, library)
+        digest_object_truth = securesystemslib.hash.digest(algorithm, library)
         digest_object_truth.update(data.encode('utf-8'))
-        digest_object = ssl_crypto__hash.digest_filename(filename, algorithm, library)
+        digest_object = securesystemslib.hash.digest_filename(filename, algorithm, library)
         self.assertEqual(digest_object_truth.digest(), digest_object.digest())
-    
+
     finally:
         os.remove(filename)
 
@@ -228,21 +230,21 @@ class TestHash(unittest.TestCase):
     file_obj = six.StringIO()
     file_obj.write(data)
     for algorithm in ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512']:
-      digest_object_truth = ssl_crypto__hash.digest(algorithm, library)
+      digest_object_truth = securesystemslib.hash.digest(algorithm, library)
       digest_object_truth.update(data.encode('utf-8'))
-      digest_object = ssl_crypto__hash.digest_fileobject(file_obj, algorithm, library)
+      digest_object = securesystemslib.hash.digest_fileobject(file_obj, algorithm, library)
       # Note: we don't seek because the update_file_obj call is supposed
       # to always seek to the beginning.
       self.assertEqual(digest_object_truth.digest(), digest_object.digest())
 
 
   def test_unsupported_digest_algorithm_and_library(self):
-    self.assertRaises(ssl_commons_exceptions.UnsupportedAlgorithmError, ssl_crypto__hash.digest,
+    self.assertRaises(securesystemslib.exceptions.UnsupportedAlgorithmError, securesystemslib.hash.digest,
                       'sha123', 'hashlib')
-    self.assertRaises(ssl_commons_exceptions.UnsupportedAlgorithmError, ssl_crypto__hash.digest,
+    self.assertRaises(securesystemslib.exceptions.UnsupportedAlgorithmError, securesystemslib.hash.digest,
                       'sha123', 'pycrypto')
-    
-    self.assertRaises(ssl_commons_exceptions.UnsupportedLibraryError, ssl_crypto__hash.digest,
+
+    self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError, securesystemslib.hash.digest,
                       'sha256', 'badlib')
 
 
