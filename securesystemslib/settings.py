@@ -26,8 +26,11 @@ from __future__ import division
 from __future__ import unicode_literals
 
 
-
-
+# Set a directory that should be used for all temporary files. If this
+# is None, then the system default will be used. The system default
+# will also be used if a directory path set here is invalid or
+# unusable.
+temporary_directory = None
 
 # The current "good enough" number of PBKDF2 passphrase iterations.
 # We recommend that important keys, such as root, be kept offline.
