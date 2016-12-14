@@ -35,11 +35,11 @@ import tempfile
 import fnmatch
 
 import securesystemslib.exceptions
+import securesystemslib.settings
 import securesystemslib.hash
 import securesystemslib.formats
 
 import six
-from simple_settings import settings
 
 # The algorithm used by the repository to generate the digests of the
 # target filepaths, which are included in metadata files and may be prepended
@@ -91,7 +91,7 @@ class TempFile(object):
 
     # If compression is set then the original file is saved in 'self._orig_file'.
     self._orig_file = None
-    temp_dir = settings.temporary_directory
+    temp_dir = securesystemslib.settings.temporary_directory
     if temp_dir is not None and securesystemslib.formats.PATH_SCHEMA.matches(temp_dir):
       try:
         self.temporary_file = tempfile.NamedTemporaryFile(prefix=prefix,
