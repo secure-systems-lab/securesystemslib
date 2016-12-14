@@ -1,0 +1,15 @@
+[run]
+branch = True 
+
+
+[report]
+exclude_lines =
+  pragma: no cover
+  def check_crypto_libraries
+  def _get_password
+  def _prompt
+  def __str__ 
+  if __name__ == .__main__.:
+
+omit =
+  */securesystemslib/_vendor/*
