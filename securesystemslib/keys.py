@@ -131,7 +131,8 @@ import securesystemslib.exceptions
 import securesystemslib.hash
 import securesystemslib.formats
 
-from simple_settings import settings
+# TODO: from simple_settings import settings
+import securesystemslib.settings
 
 # The hash algorithm to use in the generation of keyids.
 _KEY_ID_HASH_ALGORITHM = 'sha256'
@@ -145,9 +146,9 @@ _DEFAULT_RSA_KEY_BITS = 3072
 # The crypto libraries to use in 'keys.py', set by default or by the user.
 # The following cryptography libraries are currently supported:
 # ['pycrypto', 'pynacl', 'ed25519', 'pyca-cryptography']
-_RSA_CRYPTO_LIBRARY = settings.RSA_CRYPTO_LIBRARY
-_ED25519_CRYPTO_LIBRARY = settings.ED25519_CRYPTO_LIBRARY
-_GENERAL_CRYPTO_LIBRARY = settings.GENERAL_CRYPTO_LIBRARY
+_RSA_CRYPTO_LIBRARY = securesystemslib.settings.RSA_CRYPTO_LIBRARY
+_ED25519_CRYPTO_LIBRARY = securesystemslib.settings.ED25519_CRYPTO_LIBRARY
+_GENERAL_CRYPTO_LIBRARY = securesystemslib.settings.GENERAL_CRYPTO_LIBRARY
 
 
 def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS):
@@ -429,7 +430,7 @@ def format_keyval_to_metadata(keytype, key_value, private=False):
     public_key_value = {'public': key_value['public']}
 
     return {'keytype': keytype,
-            'keyid_hash_algorithms': settings.REPOSITORY_HASH_ALGORITHMS,
+            'keyid_hash_algorithms': securesystemslib.settings.HASH_ALGORITHMS,
             'keyval': public_key_value}
 
 
@@ -506,7 +507,7 @@ def format_metadata_to_key(key_metadata):
   keyids = set()
   keyids.add(default_keyid)
 
-  for hash_algorithm in settings.REPOSITORY_HASH_ALGORITHMS:
+  for hash_algorithm in securesystemslib.settings.HASH_ALGORITHMS:
     keyid = _get_keyid(keytype, key_value, hash_algorithm)
     keyids.add(keyid)
 
@@ -514,7 +515,7 @@ def format_metadata_to_key(key_metadata):
   # 'keyid_hash_algorithms'
   key_dict['keytype'] = keytype
   key_dict['keyid'] = default_keyid
-  key_dict['keyid_hash_algorithms'] = settings.REPOSITORY_HASH_ALGORITHMS
+  key_dict['keyid_hash_algorithms'] = securesystemslib.settings.HASH_ALGORITHMS
   key_dict['keyval'] = key_value
 
   return key_dict, keyids
@@ -685,7 +686,7 @@ def create_signature(key_dict, data):
     securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported or unavailable library is
     detected.
 
-    TypeError, if 'key_dict' contains an invalid keytype.
+    ValueError, if 'key_dict' contains an invalid keytype.
 
   <Side Effects>
     The cryptography library specified in 'settings' called to perform the
@@ -751,7 +752,7 @@ def create_signature(key_dict, data):
 
   # 'securesystemslib.formats.ANYKEY_SCHEMA' should detect invalid key types.
   else: # pragma: no cover
-    raise TypeError('Invalid key type.')
+    raise ValueError('Invalid key type.')
 
   # Build the signature dictionary to be returned.
   # The hexadecimal representation of 'sig' is stored in the signature.
