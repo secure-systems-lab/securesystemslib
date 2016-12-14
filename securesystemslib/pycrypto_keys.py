@@ -110,8 +110,8 @@ import securesystemslib.formats
 import securesystemslib.util
 
 # Extract the cryptography library settings.
-from simple_settings import settings
-
+# TODO: from simple_settings import settings
+import securesystemslib.settings
 
 # Recommended RSA key sizes:
 # http://www.emc.com/emc-plus/rsa-labs/historical/twirl-and-rsa-key-size.htm#table1
@@ -143,7 +143,7 @@ _SALT_SIZE = 16
 # derived key+PBDKF2 combination if the key is loaded and re-saved, overriding
 # any previous iteration setting used by the old '<keyid>.key'.
 # https://en.wikipedia.org/wiki/PBKDF2
-_PBKDF2_ITERATIONS = settings.PBKDF2_ITERATIONS
+_PBKDF2_ITERATIONS = securesystemslib.settings.PBKDF2_ITERATIONS
 
 
 def generate_rsa_public_and_private(bits=_DEFAULT_RSA_KEY_BITS):

@@ -32,13 +32,13 @@ import logging
 import securesystemslib.exceptions
 import securesystemslib.formats
 import securesystemslib.keys
+import securesystemslib.settings
 
 logger = logging.getLogger('securesystemslib.test_keys')
 
 KEYS = securesystemslib.keys
 FORMAT_ERROR_MSG = 'securesystemslib.exceptions.FormatError was raised! Check object\'s format.'
 DATA = 'SOME DATA REQUIRING AUTHENTICITY.'
-
 
 
 class TestKeys(unittest.TestCase):
@@ -132,13 +132,13 @@ class TestKeys(unittest.TestCase):
     keyid = self.rsakey_dict['keyid']
     del self.rsakey_dict['keyid']
 
-    rsakey_dict_from_meta = KEYS.format_metadata_to_key(self.rsakey_dict)
+    rsakey_dict_from_meta, junk = KEYS.format_metadata_to_key(self.rsakey_dict)
 
     # Check if the format of the object returned by this function corresponds
     # to RSAKEY_SCHEMA format.
     self.assertEqual(None,
-           securesystemslib.formats.RSAKEY_SCHEMA.check_match(rsakey_dict_from_meta),
-           FORMAT_ERROR_MSG)
+      securesystemslib.formats.RSAKEY_SCHEMA.check_match(rsakey_dict_from_meta),
+      FORMAT_ERROR_MSG)
     self.rsakey_dict['keyid'] = keyid
 
     # Supplying a wrong number of arguments.
@@ -192,7 +192,7 @@ class TestKeys(unittest.TestCase):
     self.rsakey_dict['keyval']['private'] = ''
 
     args = (self.rsakey_dict, DATA)
-    self.assertRaises(TypeError, KEYS.create_signature, *args)
+    self.assertRaises(ValueError, KEYS.create_signature, *args)
 
     # Supplying an incorrect number of arguments.
     self.assertRaises(TypeError, KEYS.create_signature)
