@@ -181,6 +181,9 @@ ROLENAME_SCHEMA = SCHEMA.AnyString()
 # http://www.emc.com/emc-plus/rsa-labs/historical/twirl-and-rsa-key-size.htm#table1
 RSAKEYBITS_SCHEMA = SCHEMA.Integer(lo=2048)
 
+# The supported ECDSA algorithms (ecdsa-sha2-nistp256 is supported by default).
+ECDSAALGORITHMS_SCHEMA = SCHEMA.OneOf([SCHEMA.String('ecdsa-sha2-nistp256')])
+
 # The number of hashed bins, or the number of delegated roles.  See
 # delegate_hashed_bins() in 'repository_tool.py' for an example.  Note:
 # Tools may require further restrictions on the number of bins, such
@@ -195,6 +198,9 @@ PYCACRYPTOSIGNATURE_SCHEMA = SCHEMA.AnyBytes()
 
 # An RSA key in PEM format.
 PEMRSA_SCHEMA = SCHEMA.AnyString()
+
+# An ECDSA key in PEM format.
+PEMECDSA_SCHEMA = SCHEMA.AnyString()
 
 # A string representing a password.
 PASSWORD_SCHEMA = SCHEMA.AnyString()
@@ -212,7 +218,8 @@ KEYVAL_SCHEMA = SCHEMA.Object(
 
 # Supported TUF key types.
 KEYTYPE_SCHEMA = SCHEMA.OneOf(
-  [SCHEMA.String('rsa'), SCHEMA.String('ed25519')])
+  [SCHEMA.String('rsa'), SCHEMA.String('ed25519'),
+   SCHEMA.String('ecdsa-sha2-nistp256')])
 
 # A generic TUF key.  All TUF keys should be saved to metadata files in this
 # format.
@@ -244,6 +251,14 @@ RSAKEY_SCHEMA = SCHEMA.Object(
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
   keyval = KEYVAL_SCHEMA)
 
+# An ECDSA TUF key.
+ECDSAKEY_SCHEMA = SCHEMA.Object(
+  object_name = 'ECDSAKEY_SCHEMA',
+  keytype = ECDSAALGORITHMS_SCHEMA,
+  keyid = KEYID_SCHEMA,
+  keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
+  keyval = KEYVAL_SCHEMA)
+
 # An ED25519 raw public key, which must be 32 bytes.
 ED25519PUBLIC_SCHEMA = SCHEMA.LengthBytes(32)
 
@@ -253,10 +268,14 @@ ED25519SEED_SCHEMA = SCHEMA.LengthBytes(32)
 # An ED25519 raw signature, which must be 64 bytes.
 ED25519SIGNATURE_SCHEMA = SCHEMA.LengthBytes(64)
 
+# An ECDSA signature.
+ECDSASIGNATURE_SCHEMA = SCHEMA.AnyString()
+
 # Required installation libraries expected by the repository tools and other
 # cryptography modules.
 REQUIRED_LIBRARIES_SCHEMA = SCHEMA.ListOf(SCHEMA.OneOf(
-  [SCHEMA.String('general'), SCHEMA.String('ed25519'), SCHEMA.String('rsa')]))
+  [SCHEMA.String('general'), SCHEMA.String('ed25519'), SCHEMA.String('rsa'),
+   SCHEMA.String('ecdsa-sha2-nistp256')]))
 
 # An ed25519 TUF key.
 ED25519KEY_SCHEMA = SCHEMA.Object(

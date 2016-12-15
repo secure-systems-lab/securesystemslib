@@ -1,0 +1,134 @@
+#!/usr/bin/env/ python
+
+"""
+<Program Name>
+  test_ecdsa_keys.py
+
+<Author>
+  Vladimir Diaz <vladimir.v.diaz@gmail.com>
+
+<Started>
+  November 23, 2016.
+
+<Copyright>
+  See LICENSE for licensing information.
+
+<Purpose>
+  Test cases for test_ecdsa_keys.py.
+"""
+
+# Help with Python 3 compatibility, where the print statement is a function, an
+# implicit relative import is invalid, and the '/' operator performs true
+# division.  Example:  print 'hello world' raises a 'SyntaxError' exception.
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import unicode_literals
+
+import unittest
+import os
+import logging
+
+import securesystemslib.exceptions
+import securesystemslib.formats
+import securesystemslib.ecdsa_keys
+
+logger = logging.getLogger('securesystemslib_test_ecdsa_keys')
+
+public, private = securesystemslib.ecdsa_keys.generate_public_and_private()
+FORMAT_ERROR_MSG = 'securesystemslib.exceptions.FormatError raised.  Check object\'s format.'
+
+
+class TestECDSA_keys(unittest.TestCase):
+  def setUp(self):
+    pass
+
+
+  def test_generate_public_and_private(self):
+    public, private = securesystemslib.ecdsa_keys.generate_public_and_private()
+
+    # Check format of 'public' and 'private'.
+    self.assertEqual(True, securesystemslib.formats.PEMECDSA_SCHEMA.matches(public))
+    self.assertEqual(True, securesystemslib.formats.PEMECDSA_SCHEMA.matches(private))
+
+
+
+  def test_create_signature(self):
+    global public
+    global private
+    data = b'The quick brown fox jumps over the lazy dog'
+    signature, method = securesystemslib.ecdsa_keys.create_signature(public, private, data)
+
+    # Verify format of returned values.
+    self.assertEqual(True,
+                     securesystemslib.formats.ECDSASIGNATURE_SCHEMA.matches(signature))
+
+    self.assertEqual(True, securesystemslib.formats.NAME_SCHEMA.matches(method))
+    self.assertEqual('ecdsa-sha2-nistp256', method)
+
+    # Check for improperly formatted argument.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      securesystemslib.ecdsa_keys.create_signature, 123, private, data)
+
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      securesystemslib.ecdsa_keys.create_signature, public, 123, data)
+
+    # Check for invalid 'data'.
+    self.assertRaises(securesystemslib.exceptions.CryptoError,
+                      securesystemslib.ecdsa_keys.create_signature, public, private, 123)
+
+
+  def test_verify_signature(self):
+    global public
+    global private
+    data = b'The quick brown fox jumps over the lazy dog'
+    signature, method = securesystemslib.ecdsa_keys.create_signature(public, private, data)
+
+    valid_signature = securesystemslib.ecdsa_keys.verify_signature(public, method, signature, data)
+    self.assertEqual(True, valid_signature)
+
+    # Check for improperly formatted arguments.
+    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.ecdsa_keys.verify_signature, 123, method,
+                                       signature, data)
+
+    # Signature method improperly formatted.
+    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.ecdsa_keys.verify_signature, public, 123,
+                                       signature, data)
+
+    # Invalid signature method.
+    self.assertRaises(securesystemslib.exceptions.UnknownMethodError, securesystemslib.ecdsa_keys.verify_signature, public,
+                                       'unsupported_method', signature, data)
+
+    # Signature not a string.
+    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.ecdsa_keys.verify_signature, public, method,
+                                       123, data)
+
+    # Invalid signature..
+    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.ecdsa_keys.verify_signature, public, method,
+                                       'bad_signature', data)
+
+    # Check for invalid signature and data.
+    # Mismatched data.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+      securesystemslib.ecdsa_keys.verify_signature, public, method,
+      signature, '123')
+
+    self.assertEqual(False, securesystemslib.ecdsa_keys.verify_signature(public, method,
+                                                     signature, b'123'))
+    # Mismatched signature.
+    bad_signature = b'a'*64
+    self.assertEqual(False, securesystemslib.ecdsa_keys.verify_signature(public, method,
+                                                     bad_signature, data))
+
+    # Generated signature created with different data.
+    new_signature, method = securesystemslib.ecdsa_keys.create_signature(public, private,
+                                                     b'mismatched data')
+
+    self.assertEqual(False, securesystemslib.ecdsa_keys.verify_signature(public, method,
+                                                     new_signature, data))
+
+
+
+# Run the unit tests.
+if __name__ == '__main__':
+  unittest.main()
