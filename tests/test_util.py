@@ -41,7 +41,7 @@ import securesystemslib.unittest_toolbox as unittest_toolbox
 
 import six
 
-logger = logging.getLogger('securesystemslib.test_util')
+logger = logging.getLogger('securesystemslib_test_util')
 
 
 class TestUtil(unittest_toolbox.Modified_TestCase):

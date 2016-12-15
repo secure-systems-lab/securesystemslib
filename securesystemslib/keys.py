@@ -16,19 +16,20 @@
 <Purpose>
   The goal of this module is to centralize cryptographic key routines and their
   supported operations (e.g., creating and verifying signatures).  This module
-  is designed to support multiple public-key algorithms, such as RSA and
-  Ed25519, and multiple cryptography libraries.  Which cryptography library to
-  use is determined by the default, or user modified, values set in
+  is designed to support multiple public-key algorithms, such as RSA, Ed25519,
+  and ECDSA, and multiple cryptography libraries.  Which cryptography library
+  to use is determined by the default, or user modified, values set in
   'settings.py'
 
   https://en.wikipedia.org/wiki/RSA_(algorithm)
   http://ed25519.cr.yp.to/
+  https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm
 
-  The (RSA and Ed25519)-related functions provided include generate_rsa_key(),
-  generate_ed25519_key(), create_signature(), and verify_signature().
-  The cryptography libraries called by 'ssl_crypto.keys.py' generate the actual TUF
-  keys and the functions listed above can be viewed as the easy-to-use public
-  interface.
+  The (RSA, ECDSA and Ed25519)-related functions provided include
+  generate_rsa_key(), generate_ed25519_key(), genereate_ecdsa_key(),
+  create_signature(), and verify_signature().  The cryptography libraries
+  called by 'ssl_crypto.keys.py' generate the actual TUF keys and the functions
+  listed above can be viewed as the easy-to-use public interface.
 
   Additional functions contained here include format_keyval_to_metadata() and
   format_metadata_to_key().  These last two functions produce or use TUF keys
@@ -37,7 +38,6 @@
   of TUF keys, such as public & private keys, and a keyID.  create_signature()
   and verify_signature() are supplemental functions needed for generating
   signatures and verifying them.
-
 
   Key IDs are used as identifiers for keys (e.g., RSA key).  They are the
   hexadecimal representation of the hash of the key object (specifically, the
@@ -63,6 +63,7 @@ import binascii
 # 'pynacl' (as of version 0.2.3).
 # http://docs.python.org/2/library/warnings.html#temporarily-suppressing-warnings
 import warnings
+import logging
 
 # 'pycrypto' and 'cryptography' are the only currently supported libraries for
 # the creation of RSA keys.
@@ -71,10 +72,14 @@ import warnings
 _SUPPORTED_RSA_CRYPTO_LIBRARIES = ['pycrypto', 'pyca-cryptography']
 
 # The currently supported libraries for the creation of ed25519 keys and
-# signatures.  The 'pynacl' library should be installed and used over the slower
-# python implementation of ed25519.  The python implementation will be used
-# if 'pynacl' is unavailable.
+# signatures.  The 'pynacl' library should be installed and used over the
+# slower python implementation of ed25519.  The python implementation will be
+# used if 'pynacl' is unavailable.
 _SUPPORTED_ED25519_CRYPTO_LIBRARIES = ['ed25519', 'pynacl']
+
+# The currently supported libraries for the creation of ECDSA keys and
+# signatures.
+_SUPPORTED_ECDSA_CRYPTO_LIBRARIES = ['pyca-cryptography']
 
 # 'pycrypto' and 'cryptography' are the only currently supported libraries for
 # general-purpose cryptography.
@@ -83,12 +88,12 @@ _SUPPORTED_ED25519_CRYPTO_LIBRARIES = ['ed25519', 'pynacl']
 _SUPPORTED_GENERAL_CRYPTO_LIBRARIES = ['pycrypto', 'pyca-cryptography']
 
 # Track which libraries are imported and thus available.  An optimized version
-# of the ed25519 python implementation is provided by TUF and avaialable by
-# default.  https://github.com/pyca/ed25519
+# of the ed25519 python implementation is provided (available by default).
+# https://github.com/pyca/ed25519
 _available_crypto_libraries = ['ed25519']
 
-# Try to import TUF's PyCrypto module (pycrypto_keys.py), which is used here
-# for general-purpose cryptography and RSA.
+# Try to import the PyCrypto module (pycrypto_keys.py), which is used here
+# for general-purpose cryptography and generation of RSA keys and signatures.
 try:
   import securesystemslib.pycrypto_keys
   _available_crypto_libraries.append('pycrypto')
@@ -97,7 +102,8 @@ except ImportError: # pragma: no cover
   pass
 
 # Try to import TUF's pyca/Cryptography module (pyca_crypto_keys.py), which is
-# used for general-purpose cryptography and RSA.
+# used for general-purpose cryptography and generation of RSA keys and
+# signatures.
 try:
   import securesystemslib.pyca_crypto_keys
   _available_crypto_libraries.append('pyca-cryptography')
@@ -124,15 +130,18 @@ with warnings.catch_warnings():
   except (ImportError, IOError): # pragma: no cover
     pass
 
-# The optimized version of the ed25519 library provided by default is imported
+# The optimized version of the Ed25519 library provided by default is imported
 # regardless of the availability of PyNaCl.
 import securesystemslib.ed25519_keys
-import securesystemslib.exceptions
-import securesystemslib.hash
-import securesystemslib.formats
 
-# TODO: from simple_settings import settings
-import securesystemslib.settings
+import securesystemslib.ecdsa_keys
+import securesystemslib.exceptions
+
+# Digest objects needed to generate hashes.
+import securesystemslib.hash
+
+# Perform format checks of argument objects.
+import securesystemslib.formats
 
 # The hash algorithm to use in the generation of keyids.
 _KEY_ID_HASH_ALGORITHM = 'sha256'
@@ -148,7 +157,10 @@ _DEFAULT_RSA_KEY_BITS = 3072
 # ['pycrypto', 'pynacl', 'ed25519', 'pyca-cryptography']
 _RSA_CRYPTO_LIBRARY = securesystemslib.settings.RSA_CRYPTO_LIBRARY
 _ED25519_CRYPTO_LIBRARY = securesystemslib.settings.ED25519_CRYPTO_LIBRARY
+_ECDSA_CRYPTO_LIBRARY = securesystemslib.settings.ECDSA_CRYPTO_LIBRARY
 _GENERAL_CRYPTO_LIBRARY = securesystemslib.settings.GENERAL_CRYPTO_LIBRARY
+
+logger = logging.getLogger('securesystemslib_keys')
 
 
 def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS):
@@ -190,11 +202,11 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS):
       greater, and a multiple of 256.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError, if 'bits' is improperly or invalid (i.e., not an integer
-    and not at least 2048).
+    securesystemslib.exceptions.FormatError, if 'bits' is improperly or invalid
+    (i.e., not an integer and not at least 2048).
 
-    securesystemslib.exceptions.UnsupportedLibraryError, if any of the cryptography libraries specified
-    in 'settings.py' are unsupported or unavailable.
+    securesystemslib.exceptions.UnsupportedLibraryError, if any of the cryptography
+    libraries specified in 'settings.py' are unsupported or unavailable.
 
     ValueError, if an exception occurs after calling the RSA key generation
     routine.  'bits' must be a multiple of 256 if PyCrypto is set via
@@ -211,13 +223,14 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS):
   """
 
   # Does 'bits' have the correct format?
-  # This check will ensure 'bits' conforms to 'securesystemslib.formats.RSAKEYBITS_SCHEMA'.
-  # 'bits' must be an integer object, with a minimum value of 2048.
-  # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
+  # This check will ensure 'bits' conforms to
+  # 'securesystemslib.formats.RSAKEYBITS_SCHEMA'.  'bits' must be an integer object,
+  # with a minimum value of 2048.  Raise 'securesystemslib.exceptions.FormatError'
+  # if the check fails.
   securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match(bits)
 
-  # Raise 'securesystemslib.exceptions.UnsupportedLibraryError' if the following libraries, specified
-  # in 'settings', are unsupported or unavailable:
+  # Raise 'securesystemslib.exceptions.UnsupportedLibraryError' if the following
+  # libraries, specified in 'settings', are unsupported or unavailable:
   # 'settings.RSA_CRYPTO_LIBRARY'.
   check_crypto_libraries(['rsa'])
 
@@ -255,9 +268,104 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS):
 
   rsakey_dict['keytype'] = keytype
   rsakey_dict['keyid'] = keyid
+  rsakey_dict['keyid_hash_algorithms'] = securesystemslib.settings.HASH_ALGORITHMS
   rsakey_dict['keyval'] = key_value
 
   return rsakey_dict
+
+
+
+
+
+def generate_ecdsa_key(algorithm='ecdsa-sha2-nistp256'):
+  """
+  <Purpose>
+    Generate public and private ECDSA keys, with NIST P-256 + SHA256 (for
+    hashing) being the default algorithm.  In addition, a keyid identifier for
+    the ECDSA key is generated.  The object returned conforms to
+    'securesystemslib.formats.ECDSAKEY_SCHEMA' and has the form:
+
+    {'keytype': 'ecdsa-sha2-nistp256',
+     'keyid': keyid,
+     'keyval': {'public': '',
+                'private': ''}}
+
+    The public and private keys are strings in TODO format.
+
+    >>> ecdsa_key = generate_ecdsa_key(algorithm='ecdsa-sha2-nistp256')
+    >>> securesystemslib.formats.ECDSAKEY_SCHEMA.matches(ecdsa_key)
+    True
+
+  <Arguments>
+    algorithm:
+      The ECDSA algorithm.  By default, ECDSA NIST P-256 is used, with SHA256
+      for hashing.
+
+  <Exceptions>
+    securesystemslib.exceptions.FormatError, if 'algorithm' is improperly or invalid
+    (i.e., not one of the supported ECDSA algorithms).
+
+    securesystemslib.exceptions.UnsupportedLibraryError, if any of the cryptography
+    libraries specified in 'settings.py' are unsupported or unavailable.
+
+  <Side Effects>
+    None.
+
+  <Returns>
+    A dictionary containing the ECDSA keys and other identifying information.
+    Conforms to 'securesystemslib.formats.ECDSAKEY_SCHEMA'.
+  """
+
+  # Does 'algorithm' have the correct format?  This check will ensure
+  # 'algorithm is properly formatted and is a supported ECDSA algorithm.  Raise
+  # 'securesystemslib.exceptions.FormatError' if the check fails.
+  securesystemslib.formats.ECDSAALGORITHMS_SCHEMA.check_match(algorithm)
+
+  # Raise 'securesystemslib.exceptions.UnsupportedLibraryError' if the following
+  # libraries, specified in 'settings', are unsupported or unavailable:
+  # 'securesystemslib.settings.ECDSA_CRYPTO_LIBRARY'.
+  check_crypto_libraries(['ecdsa-sha2-nistp256'])
+
+  # Begin building the ECDSA key dictionary.
+  ecdsa_key = {}
+  keytype = algorithm
+  public = None
+  private = None
+
+  # Generate the public and private ECDSA keys with one of the supported
+  # libraries.
+  if 'pyca-cryptography' in _available_crypto_libraries:
+    public, private = \
+      securesystemslib.ecdsa_keys.generate_public_and_private(algorithm)
+
+  else: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError('One of the supported'
+      ' libraries is unavailable.')
+
+  # Generate the keyid of the Ed25519 key.  'key_value' corresponds to the
+  # 'keyval' entry of the 'Ed25519KEY_SCHEMA' dictionary.  The private key
+  # information is not included in the generation of the 'keyid' identifier.
+  """
+  key_value = {'public': binascii.hexlify(public).decode(),
+               'private': ''}
+  keyid = _get_keyid(keytype, key_value)
+  """
+
+  key_value = {'public': public,
+               'private': ''}
+  keyid = _get_keyid(keytype, key_value)
+
+  # Build the 'ed25519_key' dictionary.  Update 'key_value' with the Ed25519
+  # private key prior to adding 'key_value' to 'ed25519_key'.
+
+  key_value['private'] = private
+  #key_value['private'] = binascii.hexlify(private).decode()
+
+  ecdsa_key['keytype'] = keytype
+  ecdsa_key['keyid'] = keyid
+  ecdsa_key['keyval'] = key_value
+
+  return ecdsa_key
 
 
 
@@ -267,17 +375,14 @@ def generate_ed25519_key():
   """
   <Purpose>
     Generate public and private ED25519 keys, both of length 32-bytes, although
-    they are hexlified to 64 bytes.
-    In addition, a keyid identifier generated for the returned ED25519 object.
-    The object returned conforms to 'securesystemslib.formats.ED25519KEY_SCHEMA' and has the
-    form:
+    they are hexlified to 64 bytes.  In addition, a keyid identifier generated
+    for the returned ED25519 object.  The object returned conforms to
+    'securesystemslib.formats.ED25519KEY_SCHEMA' and has the form:
+
     {'keytype': 'ed25519',
      'keyid': 'f30a0870d026980100c0573bd557394f8c1bbd6...',
      'keyval': {'public': '9ccf3f02b17f82febf5dd3bab878b767d8408...',
                 'private': 'ab310eae0e229a0eceee3947b6e0205dfab3...'}}
-
-    The public and private keys are strings in PEM format and stored in the
-    'keyval' field of the returned dictionary.
 
     >>> ed25519_key = generate_ed25519_key()
     >>> securesystemslib.formats.ED25519KEY_SCHEMA.matches(ed25519_key)
@@ -291,8 +396,8 @@ def generate_ed25519_key():
     None.
 
   <Exceptions>
-    securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported or unavailable library is
-    detected.
+    securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported or
+    unavailable library is detected.
 
   <Side Effects>
     The ED25519 keys are generated by calling either the optimized pure Python
@@ -303,9 +408,9 @@ def generate_ed25519_key():
     Conforms to 'securesystemslib.formats.ED25519KEY_SCHEMA'.
   """
 
-  # Raise 'securesystemslib.exceptions.UnsupportedLibraryError' if the following libraries, specified
-  # in 'settings', are unsupported or unavailable:
-  # 'settings.ED25519_CRYPTO_LIBRARY'.
+  # Raise 'securesystemslib.exceptions.UnsupportedLibraryError' if the following
+  # libraries, specified in 'settings', are unsupported or unavailable:
+  # 'securesystemslib.settings.ED25519_CRYPTO_LIBRARY'.
   check_crypto_libraries(['ed25519'])
 
   # Begin building the Ed25519 key dictionary.
@@ -324,8 +429,8 @@ def generate_ed25519_key():
       securesystemslib.ed25519_keys.generate_public_and_private()
 
   else: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError('The required PyNaCl library'
-      ' is unavailable.')
+    raise securesystemslib.exceptions.UnsupportedLibraryError('The required PyNaCl'
+      ' library is unavailable.')
 
   # Generate the keyid of the Ed25519 key.  'key_value' corresponds to the
   # 'keyval' entry of the 'Ed25519KEY_SCHEMA' dictionary.  The private key
@@ -340,6 +445,7 @@ def generate_ed25519_key():
 
   ed25519_key['keytype'] = keytype
   ed25519_key['keyid'] = keyid
+  ed25519_key['keyid_hash_algorithms'] = securesystemslib.settings.HASH_ALGORITHMS
   ed25519_key['keyval'] = key_value
 
   return ed25519_key
@@ -420,8 +526,8 @@ def format_keyval_to_metadata(keytype, key_value, private=False):
     # present in 'key_val' (a private key is optional for 'KEYVAL_SCHEMA'
     # dicts).
     if 'private' not in key_value:
-      raise securesystemslib.exceptions.FormatError('The required private key is missing'
-        ' from: ' + repr(key_value))
+      raise securesystemslib.exceptions.FormatError('The required private key'
+        ' is missing from: ' + repr(key_value))
 
     else:
       return {'keytype': keytype, 'keyval': key_value}
@@ -463,7 +569,7 @@ def format_metadata_to_key(key_metadata):
     >>> keytype = ed25519_key['keytype']
     >>> ed25519_metadata = \
     format_keyval_to_metadata(keytype, key_val, private=True)
-    >>> ed25519_key_2 = format_metadata_to_key(ed25519_metadata)
+    >>> ed25519_key_2, junk = format_metadata_to_key(ed25519_metadata)
     >>> securesystemslib.formats.ED25519KEY_SCHEMA.matches(ed25519_key_2)
     True
     >>> ed25519_key == ed25519_key_2
@@ -501,8 +607,8 @@ def format_metadata_to_key(key_metadata):
   keytype = key_metadata['keytype']
   key_value = key_metadata['keyval']
 
-  # Convert 'key_value' to 'securesystemslib.formats.KEY_SCHEMA' and generate its hash
-  # The hash is in hexdigest form.
+  # Convert 'key_value' to 'securesystemslib.formats.KEY_SCHEMA' and generate its
+  # hash The hash is in hexdigest form.
   default_keyid = _get_keyid(keytype, key_value)
   keyids = set()
   keyids.add(default_keyid)
@@ -560,8 +666,8 @@ def check_crypto_libraries(required_libraries):
       ['rsa', 'ed25519', 'general'] can be specified.
 
   <Exceptions>
-    securesystemslib.exceptions.UnsupportedLibraryError, if the 'required_libraries' and the libraries
-    specified in 'settings' are not supported or unavailable.
+    securesystemslib.exceptions.UnsupportedLibraryError, if the 'required_libraries'
+    and the libraries specified in 'settings' are not supported or unavailable.
 
   <Side Effects>
     Validates the libraries set in 'settings'.
@@ -576,19 +682,19 @@ def check_crypto_libraries(required_libraries):
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
   securesystemslib.formats.REQUIRED_LIBRARIES_SCHEMA.check_match(required_libraries)
 
-  # The checks below all raise 'securesystemslib.exceptions.UnsupportedLibraryError' if the general,
-  # RSA, and Ed25519 crypto libraries specified in 'settings.py' are not
-  # supported or unavailable.  The appropriate error message is added to the
-  # exception.  The funcions of this module that depend on user-installed
-  # crypto libraries should call this private function to ensure the called
-  # routine does not fail with unpredictable exceptions in the event of a
-  # missing library.  The supported and available lists checked are populated
-  # when 'ssl_crypto.keys.py' is imported.
+  # The checks below all raise 'securesystemslib.exceptions.UnsupportedLibraryError'
+  # if the general, RSA, and Ed25519 crypto libraries specified in
+  # 'settings.py' are not supported or unavailable.  The appropriate error
+  # message is added to the exception.  The funcions of this module that depend
+  # on user-installed crypto libraries should call this private function to
+  # ensure the called routine does not fail with unpredictable exceptions in
+  # the event of a missing library.  The supported and available lists checked
+  # are populated when 'ssl_crypto.keys.py' is imported.
 
   if 'rsa' in required_libraries and _RSA_CRYPTO_LIBRARY not in \
                                    _SUPPORTED_RSA_CRYPTO_LIBRARIES:
     raise securesystemslib.exceptions.UnsupportedLibraryError('The ' + repr(_RSA_CRYPTO_LIBRARY) +
-      ' crypto library specified in "settings.RSA_CRYPTO_LIBRARY" is not '
+      ' crypto library specified in "securesystemslib.settings.RSA_CRYPTO_LIBRARY" is not '
       ' supported.\nSupported crypto libraries: ' +
       repr(_SUPPORTED_RSA_CRYPTO_LIBRARIES) + '.')
 
@@ -599,12 +705,21 @@ def check_crypto_libraries(required_libraries):
       ' supported.\nSupported crypto libraries: ' +
       repr(_SUPPORTED_ED25519_CRYPTO_LIBRARIES) + '.')
 
+  if 'ecdsa-sha2-nistp256' in required_libraries and _ECDSA_CRYPTO_LIBRARY not in \
+                                         _SUPPORTED_ECDSA_CRYPTO_LIBRARIES:
+    raise securesystemslib.exceptions.UnsupportedLibraryError('The ' + repr(_ECDSA_CRYPTO_LIBRARY) +
+      ' crypto library specified in "settings.ECDSA_CRYPTO_LIBRARY" is not '
+      ' supported.\nSupported crypto libraries: ' +
+      repr(_SUPPORTED_ECDSA_CRYPTO_LIBRARIES) + '.')
+
   if 'general' in required_libraries and _GENERAL_CRYPTO_LIBRARY not in \
                                          _SUPPORTED_GENERAL_CRYPTO_LIBRARIES:
     raise securesystemslib.exceptions.UnsupportedLibraryError('The ' + repr(_GENERAL_CRYPTO_LIBRARY) +
       ' crypto library specified in "settings.GENERAL_CRYPTO_LIBRARY" is not'
       ' supported.\nSupported crypto libraries: ' +
       repr(_SUPPORTED_GENERAL_CRYPTO_LIBRARIES) + '.')
+
+
 
   if 'rsa' in required_libraries and _RSA_CRYPTO_LIBRARY not in \
                                      _available_crypto_libraries:
@@ -616,6 +731,12 @@ def check_crypto_libraries(required_libraries):
                                          _available_crypto_libraries:
     raise securesystemslib.exceptions.UnsupportedLibraryError('The ' + repr(_ED25519_CRYPTO_LIBRARY) +
       ' crypto library specified in "settings.ED25519_CRYPTO_LIBRARY" could'
+      ' not be imported.')
+
+  if 'ecdsa-sha2-nistp256' in required_libraries and _ECDSA_CRYPTO_LIBRARY not in \
+                                         _available_crypto_libraries:
+    raise securesystemslib.exceptions.UnsupportedLibraryError('The ' + repr(_ECDSA_CRYPTO_LIBRARY) +
+      ' crypto library specified in "settings.ECDSA_CRYPTO_LIBRARY" could'
       ' not be imported.')
 
   if 'general' in required_libraries and _GENERAL_CRYPTO_LIBRARY not in \
@@ -683,10 +804,10 @@ def create_signature(key_dict, data):
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'key_dict' is improperly formatted.
 
-    securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported or unavailable library is
-    detected.
+    securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported or
+    unavailable library is detected.
 
-    ValueError, if 'key_dict' contains an invalid keytype.
+    TypeError, if 'key_dict' contains an invalid keytype.
 
   <Side Effects>
     The cryptography library specified in 'settings' called to perform the
@@ -703,8 +824,8 @@ def create_signature(key_dict, data):
   # The key type of 'key_dict' must be either 'rsa' or 'ed25519'.
   securesystemslib.formats.ANYKEY_SCHEMA.check_match(key_dict)
 
-  # Raise 'securesystemslib.exceptions.UnsupportedLibraryError' if the following libraries, specified
-  # in 'settings', are unsupported or unavailable:
+  # Raise 'securesystemslib.exceptions.UnsupportedLibraryError' if the following
+  # libraries, specified in 'settings', are unsupported or unavailable:
   # 'settings.RSA_CRYPTO_LIBRARY' or 'settings.ED25519_CRYPTO_LIBRARY'.
   check_crypto_libraries([key_dict['keytype']])
 
@@ -731,10 +852,12 @@ def create_signature(key_dict, data):
   # otherwise raise an exception.
   if keytype == 'rsa':
     if _RSA_CRYPTO_LIBRARY == 'pycrypto':
-      sig, method = securesystemslib.pycrypto_keys.create_rsa_signature(private, data.encode('utf-8'))
+      sig, method = securesystemslib.pycrypto_keys.create_rsa_signature(private,
+        data.encode('utf-8'))
 
     elif _RSA_CRYPTO_LIBRARY == 'pyca-cryptography':
-      sig, method = securesystemslib.pyca_crypto_keys.create_rsa_signature(private, data.encode('utf-8'))
+      sig, method = securesystemslib.pyca_crypto_keys.create_rsa_signature(private,
+        data.encode('utf-8'))
 
     else: # pragma: no cover
       raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
@@ -744,15 +867,25 @@ def create_signature(key_dict, data):
     public = binascii.unhexlify(public.encode('utf-8'))
     private = binascii.unhexlify(private.encode('utf-8'))
     if 'pynacl' in _available_crypto_libraries:
-      sig, method = securesystemslib.ed25519_keys.create_signature(public, private, data.encode('utf-8'))
+      sig, method = securesystemslib.ed25519_keys.create_signature(public, private,
+        data.encode('utf-8'))
 
     else: # pragma: no cover
-      raise securesystemslib.exceptions.UnsupportedLibraryError('The required PyNaCl library'
-        ' is unavailable.')
+      raise securesystemslib.exceptions.UnsupportedLibraryError('The required'
+        ' PyNaCl library is unavailable.')
+
+  elif keytype == 'ecdsa-sha2-nistp256':
+    if _ECDSA_CRYPTO_LIBRARY == 'pyca-cryptography':
+      sig, method = securesystemslib.ecdsa_keys.create_signature(public, private,
+        data.encode('utf-8'))
+
+    else: # pragma: no cover
+      raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
+        ' "settings.ECDSA_CRYPTO_LIBRARY": ' + repr(_ECDSA_CRYPTO_LIBRARY) + '.')
 
   # 'securesystemslib.formats.ANYKEY_SCHEMA' should detect invalid key types.
   else: # pragma: no cover
-    raise ValueError('Invalid key type.')
+    raise TypeError('Invalid key type.')
 
   # Build the signature dictionary to be returned.
   # The hexadecimal representation of 'sig' is stored in the signature.
@@ -787,6 +920,12 @@ def verify_signature(key_dict, signature, data):
     True
     >>> verify_signature(rsa_key, signature, 'bad_data')
     False
+    >>> ecdsa_key = generate_ecdsa_key()
+    >>> signature = create_signature(ecdsa_key, data)
+    >>> verify_signature(ecdsa_key, signature, data)
+    True
+    >>> verify_signature(ecdsa_key, signature, 'bad_data')
+    False
 
   <Arguments>
     key_dict:
@@ -815,14 +954,14 @@ def verify_signature(key_dict, signature, data):
       'signature'.  'data' is needed here to verify the signature.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError, raised if either 'key_dict' or 'signature' are improperly
-    formatted.
+    securesystemslib.exceptions.FormatError, raised if either 'key_dict' or
+    'signature' are improperly formatted.
 
-    securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported or unavailable library is
-    detected.
+    securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported or
+    unavailable library is detected.
 
-    securesystemslib.exceptions.UnknownMethodError.  Raised if the signing method used by
-    'signature' is not one supported.
+    securesystemslib.exceptions.UnknownMethodError.  Raised if the signing method
+    used by 'signature' is not one supported.
 
   <Side Effects>
     The cryptography library specified in 'settings' called to do the actual
@@ -863,28 +1002,32 @@ def verify_signature(key_dict, signature, data):
   if keytype == 'rsa':
     if _RSA_CRYPTO_LIBRARY == 'pycrypto':
       if 'pycrypto' not in _available_crypto_libraries: # pragma: no cover
-        raise securesystemslib.exceptions.UnsupportedLibraryError('Metadata downloaded from the remote'
+        raise securesystemslib.exceptions.UnsupportedLibraryError('Metadata'
+          ' downloaded from the remote'
           ' repository listed an RSA signature.  "pycrypto" was set'
           ' (in conf.py) to generate RSA signatures, but the PyCrypto library'
           ' is not installed.  \n$ pip install PyCrypto, or pip install'
           ' ssl_crypto[tools], or you can try switching your configuration'
-          ' (settings.py) to use pyca-cryptography if that is available instead.')
+          ' (settings.py) to use pyca-cryptography if that is available'
+          ' instead.')
 
       else:
         valid_signature = securesystemslib.pycrypto_keys.verify_rsa_signature(sig, method,
                                                                  public, data)
     elif _RSA_CRYPTO_LIBRARY == 'pyca-cryptography':
       if 'pyca-cryptography' not in _available_crypto_libraries: # pragma: no cover
-        raise securesystemslib.exceptions.UnsupportedLibraryError('Metadata downloaded from the remote'
+        raise securesystemslib.exceptions.UnsupportedLibraryError('Metadata'
+          ' downloaded from the remote'
           ' repository listed an RSA signature.  "pyca-cryptography" was set'
           ' (in conf.py) to generate RSA signatures, but the "cryptography"'
           ' library is not installed.  \n$ pip install cryptography, or pip'
-          ' install ssl_crypto[tools], or you can try switching your configuration'
-          ' (ssl_crypto/conf.py) to use PyCrypto if that is available instead.')
+          ' install ssl_crypto[tools], or you can try switching your'
+          ' configuration (ssl_crypto/conf.py) to use PyCrypto if that is'
+          ' available instead.')
 
       else:
-        valid_signature = securesystemslib.pyca_crypto_keys.verify_rsa_signature(sig, method,
-                                                                 public, data)
+        valid_signature = securesystemslib.pyca_crypto_keys.verify_rsa_signature(sig,
+          method, public, data)
 
     else: # pragma: no cover
       raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
@@ -903,6 +1046,14 @@ def verify_signature(key_dict, signature, data):
       valid_signature = securesystemslib.ed25519_keys.verify_signature(public,
                                                           method, sig, data,
                                                           use_pynacl=False)
+  elif keytype == 'ecdsa-sha2-nistp256':
+      if _ECDSA_CRYPTO_LIBRARY in _available_crypto_libraries:
+        valid_signature = securesystemslib.ecdsa_keys.verify_signature(public,
+          method, sig, data)
+
+      else: # pragma: no cover
+        raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
+          ' "settings.ECDSA_CRYPTO_LIBRARY": ' + repr(_ECDSA_CRYPTO_LIBRARY) + '.')
 
   # 'securesystemslib.formats.ANYKEY_SCHEMA' should detect invalid key types.
   else: # pragma: no cover
@@ -914,27 +1065,26 @@ def verify_signature(key_dict, signature, data):
 
 
 
-
-def import_rsakey_from_pem(pem, password=None):
+def import_rsakey_from_private_pem(pem, password=None):
   """
   <Purpose>
-    Import the public and private RSA keys stored in 'pem'.  In
-    addition, a keyid identifier for the RSA key is generated.  The object
-    returned conforms to 'securesystemslib.formats.RSAKEY_SCHEMA' and has the
-    form:
+    Import the private RSA key stored in 'pem', and generate its public key
+    (which will also be included in the returned rsakey object).  In addition,
+    a keyid identifier for the RSA key is generated.  The object returned
+    conforms to 'securesystemslib.formats.RSAKEY_SCHEMA' and has the form:
 
     {'keytype': 'rsa',
      'keyid': keyid,
      'keyval': {'public': '-----BEGIN RSA PUBLIC KEY----- ...',
                 'private': '-----BEGIN RSA PRIVATE KEY----- ...'}}
 
-    The public and private keys are strings in PEM format.
+    The private key is a string in PEM format.
 
     >>> rsa_key = generate_rsa_key()
     >>> private = rsa_key['keyval']['private']
     >>> passphrase = 'secret'
     >>> encrypted_pem = create_rsa_encrypted_pem(private, passphrase)
-    >>> rsa_key2 = import_rsakey_from_pem(encrypted_pem, passphrase)
+    >>> rsa_key2 = import_rsakey_from_private_pem(encrypted_pem, passphrase)
     >>> securesystemslib.formats.RSAKEY_SCHEMA.matches(rsa_key)
     True
     >>> securesystemslib.formats.RSAKEY_SCHEMA.matches(rsa_key2)
@@ -942,7 +1092,8 @@ def import_rsakey_from_pem(pem, password=None):
 
   <Arguments>
     pem:
-      A string in PEM format.
+      A string in PEM format.  The private key is extracted and returned in
+      an rsakey object.
 
     password: (optional)
       The password, or passphrase, to decrypt the private part of the RSA
@@ -972,6 +1123,10 @@ def import_rsakey_from_pem(pem, password=None):
   if password is not None:
     securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
 
+  else:
+    logger.debug('The password/passphrase is unset.  The PEM is expected'
+      ' to be unencrypted.')
+
   # Raise 'securesystemslib.exceptions.UnsupportedLibraryError' if the following
   # libraries, specified in 'settings', are unsupported or unavailable:
   # 'settings.RSA_CRYPTO_LIBRARY' and 'settings.GENERAL_CRYPTO_LIBRARY'.
@@ -989,14 +1144,15 @@ def import_rsakey_from_pem(pem, password=None):
     public, private = \
       securesystemslib.pycrypto_keys.create_rsa_public_and_private_from_pem(pem,
                                                                       password)
-    public = format_rsakey_from_pem(public)['keyval']['public']
+    public =  extract_pem(public, private_pem=False)
     private = extract_pem(private, private_pem=True)
 
   elif _RSA_CRYPTO_LIBRARY == 'pyca-cryptography':
     public, private = \
       securesystemslib.pyca_crypto_keys.create_rsa_public_and_private_from_pem(
       pem, password)
-    public = format_rsakey_from_pem(public)['keyval']['public']
+
+    public =  extract_pem(public, private_pem=False)
     private = extract_pem(private, private_pem=True)
 
   else: #pragma: no cover
@@ -1024,7 +1180,7 @@ def import_rsakey_from_pem(pem, password=None):
 
 
 
-def format_rsakey_from_pem(pem):
+def import_rsakey_from_public_pem(pem):
   """
   <Purpose>
     Generate an RSA key object from 'pem'.  In addition, a keyid identifier for
@@ -1041,7 +1197,7 @@ def format_rsakey_from_pem(pem):
     >>> rsa_key = generate_rsa_key()
     >>> public = rsa_key['keyval']['public']
     >>> rsa_key['keyval']['private'] = ''
-    >>> rsa_key2 = format_rsakey_from_pem(public)
+    >>> rsa_key2 = import_rsakey_from_public_pem(public)
     >>> securesystemslib.formats.RSAKEY_SCHEMA.matches(rsa_key)
     True
     >>> securesystemslib.formats.RSAKEY_SCHEMA.matches(rsa_key2)
@@ -1049,7 +1205,7 @@ def format_rsakey_from_pem(pem):
 
   <Arguments>
     pem:
-      A string in PEM format.
+      A string in PEM format (it should contain a public RSA key).
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'pem' is improperly formatted.
@@ -1070,11 +1226,16 @@ def format_rsakey_from_pem(pem):
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
   securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
 
-  # Ensure the PEM string has a valid header and footer.  Although a simple
+  # Ensure the PEM string has a public header and footer.  Although a simple
   # validation of 'pem' is performed here, a fully valid PEM string is needed
   # later to successfully verify signatures.  Performing stricter validation of
   # PEMs are left to the external libraries that use 'pem'.
-  public_pem = extract_pem(pem)
+
+  if is_pem_public(pem):
+    public_pem = extract_pem(pem, private_pem=False)
+
+  else:
+    raise securesystemslib.exceptions.FormatError('Invalid public pem: ' + repr(pem))
 
   # Begin building the RSA key dictionary.
   rsakey_dict = {}
@@ -1093,6 +1254,76 @@ def format_rsakey_from_pem(pem):
 
   return rsakey_dict
 
+
+
+
+
+def import_rsakey_from_pem(pem):
+  """
+  <Purpose>
+    Import either a public or private PEM.  In contrast to the other explicit
+    import functions (import_rsakey_from_public_pem and
+    import_rsakey_from_private_pem), this function is useful for when it is not
+    known whether 'pem' is private or public.
+
+  <Arguments>
+    pem:
+      A string in PEM format.
+
+  <Exceptions>
+    securesystemslib.exceptions.FormatError, if 'pem' is improperly formatted.
+
+  <Side Effects>
+    None.
+
+  <Returns>
+    A dictionary containing the RSA keys and other identifying information.
+    Conforms to 'securesystemslib.formats.RSAKEY_SCHEMA'.
+  """
+
+  # Does 'pem' have the correct format?
+  # This check will ensure arguments has the appropriate number
+  # of objects and object types, and that all dict keys are properly named.
+  # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
+  securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
+
+  public_pem = ''
+  private_pem = ''
+
+  # Ensure the PEM string has a public or private header and footer.  Although
+  # a simple validation of 'pem' is performed here, a fully valid PEM string is
+  # needed later to successfully verify signatures.  Performing stricter
+  # validation of PEMs are left to the external libraries that use 'pem'.
+  if is_pem_public(pem):
+    public_pem = extract_pem(pem, private_pem=False)
+
+  elif is_pem_private(pem):
+    # Return an rsakey object (RSAKEY_SCHEMA) with the private key included.
+    return import_rsakey_from_private_pem(pem, password=None)
+
+  else:
+    raise securesystemslib.exceptions.FormatError('PEM contains neither a public'
+      ' nor private key: ' + repr(pem))
+
+  # Begin building the RSA key dictionary.
+  rsakey_dict = {}
+  keytype = 'rsa'
+
+  # Generate the keyid of the RSA key.  'key_value' corresponds to the
+  # 'keyval' entry of the 'RSAKEY_SCHEMA' dictionary.  The private key
+  # information is not included in the generation of the 'keyid' identifier.
+  # If a PEM is found to contain a private key, the generated rsakey object
+  # should be returned above.  The following key object is for the case of a
+  # PEM with only a public key.
+  key_value = {'public': public_pem,
+               'private': ''}
+  keyid = _get_keyid(keytype, key_value)
+
+  rsakey_dict['keytype'] = keytype
+  rsakey_dict['keyid'] = keyid
+  rsakey_dict['keyval'] = key_value
+
+  return rsakey_dict
 
 
 
@@ -1164,12 +1395,12 @@ def extract_pem(pem, private_pem=False):
   except ValueError:
     # Be careful not to print private key material in exception message.
     if not private_pem:
-      raise securesystemslib.exceptions.FormatError('Required PEM footer ' + repr(pem_footer) + '\n not'
-        ' found in PEM string ' + repr(pem))
+      raise securesystemslib.exceptions.FormatError('Required PEM'
+        ' footer ' + repr(pem_footer) + '\n not found in PEM string ' + repr(pem))
 
     else:
-      raise securesystemslib.exceptions.FormatError('Required PEM footer ' + repr(pem_footer) + '\n not'
-        ' found in private PEM string.')
+      raise securesystemslib.exceptions.FormatError('Required PEM'
+        ' footer ' + repr(pem_footer) + '\n not found in private PEM string.')
 
   # Extract only the public portion of 'pem'.  Leading or trailing whitespace
   # is excluded.
@@ -1198,7 +1429,7 @@ def encrypt_key(key_object, password):
     Derivation Function 1 (PBKF1) + MD5 to strengthen 'password', encrypted
     TUF keys use AES-256-CTR-Mode and passwords strengthened with
     PBKDF2-HMAC-SHA256 (100K iterations by default, but may be overriden in
-    'settings.PBKDF2_ITERATIONS' by the user).
+    'securesystemslib.settings.PBKDF2_ITERATIONS' by the user).
 
     http://en.wikipedia.org/wiki/Advanced_Encryption_Standard
     http://en.wikipedia.org/wiki/CTR_mode#Counter_.28CTR.29
@@ -1221,7 +1452,8 @@ def encrypt_key(key_object, password):
       encryption key is derived from it.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError, if the arguments are improperly formatted.
+    securesystemslib.exceptions.FormatError, if the arguments are improperly
+    formatted.
 
     securesystemslib.exceptions.CryptoError, if 'key_object' cannot be encrypted.
 
@@ -1248,7 +1480,7 @@ def encrypt_key(key_object, password):
 
   # Raise 'securesystemslib.exceptions.UnsupportedLibraryError' if the following
   # libraries, specified in 'settings', are unsupported or unavailable:
-  # 'settings.GENERAL_CRYPTO_LIBRARY'.
+  # 'securesystemslib.settings.GENERAL_CRYPTO_LIBRARY'.
   check_crypto_libraries(['general'])
 
   # Encrypted string of 'key_object'.  The encrypted string may be safely saved
@@ -1496,27 +1728,37 @@ def is_pem_public(pem):
 
   <Returns>
     True if 'pem' is public and false otherwise.
-
   """
+
+  # Do the arguments have the correct format?
+  # This check will ensure arguments have the appropriate number
+  # of objects and object types, and that all dict keys are properly named.
+  # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
+  securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
+
   pem_header = '-----BEGIN PUBLIC KEY-----'
   pem_footer = '-----END PUBLIC KEY-----'
+
   try:
     header_start = pem.index(pem_header)
     pem.index(pem_footer, header_start + len(pem_header))
+
   except ValueError:
     return False
+
   return True
 
 
 
 
-def is_pem_private(pem):
+def is_pem_private(pem, keytype='rsa'):
   """
   <Purpose>
     Checks if a passed PEM formatted string is a PRIVATE key, by looking for
-    the following pattern:
+    the following patterns:
 
     '-----BEGIN RSA PRIVATE KEY----- ... -----END RSA PRIVATE KEY-----'
+    '-----BEGIN EC PRIVATE KEY----- ... -----END EC PRIVATE KEY-----'
 
     >>> rsa_key = generate_rsa_key()
     >>> private = rsa_key['keyval']['private']
@@ -1531,23 +1773,280 @@ def is_pem_private(pem):
       A string in PEM format.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError, if 'pem' is improperly formatted.
+    securesystemslib.exceptions.FormatError, if any of the arguments are improperly
+    formatted.
 
   <Side Effects>
     None
 
   <Returns>
     True if 'pem' is private and false otherwise.
-
   """
-  pem_header = '-----BEGIN RSA PRIVATE KEY-----'
-  pem_footer = '-----END RSA PRIVATE KEY-----'
+
+  # Do the arguments have the correct format?
+  # This check will ensure arguments have the appropriate number
+  # of objects and object types, and that all dict keys are properly named.
+  # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
+  securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
+  securesystemslib.formats.NAME_SCHEMA.check_match(keytype)
+
+  if keytype == 'rsa':
+    pem_header = '-----BEGIN RSA PRIVATE KEY-----'
+    pem_footer = '-----END RSA PRIVATE KEY-----'
+
+  elif keytype == 'ec':
+    pem_header = '-----BEGIN EC PRIVATE KEY-----'
+    pem_footer = '-----END EC PRIVATE KEY-----'
+
+  else:
+    raise ssl_crypto_exceptions.FormatError('Unsupported key'
+      ' type: ' + repr(keytype) + '.  Supported keytypes: ["rsa", "ec"]')
+
   try:
     header_start = pem.index(pem_header)
     pem.index(pem_footer, header_start + len(pem_header))
+
   except ValueError:
     return False
+
   return True
+
+
+
+
+
+def import_ecdsakey_from_private_pem(pem, password=None):
+  """
+  <Purpose>
+    Import the private ECDSA key stored in 'pem', and generate its public key
+    (which will also be included in the returned ECDSA key object).  In addition,
+    a keyid identifier for the ECDSA key is generated.  The object returned
+    conforms to:
+
+    {'keytype': 'ecdsa-sha2-nistp256',
+     'keyid': keyid,
+     'keyval': {'public': '-----BEGIN PUBLIC KEY----- ... -----END PUBLIC KEY-----',
+                'private': '-----BEGIN EC PRIVATE KEY----- ... -----END EC PRIVATE KEY-----'}}
+
+    The private key is a string in PEM format.
+
+    >>> ecdsa_key = generate_ecdsa_key()
+    >>> private_pem = ecdsa_key['keyval']['private']
+    >>> ecdsa_key = import_ecdsakey_from_private_pem(private_pem)
+    >>> securesystemslib.formats.ECDSAKEY_SCHEMA.matches(ecdsa_key)
+    True
+
+  <Arguments>
+    pem:
+      A string in PEM format.  The private key is extracted and returned in
+      an ecdsakey object.
+
+    password: (optional)
+      The password, or passphrase, to decrypt the private part of the ECDSA
+      key if it is encrypted.  'password' is not used directly as the encryption
+      key, a stronger encryption key is derived from it.
+
+  <Exceptions>
+    securesystemslib.exceptions.FormatError, if the arguments are improperly
+    formatted.
+
+    securesystemslib.exceptions.UnsupportedLibraryError, if any of the cryptography
+    libraries specified in 'settings.py' are unsupported or unavailable.
+
+  <Side Effects>
+    None.
+
+  <Returns>
+    A dictionary containing the ECDSA keys and other identifying information.
+    Conforms to 'securesystemslib.formats.ECDSAKEY_SCHEMA'.
+  """
+
+  # Does 'pem' have the correct format?
+  # This check will ensure 'pem' conforms to
+  # 'securesystemslib.formats.ECDSARSA_SCHEMA'.
+  securesystemslib.formats.PEMECDSA_SCHEMA.check_match(pem)
+
+  if password is not None:
+    securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+
+  else:
+    logger.debug('The password/passphrase is unset.  The PEM is expected'
+      ' to be unencrypted.')
+
+  # Begin building the ECDSA key dictionary.
+  ecdsakey_dict = {}
+  keytype = 'ecdsa-sha2-nistp256'
+  public = None
+  private = None
+
+  public, private = \
+    securesystemslib.ecdsa_keys.create_ecdsa_public_and_private_from_pem(pem, password)
+
+  # Generate the keyid of the ECDSA key.  'key_value' corresponds to the
+  # 'keyval' entry of the 'ECDSAKEY_SCHEMA' dictionary.  The private key
+  # information is not included in the generation of the 'keyid' identifier.
+  key_value = {'public': public,
+               'private': ''}
+  keyid = _get_keyid(keytype, key_value)
+
+  # Build the 'ecdsakey_dict' dictionary.  Update 'key_value' with the ECDSA
+  # private key prior to adding 'key_value' to 'ecdsakey_dict'.
+  key_value['private'] = private
+
+  ecdsakey_dict['keytype'] = keytype
+  ecdsakey_dict['keyid'] = keyid
+  ecdsakey_dict['keyval'] = key_value
+
+  return ecdsakey_dict
+
+
+
+
+
+def import_ecdsakey_from_public_pem(pem):
+  """
+  <Purpose>
+    Generate an ECDSA key object from 'pem'.  In addition, a keyid identifier
+    for the ECDSA key is generated.  The object returned conforms to
+    'securesystemslib.formats.ECDSAKEY_SCHEMA' and has the form:
+
+    {'keytype': 'ecdsa-sha2-nistp256',
+     'keyid': keyid,
+     'keyval': {'public': '-----BEGIN PUBLIC KEY----- ...',
+                'private': ''}}
+
+    The public portion of the ECDSA key is a string in PEM format.
+
+    >>> ecdsa_key = generate_ecdsa_key()
+    >>> public = ecdsa_key['keyval']['public']
+    >>> ecdsa_key['keyval']['private'] = ''
+    >>> ecdsa_key2 = import_ecdsakey_from_public_pem(public)
+    >>> securesystemslib.formats.ECDSAKEY_SCHEMA.matches(ecdsa_key)
+    True
+    >>> securesystemslib.formats.ECDSAKEY_SCHEMA.matches(ecdsa_key2)
+    True
+
+  <Arguments>
+    pem:
+      A string in PEM format (it should contain a public ECDSA key).
+
+  <Exceptions>
+    securesystemslib.exceptions.FormatError, if 'pem' is improperly formatted.
+
+  <Side Effects>
+    Only the public portion of the PEM is extracted.  Leading or trailing
+    whitespace is not included in the PEM string stored in the rsakey object
+    returned.
+
+  <Returns>
+    A dictionary containing the ECDSA keys and other identifying information.
+    Conforms to 'securesystemslib.formats.ECDSAKEY_SCHEMA'.
+  """
+
+  # Does 'pem' have the correct format?
+  # This check will ensure arguments has the appropriate number
+  # of objects and object types, and that all dict keys are properly named.
+  # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
+  securesystemslib.formats.PEMECDSA_SCHEMA.check_match(pem)
+
+  # Ensure the PEM string has a public header and footer.  Although a simple
+  # validation of 'pem' is performed here, a fully valid PEM string is needed
+  # later to successfully verify signatures.  Performing stricter validation of
+  # PEMs are left to the external libraries that use 'pem'.
+
+  if is_pem_public(pem):
+    public_pem = extract_pem(pem, private_pem=False)
+
+  else:
+    raise securesystemslib.exceptions.FormatError('Invalid public pem: ' + repr(pem))
+
+  # Begin building the ECDSA key dictionary.
+  ecdsakey_dict = {}
+  keytype = 'ecdsa-sha2-nistp256'
+
+  # Generate the keyid of the ECDSA key.  'key_value' corresponds to the
+  # 'keyval' entry of the 'ECDSAKEY_SCHEMA' dictionary.  The private key
+  # information is not included in the generation of the 'keyid' identifier.
+  key_value = {'public': public_pem,
+               'private': ''}
+  keyid = _get_keyid(keytype, key_value)
+
+  ecdsakey_dict['keytype'] = keytype
+  ecdsakey_dict['keyid'] = keyid
+  ecdsakey_dict['keyval'] = key_value
+
+  return ecdsakey_dict
+
+
+
+
+
+def import_ecdsakey_from_pem(pem):
+  """
+  <Purpose>
+    Import either a public or private ECDSA PEM.  In contrast to the other
+    explicit import functions (import_ecdsakey_from_public_pem and
+    import_ecdsakey_from_private_pem), this function is useful for when it is
+    not known whether 'pem' is private or public.
+
+  <Arguments>
+    pem:
+      A string in PEM format.
+
+  <Exceptions>
+    securesystemslib.exceptions.FormatError, if 'pem' is improperly formatted.
+
+  <Side Effects>
+    None.
+
+  <Returns>
+    A dictionary containing the ECDSA keys and other identifying information.
+    Conforms to 'securesystemslib.formats.ECDSAKEY_SCHEMA'.
+  """
+
+  # Does 'pem' have the correct format?
+  # This check will ensure arguments has the appropriate number
+  # of objects and object types, and that all dict keys are properly named.
+  # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
+  securesystemslib.formats.PEMECDSA_SCHEMA.check_match(pem)
+
+  public_pem = ''
+  private_pem = ''
+
+  # Ensure the PEM string has a public or private header and footer.  Although
+  # a simple validation of 'pem' is performed here, a fully valid PEM string is
+  # needed later to successfully verify signatures.  Performing stricter
+  # validation of PEMs are left to the external libraries that use 'pem'.
+  if is_pem_public(pem):
+    public_pem = extract_pem(pem, private_pem=False)
+
+  elif is_pem_private(pem, 'ec'):
+    # Return an ecdsakey object (ECDSAKEY_SCHEMA) with the private key included.
+    return import_ecdsakey_from_private_pem(pem, password=None)
+
+  else:
+    raise securesystemslib.exceptions.FormatError('PEM contains neither a public'
+      ' nor private key: ' + repr(pem))
+
+  # Begin building the ECDSA key dictionary.
+  ecdsakey_dict = {}
+  keytype = 'ecdsa-sha2-nistp256'
+
+  # Generate the keyid of the ECDSA key.  'key_value' corresponds to the
+  # 'keyval' entry of the 'ECDSAKEY_SCHEMA' dictionary.  The private key
+  # information is not included in the generation of the 'keyid' identifier.
+  # If a PEM is found to contain a private key, the generated rsakey object
+  # should be returned above.  The following key object is for the case of a
+  # PEM with only a public key.
+  key_value = {'public': public_pem,
+               'private': ''}
+  keyid = _get_keyid(keytype, key_value)
+
+  ecdsakey_dict['keytype'] = keytype
+  ecdsakey_dict['keyid'] = keyid
+  ecdsakey_dict['keyval'] = key_value
+
+  return ecdsakey_dict
 
 
 

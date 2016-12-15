@@ -47,7 +47,7 @@ import six
 HASH_FUNCTION = 'sha256'
 
 # See 'log.py' to learn how logging is handled in TUF.
-logger = logging.getLogger('securesystemslib.util')
+logger = logging.getLogger('securesystemslib_util')
 
 
 class TempFile(object):

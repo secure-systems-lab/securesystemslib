@@ -15,7 +15,6 @@
 
 <Purpose>
   Test cases for test_keys.py.
-  TODO: test case for ed25519 key generation and refactor.
 """
 
 # Help with Python 3 compatibility, where the print statement is a function, an
@@ -29,16 +28,18 @@ from __future__ import unicode_literals
 import unittest
 import logging
 
+
 import securesystemslib.exceptions
 import securesystemslib.formats
 import securesystemslib.keys
-import securesystemslib.settings
 
-logger = logging.getLogger('securesystemslib.test_keys')
+logger = logging.getLogger('securesystemslib_test_keys')
 
 KEYS = securesystemslib.keys
-FORMAT_ERROR_MSG = 'securesystemslib.exceptions.FormatError was raised! Check object\'s format.'
+FORMAT_ERROR_MSG = 'securesystemslib.exceptions.FormatError was raised!' + \
+  '  Check object\'s format.'
 DATA = 'SOME DATA REQUIRING AUTHENTICITY.'
+
 
 
 class TestKeys(unittest.TestCase):
@@ -47,27 +48,56 @@ class TestKeys(unittest.TestCase):
   def setUpClass(cls):
     cls.rsakey_dict = KEYS.generate_rsa_key()
     cls.ed25519key_dict = KEYS.generate_ed25519_key()
-
+    cls.ecdsakey_dict = KEYS.generate_ecdsa_key()
 
   def test_generate_rsa_key(self):
-    _rsakey_dict = KEYS.generate_rsa_key()
+    default_rsa_library = KEYS._RSA_CRYPTO_LIBRARY
+    for rsa_crypto_library in ['pycrypto', 'pyca-cryptography']:
+      KEYS._RSA_CRYPTO_LIBRARY = rsa_crypto_library
 
-    # Check if the format of the object returned by generate() corresponds
-    # to RSAKEY_SCHEMA format.
-    self.assertEqual(None, securesystemslib.formats.RSAKEY_SCHEMA.check_match(_rsakey_dict),
-                     FORMAT_ERROR_MSG)
+      _rsakey_dict = KEYS.generate_rsa_key()
 
-    # Passing a bit value that is <2048 to generate() - should raise
-    # 'securesystemslib.exceptions.FormatError'.
-    self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.generate_rsa_key, 555)
+      # Check if the format of the object returned by generate() corresponds
+      # to RSAKEY_SCHEMA format.
+      self.assertEqual(None, securesystemslib.formats.RSAKEY_SCHEMA.check_match(_rsakey_dict),
+                       FORMAT_ERROR_MSG)
 
-    # Passing a string instead of integer for a bit value.
-    self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.generate_rsa_key, 'bits')
+      # Passing a bit value that is <2048 to generate() - should raise
+      # 'securesystemslib.exceptions.FormatError'.
+      self.assertRaises(securesystemslib.exceptions.FormatError,
+                        KEYS.generate_rsa_key, 555)
 
-    # NOTE if random bit value >=2048 (not 4096) is passed generate(bits)
-    # does not raise any errors and returns a valid key.
-    self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(KEYS.generate_rsa_key(2048)))
-    self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(KEYS.generate_rsa_key(4096)))
+      # Passing a string instead of integer for a bit value.
+      self.assertRaises(securesystemslib.exceptions.FormatError,
+                        KEYS.generate_rsa_key, 'bits')
+
+      # NOTE if random bit value >=2048 (not 4096) is passed generate(bits)
+      # does not raise any errors and returns a valid key.
+      self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(KEYS.generate_rsa_key(2048)))
+      self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(KEYS.generate_rsa_key(4096)))
+
+    # Reset to originally set RSA crypto library.
+    KEYS._RSA_CRYPTO_LIBRARY = default_rsa_library
+
+
+
+  def test_generate_ecdsa_key(self):
+      _ecdsakey_dict = KEYS.generate_ecdsa_key()
+
+      # Check if the format of the object returned by generate_ecdsa_key()
+      # corresponds to ECDSAKEY_SCHEMA format.
+      self.assertEqual(None,
+        securesystemslib.formats.ECDSAKEY_SCHEMA.check_match(_ecdsakey_dict),
+        FORMAT_ERROR_MSG)
+
+      # Passing an invalid algorithm to generate() should raise
+      # 'securesystemslib.exceptions.FormatError'.
+      self.assertRaises(securesystemslib.exceptions.FormatError,
+                        KEYS.generate_rsa_key, 'bad_algorithm')
+
+      # Passing a string instead of integer for a bit value.
+      self.assertRaises(securesystemslib.exceptions.FormatError,
+                        KEYS.generate_rsa_key, 123)
 
 
 
@@ -89,39 +119,53 @@ class TestKeys(unittest.TestCase):
                      FORMAT_ERROR_MSG)
 
     # Supplying a 'bad' keyvalue.
-    self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.format_keyval_to_metadata,
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.format_keyval_to_metadata,
                       'bad_keytype', keyvalue)
 
+    # Test for missing 'public' entry.
     public = keyvalue['public']
     del keyvalue['public']
-    self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.format_keyval_to_metadata,
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.format_keyval_to_metadata,
                       keytype, keyvalue)
     keyvalue['public'] = public
 
+    # Test for missing 'private' entry.
+    private = keyvalue['private']
+    del keyvalue['private']
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.format_keyval_to_metadata,
+                      keytype, keyvalue, private=True)
+    keyvalue['private'] = private
 
 
-  def test_format_rsakey_from_pem(self):
+
+  def test_import_rsakey_from_public_pem(self):
     pem = self.rsakey_dict['keyval']['public']
-    rsa_key = KEYS.format_rsakey_from_pem(pem)
+    rsa_key = KEYS.import_rsakey_from_public_pem(pem)
 
     # Check if the format of the object returned by this function corresponds
     # to 'securesystemslib.formats.RSAKEY_SCHEMA' format.
     self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(rsa_key))
 
     # Verify whitespace is stripped.
-    self.assertEqual(rsa_key, KEYS.format_rsakey_from_pem(pem + '\n'))
+    self.assertEqual(rsa_key, KEYS.import_rsakey_from_public_pem(pem + '\n'))
 
     # Supplying a 'bad_pem' argument.
-    self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.format_rsakey_from_pem, 'bad_pem')
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_rsakey_from_public_pem, 'bad_pem')
 
     # Supplying an improperly formatted PEM.
     # Strip the PEM header and footer.
     pem_header = '-----BEGIN PUBLIC KEY-----'
-    self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.format_rsakey_from_pem,
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_rsakey_from_public_pem,
                       pem[len(pem_header):])
 
     pem_footer = '-----END PUBLIC KEY-----'
-    self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.format_rsakey_from_pem,
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_rsakey_from_public_pem,
                       pem[:-len(pem_footer)])
 
 
@@ -137,8 +181,13 @@ class TestKeys(unittest.TestCase):
     # Check if the format of the object returned by this function corresponds
     # to RSAKEY_SCHEMA format.
     self.assertEqual(None,
-      securesystemslib.formats.RSAKEY_SCHEMA.check_match(rsakey_dict_from_meta),
-      FORMAT_ERROR_MSG)
+           securesystemslib.formats.RSAKEY_SCHEMA.check_match(rsakey_dict_from_meta),
+           FORMAT_ERROR_MSG)
+
+    self.assertEqual(None,
+           securesystemslib.formats.KEY_SCHEMA.check_match(rsakey_dict_from_meta),
+           FORMAT_ERROR_MSG)
+
     self.rsakey_dict['keyid'] = keyid
 
     # Supplying a wrong number of arguments.
@@ -149,7 +198,8 @@ class TestKeys(unittest.TestCase):
     # Supplying a malformed argument to the function - should get FormatError
     keyval = self.rsakey_dict['keyval']
     del self.rsakey_dict['keyval']
-    self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.format_metadata_to_key,
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.format_metadata_to_key,
                       self.rsakey_dict)
     self.rsakey_dict['keyval'] = keyval
 
@@ -160,136 +210,479 @@ class TestKeys(unittest.TestCase):
     keyvalue = self.rsakey_dict['keyval']
 
     # Check format of 'keytype'.
-    self.assertEqual(None, securesystemslib.formats.KEYTYPE_SCHEMA.check_match(keytype),
+    self.assertEqual(None,
+                     securesystemslib.formats.KEYTYPE_SCHEMA.check_match(keytype),
                      FORMAT_ERROR_MSG)
 
     # Check format of 'keyvalue'.
-    self.assertEqual(None, securesystemslib.formats.KEYVAL_SCHEMA.check_match(keyvalue),
+    self.assertEqual(None,
+                     securesystemslib.formats.KEYVAL_SCHEMA.check_match(keyvalue),
                      FORMAT_ERROR_MSG)
 
     keyid = KEYS._get_keyid(keytype, keyvalue)
 
     # Check format of 'keyid' - the output of '_get_keyid()' function.
-    self.assertEqual(None, securesystemslib.formats.KEYID_SCHEMA.check_match(keyid),
+    self.assertEqual(None,
+                     securesystemslib.formats.KEYID_SCHEMA.check_match(keyid),
                      FORMAT_ERROR_MSG)
 
 
   def test_create_signature(self):
-    # Creating a signature for 'DATA'.
-    rsa_signature = KEYS.create_signature(self.rsakey_dict, DATA)
-    ed25519_signature = KEYS.create_signature(self.ed25519key_dict, DATA)
+    default_rsa_library = KEYS._RSA_CRYPTO_LIBRARY
+    for rsa_crypto_library in ['pycrypto', 'pyca-cryptography']:
+      KEYS._RSA_CRYPTO_LIBRARY = rsa_crypto_library
 
-    # Check format of output.
-    self.assertEqual(None,
-                     securesystemslib.formats.SIGNATURE_SCHEMA.check_match(rsa_signature),
-                     FORMAT_ERROR_MSG)
-    self.assertEqual(None,
-                     securesystemslib.formats.SIGNATURE_SCHEMA.check_match(ed25519_signature),
-                     FORMAT_ERROR_MSG)
+      # Creating a signature for 'DATA'.
+      rsa_signature = KEYS.create_signature(self.rsakey_dict, DATA)
+      ed25519_signature = KEYS.create_signature(self.ed25519key_dict, DATA)
 
-    # Removing private key from 'rsakey_dict' - should raise a TypeError.
-    private = self.rsakey_dict['keyval']['private']
-    self.rsakey_dict['keyval']['private'] = ''
+      # Check format of output.
+      self.assertEqual(None,
+                       securesystemslib.formats.SIGNATURE_SCHEMA.check_match(rsa_signature),
+                       FORMAT_ERROR_MSG)
+      self.assertEqual(None,
+                       securesystemslib.formats.SIGNATURE_SCHEMA.check_match(ed25519_signature),
+                       FORMAT_ERROR_MSG)
 
-    args = (self.rsakey_dict, DATA)
-    self.assertRaises(ValueError, KEYS.create_signature, *args)
+      # Removing private key from 'rsakey_dict' - should raise a TypeError.
+      private = self.rsakey_dict['keyval']['private']
+      self.rsakey_dict['keyval']['private'] = ''
 
-    # Supplying an incorrect number of arguments.
-    self.assertRaises(TypeError, KEYS.create_signature)
-    self.rsakey_dict['keyval']['private'] = private
+      args = (self.rsakey_dict, DATA)
+      self.assertRaises(ValueError, KEYS.create_signature, *args)
+
+      # Supplying an incorrect number of arguments.
+      self.assertRaises(TypeError, KEYS.create_signature)
+      self.rsakey_dict['keyval']['private'] = private
+
+    KEYS._RSA_CRYPTO_LIBRARY = default_rsa_library
+
+    # Test generation of ECDSA signatures.
+    default_ecdsa_library = KEYS._ECDSA_CRYPTO_LIBRARY
+    for ecdsa_crypto_library in ['pyca-cryptography']:
+      KEYS._ECDSA_CRYPTO_LIBRARY = ecdsa_crypto_library
+
+      # Creating a signature for 'DATA'.
+      ecdsa_signature = KEYS.create_signature(self.ecdsakey_dict, DATA)
+      ecdsa_signature = KEYS.create_signature(self.ecdsakey_dict, DATA)
+
+      # Check format of output.
+      self.assertEqual(None,
+                       securesystemslib.formats.SIGNATURE_SCHEMA.check_match(ecdsa_signature),
+                       FORMAT_ERROR_MSG)
+      self.assertEqual(None,
+                       securesystemslib.formats.SIGNATURE_SCHEMA.check_match(ecdsa_signature),
+                       FORMAT_ERROR_MSG)
+
+      # Removing private key from 'ecdsakey_dict' - should raise a TypeError.
+      private = self.ecdsakey_dict['keyval']['private']
+      self.ecdsakey_dict['keyval']['private'] = ''
+
+      args = (self.ecdsakey_dict, DATA)
+      self.assertRaises(ValueError, KEYS.create_signature, *args)
+
+      # Supplying an incorrect number of arguments.
+      self.assertRaises(TypeError, KEYS.create_signature)
+      self.ecdsakey_dict['keyval']['private'] = private
+
 
 
 
   def test_verify_signature(self):
-    # Creating a signature of 'DATA' to be verified.
-    rsa_signature = KEYS.create_signature(self.rsakey_dict, DATA)
-    ed25519_signature = KEYS.create_signature(self.ed25519key_dict, DATA)
+    default_rsa_library = KEYS._RSA_CRYPTO_LIBRARY
+    default_available_libraries = KEYS._available_crypto_libraries
 
-    # Verifying the 'signature' of 'DATA'.
-    verified = KEYS.verify_signature(self.rsakey_dict, rsa_signature, DATA)
-    self.assertTrue(verified, "Incorrect signature.")
+    for crypto_library in ['pycrypto', 'pyca-cryptography']:
+      KEYS._RSA_CRYPTO_LIBRARY = crypto_library
+      KEYS._ECDSA_CRYPTO_LIBRARY = crypto_library
 
-    # Verifying the 'ed25519_signature' of 'DATA'.
-    verified = KEYS.verify_signature(self.ed25519key_dict, ed25519_signature, DATA)
-    self.assertTrue(verified, "Incorrect signature.")
+      # Creating a signature of 'DATA' to be verified.
+      rsa_signature = KEYS.create_signature(self.rsakey_dict, DATA)
+      ed25519_signature = KEYS.create_signature(self.ed25519key_dict, DATA)
+      ecdsa_signature = None
 
-    # Testing an invalid 'rsa_signature'. Same 'rsa_signature' is passed, with
-    # 'DATA' different than the original 'DATA' that was used
-    # in creating the 'rsa_signature'. Function should return 'False'.
+      if crypto_library == 'pyca-cryptography':
+        ecdsa_signature = KEYS.create_signature(self.ecdsakey_dict, DATA)
 
-    # Modifying 'DATA'.
-    _DATA = '1111' + DATA + '1111'
+      else:
+        logger.debug('Skip creation of ECDSA signature using ' + repr(crypto_library))
 
-    # Verifying the 'signature' of modified '_DATA'.
-    verified = KEYS.verify_signature(self.rsakey_dict, rsa_signature, _DATA)
-    self.assertFalse(verified,
-                     'Returned \'True\' on an incorrect signature.')
+      # Verifying the 'signature' of 'DATA'.
+      verified = KEYS.verify_signature(self.rsakey_dict, rsa_signature, DATA)
+      self.assertTrue(verified, "Incorrect signature.")
 
-    # Modifying 'signature' to pass an incorrect method since only
-    # 'PyCrypto-PKCS#1 PSS' is accepted.
-    rsa_signature['method'] = 'Biff'
+      # Verifying the 'ed25519_signature' of 'DATA'.
+      verified = KEYS.verify_signature(self.ed25519key_dict, ed25519_signature,
+                                       DATA)
+      self.assertTrue(verified, "Incorrect signature.")
 
-    args = (self.rsakey_dict, rsa_signature, DATA)
-    self.assertRaises(securesystemslib.exceptions.UnknownMethodError, KEYS.verify_signature, *args)
+      # Verifying the 'ecdsa_sigature' of 'DATA'.
+      if ecdsa_signature:
+        verified = KEYS.verify_signature(self.ecdsakey_dict, ecdsa_signature, DATA)
+        self.assertTrue(verified, "Incorrect signature.")
 
-    # Passing incorrect number of arguments.
-    self.assertRaises(TypeError, KEYS.verify_signature)
+        # Verifying the 'ed25519_signature' of 'DATA'.
+        verified = KEYS.verify_signature(self.ecdsakey_dict, ecdsa_signature,
+                                         DATA)
+        self.assertTrue(verified, "Incorrect signature.")
 
-    # Verify that the pure python 'ed25519' base case (triggered if 'pynacl' is
-    # unavailable) is executed in securesystemslib.keys.verify_signature().
-    KEYS._ED25519_CRYPTO_LIBRARY = 'invalid'
-    KEYS._available_crypto_libraries = ['invalid']
-    verified = KEYS.verify_signature(self.ed25519key_dict, ed25519_signature, DATA)
-    self.assertTrue(verified, "Incorrect signature.")
+      # Testing invalid signatures. Same signature is passed, with 'DATA' being
+      # different than the original 'DATA' that was used in creating the
+      # 'rsa_signature'. Function should return 'False'.
 
-    # Reset to the expected available crypto libraries.
-    KEYS._ED25519_CRYPTO_LIBRARY = 'pynacl'
-    KEYS._available_crypto_libraries = ['ed25519', 'pycrypto', 'pynacl']
+      # Modifying 'DATA'.
+      _DATA = '1111' + DATA + '1111'
+
+      # Verifying the 'signature' of modified '_DATA'.
+      verified = KEYS.verify_signature(self.rsakey_dict, rsa_signature, _DATA)
+      self.assertFalse(verified,
+                       'Returned \'True\' on an incorrect signature.')
+
+      verified = KEYS.verify_signature(self.ed25519key_dict, ed25519_signature, _DATA)
+      self.assertFalse(verified,
+                       'Returned \'True\' on an incorrect signature.')
+
+      if ecdsa_signature:
+        verified = KEYS.verify_signature(self.ecdsakey_dict, ecdsa_signature, _DATA)
+        self.assertFalse(verified,
+                         'Returned \'True\' on an incorrect signature.')
+
+      # Modifying 'signature' to pass an incorrect method since only
+      # 'PyCrypto-PKCS#1 PSS' is accepted.
+      rsa_signature['method'] = 'Biff'
+
+      args = (self.rsakey_dict, rsa_signature, DATA)
+      self.assertRaises(securesystemslib.exceptions.UnknownMethodError,
+                        KEYS.verify_signature, *args)
+
+      # Passing incorrect number of arguments.
+      self.assertRaises(TypeError, KEYS.verify_signature)
+
+      # Verify that the pure python 'ed25519' base case (triggered if 'pynacl'
+      # is unavailable) is executed in securesystemslib.keys.verify_signature().
+      KEYS._ED25519_CRYPTO_LIBRARY = 'invalid'
+      KEYS._available_crypto_libraries = ['invalid']
+      verified = KEYS.verify_signature(self.ed25519key_dict, ed25519_signature, DATA)
+      self.assertTrue(verified, "Incorrect signature.")
+
+      # Reset to the expected available crypto libraries.
+      KEYS._ED25519_CRYPTO_LIBRARY = 'pynacl'
+      KEYS._available_crypto_libraries = default_available_libraries
+
+    KEYS._RSA_CRYPTO_LIBRARY = default_rsa_library
 
 
 
   def test_create_rsa_encrypted_pem(self):
-    # Test valid arguments.
-    private = self.rsakey_dict['keyval']['private']
-    passphrase = 'secret'
-    encrypted_pem = KEYS.create_rsa_encrypted_pem(private, passphrase)
-    self.assertTrue(securesystemslib.formats.PEMRSA_SCHEMA.matches(encrypted_pem))
+    default_rsa_library = KEYS._RSA_CRYPTO_LIBRARY
+    for rsa_crypto_library in ['pycrypto', 'pyca-cryptography']:
+      KEYS._RSA_CRYPTO_LIBRARY = rsa_crypto_library
 
-    # Test improperly formatted arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.create_rsa_encrypted_pem,
-                      8, passphrase)
+      # Test valid arguments.
+      private = self.rsakey_dict['keyval']['private']
+      passphrase = 'secret'
+      encrypted_pem = KEYS.create_rsa_encrypted_pem(private, passphrase)
+      self.assertTrue(securesystemslib.formats.PEMRSA_SCHEMA.matches(encrypted_pem))
 
-    self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.create_rsa_encrypted_pem,
-                      private, 8)
+      # Try to import the encryped PEM file.
+      rsakey = KEYS.import_rsakey_from_private_pem(encrypted_pem, passphrase)
+      self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(rsakey))
 
-    # Test for missing required library.
-    KEYS._RSA_CRYPTO_LIBRARY = 'invalid'
-    self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError, KEYS.create_rsa_encrypted_pem,
-                      private, passphrase)
-    KEYS._RSA_CRYPTO_LIBRARY = 'pycrypto'
+      # Test improperly formatted arguments.
+      self.assertRaises(securesystemslib.exceptions.FormatError,
+                        KEYS.create_rsa_encrypted_pem,
+                        8, passphrase)
+
+      self.assertRaises(securesystemslib.exceptions.FormatError,
+                        KEYS.create_rsa_encrypted_pem,
+                        private, 8)
+
+      # Test for missing required library.
+      KEYS._RSA_CRYPTO_LIBRARY = 'invalid'
+      self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError,
+                        KEYS.create_rsa_encrypted_pem,
+                        private, passphrase)
+      KEYS._RSA_CRYPTO_LIBRARY = 'pycrypto'
+
+    KEYS._RSA_CRYPTO_LIBRARY = default_rsa_library
+
+
+
+  def test_import_rsakey_from_private_pem(self):
+    # Try to import an rsakey from a valid PEM.
+    private_pem = self.rsakey_dict['keyval']['private']
+
+    private_rsakey = KEYS.import_rsakey_from_private_pem(private_pem)
+
+    # Test for invalid arguments.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_rsakey_from_private_pem, 123)
+
+
+
+  def test_import_rsakey_from_public_pem(self):
+    # Try to import an rsakey from a public PEM.
+    pem = self.rsakey_dict['keyval']['public']
+    rsa_key = KEYS.import_rsakey_from_public_pem(pem)
+
+    # Check if the format of the object returned by this function corresponds
+    # to 'securesystemslib.formats.RSAKEY_SCHEMA' format.
+    self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(rsa_key))
+
+    # Verify whitespace is stripped.
+    self.assertEqual(rsa_key, KEYS.import_rsakey_from_public_pem(pem + '\n'))
+
+    # Supplying a 'bad_pem' argument.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                     KEYS.import_rsakey_from_public_pem, 'bad_pem')
+
+    # Supplying an improperly formatted PEM.
+    # Strip the PEM header and footer.
+    pem_header = '-----BEGIN PUBLIC KEY-----'
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_rsakey_from_public_pem,
+                      pem[len(pem_header):])
+
+    pem_footer = '-----END PUBLIC KEY-----'
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_rsakey_from_public_pem,
+                      pem[:-len(pem_footer)])
+
+    # Test for invalid arguments.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_rsakey_from_public_pem, 123)
+
+
+
+  def test_import_rsakey_from_pem(self):
+    # Try to import an rsakey from a public PEM.
+    public_pem = self.rsakey_dict['keyval']['public']
+    private_pem = self.rsakey_dict['keyval']['private']
+    public_rsakey = KEYS.import_rsakey_from_pem(public_pem)
+    private_rsakey = KEYS.import_rsakey_from_pem(private_pem)
+
+    # Check if the format of the object returned by this function corresponds
+    # to 'securesystemslib.formats.RSAKEY_SCHEMA' format.
+    self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(public_rsakey))
+    self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(private_rsakey))
+
+    # Verify whitespace is stripped.
+    self.assertEqual(public_rsakey, KEYS.import_rsakey_from_pem(public_pem + '\n'))
+    self.assertEqual(private_rsakey, KEYS.import_rsakey_from_pem(private_pem + '\n'))
+
+    # Supplying a 'bad_pem' argument.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_rsakey_from_pem, 'bad_pem')
+
+    # Supplying an improperly formatted public PEM.
+    # Strip the PEM header and footer.
+    pem_header = '-----BEGIN PUBLIC KEY-----'
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_rsakey_from_pem,
+                      public_pem[len(pem_header):])
+
+    pem_footer = '-----END PUBLIC KEY-----'
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_rsakey_from_pem,
+                      public_pem[:-len(pem_footer)])
+
+    # Supplying an improperly formatted private PEM.
+    # Strip the PEM header and footer.
+    pem_header = '-----BEGIN PRIVATE KEY-----'
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_rsakey_from_pem,
+                      private_pem[len(pem_header):])
+
+    pem_footer = '-----END PRIVATE KEY-----'
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_rsakey_from_pem,
+                      private_pem[:-len(pem_footer)])
+
+    # Test for invalid arguments.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_rsakey_from_pem, 123)
+
+
+
+  def test_import_ecdsakey_from_private_pem(self):
+    # Try to import an ecdsakey from a valid PEM.
+    private_pem = self.ecdsakey_dict['keyval']['private']
+
+    private_ecdsakey = KEYS.import_ecdsakey_from_private_pem(private_pem)
+
+    # Test for invalid arguments.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_ecdsakey_from_private_pem, 123)
+
+
+
+  def test_import_ecdsakey_from_public_pem(self):
+    # Try to import an ecdsakey from a public PEM.
+    pem = self.ecdsakey_dict['keyval']['public']
+    ecdsa_key = KEYS.import_ecdsakey_from_public_pem(pem)
+
+    # Check if the format of the object returned by this function corresponds
+    # to 'securesystemslib.formats.ECDSAKEY_SCHEMA' format.
+    self.assertTrue(securesystemslib.formats.ECDSAKEY_SCHEMA.matches(ecdsa_key))
+
+    # Verify whitespace is stripped.
+    self.assertEqual(ecdsa_key, KEYS.import_ecdsakey_from_public_pem(pem + '\n'))
+
+    # Supplying a 'bad_pem' argument.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                     KEYS.import_ecdsakey_from_public_pem, 'bad_pem')
+
+    # Supplying an improperly formatted PEM.  Strip the PEM header and footer.
+    pem_header = '-----BEGIN PUBLIC KEY-----'
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_ecdsakey_from_public_pem,
+                      pem[len(pem_header):])
+
+    pem_footer = '-----END PUBLIC KEY-----'
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_ecdsakey_from_public_pem,
+                      pem[:-len(pem_footer)])
+
+    # Test for invalid arguments.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_ecdsakey_from_public_pem, 123)
+
+
+
+  def test_import_ecdsakey_from_pem(self):
+    # Try to import an ecdsakey from a public PEM.
+    public_pem = self.ecdsakey_dict['keyval']['public']
+    private_pem = self.ecdsakey_dict['keyval']['private']
+    public_ecdsakey = KEYS.import_ecdsakey_from_pem(public_pem)
+    private_ecdsakey = KEYS.import_ecdsakey_from_pem(private_pem)
+
+    # Check if the format of the object returned by this function corresponds
+    # to 'securesystemslib.formats.ECDSAKEY_SCHEMA' format.
+    self.assertTrue(securesystemslib.formats.ECDSAKEY_SCHEMA.matches(public_ecdsakey))
+    self.assertTrue(securesystemslib.formats.ECDSAKEY_SCHEMA.matches(private_ecdsakey))
+
+    # Verify whitespace is stripped.
+    self.assertEqual(public_ecdsakey, KEYS.import_ecdsakey_from_pem(public_pem + '\n'))
+    self.assertEqual(private_ecdsakey, KEYS.import_ecdsakey_from_pem(private_pem + '\n'))
+
+    # Supplying a 'bad_pem' argument.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_ecdsakey_from_pem, 'bad_pem')
+
+    # Supplying an improperly formatted public PEM.  Strip the PEM header and
+    # footer.
+    pem_header = '-----BEGIN PUBLIC KEY-----'
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_ecdsakey_from_pem,
+                      public_pem[len(pem_header):])
+
+    pem_footer = '-----END PUBLIC KEY-----'
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_ecdsakey_from_pem,
+                      public_pem[:-len(pem_footer)])
+
+    # Supplying an improperly formatted private PEM.  Strip the PEM header and
+    # footer.
+    pem_header = '-----BEGIN EC PRIVATE KEY-----'
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_ecdsakey_from_pem,
+                      private_pem[len(pem_header):])
+
+    pem_footer = '-----END EC PRIVATE KEY-----'
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_ecdsakey_from_pem,
+                      private_pem[:-len(pem_footer)])
+
+    # Test for invalid arguments.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.import_ecdsakey_from_pem, 123)
 
 
 
   def test_decrypt_key(self):
-    # Test valid arguments.
-    passphrase = 'secret'
-    encrypted_key = KEYS.encrypt_key(self.rsakey_dict, passphrase).encode('utf-8')
-    decrypted_key = KEYS.decrypt_key(encrypted_key, passphrase)
+    default_general_library = KEYS._GENERAL_CRYPTO_LIBRARY
+    for general_crypto_library in ['pycrypto', 'pyca-cryptography']:
+      KEYS._GENERAL_CRYPTO_LIBRARY = general_crypto_library
 
-    self.assertTrue(securesystemslib.formats.ANYKEY_SCHEMA.matches(decrypted_key))
+      # Test valid arguments.
+      passphrase = 'secret'
+      encrypted_key = KEYS.encrypt_key(self.rsakey_dict, passphrase).encode('utf-8')
+      decrypted_key = KEYS.decrypt_key(encrypted_key, passphrase)
 
-    # Test improperly formatted arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.decrypt_key,
-                      8, passphrase)
+      self.assertTrue(securesystemslib.formats.ANYKEY_SCHEMA.matches(decrypted_key))
 
-    self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.decrypt_key,
-                      encrypted_key, 8)
+      # Test improperly formatted arguments.
+      self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.decrypt_key,
+                        8, passphrase)
 
-    # Test for missing required library.
-    KEYS._GENERAL_CRYPTO_LIBRARY = 'invalid'
-    self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError, KEYS.decrypt_key,
-                      encrypted_key, passphrase)
-    KEYS._GENERAL_CRYPTO_LIBRARY = 'pycrypto'
+      self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.decrypt_key,
+                        encrypted_key, 8)
+
+      # Test for missing required library.
+      KEYS._GENERAL_CRYPTO_LIBRARY = 'invalid'
+      self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError,
+                        KEYS.decrypt_key,
+                        encrypted_key, passphrase)
+      KEYS._GENERAL_CRYPTO_LIBRARY = 'pycrypto'
+
+    KEYS._GENERAL_CRYPTO_LIBRARY = default_general_library
+
+
+
+  def test_extract_pem(self):
+    # Normal case.
+    private_pem = KEYS.extract_pem(self.rsakey_dict['keyval']['private'],
+                                   private_pem=True)
+    self.assertTrue(securesystemslib.formats.PEMRSA_SCHEMA.matches(private_pem))
+
+    # Test for an invalid PEM.
+    pem_header = '-----BEGIN RSA PRIVATE KEY-----'
+    pem_footer = '-----END RSA PRIVATE KEY-----'
+
+    header_start = private_pem.index(pem_header)
+    footer_start = private_pem.index(pem_footer, header_start + len(pem_header))
+
+    missing_header = private_pem[header_start + len(pem_header):footer_start + len(pem_footer)]
+    missing_footer = private_pem[header_start:footer_start]
+
+    self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.extract_pem,
+                      'invalid_pem', private_pem=True)
+
+    self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.extract_pem,
+                      missing_header, private_pem=True)
+
+    self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.extract_pem,
+                      missing_footer, private_pem=True)
+
+
+
+  def test_is_pem_public(self):
+    # Test for a valid PEM string.
+    public_pem = self.rsakey_dict['keyval']['public']
+    self.assertTrue(KEYS.is_pem_public(public_pem))
+
+    # Tesst for a valid non-public PEM string.
+    private_pem = self.rsakey_dict['keyval']['private']
+    self.assertFalse(KEYS.is_pem_public(private_pem))
+
+    # Test for an invalid PEM string.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.is_pem_public, 123)
+
+
+
+  def test_is_pem_private(self):
+    # Test for a valid PEM string.
+    private_pem = self.rsakey_dict['keyval']['private']
+    self.assertTrue(KEYS.is_pem_private(private_pem))
+
+    # Test for a valid non-private PEM string.
+    public_pem = self.rsakey_dict['keyval']['public']
+    self.assertFalse(KEYS.is_pem_private(public_pem))
+
+    # Test for an invalid PEM string.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      KEYS.is_pem_private, 123)
 
 
 

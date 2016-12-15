@@ -51,6 +51,9 @@ RSA_CRYPTO_LIBRARY = 'pyca-cryptography'
 # Supported Ed25519 cryptography libraries: ['pynacl', 'ed25519']
 ED25519_CRYPTO_LIBRARY = 'ed25519'
 
+# Supported ECDSA cryptography libraries: ['pyca-cryptography']
+ECDSA_CRYPTO_LIBRARY = 'pyca-cryptography'
+
 # General purpose cryptography. Algorithms and functions that fall under
 # general purpose include AES, PBKDF2, cryptographically strong random number
 # generators, and cryptographic hash functions.  The majority of the general
