@@ -99,7 +99,7 @@ setup(
     'Topic :: Security',
     'Topic :: Software Development'
   ],
-  install_requires = ['six', 'simple-settings'],
+  install_requires = ['six'],
   packages = find_packages(exclude=['tests']),
   extras_require = extras,
   scripts = []
