@@ -147,8 +147,7 @@ def generate_public_and_private(algorithm='ecdsa-sha2-nistp256'):
   public_pem = public_key.public_bytes(encoding=serialization.Encoding.PEM,
     format=serialization.PublicFormat.SubjectPublicKeyInfo)
 
-
-  return public_pem, private_pem
+  return public_pem.decode('utf-8'), private_pem.decode('utf-8')
 
 
 
@@ -272,7 +271,7 @@ def verify_signature(public_key, method, signature, data):
 
   # Is 'method' one of the supported ECDSA algorithms?
   if method in _SUPPORTED_ECDSA_ALGORITHMS:
-    ecdsa_key = load_pem_public_key(public_key, backend=default_backend())
+    ecdsa_key = load_pem_public_key(public_key.encode('utf-8'), backend=default_backend())
 
     if not isinstance(ecdsa_key, ec.EllipticCurvePublicKey):
       raise securesystemslib.exceptions.FormatError('Invalid ECDSA public'
@@ -388,7 +387,7 @@ def create_ecdsa_public_and_private_from_pem(pem, password=None):
   public = public.public_bytes(encoding=serialization.Encoding.PEM,
     format=serialization.PublicFormat.SubjectPublicKeyInfo)
 
-  return public, private
+  return public.decode('utf-8'), private.decode('utf-8')
 
 
 

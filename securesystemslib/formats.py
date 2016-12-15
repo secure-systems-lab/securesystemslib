@@ -269,7 +269,7 @@ ED25519SEED_SCHEMA = SCHEMA.LengthBytes(32)
 ED25519SIGNATURE_SCHEMA = SCHEMA.LengthBytes(64)
 
 # An ECDSA signature.
-ECDSASIGNATURE_SCHEMA = SCHEMA.AnyString()
+ECDSASIGNATURE_SCHEMA = SCHEMA.AnyBytes()
 
 # Required installation libraries expected by the repository tools and other
 # cryptography modules.
