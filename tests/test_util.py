@@ -338,7 +338,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
     # Test invalid arguments.
     self.assertRaises(securesystemslib.exceptions.Error, securesystemslib.util.load_json_string, 8)
-    invalid_json_string = {'a': securesystemslib.exceptions.FormatError}
+    invalid_json_string = json_string + '.'
     self.assertRaises(securesystemslib.exceptions.Error, securesystemslib.util.load_json_string, invalid_json_string)
 
 
@@ -365,6 +365,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     # Invalid JSON content.
     with open(filepath, 'a') as filepath:
       filepath.write('junk data')
+
     self.assertRaises(securesystemslib.exceptions.Error, securesystemslib.util.load_json_file, filepath)
 
 
