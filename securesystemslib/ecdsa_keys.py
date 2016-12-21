@@ -19,7 +19,7 @@
 
   https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm
 
-  'ssl_crypto/ecdsa_keys.py' calls the 'cryptography' library to perform
+  'securesystemslib.ecdsa_keys.py' calls the 'cryptography' library to perform
   all of the ecdsa-related operations.
 
   The ecdsa-related functions included here are generate(), create_signature()
@@ -187,9 +187,9 @@ def create_signature(public_key, private_key, data):
     None.
 
   <Returns>
-    A signature dictionary conformat to 'ssl_crypto.format.SIGNATURE_SCHEMA'.
-    ECDSA signatures are XX bytes, however, the hexlified signature is
-    stored in the dictionary returned.
+    A signature dictionary conformat to
+    'securesystemslib.format.SIGNATURE_SCHEMA'.  ECDSA signatures are XX bytes,
+    however, the hexlified signature is stored in the dictionary returned.
   """
 
   # Do 'public_key' and 'private_key' have the correct format?
@@ -373,8 +373,8 @@ def create_ecdsa_public_and_private_from_pem(pem, password=None):
     private = load_pem_private_key(pem.encode('utf-8'), password=password,
       backend=default_backend())
 
-  except (ValueError, cryptography.exceptions.UnsupportedAlogorithm) as e:
-    raise ssl_crypto_exceptions.CryptoError('Could not import private'
+  except (ValueError, cryptography.exceptions.UnsupportedAlgorithm) as e:
+    raise securesystemslib.exceptions.CryptoError('Could not import private'
       ' PEM.\n' + str(e))
 
   public = private.public_key()

@@ -26,7 +26,7 @@
   https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm
 
   The (RSA, ECDSA and Ed25519)-related functions provided include
-  generate_rsa_key(), generate_ed25519_key(), genereate_ecdsa_key(),
+  generate_rsa_key(), generate_ed25519_key(), generate_ecdsa_key(),
   create_signature(), and verify_signature().  The cryptography libraries
   called by 'ssl_crypto.keys.py' generate the actual TUF keys and the functions
   listed above can be viewed as the easy-to-use public interface.
@@ -339,18 +339,12 @@ def generate_ecdsa_key(algorithm='ecdsa-sha2-nistp256'):
       securesystemslib.ecdsa_keys.generate_public_and_private(algorithm)
 
   else: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError('One of the supported'
-      ' libraries is unavailable.')
+    raise securesystemslib.exceptions.UnsupportedLibraryError('One of the'
+      ' supported libraries is unavailable.')
 
   # Generate the keyid of the Ed25519 key.  'key_value' corresponds to the
   # 'keyval' entry of the 'Ed25519KEY_SCHEMA' dictionary.  The private key
   # information is not included in the generation of the 'keyid' identifier.
-  """
-  key_value = {'public': binascii.hexlify(public).decode(),
-               'private': ''}
-  keyid = _get_keyid(keytype, key_value)
-  """
-
   key_value = {'public': public,
                'private': ''}
   keyid = _get_keyid(keytype, key_value)
@@ -359,7 +353,6 @@ def generate_ecdsa_key(algorithm='ecdsa-sha2-nistp256'):
   # private key prior to adding 'key_value' to 'ed25519_key'.
 
   key_value['private'] = private
-  #key_value['private'] = binascii.hexlify(private).decode()
 
   ecdsa_key['keytype'] = keytype
   ecdsa_key['keyid'] = keyid

@@ -363,10 +363,13 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     self.assertRaises(IOError, securesystemslib.util.load_json_file, 'non-existent.json')
 
     # Invalid JSON content.
-    with open(filepath, 'a') as filepath:
-      filepath.write('junk data')
+    filepath_bad_data = self.make_temp_file()
+    fileobj = open(filepath_bad_data, 'wt')
+    fileobj.write('junk data')
+    fileobj.close()
 
-    self.assertRaises(securesystemslib.exceptions.Error, securesystemslib.util.load_json_file, filepath)
+    self.assertRaises(securesystemslib.exceptions.Error,
+      securesystemslib.util.load_json_file, filepath_bad_data)
 
 
 

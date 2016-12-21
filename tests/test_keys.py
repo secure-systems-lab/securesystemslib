@@ -32,6 +32,7 @@ import logging
 import securesystemslib.exceptions
 import securesystemslib.formats
 import securesystemslib.keys
+import securesystemslib.ecdsa_keys
 
 logger = logging.getLogger('securesystemslib_test_keys')
 
@@ -507,8 +508,14 @@ class TestKeys(unittest.TestCase):
   def test_import_ecdsakey_from_private_pem(self):
     # Try to import an ecdsakey from a valid PEM.
     private_pem = self.ecdsakey_dict['keyval']['private']
+    ecdsakey = KEYS.import_ecdsakey_from_private_pem(private_pem)
 
-    private_ecdsakey = KEYS.import_ecdsakey_from_private_pem(private_pem)
+    # Test for an encrypted PEM.
+    encrypted_pem = \
+      securesystemslib.ecdsa_keys.create_ecdsa_encrypted_pem(private_pem,
+        b'password')
+    private_ecdsakey = KEYS.import_ecdsakey_from_private_pem(encrypted_pem, b'password')
+
 
     # Test for invalid arguments.
     self.assertRaises(securesystemslib.exceptions.FormatError,

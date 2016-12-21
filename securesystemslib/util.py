@@ -897,8 +897,8 @@ def load_json_file(filepath):
     deserialized_object = json.load(fileobject)
 
   except (ValueError, TypeError) as e:
-    message = 'Cannot deserialize to a Python object: ' + repr(filepath)
-    raise securesystemslib.exceptions.Error(message)
+    raise securesystemslib.exceptions.Error('Cannot deserialize to a'
+      ' Python object: ' + repr(filepath))
 
   else:
     fileobject.close()
