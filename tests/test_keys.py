@@ -512,9 +512,8 @@ class TestKeys(unittest.TestCase):
 
     # Test for an encrypted PEM.
     encrypted_pem = \
-      securesystemslib.ecdsa_keys.create_ecdsa_encrypted_pem(private_pem,
-        b'password')
-    private_ecdsakey = KEYS.import_ecdsakey_from_private_pem(encrypted_pem, b'password')
+      securesystemslib.ecdsa_keys.create_ecdsa_encrypted_pem(private_pem, 'password')
+    private_ecdsakey = KEYS.import_ecdsakey_from_private_pem(encrypted_pem.decode('utf-8'), 'password')
 
 
     # Test for invalid arguments.

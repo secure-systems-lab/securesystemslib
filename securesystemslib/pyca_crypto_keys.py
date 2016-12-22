@@ -700,7 +700,7 @@ def encrypt_key(key_object, password):
     securesystemslib.exceptions.FormatError, if any of the arguments are improperly
     formatted or 'key_object' does not contain the private portion of the key.
 
-    securesystemslib.exceptions.CryptoError, if an ED25519 key in encrypted TUF
+    securesystemslib.exceptions.CryptoError, if an Ed25519 key in encrypted TUF
     format cannot be created.
 
   <Side Effects>
