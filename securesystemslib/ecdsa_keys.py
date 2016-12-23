@@ -135,7 +135,9 @@ def generate_public_and_private(algorithm='ecdsa-sha2-nistp256'):
     private_key = ec.generate_private_key(ec.SECP256R1, default_backend())
     public_key = private_key.public_key()
 
-  else:
+  # The formats ECDSAALGORITHMS_SCHEMA check above should have detected any
+  # invalid 'algorithm'.
+  else: #pragma: no cover
     raise securesystemslib.exceptions.UnsupportedLibraryError('An unsupported'
       ' algorithm was specified: ' + repr(algorithm) + '.\n  Supported'
       ' algorithms: ' + repr(_SUPPORTED_ECDSA_ALGORITHMS))
