@@ -86,6 +86,10 @@ class TestPycrypto_keys(unittest.TestCase):
     self.assertRaises(securesystemslib.exceptions.FormatError,
                       securesystemslib.pycrypto_keys.create_rsa_signature, private_rsa, '')
 
+    # Check for invalid private RSA key.
+    self.assertRaises(securesystemslib.exceptions.CryptoError,
+                      securesystemslib.pycrypto_keys.create_rsa_signature, 'bad_key', data)
+
     # create_rsa_signature should reject non-string data.
     self.assertRaises(securesystemslib.exceptions.FormatError,
                       securesystemslib.pycrypto_keys.create_rsa_signature, private_rsa, 123)
@@ -104,6 +108,12 @@ class TestPycrypto_keys(unittest.TestCase):
     valid_signature = securesystemslib.pycrypto_keys.verify_rsa_signature(signature, method, public_rsa,
                                                 data)
     self.assertEqual(True, valid_signature)
+
+    # Check for invalid arguments that result in a failed signature
+    # verification.
+    self.assertRaises(securesystemslib.exceptions.CryptoError,
+      securesystemslib.pycrypto_keys.verify_rsa_signature, signature, method,
+      'bad_key', data)
 
     # Check for improperly formatted arguments.
     self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.pycrypto_keys.verify_rsa_signature, signature,
