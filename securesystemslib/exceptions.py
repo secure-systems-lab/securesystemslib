@@ -110,21 +110,6 @@ class ExpiredMetadataError(Error):
   pass
 
 
-class ReplayedMetadataError(RepositoryError):
-  """Indicate that some metadata has been replayed to the client."""
-
-  def __init__(self, metadata_role, previous_version, current_version):
-    self.metadata_role = metadata_role
-    self.previous_version = previous_version
-    self.current_version = current_version
-
-
-  def __str__(self):
-    return 'Downloaded ' + repr(self.metadata_role)+' is older ('+\
-           repr(self.previous_version) + ') than the version currently '+\
-           'installed (' + repr(self.current_version) + ').'
-
-
 class CryptoError(Error):
   """Indicate any cryptography-related errors."""
   pass
@@ -167,29 +152,6 @@ class DownloadError(Error):
   pass
 
 
-class DownloadLengthMismatchError(DownloadError):
-  """Indicate that a mismatch of lengths was seen while downloading a file."""
-
-  def __init__(self, expected_length, observed_length):
-    self.expected_length = expected_length #bytes
-    self.observed_length = observed_length #bytes
-
-  def __str__(self):
-    return 'Observed length (' + repr(self.observed_length)+\
-           ') <= expected length (' + repr(self.expected_length) + ').'
-
-
-class SlowRetrievalError(DownloadError):
-  """"Indicate that downloading a file took an unreasonably long time."""
-
-  def __init__(self, average_download_speed):
-    self.__average_download_speed = average_download_speed #bytes/second
-
-  def __str__(self):
-    return 'Download was too slow. Average speed: ' +\
-           repr(self.__average_download_speed) + ' bytes per second.'
-
-
 class KeyAlreadyExistsError(Error):
   """Indicate that a key already exists and cannot be added."""
   pass
@@ -213,49 +175,6 @@ class UnknownTargetError(Error):
 class InvalidNameError(Error):
   """Indicate an error while trying to validate any type of named object."""
   pass
-
-
-class UnsignedMetadataError(Error):
-  """Indicate metadata object with insufficient threshold of signatures."""
-
-  def __init__(self, message, signable):
-    self.exception_message = message
-    self.signable = signable
-
-  def __str__(self):
-    return self.exception_message
-
-
-class NoWorkingMirrorError(Error):
-  """
-    An updater will throw this exception in case it could not download a
-    metadata or target file.
-    A dictionary of Exception instances indexed by every mirror URL will also be
-    provided.
-  """
-
-  def __init__(self, mirror_errors):
-    # Dictionary of URL strings to Exception instances
-    self.mirror_errors = mirror_errors
-
-  def __str__(self):
-    all_errors = 'No working mirror was found:'
-
-    for mirror_url, mirror_error in six.iteritems(self.mirror_errors):
-      try:
-        # http://docs.python.org/2/library/urlparse.html#urlparse.urlparse
-        mirror_url_tokens = six.moves.urllib.parse.urlparse(mirror_url)
-
-      except:
-        logger.exception('Failed to parse mirror URL: ' + repr(mirror_url))
-        mirror_netloc = mirror_url
-
-      else:
-        mirror_netloc = mirror_url_tokens.netloc
-
-      all_errors += '\n  ' + repr(mirror_netloc) + ': ' + repr(mirror_error)
-
-    return all_errors
 
 
 class NotFoundError(Error):
