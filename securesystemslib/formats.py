@@ -161,7 +161,7 @@ HASHALGORITHMS_SCHEMA = SCHEMA.ListOf(SCHEMA.OneOf(
 
 # The contents of an encrypted TUF key.  Encrypted TUF keys are saved to files
 # in this format.
-ENCRYPTEDKEY_SCHEMA = SCHEMA.AnyBytes()
+ENCRYPTEDKEY_SCHEMA = SCHEMA.AnyString()
 
 # A value that is either True or False, on or off, etc.
 BOOLEAN_SCHEMA = SCHEMA.Boolean()

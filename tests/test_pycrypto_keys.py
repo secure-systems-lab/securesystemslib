@@ -263,19 +263,19 @@ class TestPycrypto_keys(unittest.TestCase):
     'keyid': 'd62247f817883f593cf6c66a5a55292488d457bcf638ae03207dbbba9dbe457d',
     'keyval': {'public': public_rsa, 'private': private_rsa}}
 
-    encrypted_rsa_key = securesystemslib.pycrypto_keys.encrypt_key(rsa_key, passphrase).encode('utf-8')
+    encrypted_rsa_key = securesystemslib.pycrypto_keys.encrypt_key(rsa_key, passphrase)
 
     decrypted_rsa_key = securesystemslib.pycrypto_keys.decrypt_key(encrypted_rsa_key, passphrase)
 
 
     # Test for invalid arguments.
-    self.assertRaises(securesystemslib.exceptions.CryptoError, securesystemslib.pycrypto_keys.decrypt_key, b'bad',
+    self.assertRaises(securesystemslib.exceptions.CryptoError, securesystemslib.pycrypto_keys.decrypt_key, 'bad',
                                        passphrase)
 
     # Test for invalid encrypted content (i.e., invalid hmac and ciphertext.)
     encryption_delimiter = securesystemslib.pycrypto_keys._ENCRYPTION_DELIMITER
     salt, iterations, hmac, iv, ciphertext = \
-      encrypted_rsa_key.decode('utf-8').split(encryption_delimiter)
+      encrypted_rsa_key.split(encryption_delimiter)
 
     # Set an invalid hmac.  The decryption routine sould raise a
     # securesystemslib.exceptions.CryptoError exception because 'hmac' does not
@@ -286,7 +286,7 @@ class TestPycrypto_keys(unittest.TestCase):
       bad_hmac + encryption_delimiter + iv + encryption_delimiter + ciphertext
 
     self.assertRaises(securesystemslib.exceptions.CryptoError, securesystemslib.pycrypto_keys.decrypt_key,
-                      invalid_encrypted_rsa_key.encode('utf-8'), passphrase)
+                      invalid_encrypted_rsa_key, passphrase)
 
     # Test for invalid 'ciphertext'
     bad_ciphertext = '12345abcde'
@@ -295,7 +295,7 @@ class TestPycrypto_keys(unittest.TestCase):
       hmac + encryption_delimiter + iv + encryption_delimiter + bad_ciphertext
 
     self.assertRaises(securesystemslib.exceptions.CryptoError, securesystemslib.pycrypto_keys.decrypt_key,
-                      invalid_encrypted_rsa_key.encode('utf-8'), passphrase)
+                      invalid_encrypted_rsa_key, passphrase)
 
 
 

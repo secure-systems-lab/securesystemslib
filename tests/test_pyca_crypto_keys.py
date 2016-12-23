@@ -103,6 +103,11 @@ class TestPyca_crypto_keys(unittest.TestCase):
                                                 data)
     self.assertEqual(True, valid_signature)
 
+    # Check for an invalid public key.
+    self.assertRaises(securesystemslib.exceptions.CryptoError,
+      securesystemslib.pyca_crypto_keys.verify_rsa_signature, signature, method,
+      private_rsa, data)
+
     # Check for improperly formatted arguments.
     self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.pyca_crypto_keys.verify_rsa_signature, signature,
                                        123, public_rsa, data)
@@ -131,6 +136,72 @@ class TestPyca_crypto_keys(unittest.TestCase):
 
     self.assertEqual(False, securesystemslib.pyca_crypto_keys.verify_rsa_signature(mismatched_signature,
                             method, public_rsa, data))
+
+
+  def test_create_rsa_encrypted_pem(self):
+    global public_rsa
+    global private_rsa
+
+    encrypted_pem = securesystemslib.pyca_crypto_keys.create_rsa_encrypted_pem(private_rsa,
+      'password')
+    self.assertTrue(securesystemslib.formats.PEMRSA_SCHEMA.matches(encrypted_pem))
+
+    # Test for invalid private key (via PEM).
+    self.assertRaises(securesystemslib.exceptions.CryptoError,
+      securesystemslib.pyca_crypto_keys.create_rsa_encrypted_pem, public_rsa, 'password')
+
+    # Test for invalid arguments.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+      securesystemslib.pyca_crypto_keys.create_rsa_encrypted_pem, public_rsa, 123)
+
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+      securesystemslib.pyca_crypto_keys.create_rsa_encrypted_pem, 123, 'password')
+
+    self.assertRaises(ValueError,
+      securesystemslib.pyca_crypto_keys.create_rsa_encrypted_pem, '', 'password')
+
+
+
+  def test_create_rsa_public_and_private_from_pem(self):
+    global public_rsa
+    global private_rsa
+
+    public, private = \
+      securesystemslib.pyca_crypto_keys.create_rsa_public_and_private_from_pem(
+      private_rsa)
+
+    self.assertTrue(securesystemslib.formats.PEMRSA_SCHEMA.matches(public))
+    self.assertTrue(securesystemslib.formats.PEMRSA_SCHEMA.matches(private))
+
+    self.assertRaises(securesystemslib.exceptions.CryptoError,
+      securesystemslib.pyca_crypto_keys.create_rsa_public_and_private_from_pem,
+      public_rsa)
+
+
+
+  def test_encrypt_key(self):
+    global public_rsa
+    global private_rsa
+
+    key_object = {'keytype': 'rsa',
+                  'keyid': '1223',
+                  'keyval': {'public': public_rsa,
+                             'private': private_rsa}}
+
+    encrypted_key = securesystemslib.pyca_crypto_keys.encrypt_key(key_object, 'password')
+    self.assertTrue(securesystemslib.formats.ENCRYPTEDKEY_SCHEMA.matches(encrypted_key))
+
+    key_object['keyval']['private'] = ''
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+      securesystemslib.pyca_crypto_keys.encrypt_key, key_object, 'password')
+
+
+  def test__decrypt(self):
+    self.assertRaises(securesystemslib.exceptions.CryptoError,
+      securesystemslib.pyca_crypto_keys._decrypt, 'bad_ciphertext', 'password')
+
+
+
 
 
 # Run the unit tests.

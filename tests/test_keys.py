@@ -612,7 +612,7 @@ class TestKeys(unittest.TestCase):
 
       # Test valid arguments.
       passphrase = 'secret'
-      encrypted_key = KEYS.encrypt_key(self.rsakey_dict, passphrase).encode('utf-8')
+      encrypted_key = KEYS.encrypt_key(self.rsakey_dict, passphrase)
       decrypted_key = KEYS.decrypt_key(encrypted_key, passphrase)
 
       self.assertTrue(securesystemslib.formats.ANYKEY_SCHEMA.matches(decrypted_key))
