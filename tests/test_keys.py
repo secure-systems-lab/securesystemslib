@@ -641,24 +641,43 @@ class TestKeys(unittest.TestCase):
                                    private_pem=True)
     self.assertTrue(securesystemslib.formats.PEMRSA_SCHEMA.matches(private_pem))
 
+    public_pem = KEYS.extract_pem(self.rsakey_dict['keyval']['public'],
+                                   private_pem=False)
+    self.assertTrue(securesystemslib.formats.PEMRSA_SCHEMA.matches(public_pem))
+
     # Test for an invalid PEM.
     pem_header = '-----BEGIN RSA PRIVATE KEY-----'
     pem_footer = '-----END RSA PRIVATE KEY-----'
 
-    header_start = private_pem.index(pem_header)
-    footer_start = private_pem.index(pem_footer, header_start + len(pem_header))
+    private_header_start = private_pem.index(pem_header)
+    private_footer_start = private_pem.index(pem_footer, private_header_start + len(pem_header))
 
-    missing_header = private_pem[header_start + len(pem_header):footer_start + len(pem_footer)]
-    missing_footer = private_pem[header_start:footer_start]
+    private_missing_header = private_pem[private_header_start + len(pem_header):private_footer_start + len(pem_footer)]
+    private_missing_footer = private_pem[private_header_start:private_footer_start]
+
+    pem_header = '-----BEGIN PUBLIC KEY-----'
+    pem_footer = '-----END PUBLIC KEY-----'
+
+    public_header_start = public_pem.index(pem_header)
+    public_footer_start = public_pem.index(pem_footer, public_header_start + len(pem_header))
+
+    public_missing_header = public_pem[public_header_start + len(pem_header):public_footer_start + len(pem_footer)]
+    public_missing_footer = public_pem[public_header_start:public_footer_start]
 
     self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.extract_pem,
-                      'invalid_pem', private_pem=True)
+                      'invalid_pem', private_pem=False)
 
     self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.extract_pem,
-                      missing_header, private_pem=True)
+                      public_missing_header, private_pem=False)
+    self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.extract_pem,
+                      private_missing_header, private_pem=True)
 
     self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.extract_pem,
-                      missing_footer, private_pem=True)
+                      public_missing_footer, private_pem=False)
+
+    self.assertRaises(securesystemslib.exceptions.FormatError, KEYS.extract_pem,
+                      private_missing_footer, private_pem=True)
+
 
 
 
@@ -680,11 +699,20 @@ class TestKeys(unittest.TestCase):
   def test_is_pem_private(self):
     # Test for a valid PEM string.
     private_pem = self.rsakey_dict['keyval']['private']
+    private_pem_ec = self.ecdsakey_dict['keyval']['private']
+
     self.assertTrue(KEYS.is_pem_private(private_pem))
+    self.assertTrue(KEYS.is_pem_private(private_pem_ec, 'ec'))
 
     # Test for a valid non-private PEM string.
     public_pem = self.rsakey_dict['keyval']['public']
+    public_pem_ec = self.ecdsakey_dict['keyval']['public']
     self.assertFalse(KEYS.is_pem_private(public_pem))
+    self.assertFalse(KEYS.is_pem_private(public_pem_ec, 'ec'))
+
+    # Test for unsupported keytype.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+      KEYS.is_pem_private, private_pem, 'bad_keytype')
 
     # Test for an invalid PEM string.
     self.assertRaises(securesystemslib.exceptions.FormatError,
