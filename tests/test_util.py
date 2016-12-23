@@ -582,6 +582,13 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
 
 
+  def test_c5_unittest_toolbox_random_path(self):
+    # Verify that a random path can be generated with unittest_toolbox.
+    random_path = self.random_path(length=10)
+    self.assertTrue(securesystemslib.formats.PATH_SCHEMA.matches(random_path))
+    self.assertTrue(10, len(random_path))
+
+
   def test_c6_get_compressed_length(self):
    self.temp_fileobj.write(b'hello world')
    self.assertTrue(self.temp_fileobj.get_compressed_length() == 11)
