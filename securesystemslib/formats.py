@@ -554,6 +554,165 @@ MIRRORLIST_SCHEMA = SCHEMA.Object(
 ANYROLE_SCHEMA = SCHEMA.OneOf([ROOT_SCHEMA, TARGETS_SCHEMA, SNAPSHOT_SCHEMA,
                                TIMESTAMP_SCHEMA, MIRROR_SCHEMA])
 
+
+
+
+def datetime_to_unix_timestamp(datetime_object):
+  """
+  <Purpose>
+    Convert 'datetime_object' (in datetime.datetime()) format) to a Unix/POSIX
+    timestamp.  For example, Python's time.time() returns a Unix timestamp, and
+    includes the number of microseconds.  'datetime_object' is converted to UTC.
+
+    >>> datetime_object = datetime.datetime(1985, 10, 26, 1, 22)
+    >>> timestamp = datetime_to_unix_timestamp(datetime_object)
+    >>> timestamp
+    499137720
+
+  <Arguments>
+    datetime_object:
+      The datetime.datetime() object to convert to a Unix timestamp.
+
+  <Exceptions>
+    securesystemslib.exceptions.FormatError, if 'datetime_object' is not a
+    datetime.datetime() object.
+
+  <Side Effects>
+    None.
+
+  <Returns>
+    A unix (posix) timestamp (e.g., 499137660).
+  """
+
+  # Is 'datetime_object' a datetime.datetime() object?
+  # Raise 'securesystemslib.exceptions.FormatError' if not.
+  if not isinstance(datetime_object, datetime.datetime):
+    message = repr(datetime_object) + ' is not a datetime.datetime() object.'
+    raise securesystemslib.exceptions.FormatError(message)
+
+  unix_timestamp = calendar.timegm(datetime_object.timetuple())
+
+  return unix_timestamp
+
+
+
+
+def unix_timestamp_to_datetime(unix_timestamp):
+  """
+  <Purpose>
+    Convert 'unix_timestamp' (i.e., POSIX time, in UNIX_TIMESTAMP_SCHEMA format)
+    to a datetime.datetime() object.  'unix_timestamp' is the number of seconds
+    since the epoch (January 1, 1970.)
+
+    >>> datetime_object = unix_timestamp_to_datetime(1445455680)
+    >>> datetime_object
+    datetime.datetime(2015, 10, 21, 19, 28)
+
+  <Arguments>
+    unix_timestamp:
+      An integer representing the time (e.g., 1445455680).  Conformant to
+      'securesystemslib.formats.UNIX_TIMESTAMP_SCHEMA'.
+
+  <Exceptions>
+    securesystemslib.exceptions.FormatError, if 'unix_timestamp' is improperly
+    formatted.
+
+  <Side Effects>
+    None.
+
+  <Returns>
+    A datetime.datetime() object corresponding to 'unix_timestamp'.
+  """
+
+  # Is 'unix_timestamp' properly formatted?
+  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
+  securesystemslib.formats.UNIX_TIMESTAMP_SCHEMA.check_match(unix_timestamp)
+
+  # Convert 'unix_timestamp' to a 'time.struct_time',  in UTC.  The Daylight
+  # Savings Time (DST) flag is set to zero.  datetime.fromtimestamp() is not
+  # used because it returns a local datetime.
+  struct_time = time.gmtime(unix_timestamp)
+
+  # Extract the (year, month, day, hour, minutes, seconds) arguments for the
+  # datetime object to be returned.
+  datetime_object = datetime.datetime(*struct_time[:6])
+
+  return datetime_object
+
+
+
+
+def format_base64(data):
+  """
+  <Purpose>
+    Return the base64 encoding of 'data' with whitespace and '=' signs omitted.
+
+  <Arguments>
+    data:
+      Binary or buffer of data to convert.
+
+  <Exceptions>
+    securesystemslib.exceptions.FormatError, if the base64 encoding fails or the
+    argument is invalid.
+
+  <Side Effects>
+    None.
+
+  <Returns>
+    A base64-encoded string.
+  """
+
+  try:
+    return binascii.b2a_base64(data).decode('utf-8').rstrip('=\n ')
+
+  except (TypeError, binascii.Error) as e:
+    raise securesystemslib.exceptions.FormatError('Invalid base64'
+      ' encoding: ' + str(e))
+
+
+
+
+def parse_base64(base64_string):
+  """
+  <Purpose>
+    Parse a base64 encoding with whitespace and '=' signs omitted.
+
+  <Arguments>
+    base64_string:
+      A string holding a base64 value.
+
+  <Exceptions>
+    securesystemslib.exceptions.FormatError, if 'base64_string' cannot be parsed
+    due to an invalid base64 encoding.
+
+  <Side Effects>
+    None.
+
+  <Returns>
+    A byte string representing the parsed based64 encoding of
+    'base64_string'.
+  """
+
+  if not isinstance(base64_string, six.string_types):
+    message = 'Invalid argument: '+repr(base64_string)
+    raise securesystemslib.exceptions.FormatError(message)
+
+  extra = len(base64_string) % 4
+  if extra:
+    padding = '=' * (4 - extra)
+    base64_string = base64_string + padding
+
+  try:
+    return binascii.a2b_base64(base64_string.encode('utf-8'))
+
+  except (TypeError, binascii.Error) as e:
+    raise securesystemslib.exceptions.FormatError('Invalid base64'
+      ' encoding: ' + str(e))
+
+
+
+
+
 def make_signable(object):
   """
   <Purpose>
