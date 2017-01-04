@@ -28,8 +28,8 @@
   raises a 'securesystemslib.exceptions.FormatError' exception if the match fails and the other
   returns a Boolean result.
 
-  ssl_crypto.formats.<SCHEMA>.check_match(object)
-  ssl_crypto.formats.<SCHEMA>.matches(object)
+  securesystemslib.formats.<SCHEMA>.check_match(object)
+  securesystemslib.formats.<SCHEMA>.matches(object)
 
   Example:
 
@@ -38,8 +38,8 @@
              'keyval': {'public': 'public_key',
                         'private': 'private_key'}
 
-  ssl_crypto.formats.RSAKEY_SCHEMA.check_match(rsa_key)
-  ssl_crypto.formats.RSAKEY_SCHEMA.matches(rsa_key)
+  securesystemslib.formats.RSAKEY_SCHEMA.check_match(rsa_key)
+  securesystemslib.formats.RSAKEY_SCHEMA.matches(rsa_key)
 
   In this example, if a dict key or dict value is missing or incorrect,
   the match fails.  There are numerous variations of object checking
@@ -49,8 +49,8 @@
   multiple top-level roles, each with differing metadata formats.
   Example:
 
-  root_object = ssl_crypto.formats.RootFile.from_metadata(root_metadata_file)
-  targets_metadata = ssl_crypto.formats.TargetsFile.make_metadata(...)
+  root_object = securesystemslib.formats.RootFile.from_metadata(root_metadata_file)
+  targets_metadata = securesystemslib.formats.TargetsFile.make_metadata(...)
 
   The input and output of these classes are checked against their respective
   schema to ensure correctly formatted metadata.
@@ -710,39 +710,6 @@ def parse_base64(base64_string):
       ' encoding: ' + str(e))
 
 
-
-
-
-def make_signable(object):
-  """
-  <Purpose>
-    Return the role metadata 'object' in 'SIGNABLE_SCHEMA' format.
-    'object' is added to the 'signed' key, and an empty list
-    initialized to the 'signatures' key.  The caller adds signatures
-    to this second field.
-    Note: check_signable_object_format() should be called after
-    make_signable() and signatures added to ensure the final
-    signable object has a valid format (i.e., a signable containing
-    a supported role metadata).
-
-  <Arguments>
-    object:
-      A role schema dict (e.g., 'ROOT_SCHEMA', 'SNAPSHOT_SCHEMA').
-
-  <Exceptions>
-    None.
-
-  <Side Effects>
-    None.
-
-  <Returns>
-    A dict in 'SIGNABLE_SCHEMA' format.
-  """
-
-  if not isinstance(object, dict) or 'signed' not in object:
-    return { 'signed' : object, 'signatures' : [] }
-  else:
-    return object
 
 
 def _canonical_string_encoder(string):
