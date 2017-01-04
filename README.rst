@@ -1,7 +1,6 @@
-Secure Systems Lib
-------------------
+Secure Systems Library
+----------------------
 
-https://travis-ci.org/secure-systems-lab/securesystemslib.svg?branch=master
 .. image:: https://travis-ci.org/secure-systems-lab/securesystemslib.svg?branch=master
    :target: https://travis-ci.org/secure-systems-lab/securesystemslib
 
