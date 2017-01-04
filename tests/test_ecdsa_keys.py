@@ -32,6 +32,7 @@ import logging
 import securesystemslib.exceptions
 import securesystemslib.formats
 import securesystemslib.ecdsa_keys
+import securesystemslib.pycrypto_keys
 
 logger = logging.getLogger('securesystemslib_test_ecdsa_keys')
 
@@ -51,6 +52,32 @@ class TestECDSA_keys(unittest.TestCase):
     self.assertEqual(True, securesystemslib.formats.PEMECDSA_SCHEMA.matches(public))
     self.assertEqual(True, securesystemslib.formats.PEMECDSA_SCHEMA.matches(private))
 
+    # Test for invalid argument.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+      securesystemslib.ecdsa_keys.generate_public_and_private, 'bad_algo')
+
+
+  def test_create_ecdsa_public_and_private_from_pem(self):
+    global public
+    global private
+
+    # Check format of 'public' and 'private'.
+    self.assertEqual(True, securesystemslib.formats.PEMECDSA_SCHEMA.matches(public))
+    self.assertEqual(True, securesystemslib.formats.PEMECDSA_SCHEMA.matches(private))
+
+    # Check for a valid private pem.
+    public, private = \
+      securesystemslib.ecdsa_keys.create_ecdsa_public_and_private_from_pem(private)
+
+    # Check for an invalid pem (non-private).
+    self.assertRaises(securesystemslib.exceptions.CryptoError,
+      securesystemslib.ecdsa_keys.create_ecdsa_public_and_private_from_pem,
+      public)
+
+    # Test for invalid argument.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+      securesystemslib.ecdsa_keys.create_ecdsa_public_and_private_from_pem,
+      123)
 
 
   def test_create_signature(self):
@@ -86,6 +113,15 @@ class TestECDSA_keys(unittest.TestCase):
 
     valid_signature = securesystemslib.ecdsa_keys.verify_signature(public, method, signature, data)
     self.assertEqual(True, valid_signature)
+
+    # Generate an RSA key so that we can verify that non-ECDSA keys are
+    # rejected.
+    rsa_pem, junk = securesystemslib.pycrypto_keys.generate_rsa_public_and_private()
+
+    # Verify that a non-ECDSA key (via the PEM argument) is rejected.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+      securesystemslib.ecdsa_keys.verify_signature, rsa_pem, method, signature,
+      data)
 
     # Check for improperly formatted arguments.
     self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.ecdsa_keys.verify_signature, 123, method,

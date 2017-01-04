@@ -19,7 +19,7 @@
 
   https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm
 
-  'ssl_crypto/ecdsa_keys.py' calls the 'cryptography' library to perform
+  'securesystemslib.ecdsa_keys.py' calls the 'cryptography' library to perform
   all of the ecdsa-related operations.
 
   The ecdsa-related functions included here are generate(), create_signature()
@@ -135,7 +135,9 @@ def generate_public_and_private(algorithm='ecdsa-sha2-nistp256'):
     private_key = ec.generate_private_key(ec.SECP256R1, default_backend())
     public_key = private_key.public_key()
 
-  else:
+  # The formats ECDSAALGORITHMS_SCHEMA check above should have detected any
+  # invalid 'algorithm'.
+  else: #pragma: no cover
     raise securesystemslib.exceptions.UnsupportedLibraryError('An unsupported'
       ' algorithm was specified: ' + repr(algorithm) + '.\n  Supported'
       ' algorithms: ' + repr(_SUPPORTED_ECDSA_ALGORITHMS))
@@ -187,9 +189,9 @@ def create_signature(public_key, private_key, data):
     None.
 
   <Returns>
-    A signature dictionary conformat to 'ssl_crypto.format.SIGNATURE_SCHEMA'.
-    ECDSA signatures are XX bytes, however, the hexlified signature is
-    stored in the dictionary returned.
+    A signature dictionary conformat to
+    'securesystemslib.format.SIGNATURE_SCHEMA'.  ECDSA signatures are XX bytes,
+    however, the hexlified signature is stored in the dictionary returned.
   """
 
   # Do 'public_key' and 'private_key' have the correct format?
@@ -359,6 +361,7 @@ def create_ecdsa_public_and_private_from_pem(pem, password=None):
 
   if password is not None:
     securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+    password = password.encode('utf-8')
 
   else:
     logger.debug('The password/passphrase is unset.  The PEM is expected'
@@ -373,8 +376,8 @@ def create_ecdsa_public_and_private_from_pem(pem, password=None):
     private = load_pem_private_key(pem.encode('utf-8'), password=password,
       backend=default_backend())
 
-  except (ValueError, cryptography.exceptions.UnsupportedAlogorithm) as e:
-    raise ssl_crypto_exceptions.CryptoError('Could not import private'
+  except (ValueError, cryptography.exceptions.UnsupportedAlgorithm) as e:
+    raise securesystemslib.exceptions.CryptoError('Could not import private'
       ' PEM.\n' + str(e))
 
   public = private.public_key()
@@ -393,11 +396,11 @@ def create_ecdsa_public_and_private_from_pem(pem, password=None):
 
 
 
-def create_ecdsa_encrypted_pem(private_key, passphrase):
+def create_ecdsa_encrypted_pem(private_pem, passphrase):
   """
   <Purpose>
     Return a string in PEM format, where the private part of the ECDSA key is
-    encrypted. The private part of the ECDSA key is encrypted as followed by
+    encrypted. The private part of the ECDSA key is encrypted as done by
     pyca/cryptography: "Encrypt using the best available encryption for a given
     key's backend. This is a curated encryption choice and the algorithm may
     change over time."
@@ -409,8 +412,8 @@ def create_ecdsa_encrypted_pem(private_key, passphrase):
     True
 
   <Arguments>
-    private_key:
-    The private key string in PEM format.
+    private_pem:
+    The private ECDSA key string in PEM format.
 
     passphrase:
     The passphrase, or password, to encrypt the private part of the ECDSA
@@ -428,20 +431,20 @@ def create_ecdsa_encrypted_pem(private_key, passphrase):
     None.
 
   <Returns>
-    A string in PEM format, where the private RSA key is encrypted.
+    A string in PEM format, where the private RSA portion is encrypted.
     Conforms to 'securesystemslib.formats.PEMECDSA_SCHEMA'.
   """
 
   # Does 'private_key' have the correct format?
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.PEMRSA_SCHEMA.check_match(private_key)
+  securesystemslib.formats.PEMRSA_SCHEMA.check_match(private_pem)
 
   # Does 'passphrase' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(passphrase)
 
   encrypted_pem = None
 
-  private = load_pem_private_key(private_key.encode('utf-8'), password=None,
+  private = load_pem_private_key(private_pem.encode('utf-8'), password=None,
     backend=default_backend())
 
   encrypted_private_pem = \

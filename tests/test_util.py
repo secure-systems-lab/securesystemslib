@@ -363,10 +363,13 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     self.assertRaises(IOError, securesystemslib.util.load_json_file, 'non-existent.json')
 
     # Invalid JSON content.
-    with open(filepath, 'a') as filepath:
-      filepath.write('junk data')
+    filepath_bad_data = self.make_temp_file()
+    fileobj = open(filepath_bad_data, 'wt')
+    fileobj.write('junk data')
+    fileobj.close()
 
-    self.assertRaises(securesystemslib.exceptions.Error, securesystemslib.util.load_json_file, filepath)
+    self.assertRaises(securesystemslib.exceptions.Error,
+      securesystemslib.util.load_json_file, filepath_bad_data)
 
 
 
@@ -577,6 +580,13 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     temp_directory = self.make_temp_directory()
     os.rmdir(temp_directory)
 
+
+
+  def test_c5_unittest_toolbox_random_path(self):
+    # Verify that a random path can be generated with unittest_toolbox.
+    random_path = self.random_path(length=10)
+    self.assertTrue(securesystemslib.formats.PATH_SCHEMA.matches(random_path))
+    self.assertTrue(10, len(random_path))
 
 
   def test_c6_get_compressed_length(self):

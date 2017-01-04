@@ -446,8 +446,8 @@ def verify_rsa_signature(signature, signature_method, public_key, data):
 
   # Raised by load_pem_public_key().
   except (ValueError, cryptography.exceptions.UnsupportedAlgorithm) as e:
-    raise securesystemslib.exceptions.CryptoError('The PEM could not be decoded successfully,'
-      ' or contained an unsupported key type: ' + str(e))
+    raise securesystemslib.exceptions.CryptoError('The PEM could not be'
+      ' decoded successfully, or contained an unsupported key type: ' + str(e))
 
 
 def create_rsa_encrypted_pem(private_key, passphrase):
@@ -479,7 +479,7 @@ def create_rsa_encrypted_pem(private_key, passphrase):
 
     securesystemslib.exceptions.CryptoError, if an RSA key in encrypted PEM format cannot be created.
 
-    TypeError, if 'private_key' is unset.
+    ValueError, if 'private_key' is unset.
 
   <Side Effects>
     PyCrypto's Crypto.PublicKey.RSA.exportKey() called to perform the actual
@@ -500,15 +500,12 @@ def create_rsa_encrypted_pem(private_key, passphrase):
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(passphrase)
 
   # 'private_key' is in PEM format and unencrypted.  The extracted key will be
-  # imported and converted to PyCrypto's RSA key object
-  # (i.e., Crypto.PublicKey.RSA).  Use PyCrypto's exportKey method, with a
-  # passphrase specified, to create the string.  PyCrypto uses PBKDF1+MD5 to
-  # strengthen 'passphrase', and 3DES with CBC mode for encryption.
-  # 'private_key' may still be a NULL string after the
-  # 'securesystemslib.formats.PEMRSA_SCHEMA' (i.e., 'private_key' has variable size and can
-  # be an empty string.
-  # TODO: Use PyCrypto to generate the encrypted PEM string.  Generating
-  # encrypted PEMs appears currently unsupported by pyca/cryptography.
+  # imported and converted to PyCrypto's RSA key object (i.e.,
+  # Crypto.PublicKey.RSA).  Use PyCrypto's exportKey method, with a passphrase
+  # specified, to create the string.  PyCrypto uses PBKDF1+MD5 to strengthen
+  # 'passphrase', and 3DES with CBC mode for encryption.  'private_key' may
+  # still be a NULL string after the 'securesystemslib.formats.PEMRSA_SCHEMA'
+  # (i.e., 'private_key' has variable size and can be an empty string.
   if len(private_key):
     try:
       private_key = load_pem_private_key(private_key.encode('utf-8'),
@@ -519,7 +516,7 @@ def create_rsa_encrypted_pem(private_key, passphrase):
         ' deserialized.')
 
   else:
-    raise TypeError('The required private key is unset.')
+    raise ValueError('The required private key is unset.')
 
   encrypted_pem = \
     private_key.private_bytes(encoding=serialization.Encoding.PEM,
@@ -700,7 +697,7 @@ def encrypt_key(key_object, password):
     securesystemslib.exceptions.FormatError, if any of the arguments are improperly
     formatted or 'key_object' does not contain the private portion of the key.
 
-    securesystemslib.exceptions.CryptoError, if an ED25519 key in encrypted TUF
+    securesystemslib.exceptions.CryptoError, if an Ed25519 key in encrypted TUF
     format cannot be created.
 
   <Side Effects>
@@ -821,7 +818,7 @@ def decrypt_key(encrypted_key, password):
 
   # Decrypt 'encrypted_key', using 'password' (and additional key derivation
   # data like salts and password iterations) to re-derive the decryption key.
-  json_data = _decrypt(encrypted_key.decode('utf-8'), password)
+  json_data = _decrypt(encrypted_key, password)
 
   # Raise 'securesystemslib.exceptions.Error' if 'json_data' cannot be deserialized
   # to a valid 'securesystemslib.formats.ANYKEY_SCHEMA' key object.

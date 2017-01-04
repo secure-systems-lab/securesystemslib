@@ -26,9 +26,9 @@
   https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm
 
   The (RSA, ECDSA and Ed25519)-related functions provided include
-  generate_rsa_key(), generate_ed25519_key(), genereate_ecdsa_key(),
+  generate_rsa_key(), generate_ed25519_key(), generate_ecdsa_key(),
   create_signature(), and verify_signature().  The cryptography libraries
-  called by 'ssl_crypto.keys.py' generate the actual TUF keys and the functions
+  called by 'securesystemslib.keys.py' generate the actual TUF keys and the functions
   listed above can be viewed as the easy-to-use public interface.
 
   Additional functions contained here include format_keyval_to_metadata() and
@@ -339,18 +339,12 @@ def generate_ecdsa_key(algorithm='ecdsa-sha2-nistp256'):
       securesystemslib.ecdsa_keys.generate_public_and_private(algorithm)
 
   else: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError('One of the supported'
-      ' libraries is unavailable.')
+    raise securesystemslib.exceptions.UnsupportedLibraryError('One of the'
+      ' supported libraries is unavailable.')
 
   # Generate the keyid of the Ed25519 key.  'key_value' corresponds to the
   # 'keyval' entry of the 'Ed25519KEY_SCHEMA' dictionary.  The private key
   # information is not included in the generation of the 'keyid' identifier.
-  """
-  key_value = {'public': binascii.hexlify(public).decode(),
-               'private': ''}
-  keyid = _get_keyid(keytype, key_value)
-  """
-
   key_value = {'public': public,
                'private': ''}
   keyid = _get_keyid(keytype, key_value)
@@ -359,7 +353,6 @@ def generate_ecdsa_key(algorithm='ecdsa-sha2-nistp256'):
   # private key prior to adding 'key_value' to 'ed25519_key'.
 
   key_value['private'] = private
-  #key_value['private'] = binascii.hexlify(private).decode()
 
   ecdsa_key['keytype'] = keytype
   ecdsa_key['keyid'] = keyid
@@ -689,7 +682,7 @@ def check_crypto_libraries(required_libraries):
   # on user-installed crypto libraries should call this private function to
   # ensure the called routine does not fail with unpredictable exceptions in
   # the event of a missing library.  The supported and available lists checked
-  # are populated when 'ssl_crypto.keys.py' is imported.
+  # are populated when 'securesystemslib.keys.py' is imported.
 
   if 'rsa' in required_libraries and _RSA_CRYPTO_LIBRARY not in \
                                    _SUPPORTED_RSA_CRYPTO_LIBRARIES:
@@ -814,7 +807,7 @@ def create_signature(key_dict, data):
     actual signing routine.
 
   <Returns>
-    A signature dictionary conformant to 'ssl_crypto_format.SIGNATURE_SCHEMA'.
+    A signature dictionary conformant to 'securesystemslib_format.SIGNATURE_SCHEMA'.
   """
 
   # Does 'key_dict' have the correct format?
@@ -950,7 +943,7 @@ def verify_signature(key_dict, signature, data):
       Conformant to 'securesystemslib.formats.SIGNATURE_SCHEMA'.
 
     data:
-      Data object used by ssl_crypto.rsa_key.create_signature() to generate
+      Data object used by securesystemslib.rsa_key.create_signature() to generate
       'signature'.  'data' is needed here to verify the signature.
 
   <Exceptions>
@@ -1007,7 +1000,7 @@ def verify_signature(key_dict, signature, data):
           ' repository listed an RSA signature.  "pycrypto" was set'
           ' (in conf.py) to generate RSA signatures, but the PyCrypto library'
           ' is not installed.  \n$ pip install PyCrypto, or pip install'
-          ' ssl_crypto[tools], or you can try switching your configuration'
+          ' securesystemslib[tools], or you can try switching your configuration'
           ' (settings.py) to use pyca-cryptography if that is available'
           ' instead.')
 
@@ -1021,8 +1014,8 @@ def verify_signature(key_dict, signature, data):
           ' repository listed an RSA signature.  "pyca-cryptography" was set'
           ' (in conf.py) to generate RSA signatures, but the "cryptography"'
           ' library is not installed.  \n$ pip install cryptography, or pip'
-          ' install ssl_crypto[tools], or you can try switching your'
-          ' configuration (ssl_crypto/conf.py) to use PyCrypto if that is'
+          ' install securesystemslib[tools], or you can try switching your'
+          ' configuration (securesystemslib/settings.py) to use PyCrypto if that is'
           ' available instead.')
 
       else:
@@ -1344,11 +1337,15 @@ def extract_pem(pem, private_pem=False):
     Note: This function assumes "pem" is a valid pem in the following format:
     pem header + key material + key footer.  Crypto libraries (e.g., pyca's
     cryptography) that parse the pem returned by this function are expected to
-    fully validate and process the pem.
+    fully validate the pem.
 
   <Arguments>
     pem:
       A string in PEM format.
+
+    private_pem:
+      Boolean that indicates whether 'pem' is a private PEM.  Private PEMs
+      are not shown in exception messages.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'pem' is improperly formatted.
@@ -1799,7 +1796,7 @@ def is_pem_private(pem, keytype='rsa'):
     pem_footer = '-----END EC PRIVATE KEY-----'
 
   else:
-    raise ssl_crypto_exceptions.FormatError('Unsupported key'
+    raise securesystemslib.exceptions.FormatError('Unsupported key'
       ' type: ' + repr(keytype) + '.  Supported keytypes: ["rsa", "ec"]')
 
   try:

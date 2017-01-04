@@ -773,7 +773,7 @@ def decrypt_key(encrypted_key, password):
 
   # Decrypt 'encrypted_key', using 'password' (and additional key derivation
   # data like salts and password iterations) to re-derive the decryption key.
-  json_data = _decrypt(encrypted_key.decode('utf-8'), password)
+  json_data = _decrypt(encrypted_key, password)
 
   # Raise 'securesystemslib.exceptions.Error' if 'json_data' cannot be deserialized
   # to a valid 'securesystemslib.formats.ANYKEY_SCHEMA' key object.
