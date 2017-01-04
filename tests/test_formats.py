@@ -338,7 +338,10 @@ class TestFormats(unittest.TestCase):
     self.assertEqual('[1,2,3]', encode([1, 2, 3]))
     self.assertEqual('[1,2,3]', encode([1,2,3]))
     self.assertEqual('[]', encode([]))
+    self.assertEqual('{}', encode({}))
     self.assertEqual('{"A":[99]}', encode({"A": [99]}))
+    self.assertEqual('{"A":true}', encode({"A": True}))
+    self.assertEqual('{"B":false}', encode({"B": False}))
     self.assertEqual('{"x":3,"y":2}', encode({"x": 3, "y": 2}))
 
     self.assertEqual('{"x":3,"y":null}', encode({"x": 3, "y": None}))

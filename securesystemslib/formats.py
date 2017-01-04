@@ -509,7 +509,7 @@ TIMESTAMP_SCHEMA = SCHEMA.Object(
   _type = SCHEMA.String('Timestamp'),
   version = METADATAVERSION_SCHEMA,
   expires = ISO8601_DATETIME_SCHEMA,
-  meta = VERSIONDICT_SCHEMA)
+  meta = FILEDICT_SCHEMA)
 
 # project.cfg file: stores information about the project in a json dictionary
 PROJECT_CFG_SCHEMA = SCHEMA.Object(
