@@ -1,0 +1,22 @@
+language: python
+
+sudo: false
+
+cache: pip
+
+python:
+  - "3.5"
+
+before_script:
+  - pip install -U pip wheel tox
+
+script: tox
+
+after_success:
+  - cd tests
+  - coveralls
+  - cd -
+
+branches:
+  only:
+    - master
