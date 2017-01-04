@@ -126,7 +126,6 @@ import securesystemslib.formats
 import securesystemslib.util
 
 # Extract/reference the cryptography library settings.
-# TODO: from simple_settings import settings
 import securesystemslib.settings
 
 # Recommended RSA key sizes:

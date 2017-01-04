@@ -62,7 +62,7 @@ ECDSA_CRYPTO_LIBRARY = 'pyca-cryptography'
 # of the software updater.
 # Supported libraries for general-purpose cryptography:  ['pycrypto',
 # 'pyca-cryptography']
-GENERAL_CRYPTO_LIBRARY = 'pycrypto'
+GENERAL_CRYPTO_LIBRARY = 'pyca-cryptography'
 
 # The algorithm(s) in HASH_ALGORITHMS are used to generate key IDs.
 HASH_ALGORITHMS = ['sha256', 'sha512']
