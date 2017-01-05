@@ -16,12 +16,12 @@ Overview
 
 The secure systems library (securesystemslib) supports multiple public-key
 algorithms, such as `ECDSA
-<https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm>`,
+<https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm>`_,
 `Ed25519 <http://ed25519.cr.yp.to/>`_ and `RSA
 <https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29>`_, via multiple
 cryptography libraries.  This library is written in Python.  Users may choose
 from multiple library options for supported algorithms by modifying their
-corresponding entries in [settings.py](settings.py).
+corresponding entries in settings.py.
 
 The `cryptography
 <https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm>`_
@@ -41,6 +41,7 @@ files can be done with functions available in securesystemslib.
 Installation
 ++++++++++++
 ::
+
     $ pip install securesystemslib
 
 
@@ -52,6 +53,7 @@ that should be entered by the reader, `#` begins the start of a comment, and
 text without prepended symbols is the output of a command.
 
 ::
+
     >>> from securesystemslib import *
 
     # The following function creates an RSA key pair, where the private key is
@@ -80,6 +82,7 @@ Import RSA Keys
 ~~~~~~~~~~~~~~~
 
 ::
+
     # Continuing from the previous section . . .
 
     # Import an existing public key.
@@ -96,6 +99,7 @@ Import RSA Keys
 invalid:
 
 ::
+
     securesystemslib.exceptions.CryptoError: RSA (public, private) tuple cannot
     be generated from the encrypted PEM string: Bad decrypt. Incorrect password?
 
@@ -106,6 +110,7 @@ Create and Import Ed25519 Keys
 ++++++++++++++++++++++++++++++
 
 ::
+
     # Continuing from the previous section . . .
 
     # Generate and write an Ed25519 key pair.  The private key is saved
