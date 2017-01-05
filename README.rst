@@ -14,21 +14,21 @@ at NYU.
 Overview
 ++++++++
 
-The secure systems library (securesystemslib) supports multiple public-key
-algorithms, such as `ECDSA
+The secure systems library (securesystemslib) supports public-key algorithms,
+such as `ECDSA
 <https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm>`_,
 `Ed25519 <http://ed25519.cr.yp.to/>`_ and `RSA
-<https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29>`_, via multiple
-cryptography libraries.  This library is written in Python.  Users may choose
-from multiple library options for supported algorithms by modifying their
-corresponding entries in settings.py.
+<https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29>`_, via multiple external
+cryptography libraries (e.g., cryptography and PyNaCl).  This library is
+written in Python.  Users may choose from cryptography library options for
+supported algorithms by modifying their corresponding entries in settings.py.
 
-The `cryptography
+The `cryptography <https://cryptography.io/en/latest/>`_ library may be used to
+generate keys and signatures with the `ECDSA
 <https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm>`_
-library may be used to generate keys and signatures with the ECDSA and RSA
-algorithms, and perform general-purpose cryptography such as encrypting keys.
-The `PyCrypto <https://www.dlitz.net/software/pycrypto/>`_ library may be
-selected to generate RSA keys and `RSA-PSS
+and RSA algorithms, and perform general-purpose cryptography such as encrypting
+keys.  The `PyCrypto <https://www.dlitz.net/software/pycrypto/>`_ library may
+be selected to generate RSA keys and `RSA-PSS
 <https://en.wikipedia.org/wiki/RSA-PSS>`_ signatures.  If generation of Ed25519
 signatures is needed, the `PyNaCl <https://github.com/pyca/pynacl>`_ library
 setting should be enabled.  PyNaCl is a Python binding to the Networking and
