@@ -56,7 +56,7 @@ text without prepended symbols is the output of a command.
 
 ::
 
-    >>> from securesystemslib import *
+    >>> from securesystemslib.interface import *
 
     # The following function creates an RSA key pair, where the private key is
     # saved to "rsa_key1" and the public key to "rsa_key1.pub" (both saved to
@@ -88,8 +88,7 @@ Import RSA Keys
     # Continuing from the previous section . . .
 
     # Import an existing public key.
-    >>> public_rsa_key1 =
-    >>> import_rsa_publickey_from_file("rsa_key1.pub")
+    >>> public_rsa_key1 = import_rsa_publickey_from_file("rsa_key1.pub")
 
     # Import an existing private key.  Importing a private key requires a
     # password, whereas importing a public key does not.
@@ -109,7 +108,7 @@ Note: The specific message provided by the exception might differ depending on
 which cryptography library is used.
 
 Create and Import Ed25519 Keys
-++++++++++++++++++++++++++++++
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
@@ -122,29 +121,27 @@ Create and Import Ed25519 Keys
     Enter a password for the Ed25519 key:
     Confirm:
 
-    # Import the ed25519 public key just created . . .
-    >>> public_ed25519_key =
-    >>> import_ed25519_publickey_from_file('ed25519_key.pub')
+    # Import the Ed25519 public key just created . . .
+    >>> public_ed25519_key = import_ed25519_publickey_from_file('ed25519_key.pub')
 
     # and its corresponding private key.
-    >>> private_ed25519_key =
-    >>> import_ed25519_privatekey_from_file('ed25519_key')
+    >>> private_ed25519_key = import_ed25519_privatekey_from_file('ed25519_key')
     Enter a password for the encrypted Ed25519 key:
 
 
 Create and Import ECDSA Keys
-++++++++++++++++++++++++++++
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 TODO
 
 
 Verify ECDSA, RSA, and Ed25519 Keys
-+++++++++++++++++++++++++++++++++++
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 TODO
 
 
 Hashing
-+++++++
+~~~~~~~
 
 TODO
