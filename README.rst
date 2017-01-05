@@ -14,14 +14,16 @@ at NYU.
 Overview
 ++++++++
 
-The secure systems library (securesystemslib) supports public-key algorithms,
-such as `ECDSA
+The secure systems library (securesystemslib) supports public-key and
+general-purpose cryptography, such as `ECDSA
 <https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm>`_,
-`Ed25519 <http://ed25519.cr.yp.to/>`_ and `RSA
-<https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29>`_, via multiple external
-cryptography libraries (e.g., cryptography and PyNaCl).  This library is
-written in Python.  Users may choose from cryptography library options for
-supported algorithms by modifying their corresponding entries in settings.py.
+`Ed25519 <http://ed25519.cr.yp.to/>`_, `RSA
+<https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29>`_, SHA256, SHA512, etc.
+Cryptography operations are performed via configurable external cryptography
+libraries (e.g., `cryptography <https://cryptography.io/en/latest/>`_ and
+`PyNaCl <https://github.com/pyca/pynacl>`_.  securesystemslib is written in
+Python.  Users may choose from cryptography library options for supported
+algorithms by modifying their corresponding entries in settings.py.
 
 The `cryptography <https://cryptography.io/en/latest/>`_ library may be used to
 generate keys and signatures with the `ECDSA
@@ -48,8 +50,8 @@ Installation
 Create RSA Keys
 ~~~~~~~~~~~~~~~
 
-Note:  In the instructions below, lines that start with `>>>` denote commands
-that should be entered by the reader, `#` begins the start of a comment, and
+Note:  In the instructions below, lines that start with *>>>* denote commands
+that should be entered by the reader, *#* begins the start of a comment, and
 text without prepended symbols is the output of a command.
 
 ::
@@ -95,7 +97,7 @@ Import RSA Keys
     Enter a password for the encrypted RSA key:
 
 **import_rsa_privatekey_from_file()** raises a
-`securesystemslib.exceptions.CryptoError` exception if the key / password is
+*securesystemslib.exceptions.CryptoError* exception if the key / password is
 invalid:
 
 ::
@@ -130,3 +132,19 @@ Create and Import Ed25519 Keys
     Enter a password for the encrypted Ed25519 key:
 
 
+Create and Import ECDSA Keys
+++++++++++++++++++++++++++++
+
+TODO
+
+
+Verify ECDSA, RSA, and Ed25519 Keys
++++++++++++++++++++++++++++++++++++
+
+TODO
+
+
+Hashing
++++++++
+
+TODO
