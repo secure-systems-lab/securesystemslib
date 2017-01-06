@@ -75,10 +75,10 @@ text without prepended symbols is the output of a command.
 
 The following four key files should now exist:
 
-1.  **rsa_key1**
-2.  **rsa_key1.pub**
-3.  **rsa_key2**
-4.  **rsa_key2.pub**
+1.  rsa_key1
+2.  rsa_key1.pub
+3.  rsa_key2
+4.  rsa_key2.pub
 
 Import RSA Keys
 ~~~~~~~~~~~~~~~
@@ -132,16 +132,187 @@ Create and Import Ed25519 Keys
 Create and Import ECDSA Keys
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TODO
+::
+
+    # continuing from the previous sections . . .
+
+    >>> generate_and_write_ecdsa_keypair('ecdsa_key')
+    Enter a password for the ECDSA key:
+    Confirm:
+
+    >>> public_ecdsa_key = import_ecdsa_publickey_from_file('ecdsa_key.pub')
+    >>> private_ecdsa_key = import_ecdsa_privatekey_from_file('ecdsa_key')
+    Enter a password for the encrypted ECDSA key:
 
 
-Verify ECDSA, RSA, and Ed25519 Keys
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Generate ECDSA, Ed25519, and RSA Signatures
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TODO
+Note: Users may also access the crypto functions directly to perform
+cryptographic operations.
+
+::
+
+    >>> from securesystemslib.keys import *
+
+    >>> data = 'The quick brown fox jumps over the lazy dog'
+    >>> ed25519_key = generate_ed25519_key()
+    >>> signature = create_signature(ed25519_key, data)
+    >>> rsa_key = generate_rsa_key(2048)
+    >>> signature = create_signature(rsa_key, data)
+    >>> ecdsa_key = generate_ecdsa_key()
+    >>> signature = create_signature(ecdsa_key, data)
 
 
-Hashing
-~~~~~~~
+Verify ECDSA, Ed25519, and RSA Signatures
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TODO
+::
+
+    # Continuing from the previous sections . . .
+
+    >>> data = 'The quick brown fox jumps over the lazy dog'
+    >>> ed25519_key = generate_ed25519_key()
+    >>> signature = create_signature(ed25519_key, data)
+    >>> verify_signature(ed25519_key, signature, data)
+    True
+    >>> verify_signature(ed25519_key, signature, 'bad_data')
+    False
+    >>> rsa_key = generate_rsa_key()
+    >>> signature = create_signature(rsa_key, data)
+    >>> verify_signature(rsa_key, signature, data)
+    True
+    >>> ecdsa_key = generate_ecdsa_key()
+    >>> signature = create_signature(ecdsa_key, data)
+    >>> verify_signature(ecdsa_key, signature, data)
+    True
+
+
+Miscellaneous functions
+~~~~~~~~~~~~~~~~~~~~~~~
+
+**create_rsa_encrypted_pem()**
+
+::
+
+    # Continuing from the previous sections . . .
+
+    >>> rsa_key = generate_rsa_key()
+    >>> private = rsa_key['keyval']['private']
+    >>> passphrase = 'secret'
+    >>> encrypted_pem = create_rsa_encrypted_pem(private, passphrase)
+
+**import_rsakey_from_public_pem()**
+
+::
+
+    >>> rsa_key = generate_rsa_key()
+    >>> public = rsa_key['keyval']['public']
+    >>> rsa_key2 = import_rsakey_from_public_pem(public)
+
+
+**import_rsakey_from_pem()**
+
+::
+
+    >>> rsa_key = generate_rsa_key()
+    >>> public = rsa_key['keyval']['public']
+    >>> private = rsa_key['keyval']['private']
+    >>> rsa_key2 = import_rsakey_from_pem(public)
+    >>> rsa_key3 = import_rsakey_from_pem(private)
+
+
+**extract_pem()**
+
+::
+
+    >>> rsa_key = generate_rsa_key()
+    >>> private_pem = extract_pem(rsakey['keyval']['private'], private_pem=True)
+    >>> public_pem = extract_pem(rsakey['keyval']['public'], private_pem=False)
+
+
+**encrypt_key()**
+
+::
+
+    >>> ed25519_key = generate_ed25519_key()
+    >>> password = 'secret'
+    >>> encrypted_key = encrypt_key(ed25519_key, password)
+
+
+**decrypt_key()**
+
+::
+
+    >>> ed25519_key = generate_ed25519_key()
+    >>> password = 'secret'
+    >>> encrypted_key = encrypt_key(ed25519_key, password)
+    >>> decrypted_key = decrypt_key(encrypted_key.encode('utf-8'), password)
+    >>> decrypted_key == ed25519_key
+    True
+
+
+**create_rsa_encrypted_pem()**
+
+::
+
+  >>> rsa_key = generate_rsa_key()
+  >>> private = rsa_key['keyval']['private']
+  >>> passphrase = 'secret'
+  >>> encrypted_pem = create_rsa_encrypted_pem(private, passphrase)
+
+
+**is_pem_public()**
+
+::
+
+    >>> rsa_key = generate_rsa_key()
+    >>> public = rsa_key['keyval']['public']
+    >>> private = rsa_key['keyval']['private']
+    >>> is_pem_public(public)
+    True
+    >>> is_pem_public(private)
+    False
+
+
+**is_pem_private()**
+
+::
+
+    >>> rsa_key = generate_rsa_key()
+    >>> private = rsa_key['keyval']['private']
+    >>> public = rsa_key['keyval']['public']
+    >>> is_pem_private(private)
+    True
+    >>> is_pem_private(public)
+    False
+
+
+**import_ecdsakey_from_private_pem()**
+
+::
+
+    >>> ecdsa_key = generate_ecdsa_key()
+    >>> private_pem = ecdsa_key['keyval']['private']
+    >>> ecdsa_key2 = import_ecdsakey_from_private_pem(private_pem)
+
+
+**import_ecdsakey_from_public_pem()**
+
+::
+
+    >>> ecdsa_key = generate_ecdsa_key()
+    >>> public = ecdsa_key['keyval']['public']
+    >>> ecdsa_key2 = import_ecdsakey_from_public_pem(public)
+
+
+**import_ecdsakey_from_pem()**
+
+::
+
+    >>> ecdsa_key = generate_ecdsa_key()
+    >>> private_pem = ecdsa_key['keyval']['private']
+    >>> ecdsa_key2 = import_ecdsakey_from_pem(private_pem)
+    >>> public_pem = ecdsa_key['keyval']['public']
+    >>> ecdsa_key2 = import_ecdsakey_from_pem(public_pem)
+

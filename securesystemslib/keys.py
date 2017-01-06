@@ -771,8 +771,11 @@ def create_signature(key_dict, data):
     >>> len(signature['sig'])
     128
     >>> rsa_key = generate_rsa_key(2048)
-    >>> data = 'The quick brown fox jumps over the lazy dog'
     >>> signature = create_signature(rsa_key, data)
+    >>> securesystemslib.formats.SIGNATURE_SCHEMA.matches(signature)
+    True
+    >>> ecdsa_key = generate_ecdsa_key()
+    >>> signature = create_signature(ecdsa_key, data)
     >>> securesystemslib.formats.SIGNATURE_SCHEMA.matches(signature)
     True
 
