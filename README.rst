@@ -169,6 +169,8 @@ Verify ECDSA, Ed25519, and RSA Signatures
 
 ::
 
+    # Continuing from the previous sections . . .
+
     >>> data = 'The quick brown fox jumps over the lazy dog'
     >>> ed25519_key = generate_ed25519_key()
     >>> signature = create_signature(ed25519_key, data)
@@ -186,13 +188,67 @@ Verify ECDSA, Ed25519, and RSA Signatures
     True
 
 
-Hashing
-~~~~~~~
-
-TODO
-
-
 Miscellaneous functions
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-TODO
+create_rsa_encrypted_pem()
+
+::
+
+    # Continuing from the previous sections . . .
+
+    >>> rsa_key = generate_rsa_key()
+    >>> private = rsa_key['keyval']['private']
+    >>> passphrase = 'secret'
+    >>> encrypted_pem = create_rsa_encrypted_pem(private, passphrase)
+
+import_rsakey_from_public_pem()
+
+::
+
+    >>> rsa_key = generate_rsa_key()
+    >>> public = rsa_key['keyval']['public']
+    >>> rsa_key2 = import_rsakey_from_public_pem(public)
+
+
+import_rsakey_from_pem()
+
+::
+
+    >>> rsa_key = generate_rsa_key()
+    >>> public = rsa_key['keyval']['public']
+    >>> private = rsa_key['keyval']['private']
+    >>> rsa_key2 = import_rsakey_from_pem(public)
+    >>> rsa_key3 = import_rsakey_from_pem(private)
+
+
+extract_pem()
+
+::
+
+    >>> rsa_key = generate_rsa_key()
+    >>> private_pem = extract_pem(rsakey['keyval']['private'], private_pem=True)
+    >>> public_pem = extract_pem(rsakey['keyval']['public'], private_pem=False)
+
+
+encrypt_key()
+
+::
+
+    >>> ed25519_key = generate_ed25519_key()
+    >>> password = 'secret'
+    >>> encrypted_key = encrypt_key(ed25519_key, password)
+
+
+decrypt_key()
+
+::
+
+    >>> ed25519_key = generate_ed25519_key()
+    >>> password = 'secret'
+    >>> encrypted_key = encrypt_key(ed25519_key, password)
+    >>> decrypted_key = decrypt_key(encrypted_key.encode('utf-8'), password)
+    >>> decrypted_key == ed25519_key
+    True
+
+
