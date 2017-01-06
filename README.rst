@@ -21,9 +21,9 @@ general-purpose cryptography, such as `ECDSA
 <https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29>`_, SHA256, SHA512, etc.
 Cryptography operations are performed via configurable external cryptography
 libraries (e.g., `cryptography <https://cryptography.io/en/latest/>`_ and
-`PyNaCl <https://github.com/pyca/pynacl>`_.  securesystemslib is written in
-Python.  Users may choose from cryptography library options for supported
-algorithms by modifying their corresponding entries in settings.py.
+`PyNaCl <https://github.com/pyca/pynacl>`_).  Users may choose from
+cryptography library options for supported algorithms by modifying their
+corresponding entries in settings.py.
 
 The `cryptography <https://cryptography.io/en/latest/>`_ library may be used to
 generate keys and signatures with the `ECDSA
