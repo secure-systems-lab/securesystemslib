@@ -132,16 +132,32 @@ Create and Import Ed25519 Keys
 Create and Import ECDSA Keys
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TODO
+::
+
+    # continuing from the previous sections . . .
+
+    >>> generate_and_write_ecdsa_keypair('ecdsa_key')
+    Enter a password for the ECDSA key:
+    Confirm:
+
+    >>> public_ecdsa_key = import_ecdsa_publickey_from_file('ecdsa_key.pub')
+    >>> private_ecdsa_key = import_ecdsa_privatekey_from_file('ecdsa_key')
+    Enter a password for the encrypted ECDSA key:
 
 
-Verify ECDSA, RSA, and Ed25519 Keys
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Verify ECDSA, RSA, and Ed25519 Signatures
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 TODO
 
 
 Hashing
 ~~~~~~~
+
+TODO
+
+
+Miscellaneous functions
+~~~~~~~~~~~~~~~~~~~~~~~
 
 TODO
