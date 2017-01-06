@@ -28,14 +28,14 @@
   The (RSA, ECDSA and Ed25519)-related functions provided include
   generate_rsa_key(), generate_ed25519_key(), generate_ecdsa_key(),
   create_signature(), and verify_signature().  The cryptography libraries
-  called by 'securesystemslib.keys.py' generate the actual TUF keys and the functions
-  listed above can be viewed as the easy-to-use public interface.
+  called by 'securesystemslib.keys.py' generate the actual keys and the
+  functions listed above can be viewed as the easy-to-use public interface.
 
   Additional functions contained here include format_keyval_to_metadata() and
-  format_metadata_to_key().  These last two functions produce or use TUF keys
-  compatible with the key structures listed in TUF Metadata files.  The key
+  format_metadata_to_key().  These last two functions produce or use keys
+  compatible with the key structures listed in Metadata files.  The key
   generation functions return a dictionary containing all the information needed
-  of TUF keys, such as public & private keys, and a keyID.  create_signature()
+  of keys, such as public & private keys, and a keyID.  create_signature()
   and verify_signature() are supplemental functions needed for generating
   signatures and verifying them.
 
@@ -101,7 +101,7 @@ try:
 except ImportError: # pragma: no cover
   pass
 
-# Try to import TUF's pyca/Cryptography module (pyca_crypto_keys.py), which is
+# Try to import the pyca/Cryptography module (pyca_crypto_keys.py), which is
 # used for general-purpose cryptography and generation of RSA keys and
 # signatures.
 try:
@@ -181,10 +181,10 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS):
     Although the PyCrypto and PyCA cryptography libraries do set a minimum key
     size (e.g., 1024-bit minimum in PyCrypto), generate() enforces a minimum
     key size of 2048 bits.  If 'bits' is unspecified, a 3072-bit RSA key is
-    generated, which is the key size recommended by TUF.  These key size
-    restrictions are only enforced for keys generated within TUF.  RSA keys
-    with sizes lower than what we recommended may still be imported (e.g., with
-    import_rsakey_from_pem().
+    generated, which is the key size recommended by securesystemslib.  These
+    key size restrictions are only enforced for keys generated within
+    securesystemslib.  RSA keys with sizes lower than what we recommended may
+    still be imported (e.g., with import_rsakey_from_pem().
 
     >>> rsa_key = generate_rsa_key(bits=2048)
     >>> securesystemslib.formats.RSAKEY_SCHEMA.matches(rsa_key)
@@ -464,9 +464,6 @@ def format_keyval_to_metadata(keytype, key_value, private=False):
      'keyval': {'public': '...',
                 'private': ''}}
 
-    TUF keys are stored in Metadata files (e.g., root.json) in the format
-    returned by this function.
-
     >>> ed25519_key = generate_ed25519_key()
     >>> key_val = ed25519_key['keyval']
     >>> keytype = ed25519_key['keytype']
@@ -539,7 +536,7 @@ def format_keyval_to_metadata(keytype, key_value, private=False):
 def format_metadata_to_key(key_metadata):
   """
   <Purpose>
-    Construct a TUF key dictionary (e.g., securesystemslib.formats.RSAKEY_SCHEMA)
+    Construct a key dictionary (e.g., securesystemslib.formats.RSAKEY_SCHEMA)
     according to the keytype of 'key_metadata'.  The dict returned by this
     function has the exact format as the dict returned by one of the key
     generations functions, like generate_ed25519_key().  The dict returned
@@ -570,7 +567,7 @@ def format_metadata_to_key(key_metadata):
 
   <Arguments>
     key_metadata:
-      The TUF key dictionary as stored in Metadata files, conforming to
+      The key dictionary as stored in Metadata files, conforming to
       'securesystemslib.formats.KEY_SCHEMA'.  It has the form:
 
       {'keytype': '...',
@@ -629,7 +626,7 @@ def _get_keyid(keytype, key_value, hash_algorithm = 'sha256'):
   # 'format_keyval_to_metadata()' returns the object needed by _get_keyid().
   key_meta = format_keyval_to_metadata(keytype, key_value, private=False)
 
-  # Convert the TUF key to JSON Canonical format, suitable for adding
+  # Convert the key to JSON Canonical format, suitable for adding
   # to digest objects.
   key_update_data = securesystemslib.formats.encode_canonical(key_meta)
 
@@ -781,7 +778,7 @@ def create_signature(key_dict, data):
 
   <Arguments>
     key_dict:
-      A dictionary containing the TUF keys.  An example RSA key dict has the
+      A dictionary containing the keys.  An example RSA key dict has the
       form:
 
       {'keytype': 'rsa',
@@ -922,7 +919,7 @@ def verify_signature(key_dict, signature, data):
 
   <Arguments>
     key_dict:
-      A dictionary containing the TUF keys and other identifying information.
+      A dictionary containing the keys and other identifying information.
       If 'key_dict' is an RSA key, it has the form:
 
       {'keytype': 'rsa',
@@ -1415,7 +1412,7 @@ def encrypt_key(key_object, password):
     Return a string containing 'key_object' in encrypted form. Encrypted strings
     may be safely saved to a file.  The corresponding decrypt_key() function can
     be applied to the encrypted string to restore the original key object.
-    'key_object' is a TUF key (e.g., RSAKEY_SCHEMA, ED25519KEY_SCHEMA).  This
+    'key_object' is a key (e.g., RSAKEY_SCHEMA, ED25519KEY_SCHEMA).  This
     function calls the appropriate cryptography module (e.g., pycrypto_keys.py)
     to perform the encryption.
 
@@ -1424,7 +1421,7 @@ def encrypt_key(key_object, password):
     an encrypted PEM file uses the Triple Data Encryption Algorithm (3DES), the
     Cipher-block chaining (CBC) mode of operation, and the Password-Based Key
     Derivation Function 1 (PBKF1) + MD5 to strengthen 'password', encrypted
-    TUF keys use AES-256-CTR-Mode and passwords strengthened with
+    keys use AES-256-CTR-Mode and passwords strengthened with
     PBKDF2-HMAC-SHA256 (100K iterations by default, but may be overriden in
     'securesystemslib.settings.PBKDF2_ITERATIONS' by the user).
 
@@ -1440,7 +1437,7 @@ def encrypt_key(key_object, password):
 
   <Arguments>
     key_object:
-      A TUF key (containing also the private key portion) of the form
+      A key (containing also the private key portion) of the form
       'securesystemslib.formats.ANYKEY_SCHEMA'
 
     password:
@@ -1511,7 +1508,7 @@ def decrypt_key(encrypted_key, passphrase):
   <Purpose>
     Return a string containing 'encrypted_key' in non-encrypted form.
     The decrypt_key() function can be applied to the encrypted string to restore
-    the original key object, a TUF key (e.g., RSAKEY_SCHEMA, ED25519KEY_SCHEMA).
+    the original key object, a key (e.g., RSAKEY_SCHEMA, ED25519KEY_SCHEMA).
     This function calls the appropriate cryptography module (e.g.,
     pycrypto_keys.py) to perform the decryption.
 
@@ -1520,7 +1517,7 @@ def decrypt_key(encrypted_key, passphrase):
     an encrypted PEM file uses the Triple Data Encryption Algorithm (3DES), the
     Cipher-block chaining (CBC) mode of operation, and the Password-Based Key
     Derivation Function 1 (PBKF1) + MD5 to strengthen 'password', encrypted
-    TUF keys use AES-256-CTR-Mode and passwords strengthened with
+    keys use AES-256-CTR-Mode and passwords strengthened with
     PBKDF2-HMAC-SHA256 (100K iterations be default, but may be overriden in
     'settings.py' by the user).
 
@@ -1539,7 +1536,7 @@ def decrypt_key(encrypted_key, passphrase):
 
   <Arguments>
     encrypted_key:
-      An encrypted TUF key (additional data is also included, such as salt,
+      An encrypted key (additional data is also included, such as salt,
       number of password iterations used for the derived encryption key, etc)
       of the form 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA'.  'encrypted_key'
       should have been generated with encrypted_key().
@@ -1565,7 +1562,7 @@ def decrypt_key(encrypted_key, passphrase):
     'securesystemslib.formats.GENERAL_CRYPTO_LIBRARY' and 'password'.
 
   <Returns>
-    A TUF key object of the form: 'securesystemslib.formats.ANYKEY_SCHEMA' (e.g.,
+    A key object of the form: 'securesystemslib.formats.ANYKEY_SCHEMA' (e.g.,
     RSAKEY_SCHEMA, ED25519KEY_SCHEMA).
   """
 
@@ -1587,7 +1584,7 @@ def decrypt_key(encrypted_key, passphrase):
   key_object = None
 
   # Decrypt 'encrypted_key' so that the original key object is restored.
-  # encrypt_key() generates an encrypted string of the TUF key object using
+  # encrypt_key() generates an encrypted string of the key object using
   # AES-256-CTR-Mode, where 'password' is strengthened with PBKDF2-HMAC-SHA256.
   # Ensure the general-purpose library specified in
   # 'settings.GENERAL_CRYPTO_LIBRARY' is supported.

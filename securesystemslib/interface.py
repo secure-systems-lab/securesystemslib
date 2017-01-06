@@ -529,6 +529,226 @@ def import_ed25519_privatekey_from_file(filepath, password=None):
 
 
 
+
+
+def generate_and_write_ecdsa_keypair(filepath, password=None):
+  """
+  <Purpose>
+    Generate an ECDSA key file, create an encrypted key (using 'password' as
+    the pass phrase), and store it in 'filepath'.  The public key portion of
+    the generated ECDSA key is stored in <'filepath'>.pub.  Which cryptography
+    library performs the cryptographic decryption is determined by the string
+    set in 'settings.ECDSA_CRYPTO_LIBRARY'.  'cryptography' library currently
+    supported.  The private key is encrypted according to 'cryptography's
+    approach: "Encrypt using the best available encryption for a given key's
+    backend. This is a curated encryption choice and the algorithm may
+    change over time."
+
+  <Arguments>
+    filepath:
+      The public and private key files are saved to <filepath>.pub and
+      <filepath>, respectively.
+
+    password:
+      The password, or passphrase, to encrypt the private portion of the
+      generated ECDSA key.  A symmetric encryption key is derived from
+      'password', so it is not directly used.
+
+  <Exceptions>
+    securesystemslib.exceptions.FormatError, if the arguments are improperly
+    formatted.
+
+    securesystemslib.exceptions.CryptoError, if 'filepath' cannot be encrypted.
+
+    securesystemslib.exceptions.UnsupportedLibraryError, if 'filepath' cannot be
+    encrypted due to an invalid configuration setting (i.e., invalid
+    'settings.py' setting).
+
+  <Side Effects>
+    Writes key files to '<filepath>' and '<filepath>.pub'.
+
+  <Returns>
+    None.
+  """
+
+  # Does 'filepath' have the correct format?
+  # Ensure the arguments have the appropriate number of objects and object
+  # types, and that all dict keys are properly named.
+  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
+  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+
+  # If the caller does not provide a password argument, prompt for one.
+  if password is None: # pragma: no cover
+    message = 'Enter a password for the ECDSA key: '
+    password = _get_password(message, confirm=True)
+
+  # Does 'password' have the correct format?
+  securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+
+  # Generate a new ECDSA key object and encrypt it.  The cryptography library
+  # used is determined by the user, or by default (set in
+  # 'settings.ECDSA_CRYPTO_LIBRARY').  Raise
+  # 'securesystemslib.exceptions.CryptoError' or
+  # 'securesystemslib.exceptions.UnsupportedLibraryError', if 'ed25519_key'
+  # cannot be encrypted.
+  ecdsa_key = securesystemslib.keys.generate_ecdsa_key()
+  encrypted_key = securesystemslib.keys.encrypt_key(ecdsa_key, password)
+
+  # ECDSA public key file contents in metadata format (i.e., does not include
+  # the keyid portion).
+  keytype = ecdsa_key['keytype']
+  keyval = ecdsa_key['keyval']
+  ecdsakey_metadata_format = \
+    securesystemslib.keys.format_keyval_to_metadata(keytype, keyval, private=False)
+
+  # Write the public key, conformant to 'securesystemslib.formats.KEY_SCHEMA', to
+  # '<filepath>.pub'.
+  securesystemslib.util.ensure_parent_dir(filepath)
+
+  # Create a tempororary file, write the contents of the public key, and move
+  # to final destination.
+  file_object = securesystemslib.util.TempFile()
+  file_object.write(json.dumps(ecdsakey_metadata_format).encode('utf-8'))
+
+  # The temporary file is closed after the final move.
+  file_object.move(filepath + '.pub')
+
+  # Write the encrypted key string, conformant to
+  # 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA', to '<filepath>'.
+  file_object = securesystemslib.util.TempFile()
+  file_object.write(encrypted_key.encode('utf-8'))
+  file_object.move(filepath)
+
+
+
+
+
+def import_ecdsa_publickey_from_file(filepath):
+  """
+  <Purpose>
+    Load the ECDSA public key object (conformant to
+    'securesystemslib.formats.KEY_SCHEMA') stored in 'filepath'.  Return
+    'filepath' in securesystemslib.formats.ECDSAKEY_SCHEMA format.
+
+    If the key object in 'filepath' contains a private key, it is discarded.
+
+  <Arguments>
+    filepath:
+      <filepath>.pub file, a public key file.
+
+  <Exceptions>
+    securesystemslib.exceptions.FormatError, if 'filepath' is improperly
+    formatted or is an unexpected key type.
+
+  <Side Effects>
+    The contents of 'filepath' is read and saved.
+
+  <Returns>
+    An ECDSA key object conformant to
+    'securesystemslib.formats.ECDSAKEY_SCHEMA'.
+  """
+
+  # Does 'filepath' have the correct format?
+  # Ensure the arguments have the appropriate number of objects and object
+  # types, and that all dict keys are properly named.
+  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
+  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+
+  # ECDSA key objects are saved in json and metadata format.  Return the
+  # loaded key object in securesystemslib.formats.ECDSAKEY_SCHEMA' format that
+  # also includes the keyid.
+  ecdsa_key_metadata = securesystemslib.util.load_json_file(filepath)
+  ecdsa_key, junk = securesystemslib.keys.format_metadata_to_key(ecdsa_key_metadata)
+
+  # Raise an exception if an unexpected key type is imported.  Redundant
+  # validation of 'keytype'.  'securesystemslib.keys.format_metadata_to_key()'
+  # should have fully validated 'ecdsa_key_metadata'.
+  if ecdsa_key['keytype'] != 'ecdsa-sha2-nistp256': # pragma: no cover
+    message = 'Invalid key type loaded: ' + repr(ecdsa_key['keytype'])
+    raise securesystemslib.exceptions.FormatError(message)
+
+  return ecdsa_key
+
+
+
+
+
+def import_ecdsa_privatekey_from_file(filepath, password=None):
+  """
+  <Purpose>
+    Import the encrypted ECDSA key file in 'filepath', decrypt it, and return
+    the key object in 'securesystemslib.formats.ECDSAKEY_SCHEMA' format.
+
+    Which cryptography library performs the cryptographic decryption is
+    determined by the string set in 'settings.ECDSA_CRYPTO_LIBRARY'.
+    currently supported.  The 'cryptography' library currently supported.
+
+  <Arguments>
+    filepath:
+      <filepath> file, an ECDSA encrypted key file.
+
+    password:
+      The password, or passphrase, to import the private key (i.e., the
+      encrypted key file 'filepath' must be decrypted before the ECDSA key
+      object can be returned.
+
+  <Exceptions>
+    securesystemslib.exceptions.FormatError, if the arguments are improperly
+    formatted or the imported key object contains an invalid key type (i.e.,
+    not 'ecdsa-sha2-nistp256').
+
+    securesystemslib.exceptions.CryptoError, if 'filepath' cannot be decrypted.
+
+    securesystemslib.exceptions.UnsupportedLibraryError, if 'filepath' cannot be
+    decrypted due to an invalid configuration setting (i.e., invalid
+    'settings.py' setting).
+
+  <Side Effects>
+    'password' is used to decrypt the 'filepath' key file.
+
+  <Returns>
+    An ECDSA key object of the form: 'securesystemslib.formats.ECDSAKEY_SCHEMA'.
+  """
+
+  # Does 'filepath' have the correct format?
+  # Ensure the arguments have the appropriate number of objects and object
+  # types, and that all dict keys are properly named.
+  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
+  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+
+  # If the caller does not provide a password argument, prompt for one.
+  # Password confirmation disabled here, which should ideally happen only
+  # when creating encrypted key files (i.e., improve usability).
+  if password is None: # pragma: no cover
+    message = 'Enter a password for the encrypted ECDSA key: '
+    password = _get_password(message, confirm=False)
+
+  # Does 'password' have the correct format?
+  securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+
+  # Store the encrypted contents of 'filepath' prior to calling the decryption
+  # routine.
+  encrypted_key = None
+
+  with open(filepath, 'rb') as file_object:
+    encrypted_key = file_object.read()
+
+  # Decrypt the loaded key file, calling the appropriate cryptography library
+  # (i.e., set by the user) and generating the derived encryption key from
+  # 'password'.  Raise 'securesystemslib.exceptions.CryptoError' or
+  # 'securesystemslib.exceptions.UnsupportedLibraryError' if the decryption
+  # fails.
+  key_object = securesystemslib.keys.decrypt_key(encrypted_key.decode('utf-8'), password)
+
+  # Raise an exception if an unexpected key type is imported.
+  if key_object['keytype'] != 'ecdsa-sha2-nistp256':
+    message = 'Invalid key type loaded: ' + repr(key_object['keytype'])
+    raise securesystemslib.exceptions.FormatError(message)
+
+  return key_object
+
+
+
 if __name__ == '__main__':
   # The interactive sessions of the documentation strings can
   # be tested by running interface.py as a standalone module:
