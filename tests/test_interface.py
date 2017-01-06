@@ -338,6 +338,35 @@ class TestInterfaceFunctions(unittest.TestCase):
 
 
 
+  def test_generate_and_write_ed25519_keypair(self):
+
+    # Test normal case.
+    temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
+    test_keypath = os.path.join(temporary_directory, 'ecdsa_key')
+
+    interface.generate_and_write_ecdsa_keypair(test_keypath, password='pw')
+    self.assertTrue(os.path.exists(test_keypath))
+    self.assertTrue(os.path.exists(test_keypath + '.pub'))
+
+    # Ensure the generated key files are importable.
+    imported_pubkey = \
+      interface.import_ecdsa_publickey_from_file(test_keypath + '.pub')
+    self.assertTrue(securesystemslib.formats.ECDSAKEY_SCHEMA.matches(imported_pubkey))
+
+    imported_privkey = \
+      interface.import_ecdsa_privatekey_from_file(test_keypath, 'pw')
+    self.assertTrue(securesystemslib.formats.ECDSAKEY_SCHEMA.matches(imported_privkey))
+
+
+    # Test improperly formatted arguments.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      interface.generate_and_write_ecdsa_keypair,
+                      3, password='pw')
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+      interface.generate_and_write_ecdsa_keypair, test_keypath, password=3)
+
+
+
 # Run the test cases.
 if __name__ == '__main__':
   unittest.main()
