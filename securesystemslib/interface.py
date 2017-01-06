@@ -246,7 +246,7 @@ def import_rsa_privatekey_from_file(filepath, password=None):
   # Convert 'encrypted_pem' to 'securesystemslib.formats.RSAKEY_SCHEMA' format.
   # Raise 'securesystemslib.exceptions.CryptoError' if 'encrypted_pem' is
   # invalid.
-  rsa_key = securesystemslib.keys.import_rsakey_from_pem(encrypted_pem, password)
+  rsa_key = securesystemslib.keys.import_rsakey_from_private_pem(encrypted_pem, password)
 
   return rsa_key
 
@@ -296,7 +296,7 @@ def import_rsa_publickey_from_file(filepath):
 
   # Convert 'rsa_pubkey_pem' to 'securesystemslib.formats.RSAKEY_SCHEMA' format.
   try:
-    rsakey_dict = securesystemslib.keys.format_rsakey_from_pem(rsa_pubkey_pem)
+    rsakey_dict = securesystemslib.keys.import_rsakey_from_public_pem(rsa_pubkey_pem)
 
   except securesystemslib.exceptions.FormatError as e:
     raise securesystemslib.exceptions.Error('Cannot import improperly formatted'
