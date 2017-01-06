@@ -257,9 +257,9 @@ def import_rsa_privatekey_from_file(filepath, password=None):
 def import_rsa_publickey_from_file(filepath):
   """
   <Purpose>
-    Import the RSA key stored in 'filepath'.  The key object returned is a TUF
-    key, specifically 'securesystemslib.formats.RSAKEY_SCHEMA'.  If the RSA PEM
-    in 'filepath' contains a private key, it is discarded.
+    Import the RSA key stored in 'filepath'.  The key object returned is in the
+    format 'securesystemslib.formats.RSAKEY_SCHEMA'.  If the RSA PEM in
+    'filepath' contains a private key, it is discarded.
 
     Which cryptography library performs the cryptographic decryption is
     determined by the string set in 'settings.RSA_CRYPTO_LIBRARY'.  PyCrypto
@@ -311,7 +311,7 @@ def import_rsa_publickey_from_file(filepath):
 def generate_and_write_ed25519_keypair(filepath, password=None):
   """
   <Purpose>
-    Generate an Ed25519 key file, create an encrypted TUF key (using 'password'
+    Generate an Ed25519 key file, create an encrypted key (using 'password'
     as the pass phrase), and store it in 'filepath'.  The public key portion of
     the generated ED25519 key is stored in <'filepath'>.pub.  Which cryptography
     library performs the cryptographic decryption is determined by the string
@@ -339,7 +339,7 @@ def generate_and_write_ed25519_keypair(filepath, password=None):
 
     securesystemslib.exceptions.UnsupportedLibraryError, if 'filepath' cannot be
     encrypted due to an invalid configuration setting (i.e., invalid
-    'tuf.settings.py' setting).
+    'settings.py' setting).
 
   <Side Effects>
     Writes key files to '<filepath>' and '<filepath>.pub'.
@@ -407,11 +407,11 @@ def import_ed25519_publickey_from_file(filepath):
     'securesystemslib.formats.KEY_SCHEMA') stored in 'filepath'.  Return
     'filepath' in securesystemslib.formats.ED25519KEY_SCHEMA format.
 
-    If the TUF key object in 'filepath' contains a private key, it is discarded.
+    If the key object in 'filepath' contains a private key, it is discarded.
 
   <Arguments>
     filepath:
-      <filepath>.pub file, a TUF public key file.
+      <filepath>.pub file, a public key file.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'filepath' is improperly
@@ -453,20 +453,20 @@ def import_ed25519_publickey_from_file(filepath):
 def import_ed25519_privatekey_from_file(filepath, password=None):
   """
   <Purpose>
-    Import the encrypted ed25519 TUF key file in 'filepath', decrypt it, and
+    Import the encrypted ed25519 key file in 'filepath', decrypt it, and
     return the key object in 'securesystemslib.formats.ED25519KEY_SCHEMA' format.
 
     Which cryptography library performs the cryptographic decryption is
     determined by the string set in 'settings.ED25519_CRYPTO_LIBRARY'.  PyCrypto
     currently supported.
 
-    The TUF private key (may also contain the public part) is encrypted with AES
+    The private key (may also contain the public part) is encrypted with AES
     256 and CTR the mode of operation.  The password is strengthened with
     PBKDF2-HMAC-SHA256.
 
   <Arguments>
     filepath:
-      <filepath> file, an RSA encrypted TUF key file.
+      <filepath> file, an RSA encrypted key file.
 
     password:
       The password, or passphrase, to import the private key (i.e., the
@@ -482,7 +482,7 @@ def import_ed25519_privatekey_from_file(filepath, password=None):
 
     securesystemslib.exceptions.UnsupportedLibraryError, if 'filepath' cannot be
     decrypted due to an invalid configuration setting (i.e., invalid
-    'tuf.settings.py' setting).
+    'settings.py' setting).
 
   <Side Effects>
     'password' is used to decrypt the 'filepath' key file.
