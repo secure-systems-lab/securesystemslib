@@ -313,10 +313,10 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Invalid private key imported (contains unexpected keytype.)
     imported_ed25519_key['keytype'] = 'invalid_keytype'
 
-    # Use 'pycrypto_keys.py' to bypass the key format validation performed by
-    # 'keys.py'.
+    # Use 'pyca_crypto_keys.py' to bypass the key format validation performed
+    # by 'keys.py'.
     salt, iterations, derived_key = \
-      securesystemslib.pycrypto_keys._generate_derived_key('pw')
+      securesystemslib.pyca_crypto_keys._generate_derived_key('pw')
 
     # Store the derived key info in a dictionary, the object expected
     # by the non-public _encrypt() routine.
@@ -326,7 +326,7 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Convert the key object to json string format and encrypt it with the
     # derived key.
     encrypted_key = \
-      securesystemslib.pycrypto_keys._encrypt(json.dumps(imported_ed25519_key),
+      securesystemslib.pyca_crypto_keys._encrypt(json.dumps(imported_ed25519_key),
                                  derived_key_information)
 
     with open(ed25519_keypath, 'wb') as file_object:
@@ -365,6 +365,113 @@ class TestInterfaceFunctions(unittest.TestCase):
     self.assertRaises(securesystemslib.exceptions.FormatError,
       interface.generate_and_write_ecdsa_keypair, test_keypath, password=3)
 
+
+
+  def test_import_ecdsa_publickey_from_file(self):
+    # Test normal case.
+    # Generate ecdsa keys that can be imported.
+    temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
+    ecdsa_keypath = os.path.join(temporary_directory, 'ecdsa_key')
+    interface.generate_and_write_ecdsa_keypair(ecdsa_keypath, password='pw')
+
+    imported_ecdsa_key = \
+      interface.import_ecdsa_publickey_from_file(ecdsa_keypath + '.pub')
+    self.assertTrue(securesystemslib.formats.ECDSAKEY_SCHEMA.matches(imported_ecdsa_key))
+
+
+    # Test improperly formatted argument.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      interface.import_ecdsa_publickey_from_file, 3)
+
+
+    # Test invalid argument.
+    # Non-existent key file.
+    nonexistent_keypath = os.path.join(temporary_directory,
+                                       'nonexistent_keypath')
+    self.assertRaises(IOError, interface.import_ecdsa_publickey_from_file,
+                      nonexistent_keypath)
+
+    # Invalid key file argument.
+    invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
+    with open(invalid_keyfile, 'wb') as file_object:
+      file_object.write(b'bad keyfile')
+
+    self.assertRaises(securesystemslib.exceptions.Error, interface.import_ecdsa_publickey_from_file,
+                      invalid_keyfile)
+
+    # Invalid public key imported (contains unexpected keytype.)
+    keytype = imported_ecdsa_key['keytype']
+    keyval = imported_ecdsa_key['keyval']
+    ecdsakey_metadata_format = \
+      securesystemslib.keys.format_keyval_to_metadata(keytype, keyval, private=False)
+
+    ecdsakey_metadata_format['keytype'] = 'invalid_keytype'
+    with open(ecdsa_keypath + '.pub', 'wb') as file_object:
+      file_object.write(json.dumps(ecdsakey_metadata_format).encode('utf-8'))
+
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      interface.import_ecdsa_publickey_from_file,
+                      ecdsa_keypath + '.pub')
+
+
+
+  def test_import_ecdsa_privatekey_from_file(self):
+    # Test normal case.
+    # Generate ecdsa keys that can be imported.
+    temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
+    ecdsa_keypath = os.path.join(temporary_directory, 'ecdsa_key')
+    interface.generate_and_write_ecdsa_keypair(ecdsa_keypath, password='pw')
+
+    imported_ecdsa_key = \
+      interface.import_ecdsa_privatekey_from_file(ecdsa_keypath, 'pw')
+    self.assertTrue(securesystemslib.formats.ECDSAKEY_SCHEMA.matches(imported_ecdsa_key))
+
+
+    # Test improperly formatted argument.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      interface.import_ecdsa_privatekey_from_file, 3, 'pw')
+
+
+    # Test invalid argument.
+    # Non-existent key file.
+    nonexistent_keypath = os.path.join(temporary_directory,
+                                       'nonexistent_keypath')
+    self.assertRaises(IOError, interface.import_ecdsa_privatekey_from_file,
+                      nonexistent_keypath, 'pw')
+
+    # Invalid key file argument.
+    invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
+    with open(invalid_keyfile, 'wb') as file_object:
+      file_object.write(b'bad keyfile')
+
+    self.assertRaises(securesystemslib.exceptions.Error,
+      interface.import_ecdsa_privatekey_from_file, invalid_keyfile, 'pw')
+
+    # Invalid private key imported (contains unexpected keytype.)
+    imported_ecdsa_key['keytype'] = 'invalid_keytype'
+
+    # Use 'pyca_crypto_keys.py' to bypass the key format validation performed by
+    # 'keys.py'.
+    salt, iterations, derived_key = \
+      securesystemslib.pyca_crypto_keys._generate_derived_key('pw')
+
+    # Store the derived key info in a dictionary, the object expected
+    # by the non-public _encrypt() routine.
+    derived_key_information = {'salt': salt, 'iterations': iterations,
+                               'derived_key': derived_key}
+
+    # Convert the key object to json string format and encrypt it with the
+    # derived key.
+    encrypted_key = \
+      securesystemslib.pyca_crypto_keys._encrypt(json.dumps(imported_ecdsa_key),
+                                 derived_key_information)
+
+    with open(ecdsa_keypath, 'wb') as file_object:
+      file_object.write(encrypted_key.encode('utf-8'))
+
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+                      interface.import_ecdsa_privatekey_from_file,
+                      ecdsa_keypath, 'pw')
 
 
 # Run the test cases.
