@@ -191,7 +191,7 @@ Verify ECDSA, Ed25519, and RSA Signatures
 Miscellaneous functions
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-create_rsa_encrypted_pem()
+**create_rsa_encrypted_pem()**
 
 ::
 
@@ -202,7 +202,7 @@ create_rsa_encrypted_pem()
     >>> passphrase = 'secret'
     >>> encrypted_pem = create_rsa_encrypted_pem(private, passphrase)
 
-import_rsakey_from_public_pem()
+**import_rsakey_from_public_pem()**
 
 ::
 
@@ -211,7 +211,7 @@ import_rsakey_from_public_pem()
     >>> rsa_key2 = import_rsakey_from_public_pem(public)
 
 
-import_rsakey_from_pem()
+**import_rsakey_from_pem()**
 
 ::
 
@@ -222,7 +222,7 @@ import_rsakey_from_pem()
     >>> rsa_key3 = import_rsakey_from_pem(private)
 
 
-extract_pem()
+**extract_pem()**
 
 ::
 
@@ -231,7 +231,7 @@ extract_pem()
     >>> public_pem = extract_pem(rsakey['keyval']['public'], private_pem=False)
 
 
-encrypt_key()
+**encrypt_key()**
 
 ::
 
@@ -240,7 +240,7 @@ encrypt_key()
     >>> encrypted_key = encrypt_key(ed25519_key, password)
 
 
-decrypt_key()
+**decrypt_key()**
 
 ::
 
@@ -251,4 +251,68 @@ decrypt_key()
     >>> decrypted_key == ed25519_key
     True
 
+
+**create_rsa_encrypted_pem()**
+
+::
+
+  >>> rsa_key = generate_rsa_key()
+  >>> private = rsa_key['keyval']['private']
+  >>> passphrase = 'secret'
+  >>> encrypted_pem = create_rsa_encrypted_pem(private, passphrase)
+
+
+**is_pem_public()**
+
+::
+
+    >>> rsa_key = generate_rsa_key()
+    >>> public = rsa_key['keyval']['public']
+    >>> private = rsa_key['keyval']['private']
+    >>> is_pem_public(public)
+    True
+    >>> is_pem_public(private)
+    False
+
+
+**is_pem_private()**
+
+::
+
+    >>> rsa_key = generate_rsa_key()
+    >>> private = rsa_key['keyval']['private']
+    >>> public = rsa_key['keyval']['public']
+    >>> is_pem_private(private)
+    True
+    >>> is_pem_private(public)
+    False
+
+
+**import_ecdsakey_from_private_pem()**
+
+::
+
+    >>> ecdsa_key = generate_ecdsa_key()
+    >>> private_pem = ecdsa_key['keyval']['private']
+    >>> ecdsa_key2 = import_ecdsakey_from_private_pem(private_pem)
+
+
+**import_ecdsakey_from_public_pem()**
+
+::
+
+    >>> ecdsa_key = generate_ecdsa_key()
+    >>> public = ecdsa_key['keyval']['public']
+    >>> ecdsa_key2 = import_ecdsakey_from_public_pem(public)
+
+
+**import_ecdsakey_from_pem()**
+
+::
+
+    >>> ecdsa_key = generate_ecdsa_key()
+    >>> private_pem = ecdsa_key['keyval']['private']
+    >>> ecdsa_key2 = import_ecdsakey_from_pem(private_pem)
+    >>> public_pem = ecdsa_key['keyval']['public']
+    >>> ecdsa_key2 = import_ecdsakey_from_pem(public_pem)
 
