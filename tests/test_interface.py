@@ -44,7 +44,6 @@ else:
 
 import securesystemslib.formats
 import securesystemslib.formats
-import securesystemslib.keydb
 import securesystemslib.hash
 import securesystemslib.interface as interface
 
@@ -83,8 +82,7 @@ class TestInterfaceFunctions(unittest.TestCase):
 
 
   def tearDown(self):
-    securesystemslib.keydb.clear_keydb(clear_all=True)
-
+    pass
 
 
   def test_generate_and_write_rsa_keypair(self):
