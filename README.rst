@@ -75,10 +75,10 @@ text without prepended symbols is the output of a command.
 
 The following four key files should now exist:
 
-1.  **rsa_key1**
-2.  **rsa_key1.pub**
-3.  **rsa_key2**
-4.  **rsa_key2.pub**
+1.  rsa_key1
+2.  rsa_key1.pub
+3.  rsa_key2
+4.  rsa_key2.pub
 
 Import RSA Keys
 ~~~~~~~~~~~~~~~
@@ -145,10 +145,45 @@ Create and Import ECDSA Keys
     Enter a password for the encrypted ECDSA key:
 
 
-Verify ECDSA, RSA, and Ed25519 Signatures
+Generate ECDSA, Ed25519, and RSA Signatures
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TODO
+Note: Users may also access the crypto functions directory to perform
+cryptographic operations.
+
+::
+
+    >>> from securesystemslib.keys import *
+
+    >>> data = 'The quick brown fox jumps over the lazy dog'
+    >>> ed25519_key = generate_ed25519_key()
+    >>> signature = create_signature(ed25519_key, data)
+    >>> rsa_key = generate_rsa_key(2048)
+    >>> signature = create_signature(rsa_key, data)
+    >>> ecdsa_key = generate_ecdsa_key()
+    >>> signature = create_signature(ecdsa_key, data)
+
+
+Verify ECDSA, Ed25519, and RSA Signatures
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+    >>> data = 'The quick brown fox jumps over the lazy dog'
+    >>> ed25519_key = generate_ed25519_key()
+    >>> signature = create_signature(ed25519_key, data)
+    >>> verify_signature(ed25519_key, signature, data)
+    True
+    >>> verify_signature(ed25519_key, signature, 'bad_data')
+    False
+    >>> rsa_key = generate_rsa_key()
+    >>> signature = create_signature(rsa_key, data)
+    >>> verify_signature(rsa_key, signature, data)
+    True
+    >>> ecdsa_key = generate_ecdsa_key()
+    >>> signature = create_signature(ecdsa_key, data)
+    >>> verify_signature(ecdsa_key, signature, data)
+    True
 
 
 Hashing
