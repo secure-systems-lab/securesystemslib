@@ -148,7 +148,7 @@ Create and Import ECDSA Keys
 Generate ECDSA, Ed25519, and RSA Signatures
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Note: Users may also access the crypto functions directory to perform
+Note: Users may also access the crypto functions directly to perform
 cryptographic operations.
 
 ::
