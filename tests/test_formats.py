@@ -123,18 +123,6 @@ class TestFormats(unittest.TestCase):
                                                  'hashes': {'sha256': 'ABCD123'},
                                                  'custom': {'type': 'metadata'}}}),
 
-      'TARGETINFO_SCHEMA': (securesystemslib.formats.TARGETINFO_SCHEMA,
-                            {'filepath': 'targets/target1.gif',
-                             'fileinfo': {'length': 1024,
-                                          'hashes': {'sha256': 'ABCD123'},
-                                          'custom': {'type': 'target'}}}),
-
-      'TARGETINFOS_SCHEMA': (securesystemslib.formats.TARGETINFOS_SCHEMA,
-                             [{'filepath': 'targets/target1.gif',
-                               'fileinfo': {'length': 1024,
-                                            'hashes': {'sha256': 'ABCD123'},
-                                            'custom': {'type': 'target'}}}]),
-
       'SIGNATURE_SCHEMA': (securesystemslib.formats.SIGNATURE_SCHEMA,
                            {'keyid': '123abc',
                             'method': 'evp',
@@ -164,23 +152,6 @@ class TestFormats(unittest.TestCase):
                                    'keyid': '123456789abcdef',
                                    'keyval': {'public': 'pubkey',
                                               'private': 'privkey'}}}),
-
-      'SCPCONFIG_SCHEMA': (securesystemslib.formats.SCPCONFIG_SCHEMA,
-                           {'general': {'transfer_module': 'scp',
-                                        'metadata_path': '/path/meta.json',
-                                        'targets_directory': '/targets'},
-                            'scp': {'host': 'http://localhost:8001',
-                                    'user': 'McFly',
-                                    'identity_file': '/home/.ssh/file',
-                                    'remote_directory': '/home/McFly'}}),
-
-      'RECEIVECONFIG_SCHEMA': (securesystemslib.formats.RECEIVECONFIG_SCHEMA,
-                               {'general': {'transfer_module': 'scp',
-                                            'pushroots': ['/pushes'],
-                                            'repository_directory': '/repo',
-                                            'metadata_directory': '/repo/meta',
-                                            'targets_directory': '/repo/targets',
-                                            'backup_directory': '/repo/backup'}}),
 
       'ROLE_SCHEMA': (securesystemslib.formats.ROLE_SCHEMA,
                       {'keyids': ['123abc'],
