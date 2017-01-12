@@ -20,13 +20,14 @@
   module should be read and understood before tackling this module.
 
   'formats.py' can be broken down into three sections.  (1) Schemas and object
-  matching.  (2) Classes that represent Role Metadata and help produce correctly
-  formatted files.  (3) Functions that help produce or verify TUF objects.
+  matching.  (2) Classes that represent Role Metadata and help produce
+  correctly formatted files.  (3) Functions that help produce or verify TUF
+  objects.
 
   The first section deals with schemas and object matching based on format.
   There are two ways of checking the format of objects.  The first method
-  raises a 'securesystemslib.exceptions.FormatError' exception if the match fails and the other
-  returns a Boolean result.
+  raises a 'securesystemslib.exceptions.FormatError' exception if the match
+  fails and the other returns a Boolean result.
 
   securesystemslib.formats.<SCHEMA>.check_match(object)
   securesystemslib.formats.<SCHEMA>.matches(object)
@@ -319,15 +320,6 @@ FILEDICT_SCHEMA = SCHEMA.DictOf(
   key_schema = RELPATH_SCHEMA,
   value_schema = FILEINFO_SCHEMA)
 
-# A dict holding a target info.
-TARGETINFO_SCHEMA = SCHEMA.Object(
-  object_name = 'TARGETINFO_SCHEMA',
-  filepath = RELPATH_SCHEMA,
-  fileinfo = FILEINFO_SCHEMA)
-
-# A list of TARGETINFO_SCHEMA.
-TARGETINFOS_SCHEMA = SCHEMA.ListOf(TARGETINFO_SCHEMA)
-
 # A single signature of an object.  Indicates the signature, the ID of the
 # signing key, and the signing method.
 # I debated making the signature schema not contain the key ID and instead have
@@ -377,40 +369,6 @@ KEYDB_SCHEMA = SCHEMA.DictOf(
   key_schema = KEYID_SCHEMA,
   value_schema = SCHEMA.Any())
 
-# The format of the resulting "scp config dict" after extraction from the
-# push configuration file (i.e., push.cfg).  In the case of a config file
-# utilizing the scp transfer module, it must contain the 'general' and 'scp'
-# sections, where 'general' must contain a 'transfer_module' and
-# 'metadata_path' entry, and 'scp' the 'host', 'user', 'identity_file', and
-# 'remote_directory' entries.
-SCPCONFIG_SCHEMA = SCHEMA.Object(
-  object_name = 'SCPCONFIG_SCHEMA',
-  general = SCHEMA.Object(
-    object_name = '[general]',
-    transfer_module = SCHEMA.String('scp'),
-    metadata_path = PATH_SCHEMA,
-    targets_directory = PATH_SCHEMA),
-  scp=SCHEMA.Object(
-    object_name = '[scp]',
-    host = URL_SCHEMA,
-    user = NAME_SCHEMA,
-    identity_file = PATH_SCHEMA,
-    remote_directory = PATH_SCHEMA))
-
-# The format of the resulting "receive config dict" after extraction from the
-# receive configuration file (i.e., receive.cfg).  The receive config file
-# must contain a 'general' section, and this section the 'pushroots',
-# 'repository_directory', 'metadata_directory', 'targets_directory', and
-# 'backup_directory' entries.
-RECEIVECONFIG_SCHEMA = SCHEMA.Object(
-  object_name = 'RECEIVECONFIG_SCHEMA', general=SCHEMA.Object(
-    object_name = '[general]',
-    pushroots = SCHEMA.ListOf(PATH_SCHEMA),
-    repository_directory = PATH_SCHEMA,
-    metadata_directory = PATH_SCHEMA,
-    targets_directory = PATH_SCHEMA,
-    backup_directory = PATH_SCHEMA))
-
 # A path hash prefix is a hexadecimal string.
 PATH_HASH_PREFIX_SCHEMA = HEX_SCHEMA
 
@@ -458,7 +416,7 @@ PATH_FILEINFO_SCHEMA = SCHEMA.DictOf(
   key_schema = RELPATH_SCHEMA,
   value_schema = CUSTOM_SCHEMA)
 
-# TuF roledb
+# TUF roledb
 ROLEDB_SCHEMA = SCHEMA.Object(
   object_name = 'ROLEDB_SCHEMA',
   keyids = SCHEMA.Optional(KEYIDS_SCHEMA),
@@ -553,7 +511,6 @@ MIRRORLIST_SCHEMA = SCHEMA.Object(
 # Any of the role schemas (e.g., TIMESTAMP_SCHEMA, SNAPSHOT_SCHEMA, etc.)
 ANYROLE_SCHEMA = SCHEMA.OneOf([ROOT_SCHEMA, TARGETS_SCHEMA, SNAPSHOT_SCHEMA,
                                TIMESTAMP_SCHEMA, MIRROR_SCHEMA])
-
 
 
 
