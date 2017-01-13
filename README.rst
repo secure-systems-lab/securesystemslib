@@ -32,10 +32,8 @@ library may be selected to generate RSA keys and `RSA-PSS
 signatures is needed, the PyNaCl library setting should be enabled.  PyNaCl is
 a Python binding to the Networking and Cryptography Library.  For key storage,
 RSA keys may be stored in PEM or JSON format, and Ed25519 keys in JSON format.
-Private keys, for both RSA and Ed25519, are encrypted and passphrase-protected
-(strengthened with PBKDF2-HMAC-SHA256.)  Generating, importing, and loading
-cryptographic key files can be done with functions available in
-securesystemslib.
+Generating, importing, and loading cryptographic key files can be done with
+functions available in securesystemslib.
 
 Installation
 ++++++++++++
