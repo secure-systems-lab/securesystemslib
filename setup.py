@@ -72,12 +72,12 @@ with open('README.rst') as file_object:
 setup(
   name = 'securesystemslib',
   version = '0.10.0',
-  description = 'A secure systems lab library of crypto-related and general purpose routines',
+  description = 'A library that provides cryptographic and general-purpose routines for Secure Systems Lab projects at NYU',
   long_description = long_description,
-  author = '',
-  author_email = '',
-  url = '',
-  keywords = 'cryptography, keys, signatures, rsa, ed25519',
+  author = 'https://www.updateframework.com',
+  author_email = 'theupdateframework@googlegroups.com',
+  url = 'https://github.com/secure-systems-lab/securesystemslib',
+  keywords = 'cryptography, keys, signatures, rsa, ed25519, ecdsa',
   classifiers = [
     'Development Status :: 4 - Beta',
     'Intended Audience :: Developers',

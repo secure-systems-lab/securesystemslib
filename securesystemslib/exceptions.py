@@ -58,7 +58,6 @@ class InvalidMetadataJSONError(FormatError):
     # Show the original exception.
     return repr(self.exception)
 
-
 class UnsupportedAlgorithmError(Error):
   """Indicate an error while trying to identify a user-specified algorithm."""
   pass

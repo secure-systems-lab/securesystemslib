@@ -7,9 +7,8 @@ Secure Systems Library
 .. image:: https://coveralls.io/repos/github/secure-systems-lab/securesystemslib/badge.svg?branch=master
    :target: https://coveralls.io/github/secure-systems-lab/securesystemslib?branch=master
 
-Cryptography and general-purpose functions for Secure Systems Lab projects
-at NYU.
-
+A library that provides cryptographic and general-purpose functions for Secure
+Systems Lab projects at NYU.
 
 Overview
 ++++++++
@@ -25,23 +24,22 @@ libraries (e.g., `cryptography <https://cryptography.io/en/latest/>`_ and
 cryptography library options for supported algorithms by modifying their
 corresponding entries in settings.py.
 
-The `cryptography <https://cryptography.io/en/latest/>`_ library may be used to
-generate keys and signatures with the `ECDSA
-<https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm>`_
-and RSA algorithms, and perform general-purpose cryptography such as encrypting
-keys.  The `PyCrypto <https://www.dlitz.net/software/pycrypto/>`_ library may
-be selected to generate RSA keys and `RSA-PSS
+The cryptography library may be used to generate keys and signatures with the
+ECDSA and RSA algorithms, and perform general-purpose cryptography such as
+encrypting keys.  The `PyCrypto <https://www.dlitz.net/software/pycrypto/>`_
+library may be selected to generate RSA keys and `RSA-PSS
 <https://en.wikipedia.org/wiki/RSA-PSS>`_ signatures.  If generation of Ed25519
-signatures is needed, the `PyNaCl <https://github.com/pyca/pynacl>`_ library
-setting should be enabled.  PyNaCl is a Python binding to the Networking and
-Cryptography Library.  For key storage, RSA keys may be stored in PEM or JSON
-format, and Ed25519 keys in JSON format.  Private keys, for both RSA and
-Ed25519, are encrypted and passphrase-protected (strengthened with
-PBKDF2-HMAC-SHA256.)  Generating, importing, and loading cryptographic key
-files can be done with functions available in securesystemslib.
+signatures is needed, the PyNaCl library setting should be enabled.  PyNaCl is
+a Python binding to the Networking and Cryptography Library.  For key storage,
+RSA keys may be stored in PEM or JSON format, and Ed25519 keys in JSON format.
+Private keys, for both RSA and Ed25519, are encrypted and passphrase-protected
+(strengthened with PBKDF2-HMAC-SHA256.)  Generating, importing, and loading
+cryptographic key files can be done with functions available in
+securesystemslib.
 
 Installation
 ++++++++++++
+
 ::
 
     $ pip install securesystemslib
@@ -146,7 +144,7 @@ Create and Import ECDSA Keys
 
 
 Generate ECDSA, Ed25519, and RSA Signatures
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Note: Users may also access the crypto functions directly to perform
 cryptographic operations.
