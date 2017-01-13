@@ -62,16 +62,13 @@
 from setuptools import setup
 from setuptools import find_packages
 
-extras = {
-  'tools': ['cryptography>=1.4.0', 'pycrypto>=2.6.1', 'pynacl>=0.2.3']
-}
 
 with open('README.rst') as file_object:
   long_description = file_object.read()
 
 setup(
   name = 'securesystemslib',
-  version = '0.10.1',
+  version = '0.10.2',
   description = 'A library that provides cryptographic and general-purpose routines for Secure Systems Lab projects at NYU',
   long_description = long_description,
   author = 'https://www.updateframework.com',
@@ -99,8 +96,7 @@ setup(
     'Topic :: Security',
     'Topic :: Software Development'
   ],
-  install_requires = ['six'],
+  install_requires = ['six', 'cryptography>=1.4.0', 'pycrypto>=2.6.1', 'pynacl>=0.2.3'],
   packages = find_packages(exclude=['tests']),
-  extras_require = extras,
   scripts = []
 )
