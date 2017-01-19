@@ -8,7 +8,8 @@ Secure Systems Library
    :target: https://coveralls.io/github/secure-systems-lab/securesystemslib?branch=master
 
 A library that provides cryptographic and general-purpose functions for Secure
-Systems Lab projects at NYU.
+Systems Lab projects at NYU.  The routines are general enough to be usable by other
+projects.
 
 Overview
 ++++++++
@@ -18,10 +19,10 @@ general-purpose cryptography, such as `ECDSA
 <https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm>`_,
 `Ed25519 <http://ed25519.cr.yp.to/>`_, `RSA
 <https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29>`_, SHA256, SHA512, etc.
-Cryptography operations are performed via configurable external cryptography
+Cryptography operations are performed via configurable cryptography
 libraries (e.g., `cryptography <https://cryptography.io/en/latest/>`_ and
 `PyNaCl <https://github.com/pyca/pynacl>`_).  Users may choose from
-cryptography library options for supported algorithms by modifying their
+cryptography library options for supported algorithms by modifying the library's
 corresponding entries in settings.py.
 
 The cryptography library may be used to generate keys and signatures with the
