@@ -102,10 +102,25 @@ class TestFormats(unittest.TestCase):
       'KEYVAL_SCHEMA': (securesystemslib.formats.KEYVAL_SCHEMA,
                         {'public': 'pubkey', 'private': 'privkey'}),
 
+      'PUBLIC_KEYVAL_SCHEMA': (securesystemslib.formats.PUBLIC_KEYVAL_SCHEMA,
+                        {'public': 'pubkey'}),
+
+      'PUBLIC_KEYVAL_SCHEMA2': (securesystemslib.formats.PUBLIC_KEYVAL_SCHEMA,
+                        {'public': 'pubkey', 'private': ''}),
+
       'KEY_SCHEMA': (securesystemslib.formats.KEY_SCHEMA,
                      {'keytype': 'rsa',
                       'keyval': {'public': 'pubkey',
                                  'private': 'privkey'}}),
+
+      'PUBLIC_KEY_SCHEMA': (securesystemslib.formats.KEY_SCHEMA,
+                     {'keytype': 'rsa',
+                      'keyval': {'public': 'pubkey'}}),
+
+      'PUBLIC_KEY_SCHEMA2': (securesystemslib.formats.KEY_SCHEMA,
+                     {'keytype': 'rsa',
+                      'keyval': {'public': 'pubkey',
+                                 'private': ''}}),
 
       'RSAKEY_SCHEMA': (securesystemslib.formats.RSAKEY_SCHEMA,
                         {'keytype': 'rsa',
