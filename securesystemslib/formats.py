@@ -217,6 +217,13 @@ KEYVAL_SCHEMA = SCHEMA.Object(
   public = SCHEMA.AnyString(),
   private = SCHEMA.Optional(SCHEMA.AnyString()))
 
+# Public keys CAN have a private portion (for backwards compatibility) which
+# MUST be an empty string
+PUBLIC_KEYVAL_SCHEMA = SCHEMA.Object(
+  object_name = 'KEYVAL_SCHEMA',
+  public = SCHEMA.AnyString(),
+  private = SCHEMA.Optional(SCHEMA.String("")))
+
 # Supported TUF key types.
 KEYTYPE_SCHEMA = SCHEMA.OneOf(
   [SCHEMA.String('rsa'), SCHEMA.String('ed25519'),
@@ -228,6 +235,13 @@ KEY_SCHEMA = SCHEMA.Object(
   object_name = 'KEY_SCHEMA',
   keytype = SCHEMA.AnyString(),
   keyval = KEYVAL_SCHEMA,
+  expires = SCHEMA.Optional(ISO8601_DATETIME_SCHEMA))
+
+# Like KEY_SCHEMA, but requires keyval's private portion to be not set or empty
+PUBLIC_KEY_SCHEMA = SCHEMA.Object(
+  object_name = 'KEY_SCHEMA',
+  keytype = SCHEMA.AnyString(),
+  keyval = PUBLIC_KEYVAL_SCHEMA,
   expires = SCHEMA.Optional(ISO8601_DATETIME_SCHEMA))
 
 # A TUF key object.  This schema simplifies validation of keys that may be
