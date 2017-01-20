@@ -353,13 +353,13 @@ def verify_rsa_signature(signature, signature_method, public_key, data):
       The RSA public key, a string in PEM format.
 
     data:
-      Data object used by securesystemslib__keys.create_signature() to generate
+      Data object used by securesystemslib.keys.create_signature() to generate
       'signature'.  'data' is needed here to verify the signature.
 
   <Exceptions>
     securesystemslib.exceptions.UnknownMethodError.  Raised if the signing method
     used by 'signature' is not one supported by
-    securesystemslib__keys.create_signature().
+    securesystemslib.keys.create_signature().
 
     securesystemslib.exceptions.FormatError. Raised if 'signature',
     'signature_method', or 'public_key' is improperly formatted.
