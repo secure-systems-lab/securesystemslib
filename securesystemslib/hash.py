@@ -37,13 +37,13 @@ import six
 
 import securesystemslib.exceptions
 
-# Import ssl_crypto logger to log warning messages.
+# Import securesystemslib logger to log warning messages.
 logger = logging.getLogger('securesystemslib.hash')
 
 # The list of hash libraries imported successfully.
 _supported_libraries = []
 
-# Hash libraries currently supported by ssl_crypto.hash.
+# Hash libraries currently supported by securesystemslib.hash.
 _SUPPORTED_LIB_LIST = ['hashlib', 'pycrypto']
 
 # Let's try importing the pycrypto hash algorithms.  Pycrypto will
@@ -101,9 +101,9 @@ def digest(algorithm=_DEFAULT_HASH_ALGORITHM,
 
     # Creation of a digest object using defaults
     # or by specifying hash algorithm and library.
-    digest_object = ssl_crypto.hash.digest()
-    digest_object = ssl_crypto.hash.digest('sha384')
-    digest_object = ssl_crypto.hash.digest('pycrypto')
+    digest_object = securesystemslib.hash.digest()
+    digest_object = securesystemslib.hash.digest('sha384')
+    digest_object = securesystemslib.hash.digest('pycrypto')
 
     # The expected interface for digest objects.
     digest_object.digest_size
@@ -112,8 +112,8 @@ def digest(algorithm=_DEFAULT_HASH_ALGORITHM,
     digest_object.digest()
 
     # Added hash routines by this module.
-    digest_object = ssl_crypto.hash.digest_fileobject(file_object)
-    digest_object = ssl_crypto.hash.digest_filename(filename)
+    digest_object = securesystemslib.hash.digest_fileobject(file_object)
+    digest_object = securesystemslib.hash.digest_filename(filename)
 
   <Arguments>
     algorithm:
@@ -199,7 +199,7 @@ def digest_fileobject(file_object, algorithm=_DEFAULT_HASH_ALGORITHM,
     securesystemslib.exceptions.Error
 
   <Side Effects>
-    Calls ssl_crypto.hash.digest() to create the actual digest object.
+    Calls securesystemslib.hash.digest() to create the actual digest object.
 
   <Returns>
     Digest object (e.g., hashlib.new(algorithm) or
@@ -260,7 +260,7 @@ def digest_filename(filename, algorithm=_DEFAULT_HASH_ALGORITHM,
     securesystemslib.exceptions.Error
 
   <Side Effects>
-    Calls ssl_crypto.hash.digest_fileobject() after opening 'filename'.
+    Calls securesystemslib.hash.digest_fileobject() after opening 'filename'.
     File closed before returning.
 
   <Returns>
