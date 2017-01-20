@@ -17,7 +17,7 @@
   signatures (64 bytes) and small public keys (32 bytes).
   http://ed25519.cr.yp.to/
 
-  'ssl_crypto/ed25519_keys.py' calls 'ed25519.py', which is the pure Python
+  'securesystemslib/ed25519_keys.py' calls 'ed25519.py', which is the pure Python
   implementation of ed25519 optimized for a faster runtime.  The Python
   reference implementation is concise, but very slow (verifying signatures
   takes ~9 seconds on an Intel core 2 duo @ 2.2 ghz x 2).  The optimized
@@ -220,7 +220,7 @@ def create_signature(public_key, private_key, data):
     nacl.signing.SigningKey.sign() called to generate the actual signature.
 
   <Returns>
-    A signature dictionary conformat to 'ssl_crypto.format.SIGNATURE_SCHEMA'.
+    A signature dictionary conformat to 'securesystemslib.format.SIGNATURE_SCHEMA'.
     ed25519 signatures are 64 bytes, however, the hexlified signature is
     stored in the dictionary returned.
   """
@@ -297,7 +297,7 @@ def verify_signature(public_key, method, signature, data, use_pynacl=False):
       The signature is a 64-byte string.
 
     data:
-      Data object used by ssl_crypto.ed25519_keys.create_signature() to generate
+      Data object used by securesystemslib.ed25519_keys.create_signature() to generate
       'signature'.  'data' is needed here to verify the signature.
 
     use_pynacl:
@@ -307,12 +307,12 @@ def verify_signature(public_key, method, signature, data, use_pynacl=False):
 
   <Exceptions>
     securesystemslib.exceptions.UnknownMethodError.  Raised if the signing method used by
-    'signature' is not one supported by ssl_crypto.ed25519_keys.create_signature().
+    'signature' is not one supported by securesystemslib.ed25519_keys.create_signature().
 
     securesystemslib.exceptions.FormatError. Raised if the arguments are improperly formatted.
 
   <Side Effects>
-    ssl_crypto._vendor.ed25519.ed25519.checkvalid() called to do the actual
+    securesystemslib._vendor.ed25519.ed25519.checkvalid() called to do the actual
     verification.  nacl.signing.VerifyKey.verify() called if 'use_pynacl' is
     True.
 

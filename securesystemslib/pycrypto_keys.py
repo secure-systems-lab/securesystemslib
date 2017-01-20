@@ -353,13 +353,13 @@ def verify_rsa_signature(signature, signature_method, public_key, data):
       The RSA public key, a string in PEM format.
 
     data:
-      Data object used by ssl_crypto__keys.create_signature() to generate
+      Data object used by securesystemslib__keys.create_signature() to generate
       'signature'.  'data' is needed here to verify the signature.
 
   <Exceptions>
     securesystemslib.exceptions.UnknownMethodError.  Raised if the signing method
     used by 'signature' is not one supported by
-    ssl_crypto__keys.create_signature().
+    securesystemslib__keys.create_signature().
 
     securesystemslib.exceptions.FormatError. Raised if 'signature',
     'signature_method', or 'public_key' is improperly formatted.
@@ -543,10 +543,10 @@ def create_rsa_public_and_private_from_pem(pem, passphrase=None):
       it is used to derive a stronger symmetric key.
 
   <Exceptions>
-    ssl_commons.exceptions.FormatError, if the arguments are improperly
+    securesystemslib.exceptions.FormatError, if the arguments are improperly
     formatted.
 
-    ssl_commons.exceptions.CryptoError, if the public and private RSA keys
+    securesystemslib.exceptions.CryptoError, if the public and private RSA keys
     cannot be generated from 'encrypted_pem', or exported in PEM format.
 
   <Side Effects>

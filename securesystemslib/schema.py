@@ -24,18 +24,19 @@
   For example:
   >>> good = {'first': 'Marty', 'last': 'McFly'}
   >>> bad = {'sdfsfd': 'Biff', 'last': 'Tannen'}
+  >>> bad = {'sdfsfd': 'Biff', 'last': 'Tannen'}
   >>> schema = Object(first=AnyString(), last=AnyString())
   >>> schema.matches(good)
   True
   >>> schema.matches(bad)
   False
   In the process of determining if the two objects matched the template,
-  ssl_commons.schema.Object() inspected the named keys of both dictionaries.
+  securesystemslib.schema.Object() inspected the named keys of both dictionaries.
   In the case of the 'bad' dict, a 'first' dict key could not be found.
   As a result, 'bad' was flagged a mismatch.
 
   'schema.py' provides additional schemas for testing objects based on other
-  criteria.  See 'ssl_crypto.formats.py' and the rest of this module for extensive
+  criteria.  See 'securesystemslib.formats.py' and the rest of this module for extensive
   examples.  Anything related to the checking of TUF objects and their formats
   can be found in 'formats.py'.
 """

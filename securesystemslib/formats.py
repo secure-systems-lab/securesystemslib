@@ -773,7 +773,7 @@ def encode_canonical(object, output_function=None):
       (e.g., output_function('result')).
 
   <Exceptions>
-    ssl_commons.exceptions.FormatError, if 'object' cannot be encoded or 'output_function'
+    securesystemslib.exceptions.FormatError, if 'object' cannot be encoded or 'output_function'
     is not callable.
 
   <Side Effects>

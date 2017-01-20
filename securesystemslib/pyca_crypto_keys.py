@@ -101,7 +101,7 @@ from cryptography.hazmat.primitives import hmac
 from cryptography.hazmat.primitives.asymmetric import padding
 
 # Import pyca/cryptography's Key Derivation Function (KDF) module.
-# 'ssl_crypto.keys.py' needs this module to derive a secret key according to the
+# 'securesystemslib.keys.py' needs this module to derive a secret key according to the
 # Password-Based Key Derivation Function 2 specification.  The derived key is
 # used as the symmetric key to encrypt TUF key information.
 # PKCS#5 v2.0 PBKDF2 specification: http://tools.ietf.org/html/rfc2898#section-5.2
@@ -376,7 +376,7 @@ def verify_rsa_signature(signature, signature_method, public_key, data):
       The RSA public key, a string in PEM format.
 
     data:
-      Data used by ssl_crypto.keys.create_signature() to generate
+      Data used by securesystemslib.keys.create_signature() to generate
       'signature'.  'data' (a string) is needed here to verify 'signature'.
 
   <Exceptions>
@@ -384,7 +384,7 @@ def verify_rsa_signature(signature, signature_method, public_key, data):
     'data' are improperly formatted.
 
     securesystemslib.exceptions.UnknownMethodError, if the signing method used by
-    'signature' is not one supported by ssl_crypto.keys.create_signature().
+    'signature' is not one supported by securesystemslib.keys.create_signature().
 
     securesystemslib.exceptions.CryptoError, if the private key cannot be decoded or its key type
     is unsupported.
@@ -426,7 +426,7 @@ def verify_rsa_signature(signature, signature_method, public_key, data):
                                                    backend=default_backend())
 
     # 'salt_length' is set to the digest size of the hashing algorithm (to
-    # match the default size used by 'ssl_crypto.pycrypto_keys.py').
+    # match the default size used by 'securesystemslib.pycrypto_keys.py').
     verifier = public_key_object.verifier(signature,
                                 padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
                                 salt_length=hashes.SHA256().digest_size),
