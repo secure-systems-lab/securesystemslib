@@ -358,6 +358,11 @@ def generate_ecdsa_key(algorithm='ecdsa-sha2-nistp256'):
   ecdsa_key['keyid'] = keyid
   ecdsa_key['keyval'] = key_value
 
+  # Add "keyid_hash_algorithms" so equal ecdsa keys with
+  # different keyids can be associated using supported keyid_hash_algorithms
+  ecdsa_key['keyid_hash_algorithms'] = \
+      securesystemslib.settings.HASH_ALGORITHMS
+
   return ecdsa_key
 
 
@@ -1245,6 +1250,11 @@ def import_rsakey_from_public_pem(pem):
   rsakey_dict['keyid'] = keyid
   rsakey_dict['keyval'] = key_value
 
+  # Add "keyid_hash_algorithms" so equal rsa keys with
+  # different keyids can be associated using supported keyid_hash_algorithms
+  rsakey_dict['keyid_hash_algorithms'] = \
+      securesystemslib.settings.HASH_ALGORITHMS
+
   return rsakey_dict
 
 
@@ -1315,6 +1325,11 @@ def import_rsakey_from_pem(pem):
   rsakey_dict['keytype'] = keytype
   rsakey_dict['keyid'] = keyid
   rsakey_dict['keyval'] = key_value
+
+  # Add "keyid_hash_algorithms" so equal ecdsa keys with
+  # different keyids can be associated using supported keyid_hash_algorithms
+  rsakey_dict['keyid_hash_algorithms'] = \
+      securesystemslib.settings.HASH_ALGORITHMS
 
   return rsakey_dict
 
@@ -1894,6 +1909,11 @@ def import_ecdsakey_from_private_pem(pem, password=None):
   ecdsakey_dict['keyid'] = keyid
   ecdsakey_dict['keyval'] = key_value
 
+  # Add "keyid_hash_algorithms" so equal ecdsa keys with
+  # different keyids can be associated using supported keyid_hash_algorithms
+  ecdsakey_dict['keyid_hash_algorithms'] = \
+    securesystemslib.settings.HASH_ALGORITHMS
+
   return ecdsakey_dict
 
 
@@ -1971,6 +1991,11 @@ def import_ecdsakey_from_public_pem(pem):
   ecdsakey_dict['keytype'] = keytype
   ecdsakey_dict['keyid'] = keyid
   ecdsakey_dict['keyval'] = key_value
+
+  # Add "keyid_hash_algorithms" so equal ecdsa keys with
+  # different keyids can be associated using supported keyid_hash_algorithms
+  ecdsakey_dict['keyid_hash_algorithms'] = \
+      securesystemslib.settings.HASH_ALGORITHMS
 
   return ecdsakey_dict
 
