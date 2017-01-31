@@ -40,6 +40,7 @@ import securesystemslib.hash
 import securesystemslib.formats
 
 import six
+import yaml
 
 # The algorithm used by the repository to generate the digests of the
 # target filepaths, which are included in metadata files and may be prepended
@@ -906,6 +907,63 @@ def load_json_file(filepath):
 
   finally:
     fileobject.close()
+
+
+def load_yaml_file(filepath):
+  """
+  <Purpose>
+    Deserialize a YAML document from a file containing the document.
+
+  <Arguments>
+    filepath:
+      Absolute path of YAML file.
+
+  <Exceptions>
+    securesystemslib.exceptions.FormatError: If 'filepath' is improperly
+    formatted.
+
+    securesystemslib.exceptions.Error: If 'filepath' cannot be deserialized to
+    a Python object.
+
+    IOError in case of runtime IO exceptions.
+
+  <Side Effects>
+    None.
+
+  <Return>
+    Deserialized object.  For example, a dictionary.
+  """
+
+  # Making sure that the format of 'filepath' is a path string.
+  # securesystemslib.exceptions.FormatError is raised on incorrect format.
+  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+
+  deserialized_object = None
+
+  # The file is mostly likely gzipped.
+  if filepath.endswith('.gz'):
+    logger.debug('gzip.open(' + str(filepath) + ')')
+    fileobject = six.StringIO(gzip.open(filepath).read().decode('utf-8'))
+
+  else:
+    logger.debug('open(' + str(filepath) + ')')
+    fileobject = open(filepath)
+
+  try:
+    deserialized_object = yaml.load(fileobject.read())
+
+  except (ValueError, TypeError):
+    raise securesystemslib.exceptions.Error('Cannot deserialize to a'
+      ' Python object: ' + repr(filepath))
+
+  else:
+    fileobject.close()
+    return deserialized_object
+
+  finally:
+    fileobject.close()
+
+
 
 
 def digests_are_equal(digest1, digest2):
