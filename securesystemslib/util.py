@@ -886,7 +886,7 @@ def load_yaml_string(data):
     message = 'Invalid YAML string: ' + repr(data)
     raise securesystemslib.exceptions.Error(message)
 
-  except ValueError, ScannerError:
+  except (ValueError, yaml.scanner.ScannerError):
     message = 'Cannot deserialize to a Python object: ' + repr(data)
     raise securesystemslib.exceptions.Error(message)
 
