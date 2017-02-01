@@ -880,7 +880,7 @@ def load_yaml_string(data):
   deserialized_object = None
 
   try:
-    deserialized_object = yaml.loads(data)
+    deserialized_object = yaml.load(data)
 
   except TypeError:
     message = 'Invalid YAML string: ' + repr(data)
