@@ -830,7 +830,8 @@ def load_json_string(data):
       A JSON string.
 
   <Exceptions>
-    securesystemslib.exceptions.Error, if 'data' cannot be deserialized to a Python object.
+    securesystemslib.exceptions.Error, if 'data' cannot be deserialized to a
+    Python object.
 
   <Side Effects>
     None.
@@ -849,6 +850,43 @@ def load_json_string(data):
     raise securesystemslib.exceptions.Error(message)
 
   except ValueError:
+    message = 'Cannot deserialize to a Python object: ' + repr(data)
+    raise securesystemslib.exceptions.Error(message)
+
+  else:
+    return deserialized_object
+
+
+def load_yaml_string(data):
+  """
+  <Purpose>
+    Deserialize 'data' (YAML string) to a Python object.
+
+  <Arguments>
+    data:
+      A YAML string.
+
+  <Exceptions>
+    securesystemslib.exceptions.Error, if 'data' cannot be deserialized to a
+    Python object.
+
+  <Side Effects>
+    None.
+
+  <Returns>
+    Deserialized object.  For example, a dictionary.
+  """
+
+  deserialized_object = None
+
+  try:
+    deserialized_object = yaml.loads(data)
+
+  except TypeError:
+    message = 'Invalid YAML string: ' + repr(data)
+    raise securesystemslib.exceptions.Error(message)
+
+  except ValueError, ScannerError:
     message = 'Cannot deserialize to a Python object: ' + repr(data)
     raise securesystemslib.exceptions.Error(message)
 
