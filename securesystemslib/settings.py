@@ -64,5 +64,9 @@ ECDSA_CRYPTO_LIBRARY = 'pyca-cryptography'
 # 'pyca-cryptography']
 GENERAL_CRYPTO_LIBRARY = 'pyca-cryptography'
 
+# The default hash algorithm.  For example, this algorithm will be used
+# to generate the default KEYID of keys.
+DEFAULT_HASH_ALGORITHM = 'sha256'
+
 # The algorithm(s) in HASH_ALGORITHMS are used to generate key IDs.
 HASH_ALGORITHMS = ['sha256', 'sha512']

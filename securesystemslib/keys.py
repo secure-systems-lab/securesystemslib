@@ -260,7 +260,8 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS):
   # not included in the generation of the 'keyid' identifier.
   key_value = {'public': public,
                'private': ''}
-  keyid = _get_keyid(keytype, key_value)
+  keyid = _get_keyid(keytype, key_value,
+      securesystemslib.settings.DEFAULT_HASH_ALGORITHM)
 
   # Build the 'rsakey_dict' dictionary.  Update 'key_value' with the RSA
   # private key prior to adding 'key_value' to 'rsakey_dict'.
@@ -347,7 +348,8 @@ def generate_ecdsa_key(algorithm='ecdsa-sha2-nistp256'):
   # information is not included in the generation of the 'keyid' identifier.
   key_value = {'public': public,
                'private': ''}
-  keyid = _get_keyid(keytype, key_value)
+  keyid = _get_keyid(keytype, key_value,
+      securesystemslib.settings.DEFAULT_HASH_ALGORITHM)
 
   # Build the 'ed25519_key' dictionary.  Update 'key_value' with the Ed25519
   # private key prior to adding 'key_value' to 'ed25519_key'.
@@ -430,7 +432,8 @@ def generate_ed25519_key():
   # information is not included in the generation of the 'keyid' identifier.
   key_value = {'public': binascii.hexlify(public).decode(),
                'private': ''}
-  keyid = _get_keyid(keytype, key_value)
+  keyid = _get_keyid(keytype, key_value,
+      securesystemslib.settings.DEFAULT_HASH_ALGORITHM)
 
   # Build the 'ed25519_key' dictionary.  Update 'key_value' with the Ed25519
   # private key prior to adding 'key_value' to 'ed25519_key'.
@@ -597,9 +600,9 @@ def format_metadata_to_key(key_metadata):
   keytype = key_metadata['keytype']
   key_value = key_metadata['keyval']
 
-  # Convert 'key_value' to 'securesystemslib.formats.KEY_SCHEMA' and generate its
-  # hash The hash is in hexdigest form.
-  default_keyid = _get_keyid(keytype, key_value)
+  # Convert 'key_value' to 'securesystemslib.formats.KEY_SCHEMA' and generate
+  # its hash.  The hash is in hexdigest form.
+  default_keyid = _get_keyid(keytype, key_value, securesystemslib.settings.DEFAULT_HASH_ALGORITHM)
   keyids = set()
   keyids.add(default_keyid)
 
@@ -625,6 +628,7 @@ def _get_keyid(keytype, key_value, hash_algorithm = 'sha256'):
   # which is the format Metadata files (e.g., root.json) store keys.
   # 'format_keyval_to_metadata()' returns the object needed by _get_keyid().
   key_meta = format_keyval_to_metadata(keytype, key_value, private=False)
+  del key_meta['keyid_hash_algorithms']
 
   # Convert the key to JSON Canonical format, suitable for adding
   # to digest objects.
@@ -632,7 +636,7 @@ def _get_keyid(keytype, key_value, hash_algorithm = 'sha256'):
 
   # Create a digest object and call update(), using the JSON
   # canonical format of 'rskey_meta' as the update data.
-  digest_object = securesystemslib.hash.digest(_KEY_ID_HASH_ALGORITHM)
+  digest_object = securesystemslib.hash.digest(hash_algorithm)
   digest_object.update(key_update_data.encode('utf-8'))
 
   # 'keyid' becomes the hexadecimal representation of the hash.
@@ -1157,7 +1161,8 @@ def import_rsakey_from_private_pem(pem, password=None):
   # information is not included in the generation of the 'keyid' identifier.
   key_value = {'public': public,
                'private': ''}
-  keyid = _get_keyid(keytype, key_value)
+  keyid = _get_keyid(keytype, key_value,
+      securesystemslib.settings.DEFAULT_HASH_ALGORITHM)
 
   # Build the 'rsakey_dict' dictionary.  Update 'key_value' with the RSA
   # private key prior to adding 'key_value' to 'rsakey_dict'.
@@ -1239,7 +1244,8 @@ def import_rsakey_from_public_pem(pem):
   # information is not included in the generation of the 'keyid' identifier.
   key_value = {'public': public_pem,
                'private': ''}
-  keyid = _get_keyid(keytype, key_value)
+  keyid = _get_keyid(keytype, key_value,
+      securesystemslib.settings.DEFAULT_HASH_ALGORITHM)
 
   rsakey_dict['keytype'] = keytype
   rsakey_dict['keyid'] = keyid
@@ -1310,7 +1316,8 @@ def import_rsakey_from_pem(pem):
   # PEM with only a public key.
   key_value = {'public': public_pem,
                'private': ''}
-  keyid = _get_keyid(keytype, key_value)
+  keyid = _get_keyid(keytype, key_value,
+      securesystemslib.settings.DEFAULT_HASH_ALGORITHM)
 
   rsakey_dict['keytype'] = keytype
   rsakey_dict['keyid'] = keyid
@@ -1884,7 +1891,8 @@ def import_ecdsakey_from_private_pem(pem, password=None):
   # information is not included in the generation of the 'keyid' identifier.
   key_value = {'public': public,
                'private': ''}
-  keyid = _get_keyid(keytype, key_value)
+  keyid = _get_keyid(keytype, key_value,
+      securesystemslib.settings.DEFAULT_HASH_ALGORITHM)
 
   # Build the 'ecdsakey_dict' dictionary.  Update 'key_value' with the ECDSA
   # private key prior to adding 'key_value' to 'ecdsakey_dict'.
@@ -1966,7 +1974,8 @@ def import_ecdsakey_from_public_pem(pem):
   # information is not included in the generation of the 'keyid' identifier.
   key_value = {'public': public_pem,
                'private': ''}
-  keyid = _get_keyid(keytype, key_value)
+  keyid = _get_keyid(keytype, key_value,
+      securesystemslib.settings.DEFAULT_HASH_ALGORITHM)
 
   ecdsakey_dict['keytype'] = keytype
   ecdsakey_dict['keyid'] = keyid
@@ -2037,7 +2046,8 @@ def import_ecdsakey_from_pem(pem):
   # PEM with only a public key.
   key_value = {'public': public_pem,
                'private': ''}
-  keyid = _get_keyid(keytype, key_value)
+  keyid = _get_keyid(keytype, key_value,
+      securesystemslib.settings.DEFAULT_HASH_ALGORITHM)
 
   ecdsakey_dict['keytype'] = keytype
   ecdsakey_dict['keyid'] = keyid
