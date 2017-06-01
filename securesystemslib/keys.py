@@ -998,11 +998,10 @@ def verify_signature(key_dict, signature, data):
         raise securesystemslib.exceptions.UnsupportedLibraryError('Metadata'
           ' downloaded from the remote'
           ' repository listed an RSA signature.  "pycrypto" was set'
-          ' (in conf.py) to generate RSA signatures, but the PyCrypto library'
-          ' is not installed.  \n$ pip install PyCrypto, or pip install'
-          ' securesystemslib[tools], or you can try switching your configuration'
-          ' (settings.py) to use pyca-cryptography if that is available'
-          ' instead.')
+          ' (in settings.py) to generate RSA signatures, but the PyCrypto'
+          ' library is not installed.  \n$ pip install PyCrypto, or you can'
+          ' try switching your configuration (settings.py) to use'
+          ' pyca-cryptography if that is available instead.')
 
       else:
         valid_signature = securesystemslib.pycrypto_keys.verify_rsa_signature(sig, method,
@@ -1012,10 +1011,10 @@ def verify_signature(key_dict, signature, data):
         raise securesystemslib.exceptions.UnsupportedLibraryError('Metadata'
           ' downloaded from the remote'
           ' repository listed an RSA signature.  "pyca-cryptography" was set'
-          ' (in conf.py) to generate RSA signatures, but the "cryptography"'
-          ' library is not installed.  \n$ pip install cryptography, or pip'
-          ' install securesystemslib[tools], or you can try switching your'
-          ' configuration (securesystemslib/settings.py) to use PyCrypto if that is'
+          ' (in settings.py) to generate RSA signatures, but the "cryptography"'
+          ' library is not installed.  \n$ pip install cryptography,'
+          ' or you can try switching your configuration'
+          ' (securesystemslib/settings.py) to use PyCrypto if that is'
           ' available instead.')
 
       else:
