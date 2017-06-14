@@ -290,9 +290,11 @@ def verify_signature(public_key, method, signature, data):
       raise securesystemslib.exceptions.FormatError('Invalid signature or'
         ' data: ' + str(e))
 
-    # verify() returns either True or raises an 'InvalidSignature' exception.
+    # verify() raises an 'InvalidSignature' exception if 'signature'
+    # is invalid.
     try:
-      return verifier.verify()
+      verifier.verify()
+      return True
 
     except cryptography.exceptions.InvalidSignature:
       return False
