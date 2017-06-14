@@ -237,10 +237,13 @@ KEY_SCHEMA = SCHEMA.Object(
   keyval = KEYVAL_SCHEMA,
   expires = SCHEMA.Optional(ISO8601_DATETIME_SCHEMA))
 
-# Like KEY_SCHEMA, but requires keyval's private portion to be not set or empty
+# Like KEY_SCHEMA, but requires keyval's private portion to be unset or empty,
+# and optionally includes the supported keyid hash algorithms used to generate
+# the key's keyid.
 PUBLIC_KEY_SCHEMA = SCHEMA.Object(
-  object_name = 'KEY_SCHEMA',
+  object_name = 'PUBLIC_KEY_SCHEMA',
   keytype = SCHEMA.AnyString(),
+  keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
   keyval = PUBLIC_KEYVAL_SCHEMA,
   expires = SCHEMA.Optional(ISO8601_DATETIME_SCHEMA))
 
