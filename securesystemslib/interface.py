@@ -42,7 +42,7 @@ import gzip
 import random
 
 import securesystemslib.formats
-import securesystemslib.formats
+import securesystemslib.settings
 import securesystemslib.util
 import securesystemslib.keys
 
@@ -525,6 +525,11 @@ def import_ed25519_privatekey_from_file(filepath, password=None):
     message = 'Invalid key type loaded: ' + repr(key_object['keytype'])
     raise securesystemslib.exceptions.FormatError(message)
 
+  # Add "keyid_hash_algorithms" so equal ed25519 keys with
+  # different keyids can be associated using supported keyid_hash_algorithms
+  key_object['keyid_hash_algorithms'] = \
+      securesystemslib.settings.HASH_ALGORITHMS
+
   return key_object
 
 
@@ -744,6 +749,11 @@ def import_ecdsa_privatekey_from_file(filepath, password=None):
   if key_object['keytype'] != 'ecdsa-sha2-nistp256':
     message = 'Invalid key type loaded: ' + repr(key_object['keytype'])
     raise securesystemslib.exceptions.FormatError(message)
+
+  # Add "keyid_hash_algorithms" equal ecdsa keys with
+  # different keyids can be associated using supported keyid_hash_algorithms
+  key_object['keyid_hash_algorithms'] = \
+      securesystemslib.settings.HASH_ALGORITHMS
 
   return key_object
 
