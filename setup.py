@@ -68,7 +68,7 @@ with open('README.rst') as file_object:
 
 setup(
   name = 'securesystemslib',
-  version = '0.10.4',
+  version = '0.10.5',
   description = 'A library that provides cryptographic and general-purpose routines for Secure Systems Lab projects at NYU',
   long_description = long_description,
   author = 'https://www.updateframework.com',
@@ -96,7 +96,7 @@ setup(
     'Topic :: Security',
     'Topic :: Software Development'
   ],
-  install_requires = ['six', 'cryptography>=1.4.0', 'pycrypto>=2.6.1', 'pynacl>=0.2.3'],
+  install_requires = ['six', 'cryptography>=1.9.0', 'pycrypto>=2.6.1', 'pynacl>=0.2.3'],
   packages = find_packages(exclude=['tests']),
   scripts = []
 )
