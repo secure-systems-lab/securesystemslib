@@ -525,8 +525,8 @@ def import_ed25519_privatekey_from_file(filepath, password=None):
     message = 'Invalid key type loaded: ' + repr(key_object['keytype'])
     raise securesystemslib.exceptions.FormatError(message)
 
-  # Add "keyid_hash_algorithms" so equal ed25519 keys with
-  # different keyids can be associated using supported keyid_hash_algorithms
+  # Add "keyid_hash_algorithms" so that equal ed25519 keys with
+  # different keyids can be associated using supported keyid_hash_algorithms.
   key_object['keyid_hash_algorithms'] = \
       securesystemslib.settings.HASH_ALGORITHMS
 
@@ -750,8 +750,8 @@ def import_ecdsa_privatekey_from_file(filepath, password=None):
     message = 'Invalid key type loaded: ' + repr(key_object['keytype'])
     raise securesystemslib.exceptions.FormatError(message)
 
-  # Add "keyid_hash_algorithms" equal ecdsa keys with
-  # different keyids can be associated using supported keyid_hash_algorithms
+  # Add "keyid_hash_algorithms" so that equal ecdsa keys with different keyids
+  # can be associated using supported keyid_hash_algorithms.
   key_object['keyid_hash_algorithms'] = \
       securesystemslib.settings.HASH_ALGORITHMS
 
