@@ -602,8 +602,8 @@ def format_metadata_to_key(key_metadata):
   keytype = key_metadata['keytype']
   key_value = key_metadata['keyval']
 
-  # Convert 'key_value' to 'securesystemslib.formats.KEY_SCHEMA' and generate its
-  # hash The hash is in hexdigest form.
+  # Convert 'key_value' to 'securesystemslib.formats.KEY_SCHEMA' and generate
+  # its hash The hash is in hexdigest form.
   default_keyid = _get_keyid(keytype, key_value)
   keyids = set()
   keyids.add(default_keyid)
@@ -637,7 +637,7 @@ def _get_keyid(keytype, key_value, hash_algorithm = 'sha256'):
 
   # Create a digest object and call update(), using the JSON
   # canonical format of 'rskey_meta' as the update data.
-  digest_object = securesystemslib.hash.digest(_KEY_ID_HASH_ALGORITHM)
+  digest_object = securesystemslib.hash.digest(hash_algorithm)
   digest_object.update(key_update_data.encode('utf-8'))
 
   # 'keyid' becomes the hexadecimal representation of the hash.
