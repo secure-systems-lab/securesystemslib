@@ -163,7 +163,7 @@ _GENERAL_CRYPTO_LIBRARY = securesystemslib.settings.GENERAL_CRYPTO_LIBRARY
 logger = logging.getLogger('securesystemslib_keys')
 
 
-def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS):
+def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-256'):
   """
   <Purpose>
     Generate public and private RSA keys, with modulus length 'bits'.  In
@@ -201,6 +201,10 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS):
       The key size, or key length, of the RSA key.  'bits' must be 2048, or
       greater, and a multiple of 256.
 
+    scheme:
+      The signature scheme used by the key.  It must be one of
+      ['rsassa-pss-256'].
+
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'bits' is improperly or invalid
     (i.e., not an integer and not at least 2048).
@@ -228,6 +232,7 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS):
   # with a minimum value of 2048.  Raise 'securesystemslib.exceptions.FormatError'
   # if the check fails.
   securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match(bits)
+  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme)
 
   # Raise 'securesystemslib.exceptions.UnsupportedLibraryError' if the following
   # libraries, specified in 'settings', are unsupported or unavailable:
@@ -267,6 +272,7 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS):
   key_value['private'] = private
 
   rsakey_dict['keytype'] = keytype
+  rsakey_dict['scheme'] = scheme
   rsakey_dict['keyid'] = keyid
   rsakey_dict['keyid_hash_algorithms'] = securesystemslib.settings.HASH_ALGORITHMS
   rsakey_dict['keyval'] = key_value
@@ -378,6 +384,7 @@ def generate_ed25519_key():
     'securesystemslib.formats.ED25519KEY_SCHEMA' and has the form:
 
     {'keytype': 'ed25519',
+     'sig_scheme': 'ed25519',
      'keyid': 'f30a0870d026980100c0573bd557394f8c1bbd6...',
      'keyval': {'public': '9ccf3f02b17f82febf5dd3bab878b767d8408...',
                 'private': 'ab310eae0e229a0eceee3947b6e0205dfab3...'}}
@@ -837,7 +844,6 @@ def create_signature(key_dict, data):
   public = key_dict['keyval']['public']
   private = key_dict['keyval']['private']
   keyid = key_dict['keyid']
-  method = None
   sig = None
 
   # Convert 'data' to canonical JSON format so that repeatable signatures are
@@ -888,7 +894,6 @@ def create_signature(key_dict, data):
   # Build the signature dictionary to be returned.
   # The hexadecimal representation of 'sig' is stored in the signature.
   signature['keyid'] = keyid
-  signature['method'] = method
   signature['sig'] = binascii.hexlify(sig).decode()
 
   return signature
@@ -1168,6 +1173,7 @@ def import_rsakey_from_private_pem(pem, password=None):
   key_value['private'] = private
 
   rsakey_dict['keytype'] = keytype
+  rsakey_dict['scheme'] = scheme
   rsakey_dict['keyid'] = keyid
   rsakey_dict['keyval'] = key_value
 
