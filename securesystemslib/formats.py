@@ -115,8 +115,9 @@ KEYID_SCHEMA = HASH_SCHEMA
 # A list of KEYID_SCHEMA.
 KEYIDS_SCHEMA = SCHEMA.ListOf(KEYID_SCHEMA)
 
-# The method used for a generated signature (e.g., 'RSASSA-PSS').
-SIG_METHOD_SCHEMA = SCHEMA.AnyString()
+# The signing scheme used by a key to generate a signature (e.g.,
+# 'rsassa-pss-sha256' is one of the signing schemes for key type 'rsa').
+SIG_SCHEME_SCHEMA = SCHEMA.AnyString()
 
 # A relative file path (e.g., 'metadata/root/').
 RELPATH_SCHEMA = SCHEMA.AnyString()
@@ -234,6 +235,7 @@ KEYTYPE_SCHEMA = SCHEMA.OneOf(
 KEY_SCHEMA = SCHEMA.Object(
   object_name = 'KEY_SCHEMA',
   keytype = SCHEMA.AnyString(),
+  scheme = SIG_SCHEME_SCHEMA,
   keyval = KEYVAL_SCHEMA,
   expires = SCHEMA.Optional(ISO8601_DATETIME_SCHEMA))
 
@@ -265,6 +267,7 @@ ANYKEYLIST_SCHEMA = SCHEMA.ListOf(ANYKEY_SCHEMA)
 RSAKEY_SCHEMA = SCHEMA.Object(
   object_name = 'RSAKEY_SCHEMA',
   keytype = SCHEMA.String('rsa'),
+  scheme = SCHEMA.OneOf([SCHEMA.String('rsassa-pss-256')]),
   keyid = KEYID_SCHEMA,
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
   keyval = KEYVAL_SCHEMA)
@@ -273,6 +276,7 @@ RSAKEY_SCHEMA = SCHEMA.Object(
 ECDSAKEY_SCHEMA = SCHEMA.Object(
   object_name = 'ECDSAKEY_SCHEMA',
   keytype = ECDSAALGORITHMS_SCHEMA,
+  scheme = SCHEMA.OneOf([SCHEMA.String('ecdsa-sha2-nistp256')]),
   keyid = KEYID_SCHEMA,
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
   keyval = KEYVAL_SCHEMA)
@@ -299,6 +303,7 @@ REQUIRED_LIBRARIES_SCHEMA = SCHEMA.ListOf(SCHEMA.OneOf(
 ED25519KEY_SCHEMA = SCHEMA.Object(
   object_name = 'ED25519KEY_SCHEMA',
   keytype = SCHEMA.String('ed25519'),
+  scheme = SCHEMA.OneOf([SCHEMA.String('ed25519')]),
   keyid = KEYID_SCHEMA,
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
   keyval = KEYVAL_SCHEMA)
@@ -337,18 +342,15 @@ FILEDICT_SCHEMA = SCHEMA.DictOf(
   key_schema = RELPATH_SCHEMA,
   value_schema = FILEINFO_SCHEMA)
 
-# A single signature of an object.  Indicates the signature, the ID of the
-# signing key, and the signing method.
-# I debated making the signature schema not contain the key ID and instead have
-# the signatures of a file be a dictionary with the key being the keyid and the
-# value being the signature schema without the keyid. That would be under
-# the argument that a key should only be able to sign a file once. However,
-# one can imagine that maybe a key wants to sign multiple times with different
-# signature methods.
+# A single signature of an object.  Indicates the signature, and the KEYID of
+# the signing key.  I debated making the signature schema not contain the key
+# ID and instead have the signatures of a file be a dictionary with the key
+# being the keyid and the value being the signature schema without the keyid.
+# That would be under the argument that a key should only be able to sign a
+# file once.
 SIGNATURE_SCHEMA = SCHEMA.Object(
   object_name = 'SIGNATURE_SCHEMA',
   keyid = KEYID_SCHEMA,
-  method = SIG_METHOD_SCHEMA,
   sig = HEX_SCHEMA)
 
 # List of SIGNATURE_SCHEMA.
@@ -365,8 +367,7 @@ SIGNATURESTATUS_SCHEMA = SCHEMA.Object(
   good_sigs = KEYIDS_SCHEMA,
   bad_sigs = KEYIDS_SCHEMA,
   unknown_sigs = KEYIDS_SCHEMA,
-  untrusted_sigs = KEYIDS_SCHEMA,
-  unknown_method_sigs = KEYIDS_SCHEMA)
+  untrusted_sigs = KEYIDS_SCHEMA)
 
 # A signable object.  Holds the signing role and its associated signatures.
 SIGNABLE_SCHEMA = SCHEMA.Object(
