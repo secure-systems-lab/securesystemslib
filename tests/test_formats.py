@@ -65,7 +65,7 @@ class TestFormats(unittest.TestCase):
       'KEYIDS_SCHEMA': (securesystemslib.formats.KEYIDS_SCHEMA,
                         ['123456789abcdef', '123456789abcdef']),
 
-      'SIG_METHOD_SCHEMA': (securesystemslib.formats.SIG_METHOD_SCHEMA, 'ed25519'),
+      'SIG_SCHEME_SCHEMA': (securesystemslib.formats.SIG_SCHEME_SCHEMA, 'ecdsa-sha2-nistp256'),
 
       'RELPATH_SCHEMA': (securesystemslib.formats.RELPATH_SCHEMA, 'metadata/root/'),
 
@@ -110,20 +110,24 @@ class TestFormats(unittest.TestCase):
 
       'KEY_SCHEMA': (securesystemslib.formats.KEY_SCHEMA,
                      {'keytype': 'rsa',
+                      'scheme': 'rsassa-pss-256',
                       'keyval': {'public': 'pubkey',
                                  'private': 'privkey'}}),
 
       'PUBLIC_KEY_SCHEMA': (securesystemslib.formats.KEY_SCHEMA,
                      {'keytype': 'rsa',
+                      'scheme': 'rsassa-pss-256',
                       'keyval': {'public': 'pubkey'}}),
 
       'PUBLIC_KEY_SCHEMA2': (securesystemslib.formats.KEY_SCHEMA,
                      {'keytype': 'rsa',
+                      'scheme': 'rsassa-pss-256',
                       'keyval': {'public': 'pubkey',
                                  'private': ''}}),
 
       'RSAKEY_SCHEMA': (securesystemslib.formats.RSAKEY_SCHEMA,
                         {'keytype': 'rsa',
+                         'scheme': 'rsassa-pss-256',
                          'keyid': '123456789abcdef',
                          'keyval': {'public': 'pubkey',
                                     'private': 'privkey'}}),
@@ -159,6 +163,7 @@ class TestFormats(unittest.TestCase):
 
       'KEYDICT_SCHEMA': (securesystemslib.formats.KEYDICT_SCHEMA,
                          {'123abc': {'keytype': 'rsa',
+                                     'scheme': 'rsassa-pss-256',
                                      'keyval': {'public': 'pubkey',
                                                 'private': 'privkey'}}}),
 
@@ -185,6 +190,7 @@ class TestFormats(unittest.TestCase):
                        'compression_algorithms': ['gz'],
                        'expires': '1985-10-21T13:20:00Z',
                        'keys': {'123abc': {'keytype': 'rsa',
+                                           'scheme': 'rsassa-pss-256',
                                            'keyval': {'public': 'pubkey',
                                                       'private': 'privkey'}}},
                        'roles': {'root': {'keyids': ['123abc'],
@@ -199,6 +205,7 @@ class TestFormats(unittest.TestCase):
                                               'hashes': {'sha256': 'ABCD123'},
                                               'custom': {'type': 'metadata'}}},
          'delegations': {'keys': {'123abc': {'keytype':'rsa',
+                                             'scheme': 'rsassa-pss-256',
                                              'keyval': {'public': 'pubkey',
                                                         'private': 'privkey'}}},
                          'roles': [{'name': 'root', 'keyids': ['123abc'],
@@ -245,6 +252,8 @@ class TestFormats(unittest.TestCase):
     # Iterate 'valid_schemas', ensuring each 'valid_schema' correctly matches
     # its respective 'schema_type'.
     for schema_name, (schema_type, valid_schema) in six.iteritems(valid_schemas):
+      if not schema_type.matches(valid_schema):
+        print('bad schema: ' + repr(valid_schema))
       self.assertEqual(True, schema_type.matches(valid_schema))
 
     # Test conditions for invalid schemas.
