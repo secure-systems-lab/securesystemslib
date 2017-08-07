@@ -263,20 +263,26 @@ ANYKEY_SCHEMA = SCHEMA.Object(
 # A list of TUF key objects.
 ANYKEYLIST_SCHEMA = SCHEMA.ListOf(ANYKEY_SCHEMA)
 
+# RSA signature schemes.
+RSA_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String('rsassa-pss-256')])
+
 # An RSA TUF key.
 RSAKEY_SCHEMA = SCHEMA.Object(
   object_name = 'RSAKEY_SCHEMA',
   keytype = SCHEMA.String('rsa'),
-  scheme = SCHEMA.OneOf([SCHEMA.String('rsassa-pss-256')]),
+  scheme = RSA_SIG_SCHEMA,
   keyid = KEYID_SCHEMA,
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
   keyval = KEYVAL_SCHEMA)
+
+# ECDSA signature schemes.
+ECDSA_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String('ecdsa-sha2-nistp256')])
 
 # An ECDSA TUF key.
 ECDSAKEY_SCHEMA = SCHEMA.Object(
   object_name = 'ECDSAKEY_SCHEMA',
   keytype = ECDSAALGORITHMS_SCHEMA,
-  scheme = SCHEMA.OneOf([SCHEMA.String('ecdsa-sha2-nistp256')]),
+  scheme = ECDSA_SIG_SCHEMA,
   keyid = KEYID_SCHEMA,
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
   keyval = KEYVAL_SCHEMA)
@@ -299,11 +305,15 @@ REQUIRED_LIBRARIES_SCHEMA = SCHEMA.ListOf(SCHEMA.OneOf(
   [SCHEMA.String('general'), SCHEMA.String('ed25519'), SCHEMA.String('rsa'),
    SCHEMA.String('ecdsa-sha2-nistp256')]))
 
+# Ed25519 signature schemes.  The vanilla Ed25519 signature scheme is currently
+# supported.
+ED25519_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String('ed25519')])
+
 # An ed25519 TUF key.
 ED25519KEY_SCHEMA = SCHEMA.Object(
   object_name = 'ED25519KEY_SCHEMA',
   keytype = SCHEMA.String('ed25519'),
-  scheme = SCHEMA.OneOf([SCHEMA.String('ed25519')]),
+  scheme = ED25519_SIG_SCHEMA,
   keyid = KEYID_SCHEMA,
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
   keyval = KEYVAL_SCHEMA)
