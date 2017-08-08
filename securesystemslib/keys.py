@@ -172,6 +172,7 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-256'):
     form:
 
     {'keytype': 'rsa',
+     'scheme': 'rsassa-pss-256',
      'keyid': keyid,
      'keyval': {'public': '-----BEGIN RSA PUBLIC KEY----- ...',
                 'private': '-----BEGIN RSA PRIVATE KEY----- ...'}}
@@ -189,6 +190,7 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-256'):
     >>> rsa_key = generate_rsa_key(bits=2048)
     >>> securesystemslib.formats.RSAKEY_SCHEMA.matches(rsa_key)
     True
+
     >>> public = rsa_key['keyval']['public']
     >>> private = rsa_key['keyval']['private']
     >>> securesystemslib.formats.PEMRSA_SCHEMA.matches(public)
@@ -265,7 +267,7 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-256'):
   # not included in the generation of the 'keyid' identifier.
   key_value = {'public': public,
                'private': ''}
-  keyid = _get_keyid(keytype, key_value)
+  keyid = _get_keyid(keytype, scheme, key_value)
 
   # Build the 'rsakey_dict' dictionary.  Update 'key_value' with the RSA
   # private key prior to adding 'key_value' to 'rsakey_dict'.
@@ -283,7 +285,7 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-256'):
 
 
 
-def generate_ecdsa_key(algorithm='ecdsa-sha2-nistp256'):
+def generate_ecdsa_key(scheme='ecdsa-sha2-nistp256'):
   """
   <Purpose>
     Generate public and private ECDSA keys, with NIST P-256 + SHA256 (for
@@ -292,27 +294,29 @@ def generate_ecdsa_key(algorithm='ecdsa-sha2-nistp256'):
     'securesystemslib.formats.ECDSAKEY_SCHEMA' and has the form:
 
     {'keytype': 'ecdsa-sha2-nistp256',
+     'scheme', 'ecdsa-sha2-nistp256',
      'keyid': keyid,
      'keyval': {'public': '',
                 'private': ''}}
 
     The public and private keys are strings in TODO format.
 
-    >>> ecdsa_key = generate_ecdsa_key(algorithm='ecdsa-sha2-nistp256')
+    >>> ecdsa_key = generate_ecdsa_key(scheme='ecdsa-sha2-nistp256')
     >>> securesystemslib.formats.ECDSAKEY_SCHEMA.matches(ecdsa_key)
     True
 
   <Arguments>
-    algorithm:
+    scheme:
       The ECDSA algorithm.  By default, ECDSA NIST P-256 is used, with SHA256
       for hashing.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError, if 'algorithm' is improperly or invalid
-    (i.e., not one of the supported ECDSA algorithms).
+    securesystemslib.exceptions.FormatError, if 'algorithm' is improperly or
+    invalid (i.e., not one of the supported ECDSA algorithms).
 
-    securesystemslib.exceptions.UnsupportedLibraryError, if any of the cryptography
-    libraries specified in 'settings.py' are unsupported or unavailable.
+    securesystemslib.exceptions.UnsupportedLibraryError, if any of the
+    cryptography libraries specified in 'settings.py' are unsupported or
+    unavailable.
 
   <Side Effects>
     None.
@@ -325,7 +329,7 @@ def generate_ecdsa_key(algorithm='ecdsa-sha2-nistp256'):
   # Does 'algorithm' have the correct format?  This check will ensure
   # 'algorithm is properly formatted and is a supported ECDSA algorithm.  Raise
   # 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.ECDSAALGORITHMS_SCHEMA.check_match(algorithm)
+  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
 
   # Raise 'securesystemslib.exceptions.UnsupportedLibraryError' if the following
   # libraries, specified in 'settings', are unsupported or unavailable:
@@ -334,7 +338,7 @@ def generate_ecdsa_key(algorithm='ecdsa-sha2-nistp256'):
 
   # Begin building the ECDSA key dictionary.
   ecdsa_key = {}
-  keytype = algorithm
+  keytype = 'ecdsa-sha2-nistp256'
   public = None
   private = None
 
@@ -342,7 +346,7 @@ def generate_ecdsa_key(algorithm='ecdsa-sha2-nistp256'):
   # libraries.
   if 'pyca-cryptography' in _available_crypto_libraries:
     public, private = \
-      securesystemslib.ecdsa_keys.generate_public_and_private(algorithm)
+      securesystemslib.ecdsa_keys.generate_public_and_private(scheme)
 
   else: # pragma: no cover
     raise securesystemslib.exceptions.UnsupportedLibraryError('One of the'
@@ -353,7 +357,7 @@ def generate_ecdsa_key(algorithm='ecdsa-sha2-nistp256'):
   # information is not included in the generation of the 'keyid' identifier.
   key_value = {'public': public,
                'private': ''}
-  keyid = _get_keyid(keytype, key_value)
+  keyid = _get_keyid(keytype, scheme, key_value)
 
   # Build the 'ed25519_key' dictionary.  Update 'key_value' with the Ed25519
   # private key prior to adding 'key_value' to 'ed25519_key'.
@@ -361,6 +365,7 @@ def generate_ecdsa_key(algorithm='ecdsa-sha2-nistp256'):
   key_value['private'] = private
 
   ecdsa_key['keytype'] = keytype
+  ecdsa_key['scheme'] = scheme
   ecdsa_key['keyid'] = keyid
   ecdsa_key['keyval'] = key_value
 
@@ -375,7 +380,7 @@ def generate_ecdsa_key(algorithm='ecdsa-sha2-nistp256'):
 
 
 
-def generate_ed25519_key():
+def generate_ed25519_key(scheme='ed25519'):
   """
   <Purpose>
     Generate public and private ED25519 keys, both of length 32-bytes, although
@@ -384,7 +389,7 @@ def generate_ed25519_key():
     'securesystemslib.formats.ED25519KEY_SCHEMA' and has the form:
 
     {'keytype': 'ed25519',
-     'sig_scheme': 'ed25519',
+     'scheme': 'ed25519',
      'keyid': 'f30a0870d026980100c0573bd557394f8c1bbd6...',
      'keyval': {'public': '9ccf3f02b17f82febf5dd3bab878b767d8408...',
                 'private': 'ab310eae0e229a0eceee3947b6e0205dfab3...'}}
@@ -398,7 +403,8 @@ def generate_ed25519_key():
     64
 
   <Arguments>
-    None.
+    scheme:
+      The signature scheme used by the generated Ed25519 key.
 
   <Exceptions>
     securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported or
@@ -413,9 +419,13 @@ def generate_ed25519_key():
     Conforms to 'securesystemslib.formats.ED25519KEY_SCHEMA'.
   """
 
-  # Raise 'securesystemslib.exceptions.UnsupportedLibraryError' if the following
-  # libraries, specified in 'settings', are unsupported or unavailable:
-  # 'securesystemslib.settings.ED25519_CRYPTO_LIBRARY'.
+  # Are the arguments properly formatted?  If not, raise an
+  # 'securesystemslib.exceptions.FormatError' exceptions.
+  securesystemslib.formats.ED25519_SIG_SCHEMA.check_match(scheme)
+
+  # Raise 'securesystemslib.exceptions.UnsupportedLibraryError' if the
+  # following libraries, specified in 'settings', are unsupported or
+  # unavailable: 'securesystemslib.settings.ED25519_CRYPTO_LIBRARY'.
   check_crypto_libraries(['ed25519'])
 
   # Begin building the Ed25519 key dictionary.
@@ -442,13 +452,14 @@ def generate_ed25519_key():
   # information is not included in the generation of the 'keyid' identifier.
   key_value = {'public': binascii.hexlify(public).decode(),
                'private': ''}
-  keyid = _get_keyid(keytype, key_value)
+  keyid = _get_keyid(keytype, scheme, key_value)
 
   # Build the 'ed25519_key' dictionary.  Update 'key_value' with the Ed25519
   # private key prior to adding 'key_value' to 'ed25519_key'.
   key_value['private'] = binascii.hexlify(private).decode()
 
   ed25519_key['keytype'] = keytype
+  ed25519_key['scheme'] = scheme
   ed25519_key['keyid'] = keyid
   ed25519_key['keyid_hash_algorithms'] = securesystemslib.settings.HASH_ALGORITHMS
   ed25519_key['keyval'] = key_value
@@ -459,7 +470,7 @@ def generate_ed25519_key():
 
 
 
-def format_keyval_to_metadata(keytype, key_value, private=False):
+def format_keyval_to_metadata(keytype, scheme, key_value, private=False):
   """
   <Purpose>
     Return a dictionary conformant to 'securesystemslib.formats.KEY_SCHEMA'.
@@ -467,6 +478,7 @@ def format_keyval_to_metadata(keytype, key_value, private=False):
     returned has the form:
 
     {'keytype': keytype,
+     'scheme' : scheme,
      'keyval': {'public': '...',
                 'private': '...'}}
 
@@ -479,14 +491,18 @@ def format_keyval_to_metadata(keytype, key_value, private=False):
     >>> ed25519_key = generate_ed25519_key()
     >>> key_val = ed25519_key['keyval']
     >>> keytype = ed25519_key['keytype']
+    >>> scheme = ed25519_key['scheme']
     >>> ed25519_metadata = \
-    format_keyval_to_metadata(keytype, key_val, private=True)
+    format_keyval_to_metadata(keytype, scheme, key_val, private=True)
     >>> securesystemslib.formats.KEY_SCHEMA.matches(ed25519_metadata)
     True
 
   <Arguments>
     key_type:
       The 'rsa' or 'ed25519' strings.
+
+    scheme:
+      The signature scheme used by the key.
 
     key_value:
       A dictionary containing a private and public keys.
@@ -519,6 +535,9 @@ def format_keyval_to_metadata(keytype, key_value, private=False):
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
   securesystemslib.formats.KEYTYPE_SCHEMA.check_match(keytype)
 
+  # Does 'scheme' have the correct format?
+  securesystemslib.formats.SIG_SCHEME_SCHEMA.check_match(scheme)
+
   # Does 'key_value' have the correct format?
   securesystemslib.formats.KEYVAL_SCHEMA.check_match(key_value)
 
@@ -532,12 +551,13 @@ def format_keyval_to_metadata(keytype, key_value, private=False):
         ' is missing from: ' + repr(key_value))
 
     else:
-      return {'keytype': keytype, 'keyval': key_value}
+      return {'keytype': keytype, 'scheme': scheme, 'keyval': key_value}
 
   else:
     public_key_value = {'public': key_value['public']}
 
     return {'keytype': keytype,
+            'scheme': scheme,
             'keyid_hash_algorithms': securesystemslib.settings.HASH_ALGORITHMS,
             'keyval': public_key_value}
 
@@ -555,6 +575,7 @@ def format_metadata_to_key(key_metadata):
     has the form:
 
     {'keytype': keytype,
+     'scheme': scheme,
      'keyid': 'f30a0870d026980100c0573bd557394f8c1bbd6...',
      'keyval': {'public': '...',
                 'private': '...'}}
@@ -569,8 +590,9 @@ def format_metadata_to_key(key_metadata):
     >>> ed25519_key = generate_ed25519_key()
     >>> key_val = ed25519_key['keyval']
     >>> keytype = ed25519_key['keytype']
+    >>> scheme = ed25519_key['scheme']
     >>> ed25519_metadata = \
-    format_keyval_to_metadata(keytype, key_val, private=True)
+    format_keyval_to_metadata(keytype, scheme, key_val, private=True)
     >>> ed25519_key_2, junk = format_metadata_to_key(ed25519_metadata)
     >>> securesystemslib.formats.ED25519KEY_SCHEMA.matches(ed25519_key_2)
     True
@@ -583,6 +605,7 @@ def format_metadata_to_key(key_metadata):
       'securesystemslib.formats.KEY_SCHEMA'.  It has the form:
 
       {'keytype': '...',
+       'scheme': scheme,
        'keyval': {'public': '...',
                   'private': '...'}}
 
@@ -607,21 +630,23 @@ def format_metadata_to_key(key_metadata):
   # Construct the dictionary to be returned.
   key_dict = {}
   keytype = key_metadata['keytype']
+  scheme = key_metadata['scheme']
   key_value = key_metadata['keyval']
 
   # Convert 'key_value' to 'securesystemslib.formats.KEY_SCHEMA' and generate
   # its hash The hash is in hexdigest form.
-  default_keyid = _get_keyid(keytype, key_value)
+  default_keyid = _get_keyid(keytype, scheme, key_value)
   keyids = set()
   keyids.add(default_keyid)
 
   for hash_algorithm in securesystemslib.settings.HASH_ALGORITHMS:
-    keyid = _get_keyid(keytype, key_value, hash_algorithm)
+    keyid = _get_keyid(keytype, scheme, key_value, hash_algorithm)
     keyids.add(keyid)
 
   # All the required key values gathered.  Build 'key_dict'.
   # 'keyid_hash_algorithms'
   key_dict['keytype'] = keytype
+  key_dict['scheme'] = scheme
   key_dict['keyid'] = default_keyid
   key_dict['keyid_hash_algorithms'] = securesystemslib.settings.HASH_ALGORITHMS
   key_dict['keyval'] = key_value
@@ -630,13 +655,13 @@ def format_metadata_to_key(key_metadata):
 
 
 
-def _get_keyid(keytype, key_value, hash_algorithm = 'sha256'):
+def _get_keyid(keytype, scheme, key_value, hash_algorithm = 'sha256'):
   """Return the keyid of 'key_value'."""
 
   # 'keyid' will be generated from an object conformant to KEY_SCHEMA,
   # which is the format Metadata files (e.g., root.json) store keys.
   # 'format_keyval_to_metadata()' returns the object needed by _get_keyid().
-  key_meta = format_keyval_to_metadata(keytype, key_value, private=False)
+  key_meta = format_keyval_to_metadata(keytype, scheme, key_value, private=False)
 
   # Convert the key to JSON Canonical format, suitable for adding
   # to digest objects.
@@ -756,7 +781,6 @@ def create_signature(key_dict, data):
   <Purpose>
     Return a signature dictionary of the form:
     {'keyid': 'f30a0870d026980100c0573bd557394f8c1bbd6...',
-     'method': '...',
      'sig': '...'}.
 
     The signing process will use the private key in
@@ -914,6 +938,7 @@ def verify_signature(key_dict, signature, data):
     >>> data = 'The quick brown fox jumps over the lazy dog'
     >>> signature = create_signature(ed25519_key, data)
     >>> verify_signature(ed25519_key, signature, data)
+
     True
     >>> verify_signature(ed25519_key, signature, 'bad_data')
     False
@@ -1067,7 +1092,7 @@ def verify_signature(key_dict, signature, data):
 
 
 
-def import_rsakey_from_private_pem(pem, password=None):
+def import_rsakey_from_private_pem(pem, scheme='rsassa-pss-256', password=None):
   """
   <Purpose>
     Import the private RSA key stored in 'pem', and generate its public key
@@ -1076,6 +1101,7 @@ def import_rsakey_from_private_pem(pem, password=None):
     conforms to 'securesystemslib.formats.RSAKEY_SCHEMA' and has the form:
 
     {'keytype': 'rsa',
+     'scheme': 'rsassa-pss-256',
      'keyid': keyid,
      'keyval': {'public': '-----BEGIN RSA PUBLIC KEY----- ...',
                 'private': '-----BEGIN RSA PRIVATE KEY----- ...'}}
@@ -1083,10 +1109,11 @@ def import_rsakey_from_private_pem(pem, password=None):
     The private key is a string in PEM format.
 
     >>> rsa_key = generate_rsa_key()
+    >>> scheme = rsa_key['scheme']
     >>> private = rsa_key['keyval']['private']
     >>> passphrase = 'secret'
     >>> encrypted_pem = create_rsa_encrypted_pem(private, passphrase)
-    >>> rsa_key2 = import_rsakey_from_private_pem(encrypted_pem, passphrase)
+    >>> rsa_key2 = import_rsakey_from_private_pem(encrypted_pem, scheme, passphrase)
     >>> securesystemslib.formats.RSAKEY_SCHEMA.matches(rsa_key)
     True
     >>> securesystemslib.formats.RSAKEY_SCHEMA.matches(rsa_key2)
@@ -1096,6 +1123,9 @@ def import_rsakey_from_private_pem(pem, password=None):
     pem:
       A string in PEM format.  The private key is extracted and returned in
       an rsakey object.
+
+    scheme:
+      The signature scheme used by the imported key.
 
     password: (optional)
       The password, or passphrase, to decrypt the private part of the RSA
@@ -1121,6 +1151,9 @@ def import_rsakey_from_private_pem(pem, password=None):
   # This check will ensure 'pem' conforms to
   # 'securesystemslib.formats.PEMRSA_SCHEMA'.
   securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
+
+  # Is 'scheme' properly formatted?
+  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme)
 
   if password is not None:
     securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
@@ -1166,7 +1199,7 @@ def import_rsakey_from_private_pem(pem, password=None):
   # information is not included in the generation of the 'keyid' identifier.
   key_value = {'public': public,
                'private': ''}
-  keyid = _get_keyid(keytype, key_value)
+  keyid = _get_keyid(keytype, scheme, key_value)
 
   # Build the 'rsakey_dict' dictionary.  Update 'key_value' with the RSA
   # private key prior to adding 'key_value' to 'rsakey_dict'.
@@ -1183,7 +1216,7 @@ def import_rsakey_from_private_pem(pem, password=None):
 
 
 
-def import_rsakey_from_public_pem(pem):
+def import_rsakey_from_public_pem(pem, scheme='rsassa-pss-256'):
   """
   <Purpose>
     Generate an RSA key object from 'pem'.  In addition, a keyid identifier for
@@ -1229,6 +1262,9 @@ def import_rsakey_from_public_pem(pem):
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
   securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
 
+  # Does 'scheme' have the correct format?
+  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme)
+
   # Ensure the PEM string has a public header and footer.  Although a simple
   # validation of 'pem' is performed here, a fully valid PEM string is needed
   # later to successfully verify signatures.  Performing stricter validation of
@@ -1249,9 +1285,10 @@ def import_rsakey_from_public_pem(pem):
   # information is not included in the generation of the 'keyid' identifier.
   key_value = {'public': public_pem,
                'private': ''}
-  keyid = _get_keyid(keytype, key_value)
+  keyid = _get_keyid(keytype, scheme, key_value)
 
   rsakey_dict['keytype'] = keytype
+  rsakey_dict['scheme'] = scheme
   rsakey_dict['keyid'] = keyid
   rsakey_dict['keyval'] = key_value
 
@@ -1266,7 +1303,7 @@ def import_rsakey_from_public_pem(pem):
 
 
 
-def import_rsakey_from_pem(pem):
+def import_rsakey_from_pem(pem, scheme='rsassa-pss-256'):
   """
   <Purpose>
     Import either a public or private PEM.  In contrast to the other explicit
@@ -1277,6 +1314,9 @@ def import_rsakey_from_pem(pem):
   <Arguments>
     pem:
       A string in PEM format.
+
+    scheme:
+      The signature scheme used by the imported key.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'pem' is improperly formatted.
@@ -1294,6 +1334,9 @@ def import_rsakey_from_pem(pem):
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
   securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
+
+  # Is 'scheme' properly formatted?
+  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme)
 
   public_pem = ''
   private_pem = ''
@@ -1325,9 +1368,10 @@ def import_rsakey_from_pem(pem):
   # PEM with only a public key.
   key_value = {'public': public_pem,
                'private': ''}
-  keyid = _get_keyid(keytype, key_value)
+  keyid = _get_keyid(keytype, scheme, key_value)
 
   rsakey_dict['keytype'] = keytype
+  rsakey_dict['scheme'] = scheme
   rsakey_dict['keyid'] = keyid
   rsakey_dict['keyval'] = key_value
 
@@ -1832,7 +1876,7 @@ def is_pem_private(pem, keytype='rsa'):
 
 
 
-def import_ecdsakey_from_private_pem(pem, password=None):
+def import_ecdsakey_from_private_pem(pem, scheme='ecdsa-sha2-nistp256', password=None):
   """
   <Purpose>
     Import the private ECDSA key stored in 'pem', and generate its public key
@@ -1841,6 +1885,7 @@ def import_ecdsakey_from_private_pem(pem, password=None):
     conforms to:
 
     {'keytype': 'ecdsa-sha2-nistp256',
+     'scheme': 'ecdsa-sha2-nistp256',
      'keyid': keyid,
      'keyval': {'public': '-----BEGIN PUBLIC KEY----- ... -----END PUBLIC KEY-----',
                 'private': '-----BEGIN EC PRIVATE KEY----- ... -----END EC PRIVATE KEY-----'}}
@@ -1857,6 +1902,9 @@ def import_ecdsakey_from_private_pem(pem, password=None):
     pem:
       A string in PEM format.  The private key is extracted and returned in
       an ecdsakey object.
+
+    scheme:
+      The signature scheme used by the imported key.
 
     password: (optional)
       The password, or passphrase, to decrypt the private part of the ECDSA
@@ -1883,6 +1931,9 @@ def import_ecdsakey_from_private_pem(pem, password=None):
   # 'securesystemslib.formats.ECDSARSA_SCHEMA'.
   securesystemslib.formats.PEMECDSA_SCHEMA.check_match(pem)
 
+  # Is 'scheme' properly formatted?
+  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
+
   if password is not None:
     securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
 
@@ -1904,13 +1955,14 @@ def import_ecdsakey_from_private_pem(pem, password=None):
   # information is not included in the generation of the 'keyid' identifier.
   key_value = {'public': public,
                'private': ''}
-  keyid = _get_keyid(keytype, key_value)
+  keyid = _get_keyid(keytype, scheme, key_value)
 
   # Build the 'ecdsakey_dict' dictionary.  Update 'key_value' with the ECDSA
   # private key prior to adding 'key_value' to 'ecdsakey_dict'.
   key_value['private'] = private
 
   ecdsakey_dict['keytype'] = keytype
+  ecdsakey_dict['scheme'] = scheme
   ecdsakey_dict['keyid'] = keyid
   ecdsakey_dict['keyval'] = key_value
 
@@ -1925,7 +1977,7 @@ def import_ecdsakey_from_private_pem(pem, password=None):
 
 
 
-def import_ecdsakey_from_public_pem(pem):
+def import_ecdsakey_from_public_pem(pem, scheme='ecdsa-sha2-nistp256'):
   """
   <Purpose>
     Generate an ECDSA key object from 'pem'.  In addition, a keyid identifier
@@ -1933,6 +1985,7 @@ def import_ecdsakey_from_public_pem(pem):
     'securesystemslib.formats.ECDSAKEY_SCHEMA' and has the form:
 
     {'keytype': 'ecdsa-sha2-nistp256',
+     'scheme': 'ecdsa-sha2-nistp256',
      'keyid': keyid,
      'keyval': {'public': '-----BEGIN PUBLIC KEY----- ...',
                 'private': ''}}
@@ -1942,7 +1995,8 @@ def import_ecdsakey_from_public_pem(pem):
     >>> ecdsa_key = generate_ecdsa_key()
     >>> public = ecdsa_key['keyval']['public']
     >>> ecdsa_key['keyval']['private'] = ''
-    >>> ecdsa_key2 = import_ecdsakey_from_public_pem(public)
+    >>> scheme = ecdsa_key['scheme']
+    >>> ecdsa_key2 = import_ecdsakey_from_public_pem(public, scheme)
     >>> securesystemslib.formats.ECDSAKEY_SCHEMA.matches(ecdsa_key)
     True
     >>> securesystemslib.formats.ECDSAKEY_SCHEMA.matches(ecdsa_key2)
@@ -1951,6 +2005,9 @@ def import_ecdsakey_from_public_pem(pem):
   <Arguments>
     pem:
       A string in PEM format (it should contain a public ECDSA key).
+
+    scheme:
+      The signature scheme used by the imported key.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'pem' is improperly formatted.
@@ -1970,6 +2027,9 @@ def import_ecdsakey_from_public_pem(pem):
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
   securesystemslib.formats.PEMECDSA_SCHEMA.check_match(pem)
+
+  # Is 'scheme' properly formatted?
+  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
 
   # Ensure the PEM string has a public header and footer.  Although a simple
   # validation of 'pem' is performed here, a fully valid PEM string is needed
@@ -1991,9 +2051,10 @@ def import_ecdsakey_from_public_pem(pem):
   # information is not included in the generation of the 'keyid' identifier.
   key_value = {'public': public_pem,
                'private': ''}
-  keyid = _get_keyid(keytype, key_value)
+  keyid = _get_keyid(keytype, scheme, key_value)
 
   ecdsakey_dict['keytype'] = keytype
+  ecdsakey_dict['scheme'] = scheme
   ecdsakey_dict['keyid'] = keyid
   ecdsakey_dict['keyval'] = key_value
 
@@ -2008,7 +2069,7 @@ def import_ecdsakey_from_public_pem(pem):
 
 
 
-def import_ecdsakey_from_pem(pem):
+def import_ecdsakey_from_pem(pem, scheme='ecdsa-sha2-nistp256'):
   """
   <Purpose>
     Import either a public or private ECDSA PEM.  In contrast to the other
@@ -2020,6 +2081,8 @@ def import_ecdsakey_from_pem(pem):
     pem:
       A string in PEM format.
 
+    scheme:
+      The signature scheme used by the imported key.
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'pem' is improperly formatted.
 
@@ -2036,6 +2099,9 @@ def import_ecdsakey_from_pem(pem):
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
   securesystemslib.formats.PEMECDSA_SCHEMA.check_match(pem)
+
+  # Is 'scheme' properly formatted?
+  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
 
   public_pem = ''
   private_pem = ''
@@ -2067,9 +2133,10 @@ def import_ecdsakey_from_pem(pem):
   # PEM with only a public key.
   key_value = {'public': public_pem,
                'private': ''}
-  keyid = _get_keyid(keytype, key_value)
+  keyid = _get_keyid(keytype, scheme, key_value)
 
   ecdsakey_dict['keytype'] = keytype
+  ecdsakey_dict['scheme'] = scheme
   ecdsakey_dict['keyid'] = keyid
   ecdsakey_dict['keyval'] = key_value
 
