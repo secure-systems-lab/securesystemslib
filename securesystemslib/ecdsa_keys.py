@@ -59,12 +59,12 @@ import cryptography.exceptions
 import securesystemslib.formats
 import securesystemslib.exceptions
 
-_SUPPORTED_ECDSA_ALGORITHMS = ['ecdsa-sha2-nistp256']
+_SUPPORTED_ECDSA_SCHEMES = ['ecdsa-sha2-nistp256']
 
 logger = logging.getLogger('securesystemslib_ecdsa_keys')
 
 
-def generate_public_and_private(algorithm='ecdsa-sha2-nistp256'):
+def generate_public_and_private(scheme='ecdsa-sha2-nistp256'):
   """
   <Purpose>
     Generate a pair of ECDSA public and private keys with one of the supported,
@@ -99,7 +99,7 @@ def generate_public_and_private(algorithm='ecdsa-sha2-nistp256'):
     True
 
   <Arguments>
-    algorithm:
+    scheme:
       A string indicating which algorithm to use for the generation of the
       public and private ECDSA keys.  'ecdsa-sha2-nistp256' is the only
       currently supported ECDSA algorithm, which is supported by OpenSSH and
@@ -126,12 +126,12 @@ def generate_public_and_private(algorithm='ecdsa-sha2-nistp256'):
   # supported ECDSA algorithms.  It must conform to
   # 'securesystemslib.formats.ECDSAALGORITHMS_SCHEMA'.  Raise
   # 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.ECDSAALGORITHMS_SCHEMA.check_match(algorithm)
+  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
 
   public_key = None
   private_key = None
 
-  if algorithm == 'ecdsa-sha2-nistp256':
+  if scheme == 'ecdsa-sha2-nistp256':
     private_key = ec.generate_private_key(ec.SECP256R1, default_backend())
     public_key = private_key.public_key()
 
@@ -139,8 +139,8 @@ def generate_public_and_private(algorithm='ecdsa-sha2-nistp256'):
   # invalid 'algorithm'.
   else: #pragma: no cover
     raise securesystemslib.exceptions.UnsupportedLibraryError('An unsupported'
-      ' algorithm was specified: ' + repr(algorithm) + '.\n  Supported'
-      ' algorithms: ' + repr(_SUPPORTED_ECDSA_ALGORITHMS))
+      ' algorithm was specified: ' + repr(scheme) + '.\n  Supported'
+      ' algorithms: ' + repr(_SUPPORTED_ECDSA_SCHEMES))
 
   private_pem = private_key.private_bytes(encoding=serialization.Encoding.PEM,
     format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -228,8 +228,8 @@ def verify_signature(public_key, method, signature, data):
   <Purpose>
     ...
 
-    >>> algorithm = 'ecdsa-sha2-nistp256'
-    >>> public, private = generate_public_and_private(algorithm)
+    >>> scheme= 'ecdsa-sha2-nistp256'
+    >>> public, private = generate_public_and_private(scheme)
     >>> data = b'The quick brown fox jumps over the lazy dog'
     >>> signature, method = create_signature(public, private, data)
     >>> verify_signature(public, method, signature, data)
@@ -254,8 +254,8 @@ def verify_signature(public_key, method, signature, data):
       Byte data that was used by create_signature() to generate 'signature'.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError, if any of the arguments are improperly
-    formatted.
+    securesystemslib.exceptions.FormatError, if any of the arguments are
+    improperly formatted.
 
   <Side Effects>
     None.
@@ -272,7 +272,7 @@ def verify_signature(public_key, method, signature, data):
   securesystemslib.formats.ECDSASIGNATURE_SCHEMA.check_match(signature)
 
   # Is 'method' one of the supported ECDSA algorithms?
-  if method in _SUPPORTED_ECDSA_ALGORITHMS:
+  if method in _SUPPORTED_ECDSA_SCHEMES:
     ecdsa_key = load_pem_public_key(public_key.encode('utf-8'), backend=default_backend())
 
     if not isinstance(ecdsa_key, ec.EllipticCurvePublicKey):
