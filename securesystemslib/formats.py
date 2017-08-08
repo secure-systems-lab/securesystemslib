@@ -184,7 +184,7 @@ ROLENAME_SCHEMA = SCHEMA.AnyString()
 RSAKEYBITS_SCHEMA = SCHEMA.Integer(lo=2048)
 
 # The supported ECDSA algorithms (ecdsa-sha2-nistp256 is supported by default).
-ECDSAALGORITHMS_SCHEMA = SCHEMA.OneOf([SCHEMA.String('ecdsa-sha2-nistp256')])
+ECDSA_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String('ecdsa-sha2-nistp256')])
 
 # The number of hashed bins, or the number of delegated roles.  See
 # delegate_hashed_bins() in 'repository_tool.py' for an example.  Note:
@@ -255,6 +255,7 @@ PUBLIC_KEY_SCHEMA = SCHEMA.Object(
 ANYKEY_SCHEMA = SCHEMA.Object(
   object_name = 'ANYKEY_SCHEMA',
   keytype = KEYTYPE_SCHEMA,
+  scheme = SIG_SCHEME_SCHEMA,
   keyid = KEYID_SCHEMA,
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
   keyval = KEYVAL_SCHEMA,
@@ -281,7 +282,7 @@ ECDSA_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String('ecdsa-sha2-nistp256')])
 # An ECDSA TUF key.
 ECDSAKEY_SCHEMA = SCHEMA.Object(
   object_name = 'ECDSAKEY_SCHEMA',
-  keytype = ECDSAALGORITHMS_SCHEMA,
+  keytype = SCHEMA.String('ecdsa-sha2-nistp256'),
   scheme = ECDSA_SIG_SCHEMA,
   keyid = KEYID_SCHEMA,
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
