@@ -863,7 +863,7 @@ def create_signature(key_dict, data):
 
   # Signing the 'data' object requires a private key.
   # 'rsassa-pss-sha256', 'ed25519', and 'ecdsa-sha2-nistp256' are the only
-  # signing methods currently supported.  RSASSA-PSS keys and signatures can be
+  # signing schemess currently supported.  RSASSA-PSS keys and signatures can be
   # generated and verified by the PyCrypto and 'cryptography' modules, and
   # Ed25519's by PyNaCl and PyCA's optimized, pure python implementation of
   # Ed25519.
@@ -891,7 +891,7 @@ def create_signature(key_dict, data):
 
       elif _RSA_CRYPTO_LIBRARY == 'pyca-cryptography':
         sig, method = securesystemslib.pyca_crypto_keys.create_rsa_signature(private,
-          data.encode('utf-8'))
+          data.encode('utf-8'), scheme)
 
       else: # pragma: no cover
         raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
@@ -905,7 +905,7 @@ def create_signature(key_dict, data):
     private = binascii.unhexlify(private.encode('utf-8'))
     if 'pynacl' in _available_crypto_libraries:
       sig, method = securesystemslib.ed25519_keys.create_signature(public, private,
-        data.encode('utf-8'))
+        data.encode('utf-8'), scheme)
 
     else: # pragma: no cover
       raise securesystemslib.exceptions.UnsupportedLibraryError('The required'
@@ -914,7 +914,7 @@ def create_signature(key_dict, data):
   elif keytype == 'ecdsa-sha2-nistp256':
     if _ECDSA_CRYPTO_LIBRARY == 'pyca-cryptography':
       sig, method = securesystemslib.ecdsa_keys.create_signature(public, private,
-        data.encode('utf-8'))
+        data.encode('utf-8'), scheme)
 
     else: # pragma: no cover
       raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
@@ -947,7 +947,6 @@ def verify_signature(key_dict, signature, data):
     >>> data = 'The quick brown fox jumps over the lazy dog'
     >>> signature = create_signature(ed25519_key, data)
     >>> verify_signature(ed25519_key, signature, data)
-
     True
     >>> verify_signature(ed25519_key, signature, 'bad_data')
     False
@@ -1063,7 +1062,7 @@ def verify_signature(key_dict, signature, data):
 
       else:
         valid_signature = securesystemslib.pyca_crypto_keys.verify_rsa_signature(sig,
-          method, public, data)
+          scheme, public, data)
 
     else: # pragma: no cover
       raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
