@@ -338,7 +338,7 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
 
 
 
-def verify_rsa_signature(signature, signature_method, public_key, data):
+def verify_rsa_signature(signature, signature_scheme, public_key, data):
   """
   <Purpose>
     Determine whether the corresponding private key of 'public_key' produced
@@ -392,7 +392,7 @@ def verify_rsa_signature(signature, signature_method, public_key, data):
   securesystemslib.formats.PEMRSA_SCHEMA.check_match(public_key)
 
   # Does 'signature_method' have the correct format?
-  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(signature_method)
+  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(signature_scheme)
 
   # Does 'signature' have the correct format?
   securesystemslib.formats.PYCRYPTOSIGNATURE_SCHEMA.check_match(signature)
@@ -407,7 +407,7 @@ def verify_rsa_signature(signature, signature_method, public_key, data):
 
   # Verify the signature with PyCrypto if the signature method is valid,
   # otherwise raise 'securesystemslib.exceptions.UnknownMethodError'.
-  if signature_method == 'rsassa-pss-sha256':
+  if signature_scheme == 'rsassa-pss-sha256':
     try:
       rsa_key_object = Crypto.PublicKey.RSA.importKey(public_key)
       pkcs1_pss_verifier = Crypto.Signature.PKCS1_PSS.new(rsa_key_object)
