@@ -821,6 +821,7 @@ def create_signature(key_dict, data):
       form:
 
       {'keytype': 'rsa',
+       'scheme': 'rsassa-pss-256',
        'keyid': 'f30a0870d026980100c0573bd557394f8c1bbd6...',
        'keyval': {'public': '-----BEGIN RSA PUBLIC KEY----- ...',
                   'private': '-----BEGIN RSA PRIVATE KEY----- ...'}}
@@ -831,7 +832,8 @@ def create_signature(key_dict, data):
       Data object used by create_signature() to generate the signature.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError, if 'key_dict' is improperly formatted.
+    securesystemslib.exceptions.FormatError, if 'key_dict' is improperly
+    formatted.
 
     securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported or
     unavailable library is detected.
@@ -839,11 +841,12 @@ def create_signature(key_dict, data):
     TypeError, if 'key_dict' contains an invalid keytype.
 
   <Side Effects>
-    The cryptography library specified in 'settings' called to perform the
+    The cryptography library specified in 'settings' is called to perform the
     actual signing routine.
 
   <Returns>
-    A signature dictionary conformant to 'securesystemslib_format.SIGNATURE_SCHEMA'.
+    A signature dictionary conformant to
+    'securesystemslib_format.SIGNATURE_SCHEMA'.
   """
 
   # Does 'key_dict' have the correct format?
@@ -859,12 +862,14 @@ def create_signature(key_dict, data):
   check_crypto_libraries([key_dict['keytype']])
 
   # Signing the 'data' object requires a private key.
-  # 'RSASSA-PSS' and 'ed25519' are the only signing methods currently
-  # supported.  RSASSA-PSS keys and signatures can be generated and verified by
-  # the PyCrypto and 'cryptography' modules, and Ed25519's by PyNaCl and PyCA's
-  # optimized, pure python implementation of Ed25519.
+  # 'RSASSA-PSS-256', 'ed25519', and 'ecdsa-sha2-nistp256' are the only signing
+  # methods currently supported.  RSASSA-PSS keys and signatures can be
+  # generated and verified by the PyCrypto and 'cryptography' modules, and
+  # Ed25519's by PyNaCl and PyCA's optimized, pure python implementation of
+  # Ed25519.
   signature = {}
   keytype = key_dict['keytype']
+  scheme = key_dict['scheme']
   public = key_dict['keyval']['public']
   private = key_dict['keyval']['private']
   keyid = key_dict['keyid']
@@ -879,17 +884,21 @@ def create_signature(key_dict, data):
   # Call the appropriate cryptography libraries for the supported key types,
   # otherwise raise an exception.
   if keytype == 'rsa':
-    if _RSA_CRYPTO_LIBRARY == 'pycrypto':
-      sig, method = securesystemslib.pycrypto_keys.create_rsa_signature(private,
-        data.encode('utf-8'))
+    if scheme == 'rsassa-pss-sha256':
+      if _RSA_CRYPTO_LIBRARY == 'pycrypto':
+        sig, method = securesystemslib.pycrypto_keys.create_rsa_signature(private,
+          data.encode('utf-8'), scheme)
 
-    elif _RSA_CRYPTO_LIBRARY == 'pyca-cryptography':
-      sig, method = securesystemslib.pyca_crypto_keys.create_rsa_signature(private,
-        data.encode('utf-8'))
+      elif _RSA_CRYPTO_LIBRARY == 'pyca-cryptography':
+        sig, method = securesystemslib.pyca_crypto_keys.create_rsa_signature(private,
+          data.encode('utf-8'))
 
-    else: # pragma: no cover
-      raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
-        ' "settings.RSA_CRYPTO_LIBRARY": ' + repr(_RSA_CRYPTO_LIBRARY) + '.')
+      else: # pragma: no cover
+        raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
+          ' "settings.RSA_CRYPTO_LIBRARY": ' + repr(_RSA_CRYPTO_LIBRARY) + '.')
+    else:
+      raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
+        ' RSA signature algorithm  specified: ' + repr(scheme))
 
   elif keytype == 'ed25519':
     public = binascii.unhexlify(public.encode('utf-8'))
@@ -931,8 +940,8 @@ def verify_signature(key_dict, signature, data):
   <Purpose>
     Determine whether the private key belonging to 'key_dict' produced
     'signature'.  verify_signature() will use the public key found in
-    'key_dict', the 'method' and 'sig' objects contained in 'signature',
-    and 'data' to complete the verification.
+    'key_dict', the 'sig' objects contained in 'signature', and 'data' to
+    complete the verification.
 
     >>> ed25519_key = generate_ed25519_key()
     >>> data = 'The quick brown fox jumps over the lazy dog'
@@ -972,7 +981,6 @@ def verify_signature(key_dict, signature, data):
       'signature' has the form:
 
       {'keyid': 'f30a0870d026980100c0573bd557394f8c1bbd6...',
-       'method': 'method',
        'sig': sig}.
 
       Conformant to 'securesystemslib.formats.SIGNATURE_SCHEMA'.
@@ -988,8 +996,8 @@ def verify_signature(key_dict, signature, data):
     securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported or
     unavailable library is detected.
 
-    securesystemslib.exceptions.UnknownMethodError.  Raised if the signing method
-    used by 'signature' is not one supported.
+    securesystemslib.exceptions.UnknownMethodError.  Raised if the signing
+    method used by 'signature' is not one supported.
 
   <Side Effects>
     The cryptography library specified in 'settings' called to do the actual
@@ -1012,7 +1020,6 @@ def verify_signature(key_dict, signature, data):
   # (i.e., rsakey_dict['keyval']['public']), verify whether 'signature'
   # was produced by key_dict's corresponding private key
   # key_dict['keyval']['private'].
-  method = signature['method']
   sig = signature['sig']
   sig = binascii.unhexlify(sig.encode('utf-8'))
   public = key_dict['keyval']['public']
