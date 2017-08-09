@@ -265,7 +265,7 @@ ANYKEY_SCHEMA = SCHEMA.Object(
 ANYKEYLIST_SCHEMA = SCHEMA.ListOf(ANYKEY_SCHEMA)
 
 # RSA signature schemes.
-RSA_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String('rsassa-pss-256')])
+RSA_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String('rsassa-pss-sha256')])
 
 # An RSA TUF key.
 RSAKEY_SCHEMA = SCHEMA.Object(
