@@ -1048,7 +1048,7 @@ def verify_signature(key_dict, signature, data):
           ' pyca-cryptography if that is available instead.')
 
       else:
-        valid_signature = securesystemslib.pycrypto_keys.verify_rsa_signature(sig, method,
+        valid_signature = securesystemslib.pycrypto_keys.verify_rsa_signature(sig, scheme,
                                                                  public, data)
     elif _RSA_CRYPTO_LIBRARY == 'pyca-cryptography':
       if 'pyca-cryptography' not in _available_crypto_libraries: # pragma: no cover
@@ -1074,7 +1074,7 @@ def verify_signature(key_dict, signature, data):
     if _ED25519_CRYPTO_LIBRARY == 'pynacl' or \
                               'pynacl' in _available_crypto_libraries:
       valid_signature = securesystemslib.ed25519_keys.verify_signature(public,
-                                                          method, sig, data,
+                                                          scheme, sig, data,
                                                           use_pynacl=True)
 
     # Fall back to the optimized pure python implementation of ed25519.
