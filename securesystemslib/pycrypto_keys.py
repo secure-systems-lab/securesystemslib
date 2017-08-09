@@ -347,10 +347,11 @@ def verify_rsa_signature(signature, signature_method, public_key, data):
 
     >>> public, private = generate_rsa_public_and_private(2048)
     >>> data = b'The quick brown fox jumps over the lazy dog'
-    >>> signature, method = create_rsa_signature(private, data)
-    >>> verify_rsa_signature(signature, method, public, data)
+    >>> scheme = 'rsassa-pss-sha256'
+    >>> signature, scheme = create_rsa_signature(private, data, scheme)
+    >>> verify_rsa_signature(signature, scheme, public, data)
     True
-    >>> verify_rsa_signature(signature, method, public, b'bad_data')
+    >>> verify_rsa_signature(signature, scheme, public, b'bad_data')
     False
 
   <Arguments>
@@ -358,9 +359,9 @@ def verify_rsa_signature(signature, signature_method, public_key, data):
       An RSASSA PSS signature as a string.  This is the signature returned
       by create_rsa_signature().
 
-    signature_method:
+    signature_scheme:
       A string that indicates the signature algorithm used to generate
-      'signature'.  'RSASSA-PSS' is currently supported.
+      'signature'.  'rsassa-pss-sha256' is currently supported.
 
     public_key:
       The RSA public key, a string in PEM format.
@@ -391,7 +392,7 @@ def verify_rsa_signature(signature, signature_method, public_key, data):
   securesystemslib.formats.PEMRSA_SCHEMA.check_match(public_key)
 
   # Does 'signature_method' have the correct format?
-  securesystemslib.formats.NAME_SCHEMA.check_match(signature_method)
+  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(signature_method)
 
   # Does 'signature' have the correct format?
   securesystemslib.formats.PYCRYPTOSIGNATURE_SCHEMA.check_match(signature)
@@ -406,7 +407,7 @@ def verify_rsa_signature(signature, signature_method, public_key, data):
 
   # Verify the signature with PyCrypto if the signature method is valid,
   # otherwise raise 'securesystemslib.exceptions.UnknownMethodError'.
-  if signature_method == 'RSASSA-PSS':
+  if signature_method == 'rsassa-pss-sha256':
     try:
       rsa_key_object = Crypto.PublicKey.RSA.importKey(public_key)
       pkcs1_pss_verifier = Crypto.Signature.PKCS1_PSS.new(rsa_key_object)
@@ -418,7 +419,7 @@ def verify_rsa_signature(signature, signature_method, public_key, data):
         ' be verified.')
 
   else:
-    raise securesystemslib.exceptions.UnknownMethodError(signature_method)
+    raise securesystemslib.exceptions.UnknownMethodError(signature_scheme)
 
   return valid_signature
 
@@ -640,6 +641,7 @@ def encrypt_key(key_object, password):
     https://en.wikipedia.org/wiki/PBKDF2
 
     >>> ed25519_key = {'keytype': 'ed25519', \
+                       'scheme': 'ed25519', \
                        'keyid': \
           'd62247f817883f593cf6c66a5a55292488d457bcf638ae03207dbbba9dbe457d', \
                        'keyval': {'public': \
@@ -729,6 +731,7 @@ def decrypt_key(encrypted_key, password):
     https://en.wikipedia.org/wiki/PBKDF2
 
     >>> ed25519_key = {'keytype': 'ed25519', \
+                       'scheme': 'ed25519', \
                        'keyid': \
           'd62247f817883f593cf6c66a5a55292488d457bcf638ae03207dbbba9dbe457d', \
                        'keyval': {'public': \
