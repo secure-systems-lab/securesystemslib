@@ -163,7 +163,7 @@ _GENERAL_CRYPTO_LIBRARY = securesystemslib.settings.GENERAL_CRYPTO_LIBRARY
 logger = logging.getLogger('securesystemslib_keys')
 
 
-def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-256'):
+def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-sha256'):
   """
   <Purpose>
     Generate public and private RSA keys, with modulus length 'bits'.  In
@@ -172,7 +172,7 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-256'):
     form:
 
     {'keytype': 'rsa',
-     'scheme': 'rsassa-pss-256',
+     'scheme': 'rsassa-pss-sha256',
      'keyid': keyid,
      'keyval': {'public': '-----BEGIN RSA PUBLIC KEY----- ...',
                 'private': '-----BEGIN RSA PRIVATE KEY----- ...'}}
@@ -205,7 +205,7 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-256'):
 
     scheme:
       The signature scheme used by the key.  It must be one of
-      ['rsassa-pss-256'].
+      ['rsassa-pss-sha256'].
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'bits' is improperly or invalid
@@ -821,7 +821,7 @@ def create_signature(key_dict, data):
       form:
 
       {'keytype': 'rsa',
-       'scheme': 'rsassa-pss-256',
+       'scheme': 'rsassa-pss-sha256',
        'keyid': 'f30a0870d026980100c0573bd557394f8c1bbd6...',
        'keyval': {'public': '-----BEGIN RSA PUBLIC KEY----- ...',
                   'private': '-----BEGIN RSA PRIVATE KEY----- ...'}}
@@ -862,8 +862,8 @@ def create_signature(key_dict, data):
   check_crypto_libraries([key_dict['keytype']])
 
   # Signing the 'data' object requires a private key.
-  # 'RSASSA-PSS-256', 'ed25519', and 'ecdsa-sha2-nistp256' are the only signing
-  # methods currently supported.  RSASSA-PSS keys and signatures can be
+  # 'rsassa-pss-sha256', 'ed25519', and 'ecdsa-sha2-nistp256' are the only
+  # signing methods currently supported.  RSASSA-PSS keys and signatures can be
   # generated and verified by the PyCrypto and 'cryptography' modules, and
   # Ed25519's by PyNaCl and PyCA's optimized, pure python implementation of
   # Ed25519.
@@ -970,6 +970,7 @@ def verify_signature(key_dict, signature, data):
       If 'key_dict' is an RSA key, it has the form:
 
       {'keytype': 'rsa',
+       'scheme': 'rsassa-pss-sha256',
        'keyid': 'f30a0870d026980100c0573bd557394f8c1bbd6...',
        'keyval': {'public': '-----BEGIN RSA PUBLIC KEY----- ...',
                   'private': '-----BEGIN RSA PRIVATE KEY----- ...'}}
@@ -1024,6 +1025,7 @@ def verify_signature(key_dict, signature, data):
   sig = binascii.unhexlify(sig.encode('utf-8'))
   public = key_dict['keyval']['public']
   keytype = key_dict['keytype']
+  scheme = key_dict['scheme']
   valid_signature = False
 
   # Convert 'data' to canonical JSON format so that repeatable signatures are
@@ -1099,7 +1101,7 @@ def verify_signature(key_dict, signature, data):
 
 
 
-def import_rsakey_from_private_pem(pem, scheme='rsassa-pss-256', password=None):
+def import_rsakey_from_private_pem(pem, scheme='rsassa-pss-sha256', password=None):
   """
   <Purpose>
     Import the private RSA key stored in 'pem', and generate its public key
@@ -1108,7 +1110,7 @@ def import_rsakey_from_private_pem(pem, scheme='rsassa-pss-256', password=None):
     conforms to 'securesystemslib.formats.RSAKEY_SCHEMA' and has the form:
 
     {'keytype': 'rsa',
-     'scheme': 'rsassa-pss-256',
+     'scheme': 'rsassa-pss-sha256',
      'keyid': keyid,
      'keyval': {'public': '-----BEGIN RSA PUBLIC KEY----- ...',
                 'private': '-----BEGIN RSA PRIVATE KEY----- ...'}}
@@ -1223,7 +1225,7 @@ def import_rsakey_from_private_pem(pem, scheme='rsassa-pss-256', password=None):
 
 
 
-def import_rsakey_from_public_pem(pem, scheme='rsassa-pss-256'):
+def import_rsakey_from_public_pem(pem, scheme='rsassa-pss-sha256'):
   """
   <Purpose>
     Generate an RSA key object from 'pem'.  In addition, a keyid identifier for
@@ -1310,7 +1312,7 @@ def import_rsakey_from_public_pem(pem, scheme='rsassa-pss-256'):
 
 
 
-def import_rsakey_from_pem(pem, scheme='rsassa-pss-256'):
+def import_rsakey_from_pem(pem, scheme='rsassa-pss-sha256'):
   """
   <Purpose>
     Import either a public or private PEM.  In contrast to the other explicit
