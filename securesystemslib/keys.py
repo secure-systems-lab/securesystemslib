@@ -1080,12 +1080,12 @@ def verify_signature(key_dict, signature, data):
     # Fall back to the optimized pure python implementation of ed25519.
     else: # pragma: no cover
       valid_signature = securesystemslib.ed25519_keys.verify_signature(public,
-                                                          method, sig, data,
+                                                          scheme, sig, data,
                                                           use_pynacl=False)
   elif keytype == 'ecdsa-sha2-nistp256':
       if _ECDSA_CRYPTO_LIBRARY in _available_crypto_libraries:
         valid_signature = securesystemslib.ecdsa_keys.verify_signature(public,
-          method, sig, data)
+          scheme, sig, data)
 
       else: # pragma: no cover
         raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
