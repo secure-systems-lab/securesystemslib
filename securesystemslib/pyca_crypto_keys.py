@@ -46,8 +46,8 @@
   iterations.
 
   PEM-encrypted RSA key files use the Triple Data Encryption Algorithm (3DES),
-  and Cipher-block chaining (CBC) for the mode of operation.  Password-Based Key
-  Derivation Function 1 (PBKF1) + MD5.
+  and Cipher-block chaining (CBC) for the mode of operation.  Password-Based
+  Key Derivation Function 1 (PBKF1) + MD5.
  """
 
 # Help with Python 3 compatibility, where the print statement is a function, an
@@ -101,9 +101,9 @@ from cryptography.hazmat.primitives import hmac
 from cryptography.hazmat.primitives.asymmetric import padding
 
 # Import pyca/cryptography's Key Derivation Function (KDF) module.
-# 'securesystemslib.keys.py' needs this module to derive a secret key according to the
-# Password-Based Key Derivation Function 2 specification.  The derived key is
-# used as the symmetric key to encrypt TUF key information.
+# 'securesystemslib.keys.py' needs this module to derive a secret key according
+# to the Password-Based Key Derivation Function 2 specification.  The derived
+# key is used as the symmetric key to encrypt TUF key information.
 # PKCS#5 v2.0 PBKDF2 specification: http://tools.ietf.org/html/rfc2898#section-5.2
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
@@ -235,11 +235,11 @@ def generate_rsa_public_and_private(bits=_DEFAULT_RSA_KEY_BITS):
 
 
 
-def create_rsa_signature(private_key, data):
+def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
   """
   <Purpose>
-    Generate an RSASSA-PSS signature.  The signature, and the method (signature
-    algorithm) used, is returned as a (signature, method) tuple.
+    Generate a 'scheme' signature.  The signature, and the method (signature
+    algorithm) used, is returned as a (signature, scheme) tuple.
 
     The signing process will use 'private_key' to generate the signature of
     'data'.
@@ -249,10 +249,11 @@ def create_rsa_signature(private_key, data):
 
     >>> public, private = generate_rsa_public_and_private(2048)
     >>> data = 'The quick brown fox jumps over the lazy dog'.encode('utf-8')
-    >>> signature, method = create_rsa_signature(private, data)
-    >>> securesystemslib.formats.NAME_SCHEMA.matches(method)
+    >>> scheme = 'rsassa-pss-sha256'
+    >>> signature, method = create_rsa_signature(private, data, scheme)
+    >>> securesystemslib.formats.NAME_SCHEMA.matches(scheme)
     True
-    >>> method == 'RSASSA-PSS'
+    >>> method == 'rsassa-pss-sha256'
     True
     >>> securesystemslib.formats.PYCACRYPTOSIGNATURE_SCHEMA.matches(signature)
     True
@@ -264,113 +265,128 @@ def create_rsa_signature(private_key, data):
     data:
       Data (string) used by create_rsa_signature() to generate the signature.
 
+    scheme:
+      The signature scheme used to generate the signature.
+
   <Exceptions>
-    securesystemslib.exceptions.FormatError, if 'private_key' is improperly formatted.
+    securesystemslib.exceptions.FormatError, if 'private_key' is improperly
+    formatted.
 
     ValueError, if 'private_key' is unset.
 
-    securesystemslib.exceptions.CryptoError, if the signature cannot be generated.
+    securesystemslib.exceptions.CryptoError, if the signature cannot be
+    generated.
 
   <Side Effects>
     pyca/cryptography's 'RSAPrivateKey.signer()' called to generate the
     signature.
 
   <Returns>
-    A (signature, method) tuple, where the signature is a string and the method
-    is 'RSASSA-PSS'.
+    A (signature, scheme) tuple, where the signature is a string and the scheme
+    is one of the supported RSA signature schemes. For example:
+    'rsassa-pss-sha256'.
   """
 
   # Does the arguments have the correct format?
-  # This check will ensure the arguments conform to 'securesystemslib.formats.PEMRSA_SCHEMA'.
-  # and 'securesystemslib.formats.DATA_SCHEMA'
-  # Raise 'securesystemslib.exceptions.FormatError' if the checks fail.
+  # This check will ensure the arguments conform to
+  # 'securesystemslib.formats.PEMRSA_SCHEMA'.  and
+  # 'securesystemslib.formats.DATA_SCHEMA' Raise
+  # 'securesystemslib.exceptions.FormatError' if the checks fail.
   securesystemslib.formats.PEMRSA_SCHEMA.check_match(private_key)
   securesystemslib.formats.DATA_SCHEMA.check_match(data)
+  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme)
 
-  # Signing 'data' requires a private key.  The 'RSASSA-PSS' signing method is
-  # the only method currently supported.
-  method = 'RSASSA-PSS'
+  # Signing 'data' requires a private key.  The 'rsassa-pss-sha256' signing
+  # method is the only signature scheme currently supported.
   signature = None
 
-  # Verify the signature, but only if the private key has been set.  The private
-  # key is a NULL string if unset.  Although it may be clearer to explicitly
-  # check that 'private_key' is not '', we can/should check for a value and not
-  # compare identities with the 'is' keyword.  Up to this point 'private_key'
-  # has variable size and can be an empty string.
+  # Verify the signature, but only if the private key has been set.  The
+  # private key is a NULL string if unset.  Although it may be clearer to
+  # explicitly check that 'private_key' is not '', we can/should check for a
+  # value and not compare identities with the 'is' keyword.  Up to this point
+  # 'private_key' has variable size and can be an empty string.
   if len(private_key):
 
-    # Generate an RSSA-PSS signature.  Raise 'securesystemslib.exceptions.CryptoError' for any of the
-    # expected exceptions raised by pyca/cryptography.
-    try:
-      # 'private_key' (in PEM format) must first be converted to a
-      # pyca/cryptography private key object before a signature can be
-      # generated.
-      private_key_object = load_pem_private_key(private_key.encode('utf-8'),
-                                                password=None,
-                                                backend=default_backend())
+    if scheme == 'rsassa-pss-sha256':
+      # Generate an RSSA-PSS signature.  Raise
+      # 'securesystemslib.exceptions.CryptoError' for any of the expected
+      # exceptions raised by pyca/cryptography.
+      try:
+        # 'private_key' (in PEM format) must first be converted to a
+        # pyca/cryptography private key object before a signature can be
+        # generated.
+        private_key_object = load_pem_private_key(private_key.encode('utf-8'),
+                                                  password=None,
+                                                  backend=default_backend())
 
-      # Calculate the SHA256 hash of 'data' and generate the hash's PKCS1-PSS
-      # signature.
-      rsa_signer = \
-        private_key_object.signer(padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
-                      salt_length=hashes.SHA256().digest_size), hashes.SHA256())
+        # Calculate the SHA256 hash of 'data' and generate the hash's PKCS1-PSS
+        # signature.
+        rsa_signer = \
+          private_key_object.signer(padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
+                        salt_length=hashes.SHA256().digest_size), hashes.SHA256())
 
-    # If the PEM data could not be decrypted, or if its structure could not be
-    # decoded successfully.
-    except ValueError: #pragma: no cover
-      raise securesystemslib.exceptions.CryptoError('The private key (in PEM format) could not be'
-        ' deserialized.')
+      # If the PEM data could not be decrypted, or if its structure could not be
+      # decoded successfully.
+      except ValueError: #pragma: no cover
+        raise securesystemslib.exceptions.CryptoError('The private key'
+          ' (in PEM format) could not be deserialized.')
 
-    # 'TypeError' raised if a password was given and the private key was not
-    # encrypted, or if the key was encrypted but no password was supplied.
-    # Note: A passphrase or password is not used when generating 'private_key',
-    # since it should not be encrypted.
-    except TypeError: #pragma: no cover
-      raise securesystemslib.exceptions.CryptoError('The private key was unexpectedly encrypted.')
+      # 'TypeError' raised if a password was given and the private key was not
+      # encrypted, or if the key was encrypted but no password was supplied.
+      # Note: A passphrase or password is not used when generating
+      # 'private_key', since it should not be encrypted.
+      except TypeError: #pragma: no cover
+        raise securesystemslib.exceptions.CryptoError('The private key was'
+          ' unexpectedly encrypted.')
 
-    # 'cryptography.exceptions.UnsupportedAlgorithm' raised if the serialized
-    # key is of a type that is not supported by the backend, or if the key is
-    # encrypted with a symmetric cipher that is not supported by the backend.
-    except cryptography.exceptions.UnsupportedAlgorithm: #pragma: no cover
-      raise securesystemslib.exceptions.CryptoError('The private key is encrypted with an'
-        ' unsupported algorithm.')
+      # 'cryptography.exceptions.UnsupportedAlgorithm' raised if the serialized
+      # key is of a type that is not supported by the backend, or if the key is
+      # encrypted with a symmetric cipher that is not supported by the backend.
+      except cryptography.exceptions.UnsupportedAlgorithm: #pragma: no cover
+        raise securesystemslib.exceptions.CryptoError('The private key is'
+          ' encrypted with a unsupported algorithm.')
 
-    # Generate an RSSA-PSS signature.
-    rsa_signer.update(data)
-    signature = rsa_signer.finalize()
+      # Generate an RSSA-PSS signature.
+      rsa_signer.update(data)
+      signature = rsa_signer.finalize()
+
+    else:
+      raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
+        ' signature scheme is specified: ' + repr(scheme))
 
   else:
     raise ValueError('The required private key is unset.')
 
-  return signature, method
+  return signature, scheme
 
 
 
 
 
-def verify_rsa_signature(signature, signature_method, public_key, data):
+def verify_rsa_signature(signature, signature_scheme, public_key, data):
   """
   <Purpose>
     Determine whether the corresponding private key of 'public_key' produced
-    'signature'.  verify_signature() will use the public key, signature method,
+    'signature'.  verify_signature() will use the public key, signature scheme,
     and 'data' to complete the verification.
 
     >>> public, private = generate_rsa_public_and_private(2048)
     >>> data = b'The quick brown fox jumps over the lazy dog'
-    >>> signature, method = create_rsa_signature(private, data)
-    >>> verify_rsa_signature(signature, method, public, data)
+    >>> scheme = 'rsassa-pss-sha256'
+    >>> signature, scheme = create_rsa_signature(private, data, scheme)
+    >>> verify_rsa_signature(signature, scheme, public, data)
     True
-    >>> verify_rsa_signature(signature, method, public, b'bad_data')
+    >>> verify_rsa_signature(signature, scheme, public, b'bad_data')
     False
 
   <Arguments>
     signature:
-      An RSASSA PSS signature, as a string.  This is the signature returned
+      A signature, as a string.  This is the signature returned
       by create_rsa_signature().
 
-    signature_method:
-      A string that indicates the signature algorithm used to generate
-      'signature'.  'RSASSA-PSS' is currently supported.
+    signature_scheme:
+      A string that indicates the signature scheme used to generate
+      'signature'.  'rsassa-pss-sha256' is currently supported.
 
     public_key:
       The RSA public key, a string in PEM format.
@@ -380,14 +396,15 @@ def verify_rsa_signature(signature, signature_method, public_key, data):
       'signature'.  'data' (a string) is needed here to verify 'signature'.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError, if 'signature', 'signature_method', 'public_key', or
-    'data' are improperly formatted.
+    securesystemslib.exceptions.FormatError, if 'signature',
+    'signature_scheme', 'public_key', or 'data' are improperly formatted.
 
-    securesystemslib.exceptions.UnknownMethodError, if the signing method used by
-    'signature' is not one supported by securesystemslib.keys.create_signature().
+    securesystemslib.exceptions.UnknownMethodError, if the signing method used
+    by 'signature' is not one supported by
+    securesystemslib.keys.create_signature().
 
-    securesystemslib.exceptions.CryptoError, if the private key cannot be decoded or its key type
-    is unsupported.
+    securesystemslib.exceptions.CryptoError, if the private key cannot be
+    decoded or its key type is unsupported.
 
   <Side Effects>
     pyca/cryptography's RSAPublicKey.verifier() called to do the actual
@@ -398,12 +415,13 @@ def verify_rsa_signature(signature, signature_method, public_key, data):
   """
 
   # Does 'public_key' have the correct format?
-  # This check will ensure 'public_key' conforms to 'securesystemslib.formats.PEMRSA_SCHEMA'.
-  # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
+  # This check will ensure 'public_key' conforms to
+  # 'securesystemslib.formats.PEMRSA_SCHEMA'.  Raise
+  # 'securesystemslib.exceptions.FormatError' if the check fails.
   securesystemslib.formats.PEMRSA_SCHEMA.check_match(public_key)
 
-  # Does 'signature_method' have the correct format?
-  securesystemslib.formats.NAME_SCHEMA.check_match(signature_method)
+  # Does 'signature_scheme' have the correct format?
+  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(signature_scheme)
 
   # Does 'signature' have the correct format?
   securesystemslib.formats.PYCACRYPTOSIGNATURE_SCHEMA.check_match(signature)
@@ -417,8 +435,8 @@ def verify_rsa_signature(signature, signature_method, public_key, data):
   valid_signature = False
 
   # Verify the expected 'signature_method' value.
-  if signature_method != 'RSASSA-PSS':
-    raise securesystemslib.exceptions.UnknownMethodError(signature_method)
+  if signature_scheme != 'rsassa-pss-sha256':
+    raise securesystemslib.exceptions.UnknownMethodError(signature_scheme)
 
   # Verify the RSASSA-PSS signature with pyca/cryptography.
   try:
@@ -671,6 +689,7 @@ def encrypt_key(key_object, password):
     https://en.wikipedia.org/wiki/PBKDF2
 
     >>> ed25519_key = {'keytype': 'ed25519', \
+                       'scheme': 'ed25519', \
                        'keyid': \
           'd62247f817883f593cf6c66a5a55292488d457bcf638ae03207dbbba9dbe457d', \
                        'keyval': {'public': \
@@ -761,6 +780,7 @@ def decrypt_key(encrypted_key, password):
     https://en.wikipedia.org/wiki/PBKDF2
 
     >>> ed25519_key = {'keytype': 'ed25519', \
+                       'scheme': 'ed25519', \
                        'keyid': \
           'd62247f817883f593cf6c66a5a55292488d457bcf638ae03207dbbba9dbe457d', \
                        'keyval': {'public': \
