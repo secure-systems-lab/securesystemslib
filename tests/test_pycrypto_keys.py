@@ -67,13 +67,13 @@ class TestPycrypto_keys(unittest.TestCase):
     global private_rsa
     global public_rsa
     data = 'The quick brown fox jumps over the lazy dog'.encode('utf-8')
-    signature, method = securesystemslib.pycrypto_keys.create_rsa_signature(private_rsa, data)
+    signature, scheme = securesystemslib.pycrypto_keys.create_rsa_signature(private_rsa, data)
 
     # Verify format of returned values.
     self.assertNotEqual(None, signature)
-    self.assertEqual(None, securesystemslib.formats.NAME_SCHEMA.check_match(method),
+    self.assertEqual(None, securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme),
                      FORMAT_ERROR_MSG)
-    self.assertEqual('RSASSA-PSS', method)
+    self.assertEqual('rsassa-pss-sha256', scheme)
 
     # Check for improperly formatted arguments.
     self.assertRaises(securesystemslib.exceptions.FormatError,
@@ -103,16 +103,16 @@ class TestPycrypto_keys(unittest.TestCase):
     global public_rsa
     global private_rsa
     data = 'The quick brown fox jumps over the lazy dog'.encode('utf-8')
-    signature, method = securesystemslib.pycrypto_keys.create_rsa_signature(private_rsa, data)
+    signature, scheme = securesystemslib.pycrypto_keys.create_rsa_signature(private_rsa, data)
 
-    valid_signature = securesystemslib.pycrypto_keys.verify_rsa_signature(signature, method, public_rsa,
+    valid_signature = securesystemslib.pycrypto_keys.verify_rsa_signature(signature, scheme, public_rsa,
                                                 data)
     self.assertEqual(True, valid_signature)
 
     # Check for invalid arguments that result in a failed signature
     # verification.
     self.assertRaises(securesystemslib.exceptions.CryptoError,
-      securesystemslib.pycrypto_keys.verify_rsa_signature, signature, method,
+      securesystemslib.pycrypto_keys.verify_rsa_signature, signature, scheme,
       'bad_key', data)
 
     # Check for improperly formatted arguments.
@@ -120,12 +120,12 @@ class TestPycrypto_keys(unittest.TestCase):
                                        123, public_rsa, data)
 
     self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.pycrypto_keys.verify_rsa_signature, signature,
-                                       method, 123, data)
+                                       scheme, 123, data)
 
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.pycrypto_keys.verify_rsa_signature, 123, method,
+    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.pycrypto_keys.verify_rsa_signature, 123, scheme,
                                        public_rsa, data)
 
-    self.assertRaises(securesystemslib.exceptions.UnknownMethodError, securesystemslib.pycrypto_keys.verify_rsa_signature,
+    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.pycrypto_keys.verify_rsa_signature,
                                                       signature,
                                                       'invalid_method',
                                                       public_rsa, data)
@@ -133,16 +133,16 @@ class TestPycrypto_keys(unittest.TestCase):
     # Check for invalid signature and data.
     # Verify_rsa_signature should reject non-string data.
     self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.pycrypto_keys.verify_rsa_signature, signature,
-                                       method, public_rsa, 123)
+                                       scheme, public_rsa, 123)
 
-    self.assertEqual(False, securesystemslib.pycrypto_keys.verify_rsa_signature(signature, method,
+    self.assertEqual(False, securesystemslib.pycrypto_keys.verify_rsa_signature(signature, scheme,
                             public_rsa, b'mismatched data'))
 
     mismatched_signature, method = securesystemslib.pycrypto_keys.create_rsa_signature(private_rsa,
                                                              b'mismatched data')
 
     self.assertEqual(False, securesystemslib.pycrypto_keys.verify_rsa_signature(mismatched_signature,
-                            method, public_rsa, data))
+                            scheme, public_rsa, data))
 
 
   def test_create_rsa_encrypted_pem(self):
@@ -242,8 +242,9 @@ class TestPycrypto_keys(unittest.TestCase):
     passphrase = 'pw'
 
     rsa_key = {'keytype': 'rsa',
-    'keyid': 'd62247f817883f593cf6c66a5a55292488d457bcf638ae03207dbbba9dbe457d',
-    'keyval': {'public': public_rsa, 'private': private_rsa}}
+      'scheme': 'rsassa-pss-sha256',
+      'keyid': 'd62247f817883f593cf6c66a5a55292488d457bcf638ae03207dbbba9dbe457d',
+      'keyval': {'public': public_rsa, 'private': private_rsa}}
 
     encrypted_rsa_key = securesystemslib.pycrypto_keys.encrypt_key(rsa_key, passphrase)
 
@@ -260,8 +261,9 @@ class TestPycrypto_keys(unittest.TestCase):
     passphrase = 'pw'
 
     rsa_key = {'keytype': 'rsa',
-    'keyid': 'd62247f817883f593cf6c66a5a55292488d457bcf638ae03207dbbba9dbe457d',
-    'keyval': {'public': public_rsa, 'private': private_rsa}}
+      'scheme': 'rsassa-pss-sha256',
+      'keyid': 'd62247f817883f593cf6c66a5a55292488d457bcf638ae03207dbbba9dbe457d',
+      'keyval': {'public': public_rsa, 'private': private_rsa}}
 
     encrypted_rsa_key = securesystemslib.pycrypto_keys.encrypt_key(rsa_key, passphrase)
 
