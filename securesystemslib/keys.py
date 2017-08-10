@@ -1628,10 +1628,10 @@ def decrypt_key(encrypted_key, passphrase):
 
   <Arguments>
     encrypted_key:
-      An encrypted key (additional data is also included, such as salt,
-      number of password iterations used for the derived encryption key, etc)
-      of the form 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA'.  'encrypted_key'
-      should have been generated with encrypted_key().
+      An encrypted key (additional data is also included, such as salt, number
+      of password iterations used for the derived encryption key, etc) of the
+      form 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA'.  'encrypted_key'
+      should have been generated with encrypt_key().
 
     password:
       The password, or passphrase, to decrypt 'encrypted_key'.  'password' is
