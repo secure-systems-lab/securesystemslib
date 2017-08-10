@@ -57,85 +57,98 @@ class TestEd25519_keys(unittest.TestCase):
     global public
     global private
     data = b'The quick brown fox jumps over the lazy dog'
-    signature, method = securesystemslib.ed25519_keys.create_signature(public, private, data)
+    scheme = 'ed25519'
+    signature, scheme = securesystemslib.ed25519_keys.create_signature(public,
+        private, data, scheme)
 
     # Verify format of returned values.
     self.assertEqual(True,
-                     securesystemslib.formats.ED25519SIGNATURE_SCHEMA.matches(signature))
+        securesystemslib.formats.ED25519SIGNATURE_SCHEMA.matches(signature))
 
-    self.assertEqual(True, securesystemslib.formats.NAME_SCHEMA.matches(method))
-    self.assertEqual('ed25519', method)
+    self.assertEqual(True, securesystemslib.formats.ED25519_SIG_SCHEMA.matches(scheme))
+    self.assertEqual('ed25519', scheme)
 
     # Check for improperly formatted argument.
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      securesystemslib.ed25519_keys.create_signature, 123, private, data)
+        securesystemslib.ed25519_keys.create_signature, 123, private, data,
+        scheme)
 
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      securesystemslib.ed25519_keys.create_signature, public, 123, data)
+        securesystemslib.ed25519_keys.create_signature, public, 123, data,
+        scheme)
 
     # Check for invalid 'data'.
     self.assertRaises(securesystemslib.exceptions.CryptoError,
-                      securesystemslib.ed25519_keys.create_signature, public, private, 123)
+        securesystemslib.ed25519_keys.create_signature, public, private, 123,
+        scheme)
 
 
   def test_verify_signature(self):
     global public
     global private
     data = b'The quick brown fox jumps over the lazy dog'
-    signature, method = securesystemslib.ed25519_keys.create_signature(public, private, data)
+    scheme = 'ed25519'
+    signature, scheme = securesystemslib.ed25519_keys.create_signature(public,
+        private, data, scheme)
 
-    valid_signature = securesystemslib.ed25519_keys.verify_signature(public, method, signature, data)
+    valid_signature = securesystemslib.ed25519_keys.verify_signature(public,
+        scheme, signature, data)
     self.assertEqual(True, valid_signature)
 
     # Test with 'pynacl'.
-    valid_signature = securesystemslib.ed25519_keys.verify_signature(public, method, signature, data,
-                                               use_pynacl=True)
+    valid_signature = securesystemslib.ed25519_keys.verify_signature(public,
+        scheme, signature, data, use_pynacl=True)
     self.assertEqual(True, valid_signature)
 
     # Test with 'pynacl', but a bad signature is provided.
     bad_signature = os.urandom(64)
-    valid_signature = securesystemslib.ed25519_keys.verify_signature(public, method, bad_signature,
-                                               data, use_pynacl=True)
+    valid_signature = securesystemslib.ed25519_keys.verify_signature(public,
+        scheme, bad_signature, data, use_pynacl=True)
     self.assertEqual(False, valid_signature)
 
 
 
     # Check for improperly formatted arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.ed25519_keys.verify_signature, 123, method,
-                                       signature, data)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.ed25519_keys.verify_signature, 123, scheme,
+        signature, data)
 
     # Signature method improperly formatted.
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.ed25519_keys.verify_signature, public, 123,
-                                       signature, data)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.ed25519_keys.verify_signature, public, 123,
+        signature, data)
 
     # Invalid signature method.
-    self.assertRaises(securesystemslib.exceptions.UnknownMethodError, securesystemslib.ed25519_keys.verify_signature, public,
-                                       'unsupported_method', signature, data)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.ed25519_keys.verify_signature, public,
+        'unsupported_scheme', signature, data)
 
     # Signature not a string.
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.ed25519_keys.verify_signature, public, method,
-                                       123, data)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.ed25519_keys.verify_signature, public, scheme,
+        123, data)
 
     # Invalid signature length, which must be exactly 64 bytes..
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.ed25519_keys.verify_signature, public, method,
-                                       'bad_signature', data)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.ed25519_keys.verify_signature, public, scheme,
+        'bad_signature', data)
 
     # Check for invalid signature and data.
     # Mismatched data.
-    self.assertEqual(False, securesystemslib.ed25519_keys.verify_signature(public, method,
-                                                     signature, '123'))
+    self.assertEqual(False, securesystemslib.ed25519_keys.verify_signature(public,
+        scheme, signature, '123'))
 
     # Mismatched signature.
     bad_signature = b'a'*64
-    self.assertEqual(False, securesystemslib.ed25519_keys.verify_signature(public, method,
-                                                     bad_signature, data))
+    self.assertEqual(False, securesystemslib.ed25519_keys.verify_signature(public,
+        scheme, bad_signature, data))
 
     # Generated signature created with different data.
-    new_signature, method = securesystemslib.ed25519_keys.create_signature(public, private,
-                                                     b'mismatched data')
+    new_signature, scheme = securesystemslib.ed25519_keys.create_signature(public, private,
+        b'mismatched data', scheme)
 
-    self.assertEqual(False, securesystemslib.ed25519_keys.verify_signature(public, method,
-                                                     new_signature, data))
+    self.assertEqual(False, securesystemslib.ed25519_keys.verify_signature(public,
+        scheme, new_signature, data))
 
 
 
