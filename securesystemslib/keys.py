@@ -485,6 +485,7 @@ def format_keyval_to_metadata(keytype, scheme, key_value, private=False):
     or if 'private' is False:
 
     {'keytype': keytype,
+     'scheme': scheme,
      'keyval': {'public': '...',
                 'private': ''}}
 
@@ -519,8 +520,8 @@ def format_keyval_to_metadata(keytype, scheme, key_value, private=False):
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'key_value' does not conform to
-    'securesystemslib.formats.KEYVAL_SCHEMA', or if the private key is not present in
-    'key_value' if requested by the caller via 'private'.
+    'securesystemslib.formats.KEYVAL_SCHEMA', or if the private key is not
+    present in 'key_value' if requested by the caller via 'private'.
 
   <Side Effects>
     None.
@@ -896,9 +897,10 @@ def create_signature(key_dict, data):
       else: # pragma: no cover
         raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
           ' "settings.RSA_CRYPTO_LIBRARY": ' + repr(_RSA_CRYPTO_LIBRARY) + '.')
+
     else:
       raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
-        ' RSA signature algorithm  specified: ' + repr(scheme))
+        ' RSA signature algorithm specified: ' + repr(scheme))
 
   elif keytype == 'ed25519':
     public = binascii.unhexlify(public.encode('utf-8'))
@@ -1036,59 +1038,74 @@ def verify_signature(key_dict, signature, data):
   # Call the appropriate cryptography libraries for the supported key types,
   # otherwise raise an exception.
   if keytype == 'rsa':
-    if _RSA_CRYPTO_LIBRARY == 'pycrypto':
-      if 'pycrypto' not in _available_crypto_libraries: # pragma: no cover
-        raise securesystemslib.exceptions.UnsupportedLibraryError('Metadata'
-          ' downloaded from the remote'
-          ' repository listed an RSA signature.  "pycrypto" was set'
-          ' (in settings.py) to generate RSA signatures, but the PyCrypto'
-          ' library is not installed.  \n$ pip install PyCrypto, or you can'
-          ' try switching your configuration (settings.py) to use'
-          ' pyca-cryptography if that is available instead.')
+    if scheme == 'rsassa-pss-sha256':
+      if _RSA_CRYPTO_LIBRARY == 'pycrypto':
+        if 'pycrypto' not in _available_crypto_libraries: # pragma: no cover
+          raise securesystemslib.exceptions.UnsupportedLibraryError('Metadata'
+            ' downloaded from the remote'
+            ' repository listed an RSA signature.  "pycrypto" was set'
+            ' (in settings.py) to generate RSA signatures, but the PyCrypto'
+            ' library is not installed.  \n$ pip install PyCrypto, or you can'
+            ' try switching your configuration (settings.py) to use'
+            ' pyca-cryptography if that is available instead.')
 
-      else:
-        valid_signature = securesystemslib.pycrypto_keys.verify_rsa_signature(sig, scheme,
-                                                                 public, data)
-    elif _RSA_CRYPTO_LIBRARY == 'pyca-cryptography':
-      if 'pyca-cryptography' not in _available_crypto_libraries: # pragma: no cover
-        raise securesystemslib.exceptions.UnsupportedLibraryError('Metadata'
-          ' downloaded from the remote'
-          ' repository listed an RSA signature.  "pyca-cryptography" was set'
-          ' (in settings.py) to generate RSA signatures, but the "cryptography"'
-          ' library is not installed.  \n$ pip install cryptography,'
-          ' or you can try switching your configuration'
-          ' (securesystemslib/settings.py) to use PyCrypto if that is'
-          ' available instead.')
+        else:
+          valid_signature = securesystemslib.pycrypto_keys.verify_rsa_signature(sig, scheme,
+                                                                   public, data)
+      elif _RSA_CRYPTO_LIBRARY == 'pyca-cryptography':
+        if 'pyca-cryptography' not in _available_crypto_libraries: # pragma: no cover
+          raise securesystemslib.exceptions.UnsupportedLibraryError('Metadata'
+            ' downloaded from the remote'
+            ' repository listed an RSA signature.  "pyca-cryptography" was set'
+            ' (in settings.py) to generate RSA signatures, but the "cryptography"'
+            ' library is not installed.  \n$ pip install cryptography,'
+            ' or you can try switching your configuration'
+            ' (securesystemslib/settings.py) to use PyCrypto if that is'
+            ' available instead.')
 
-      else:
-        valid_signature = securesystemslib.pyca_crypto_keys.verify_rsa_signature(sig,
-          scheme, public, data)
-
-    else: # pragma: no cover
-      raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
-        ' "settings.RSA_CRYPTO_LIBRARY": ' + repr(_RSA_CRYPTO_LIBRARY) + '.')
-
-  elif keytype == 'ed25519':
-    public = binascii.unhexlify(public.encode('utf-8'))
-    if _ED25519_CRYPTO_LIBRARY == 'pynacl' or \
-                              'pynacl' in _available_crypto_libraries:
-      valid_signature = securesystemslib.ed25519_keys.verify_signature(public,
-                                                          scheme, sig, data,
-                                                          use_pynacl=True)
-
-    # Fall back to the optimized pure python implementation of ed25519.
-    else: # pragma: no cover
-      valid_signature = securesystemslib.ed25519_keys.verify_signature(public,
-                                                          scheme, sig, data,
-                                                          use_pynacl=False)
-  elif keytype == 'ecdsa-sha2-nistp256':
-      if _ECDSA_CRYPTO_LIBRARY in _available_crypto_libraries:
-        valid_signature = securesystemslib.ecdsa_keys.verify_signature(public,
-          scheme, sig, data)
+        else:
+          valid_signature = securesystemslib.pyca_crypto_keys.verify_rsa_signature(sig,
+            scheme, public, data)
 
       else: # pragma: no cover
         raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
-          ' "settings.ECDSA_CRYPTO_LIBRARY": ' + repr(_ECDSA_CRYPTO_LIBRARY) + '.')
+          ' "settings.RSA_CRYPTO_LIBRARY": ' + repr(_RSA_CRYPTO_LIBRARY) + '.')
+
+    else:
+      raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
+          ' signature scheme is specified: ' + repr(scheme))
+
+  elif keytype == 'ed25519':
+    if scheme == 'ed25519':
+      public = binascii.unhexlify(public.encode('utf-8'))
+      if _ED25519_CRYPTO_LIBRARY == 'pynacl' or \
+                                'pynacl' in _available_crypto_libraries:
+        valid_signature = securesystemslib.ed25519_keys.verify_signature(public,
+                                                            scheme, sig, data,
+                                                            use_pynacl=True)
+
+      # Fall back to the optimized pure python implementation of ed25519.
+      else: # pragma: no cover
+        valid_signature = securesystemslib.ed25519_keys.verify_signature(public,
+                                                            scheme, sig, data,
+                                                            use_pynacl=False)
+    else:
+      raise securesystemslib.exceptions.UnsupportedAlgorithmsError('Unsupported'
+          ' signature scheme is specified: ' + repr(scheme))
+
+  elif keytype == 'ecdsa-sha2-nistp256':
+    if scheme == 'ecdsa-sha2-nistp256':
+        if _ECDSA_CRYPTO_LIBRARY in _available_crypto_libraries:
+          valid_signature = securesystemslib.ecdsa_keys.verify_signature(public,
+            scheme, sig, data)
+
+        else: # pragma: no cover
+          raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
+            ' "settings.ECDSA_CRYPTO_LIBRARY": ' + repr(_ECDSA_CRYPTO_LIBRARY) + '.')
+
+    else:
+      raise securesystemslib.exceptions.UnsupportedAlgorithmsError('Unsupported'
+          ' signature scheme is specified: ' + repr(scheme))
 
   # 'securesystemslib.formats.ANYKEY_SCHEMA' should detect invalid key types.
   else: # pragma: no cover
