@@ -105,14 +105,16 @@ class TestKeys(unittest.TestCase):
   def test_format_keyval_to_metadata(self):
     keyvalue = self.rsakey_dict['keyval']
     keytype = self.rsakey_dict['keytype']
-    key_meta = KEYS.format_keyval_to_metadata(keytype, keyvalue)
+    scheme = self.rsakey_dict['scheme']
+
+    key_meta = KEYS.format_keyval_to_metadata(keytype, scheme, keyvalue)
 
     # Check if the format of the object returned by this function corresponds
     # to KEY_SCHEMA format.
     self.assertEqual(None,
                      securesystemslib.formats.KEY_SCHEMA.check_match(key_meta),
                      FORMAT_ERROR_MSG)
-    key_meta = KEYS.format_keyval_to_metadata(keytype, keyvalue, private=True)
+    key_meta = KEYS.format_keyval_to_metadata(keytype, scheme, keyvalue, private=True)
 
     # Check if the format of the object returned by this function corresponds
     # to KEY_SCHEMA format.
@@ -122,14 +124,14 @@ class TestKeys(unittest.TestCase):
     # Supplying a 'bad' keyvalue.
     self.assertRaises(securesystemslib.exceptions.FormatError,
                       KEYS.format_keyval_to_metadata,
-                      'bad_keytype', keyvalue)
+                      'bad_keytype', scheme, keyvalue, private=True)
 
     # Test for missing 'public' entry.
     public = keyvalue['public']
     del keyvalue['public']
     self.assertRaises(securesystemslib.exceptions.FormatError,
                       KEYS.format_keyval_to_metadata,
-                      keytype, keyvalue)
+                      keytype, scheme, keyvalue)
     keyvalue['public'] = public
 
     # Test for missing 'private' entry.
@@ -137,7 +139,7 @@ class TestKeys(unittest.TestCase):
     del keyvalue['private']
     self.assertRaises(securesystemslib.exceptions.FormatError,
                       KEYS.format_keyval_to_metadata,
-                      keytype, keyvalue, private=True)
+                      keytype, scheme, keyvalue, private=True)
     keyvalue['private'] = private
 
 
@@ -209,6 +211,7 @@ class TestKeys(unittest.TestCase):
   def test_helper_get_keyid(self):
     keytype = self.rsakey_dict['keytype']
     keyvalue = self.rsakey_dict['keyval']
+    scheme = self.rsakey_dict['scheme']
 
     # Check format of 'keytype'.
     self.assertEqual(None,
@@ -220,7 +223,12 @@ class TestKeys(unittest.TestCase):
                      securesystemslib.formats.KEYVAL_SCHEMA.check_match(keyvalue),
                      FORMAT_ERROR_MSG)
 
-    keyid = KEYS._get_keyid(keytype, keyvalue)
+    # Check format of 'scheme'.
+    self.assertEqual(None,
+                     securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme),
+                     FORMAT_ERROR_MSG)
+
+    keyid = KEYS._get_keyid(keytype, scheme, keyvalue)
 
     # Check format of 'keyid' - the output of '_get_keyid()' function.
     self.assertEqual(None,
@@ -348,13 +356,17 @@ class TestKeys(unittest.TestCase):
         self.assertFalse(verified,
                          'Returned \'True\' on an incorrect signature.')
 
-      # Modifying 'signature' to pass an incorrect method since only
+      # Modifying 'rsakey_dict' to pass an incorrect scheme since only
       # 'PyCrypto-PKCS#1 PSS' is accepted.
-      rsa_signature['method'] = 'Biff'
+      valid_scheme = self.rsakey_dict['scheme']
+      self.rsakey_dict['scheme'] = 'Biff'
 
       args = (self.rsakey_dict, rsa_signature, DATA)
-      self.assertRaises(securesystemslib.exceptions.UnknownMethodError,
-                        KEYS.verify_signature, *args)
+      self.assertRaises(securesystemslib.exceptions.UnsupportedAlgorithmError,
+          KEYS.verify_signature, *args)
+
+      # Restore
+      self.rsakey_dict['scheme'] = valid_scheme
 
       # Passing incorrect number of arguments.
       self.assertRaises(TypeError, KEYS.verify_signature)
@@ -382,11 +394,12 @@ class TestKeys(unittest.TestCase):
       # Test valid arguments.
       private = self.rsakey_dict['keyval']['private']
       passphrase = 'secret'
+      scheme = 'rsassa-pss-sha256'
       encrypted_pem = KEYS.create_rsa_encrypted_pem(private, passphrase)
       self.assertTrue(securesystemslib.formats.PEMRSA_SCHEMA.matches(encrypted_pem))
 
-      # Try to import the encryped PEM file.
-      rsakey = KEYS.import_rsakey_from_private_pem(encrypted_pem, passphrase)
+      # Try to import the encrypted PEM file.
+      rsakey = KEYS.import_rsakey_from_private_pem(encrypted_pem, scheme, passphrase)
       self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(rsakey))
 
       # Test improperly formatted arguments.
@@ -511,9 +524,11 @@ class TestKeys(unittest.TestCase):
     ecdsakey = KEYS.import_ecdsakey_from_private_pem(private_pem)
 
     # Test for an encrypted PEM.
+    scheme = 'ecdsa-sha2-nistp256'
     encrypted_pem = \
       securesystemslib.ecdsa_keys.create_ecdsa_encrypted_pem(private_pem, 'password')
-    private_ecdsakey = KEYS.import_ecdsakey_from_private_pem(encrypted_pem.decode('utf-8'), 'password')
+    private_ecdsakey = KEYS.import_ecdsakey_from_private_pem(encrypted_pem.decode('utf-8'),
+        scheme, 'password')
 
 
     # Test for invalid arguments.
