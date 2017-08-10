@@ -294,7 +294,7 @@ def verify_signature(public_key, scheme, signature, data, use_pynacl=False):
     >>> verify_signature(public, scheme, signature, data, use_pynacl=True)
     True
     >>> bad_data = b'The sly brown fox jumps over the lazy dog'
-    >>> bad_signature, method = \
+    >>> bad_signature, scheme = \
         create_signature(public, private, bad_data, scheme)
     >>> verify_signature(public, scheme, bad_signature, data, use_pynacl=False)
     False
@@ -320,8 +320,8 @@ def verify_signature(public_key, scheme, signature, data, use_pynacl=False):
       of ed25519 (slower).
 
   <Exceptions>
-    securesystemslib.exceptions.UnknownMethodError.  Raised if the signing
-    method used by 'signature' is not one supported by
+    securesystemslib.exceptions.UnsupportedAlgorithmError.  Raised if the
+    signature scheme 'scheme' is not one supported by
     securesystemslib.ed25519_keys.create_signature().
 
     securesystemslib.exceptions.FormatError. Raised if the arguments are
@@ -342,7 +342,7 @@ def verify_signature(public_key, scheme, signature, data, use_pynacl=False):
   # bytes.  Raise 'securesystemslib.exceptions.FormatError' if the check fails.
   securesystemslib.formats.ED25519PUBLIC_SCHEMA.check_match(public_key)
 
-  # Is 'method' properly formatted?
+  # Is 'scheme' properly formatted?
   securesystemslib.formats.ED25519_SIG_SCHEMA.check_match(scheme)
 
   # Is 'signature' properly formatted?
@@ -352,7 +352,7 @@ def verify_signature(public_key, scheme, signature, data, use_pynacl=False):
   securesystemslib.formats.BOOLEAN_SCHEMA.check_match(use_pynacl)
 
   # Verify 'signature'.  Before returning the Boolean result, ensure 'ed25519'
-  # was used as the signing method.  Raise
+  # was used as the signature scheme.  Raise
   # 'securesystemslib.exceptions.UnsupportedLibraryError' if 'use_pynacl' is
   # True but 'nacl' is unavailable.
   public = public_key
@@ -384,9 +384,9 @@ def verify_signature(public_key, scheme, signature, data, use_pynacl=False):
         pass
 
   else:
-    message = 'Unsupported ed25519 signing method: ' + repr(method) + '.\n' + \
-      'Supported methods: ' + repr(_SUPPORTED_ED25519_SIGNING_SCHEMES) + '.'
-    raise securesystemslib.exceptions.UnknownMethodError(message)
+    message = 'Unsupported ed25519 signature scheme: ' + repr(scheme) + '.\n' + \
+      'Supported schemes: ' + repr(_SUPPORTED_ED25519_SIGNING_SCHEMES) + '.'
+    raise securesystemslib.exceptions.UnsupportedAlgorithmError(message)
 
   return valid_signature
 

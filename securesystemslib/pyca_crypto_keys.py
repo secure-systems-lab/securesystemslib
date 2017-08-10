@@ -238,8 +238,8 @@ def generate_rsa_public_and_private(bits=_DEFAULT_RSA_KEY_BITS):
 def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
   """
   <Purpose>
-    Generate a 'scheme' signature.  The signature, and the method (signature
-    algorithm) used, is returned as a (signature, scheme) tuple.
+    Generate a 'scheme' signature.  The signature, and the signature scheme
+    used, is returned as a (signature, scheme) tuple.
 
     The signing process will use 'private_key' to generate the signature of
     'data'.
@@ -250,10 +250,10 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
     >>> public, private = generate_rsa_public_and_private(2048)
     >>> data = 'The quick brown fox jumps over the lazy dog'.encode('utf-8')
     >>> scheme = 'rsassa-pss-sha256'
-    >>> signature, method = create_rsa_signature(private, data, scheme)
+    >>> signature, scheme = create_rsa_signature(private, data, scheme)
     >>> securesystemslib.formats.NAME_SCHEMA.matches(scheme)
     True
-    >>> method == 'rsassa-pss-sha256'
+    >>> scheme == 'rsassa-pss-sha256'
     True
     >>> securesystemslib.formats.PYCACRYPTOSIGNATURE_SCHEMA.matches(signature)
     True
@@ -296,8 +296,8 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
   securesystemslib.formats.DATA_SCHEMA.check_match(data)
   securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme)
 
-  # Signing 'data' requires a private key.  The 'rsassa-pss-sha256' signing
-  # method is the only signature scheme currently supported.
+  # Signing 'data' requires a private key.  'rsassa-pss-sha256' is the only
+  # signature scheme currently supported.
   signature = None
 
   # Verify the signature, but only if the private key has been set.  The
@@ -399,8 +399,8 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
     securesystemslib.exceptions.FormatError, if 'signature',
     'signature_scheme', 'public_key', or 'data' are improperly formatted.
 
-    securesystemslib.exceptions.UnknownMethodError, if the signing method used
-    by 'signature' is not one supported by
+    securesystemslib.exceptions.UnsupportedAlgorithmError, if the signature
+    scheme used by 'signature' is not one supported by
     securesystemslib.keys.create_signature().
 
     securesystemslib.exceptions.CryptoError, if the private key cannot be
@@ -431,12 +431,12 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
 
   # Verify whether the private key of 'public_key' produced 'signature'.
   # Before returning the 'valid_signature' Boolean result, ensure 'RSASSA-PSS'
-  # was used as the signing method.
+  # was used as the signature scheme.
   valid_signature = False
 
-  # Verify the expected 'signature_method' value.
+  # Verify the expected 'signature_scheme' value.
   if signature_scheme != 'rsassa-pss-sha256':
-    raise securesystemslib.exceptions.UnknownMethodError(signature_scheme)
+    raise securesystemslib.exceptions.UnsupportedAlgorithmError(signature_scheme)
 
   # Verify the RSASSA-PSS signature with pyca/cryptography.
   try:

@@ -220,8 +220,8 @@ def generate_rsa_public_and_private(bits=_DEFAULT_RSA_KEY_BITS):
 def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
   """
   <Purpose>
-    Generate an RSASSA-PSS signature.  The signature, and the method (signature
-    algorithm) used, is returned as a (signature, method) tuple.
+    Generate a 'scheme' signature.  The signature, and the signature scheme
+    used, is returned as a (signature, scheme) tuple.
 
     The signing process will use 'private_key' and 'data' to generate the
     signature.
@@ -280,9 +280,8 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
   # Does 'data' have the correct format?
   securesystemslib.formats.DATA_SCHEMA.check_match(data)
 
-  # Signing the 'data' object requires a private key.  The 'rssa-pss-sha256''
-  # (i.e., PyCrypto module) signing method is the only signature method
-  # currently supported.
+  # Signing the 'data' object requires a private key.  'rssa-pss-sha256' is the
+  # only signature scheme currently supported.
   signature = None
 
   # Verify the signature, but only if the private key has been set.  The
@@ -342,8 +341,8 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
   """
   <Purpose>
     Determine whether the corresponding private key of 'public_key' produced
-    'signature'.  verify_signature() will use the public key, signature method,
-    and 'data' to complete the verification.
+    'signature'.  verify_signature() will use the public key,
+    'signature_scheme', and 'data' to complete the verification.
 
     >>> public, private = generate_rsa_public_and_private(2048)
     >>> data = b'The quick brown fox jumps over the lazy dog'
@@ -356,8 +355,8 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
 
   <Arguments>
     signature:
-      An RSASSA PSS signature as a string.  This is the signature returned
-      by create_rsa_signature().
+      A 'signature_scheme' signature as a string.  This is the signature
+      returned by create_rsa_signature().
 
     signature_scheme:
       A string that indicates the signature algorithm used to generate
@@ -371,12 +370,12 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
       'signature'.  'data' is needed here to verify the signature.
 
   <Exceptions>
-    securesystemslib.exceptions.UnknownMethodError.  Raised if the signing method
-    used by 'signature' is not one supported by
+    securesystemslib.exceptions.UnsupportedAlgorithmError.  Raised if the
+    signature scheme used by 'signature' is not one supported by
     securesystemslib.keys.create_signature().
 
     securesystemslib.exceptions.FormatError. Raised if 'signature',
-    'signature_method', or 'public_key' is improperly formatted.
+    'signature_scheme', or 'public_key' is improperly formatted.
 
   <Side Effects>
     Crypto.Signature.PKCS1_PSS.verify() called to do the actual verification.
@@ -391,7 +390,7 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
   # 'securesystemslib.exceptions.FormatError' if the check fails.
   securesystemslib.formats.PEMRSA_SCHEMA.check_match(public_key)
 
-  # Does 'signature_method' have the correct format?
+  # Does 'signature_scheme' have the correct format?
   securesystemslib.formats.RSA_SIG_SCHEMA.check_match(signature_scheme)
 
   # Does 'signature' have the correct format?
@@ -401,12 +400,12 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
   securesystemslib.formats.DATA_SCHEMA.check_match(data)
 
   # Verify whether the private key of 'public_key' produced 'signature'.
-  # Before returning the 'valid_signature' Boolean result, ensure 'RSASSA-PSS'
-  # was used as the signing method.
+  # Before returning the 'valid_signature' Boolean result, ensure
+  # 'signature_scheme' is one of the supported signature schemes.
   valid_signature = False
 
-  # Verify the signature with PyCrypto if the signature method is valid,
-  # otherwise raise 'securesystemslib.exceptions.UnknownMethodError'.
+  # Verify the signature with PyCrypto if the signature scheme is valid,
+  # otherwise raise 'securesystemslib.exceptions.UnsupportedAlgorithmError'.
   if signature_scheme == 'rsassa-pss-sha256':
     try:
       rsa_key_object = Crypto.PublicKey.RSA.importKey(public_key)
@@ -419,7 +418,7 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
         ' be verified.')
 
   else:
-    raise securesystemslib.exceptions.UnknownMethodError(signature_scheme)
+    raise securesystemslib.exceptions.UnsupportedAlgorithmError(signature_scheme)
 
   return valid_signature
 

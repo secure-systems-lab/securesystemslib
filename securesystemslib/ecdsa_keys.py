@@ -271,6 +271,9 @@ def verify_signature(public_key, scheme, signature, data):
     securesystemslib.exceptions.FormatError, if any of the arguments are
     improperly formatted.
 
+    securesystemslib.exceptions.UnsupportedAlgorithmError, if 'scheme' is
+    not one of the supported signature schemes.
+
   <Side Effects>
     None.
 
@@ -314,9 +317,9 @@ def verify_signature(public_key, scheme, signature, data):
       return False
 
   else:
-    raise securesystemslib.exceptions.UnknownMethodError('Unsupported signing'
-      ' scheme is given: ' + repr(scheme) + '.  \nSupported'
-      ' methods: ' + repr(_SUPPORTED_ECDSA_SCHEMES))
+    raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
+      ' signature scheme is given: ' + repr(scheme) + '.  \nSupported'
+      ' schemes: ' + repr(_SUPPORTED_ECDSA_SCHEMES))
 
 
 

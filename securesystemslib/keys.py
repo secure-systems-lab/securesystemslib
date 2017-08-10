@@ -787,7 +787,7 @@ def create_signature(key_dict, data):
     The signing process will use the private key in
     key_dict['keyval']['private'] and 'data' to generate the signature.
 
-    The following signature methods are supported:
+    The following signature schemes are supported:
 
     'RSASSA-PSS'
     RFC3447 - RSASSA-PSS
@@ -887,11 +887,11 @@ def create_signature(key_dict, data):
   if keytype == 'rsa':
     if scheme == 'rsassa-pss-sha256':
       if _RSA_CRYPTO_LIBRARY == 'pycrypto':
-        sig, method = securesystemslib.pycrypto_keys.create_rsa_signature(private,
+        sig, scheme = securesystemslib.pycrypto_keys.create_rsa_signature(private,
           data.encode('utf-8'), scheme)
 
       elif _RSA_CRYPTO_LIBRARY == 'pyca-cryptography':
-        sig, method = securesystemslib.pyca_crypto_keys.create_rsa_signature(private,
+        sig, scheme = securesystemslib.pyca_crypto_keys.create_rsa_signature(private,
           data.encode('utf-8'), scheme)
 
       else: # pragma: no cover
@@ -906,7 +906,7 @@ def create_signature(key_dict, data):
     public = binascii.unhexlify(public.encode('utf-8'))
     private = binascii.unhexlify(private.encode('utf-8'))
     if 'pynacl' in _available_crypto_libraries:
-      sig, method = securesystemslib.ed25519_keys.create_signature(public, private,
+      sig, scheme = securesystemslib.ed25519_keys.create_signature(public, private,
         data.encode('utf-8'), scheme)
 
     else: # pragma: no cover
@@ -915,7 +915,7 @@ def create_signature(key_dict, data):
 
   elif keytype == 'ecdsa-sha2-nistp256':
     if _ECDSA_CRYPTO_LIBRARY == 'pyca-cryptography':
-      sig, method = securesystemslib.ecdsa_keys.create_signature(public, private,
+      sig, scheme = securesystemslib.ecdsa_keys.create_signature(public, private,
         data.encode('utf-8'), scheme)
 
     else: # pragma: no cover
@@ -998,8 +998,8 @@ def verify_signature(key_dict, signature, data):
     securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported or
     unavailable library is detected.
 
-    securesystemslib.exceptions.UnknownMethodError.  Raised if the signing
-    method used by 'signature' is not one supported.
+    securesystemslib.exceptions.UnsupportedAlgorithmError.  Raised if the
+    signature scheme specified in 'key_dict' is not supported.
 
   <Side Effects>
     The cryptography library specified in 'settings' called to do the actual
