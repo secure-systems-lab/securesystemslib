@@ -64,7 +64,8 @@ text without prepended symbols is the output of a command.
 
     # If the key length is unspecified, it defaults to 3072 bits. A length of
     # less than 2048 bits raises an exception. A password may be supplied as an
-    # argument, otherwise a user prompt is presented.
+    # argument, otherwise a user prompt is presented.  If the password is an
+    # empty string, the private key is saved unencrypted.
     >>> generate_and_write_rsa_keypair("rsa_key2")
     Enter a password for the RSA key:
     Confirm:

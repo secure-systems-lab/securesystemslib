@@ -1774,7 +1774,7 @@ def create_rsa_encrypted_pem(private_key, passphrase):
 
   elif _RSA_CRYPTO_LIBRARY == 'pyca-cryptography':
     encrypted_pem = \
-      securesystemslib.pycrypto_keys.create_rsa_encrypted_pem(private_key, passphrase)
+      securesystemslib.pyca_crypto_keys.create_rsa_encrypted_pem(private_key, passphrase)
 
   # check_crypto_libraries() should have fully verified _RSA_CRYPTO_LIBRARY.
   else: # pragma: no cover

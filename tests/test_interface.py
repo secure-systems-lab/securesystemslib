@@ -90,10 +90,17 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Test normal case.
     temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
     test_keypath = os.path.join(temporary_directory, 'rsa_key')
+    test_keypath_unencrypted = os.path.join(temporary_directory, 'rsa_key_unencrypted')
 
     interface.generate_and_write_rsa_keypair(test_keypath, password='pw')
     self.assertTrue(os.path.exists(test_keypath))
     self.assertTrue(os.path.exists(test_keypath + '.pub'))
+
+    # If an empty string is given for 'password', the private key file
+    # is written to disk unencrypted.
+    interface.generate_and_write_rsa_keypair(test_keypath_unencrypted, password='')
+    self.assertTrue(os.path.exists(test_keypath_unencrypted))
+    self.assertTrue(os.path.exists(test_keypath_unencrypted + '.pub'))
 
     # Ensure the generated key files are importable.
     scheme = 'rsassa-pss-sha256'
@@ -102,7 +109,12 @@ class TestInterfaceFunctions(unittest.TestCase):
     self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_pubkey))
 
     imported_privkey = interface.import_rsa_privatekey_from_file(test_keypath,
-      'pw', scheme)
+      'pw')
+    self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_privkey))
+
+    # Try to import the unencrypted key file.
+    imported_privkey = interface.import_rsa_privatekey_from_file(test_keypath_unencrypted,
+      '')
     self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_privkey))
 
     # Custom 'bits' argument.

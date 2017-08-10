@@ -107,13 +107,20 @@ def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
                                    password=None):
   """
   <Purpose>
-    Generate an RSA key file, create an encrypted PEM string (using 'password'
-    as the pass phrase), and store it in 'filepath'.  The public key portion of
-    the generated RSA key is stored in <'filepath'>.pub.  Which cryptography
-    library performs the cryptographic decryption is determined by the string
-    set in 'settings.RSA_CRYPTO_LIBRARY'.  PyCrypto currently supported.  The
-    PEM private key is encrypted with 3DES and CBC the mode of operation.  The
-    password is strengthened with PBKDF1-MD5.
+    Generate an RSA key pair.  The public portion of the generated RSA key is
+    saved to <'filepath'>.pub, whereas the private key portion is saved to
+    <'filepath'>.  If no password is given, the user is prompted for one.  If
+    the 'password' is an empty string, the private key is saved unencrypted to
+    <'filepath'>.
+
+    Which cryptography library performs the cryptographic decryption is
+    determined by the string set in 'settings.RSA_CRYPTO_LIBRARY'.  The
+    PyCrypto and pyca/cryprtography libraries are currently supported.  If
+    pycrypto is set, the PEM private key is encrypted with 3DES and CBC the
+    mode of operation.  The password is strengthened with PBKDF1-MD5.  If
+    pyca/cryptography is set, the best available form of encryption, for a
+    given key's backend, is used.  According to their documentation, "it is a
+    curated encryption choice and the algorithm may change over time."
 
   <Arguments>
     filepath:
@@ -124,7 +131,9 @@ def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
       The number of bits of the generated RSA key.
 
     password:
-      The password used to encrypt 'filepath'.
+      The password to encrypt 'filepath'.  If None, the user is prompted for a
+      password.  If an empty string is given, the private key is written to
+      disk unencrypted.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if the arguments are improperly
@@ -154,12 +163,17 @@ def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
 
-  #  Generate public and private RSA keys, encrypted the private portion
+  # Generate public and private RSA keys, encrypted the private portion
   # and store them in PEM format.
   rsa_key = securesystemslib.keys.generate_rsa_key(bits)
   public = rsa_key['keyval']['public']
   private = rsa_key['keyval']['private']
-  encrypted_pem = securesystemslib.keys.create_rsa_encrypted_pem(private, password)
+
+  if len(password):
+    private = securesystemslib.keys.create_rsa_encrypted_pem(private, password)
+
+  else:
+    logger.debug('An empty password was given.  Not encrypting the private key.')
 
   # Write public key (i.e., 'public', which is in PEM format) to
   # '<filepath>.pub'.  If the parent directory of filepath does not exist,
@@ -178,7 +192,7 @@ def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
   # Unlike the public key file, the private key does not have a file
   # extension.
   file_object = securesystemslib.util.TempFile()
-  file_object.write(encrypted_pem.encode('utf-8'))
+  file_object.write(private.encode('utf-8'))
   file_object.move(filepath)
 
 
@@ -243,17 +257,19 @@ def import_rsa_privatekey_from_file(filepath, password=None,
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
 
-  encrypted_pem = None
-
   # Read the contents of 'filepath' that should be an encrypted PEM.
   with open(filepath, 'rb') as file_object:
-    encrypted_pem = file_object.read().decode('utf-8')
+    pem = file_object.read().decode('utf-8')
 
-  # Convert 'encrypted_pem' to 'securesystemslib.formats.RSAKEY_SCHEMA' format.
-  # Raise 'securesystemslib.exceptions.CryptoError' if 'encrypted_pem' is
-  # invalid.
-  rsa_key = securesystemslib.keys.import_rsakey_from_private_pem(encrypted_pem,
-      scheme, password)
+  # Convert 'pem_key' to 'securesystemslib.formats.RSAKEY_SCHEMA' format.
+  # Raise 'securesystemslib.exceptions.CryptoError' if 'pem_key' is invalid.
+  if len(password):
+    rsa_key = securesystemslib.keys.import_rsakey_from_private_pem(pem, scheme, password)
+
+  else:
+    logger.debug('An empty password was given.  Attempting to import an unencrypted file.')
+    rsa_key = securesystemslib.keys.import_rsakey_from_private_pem(pem,
+    scheme, password=None)
 
   return rsa_key
 
