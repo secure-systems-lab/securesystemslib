@@ -497,6 +497,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     parent_delegations = {"keys": {
       "a394c28384648328b16731f81440d72243c77bb44c07c040be99347f0df7d7bf": {
        "keytype": "ed25519",
+       "scheme": "ed25519",
        "keyval": {
         "public": "3eb81026ded5af2c61fb3d4b272ac53cd1049a810ee88f4df1fc35cdaf918157"
        }
