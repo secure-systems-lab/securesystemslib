@@ -96,12 +96,13 @@ class TestInterfaceFunctions(unittest.TestCase):
     self.assertTrue(os.path.exists(test_keypath + '.pub'))
 
     # Ensure the generated key files are importable.
+    scheme = 'rsassa-pss-sha256'
     imported_pubkey = \
       interface.import_rsa_publickey_from_file(test_keypath + '.pub')
     self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_pubkey))
 
     imported_privkey = interface.import_rsa_privatekey_from_file(test_keypath,
-      'pw')
+      'pw', scheme)
     self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_privkey))
 
     # Custom 'bits' argument.
@@ -265,8 +266,11 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Invalid public key imported (contains unexpected keytype.)
     keytype = imported_ed25519_key['keytype']
     keyval = imported_ed25519_key['keyval']
+    scheme = imported_ed25519_key['scheme']
+
     ed25519key_metadata_format = \
-      securesystemslib.keys.format_keyval_to_metadata(keytype, keyval, private=False)
+      securesystemslib.keys.format_keyval_to_metadata(keytype, scheme,
+      keyval, private=False)
 
     ed25519key_metadata_format['keytype'] = 'invalid_keytype'
     with open(ed25519_keypath + '.pub', 'wb') as file_object:
@@ -281,6 +285,7 @@ class TestInterfaceFunctions(unittest.TestCase):
   def test_import_ed25519_privatekey_from_file(self):
     # Test normal case.
     # Generate ed25519 keys that can be imported.
+    scheme = 'ed25519'
     temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
     ed25519_keypath = os.path.join(temporary_directory, 'ed25519_key')
     interface.generate_and_write_ed25519_keypair(ed25519_keypath, password='pw')
@@ -402,8 +407,10 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Invalid public key imported (contains unexpected keytype.)
     keytype = imported_ecdsa_key['keytype']
     keyval = imported_ecdsa_key['keyval']
+    scheme = imported_ecdsa_key['scheme']
+
     ecdsakey_metadata_format = \
-      securesystemslib.keys.format_keyval_to_metadata(keytype, keyval, private=False)
+      securesystemslib.keys.format_keyval_to_metadata(keytype, scheme, keyval, private=False)
 
     ecdsakey_metadata_format['keytype'] = 'invalid_keytype'
     with open(ecdsa_keypath + '.pub', 'wb') as file_object:
