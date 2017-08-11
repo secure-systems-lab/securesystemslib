@@ -59,12 +59,12 @@ import cryptography.exceptions
 import securesystemslib.formats
 import securesystemslib.exceptions
 
-_SUPPORTED_ECDSA_ALGORITHMS = ['ecdsa-sha2-nistp256']
+_SUPPORTED_ECDSA_SCHEMES = ['ecdsa-sha2-nistp256']
 
 logger = logging.getLogger('securesystemslib_ecdsa_keys')
 
 
-def generate_public_and_private(algorithm='ecdsa-sha2-nistp256'):
+def generate_public_and_private(scheme='ecdsa-sha2-nistp256'):
   """
   <Purpose>
     Generate a pair of ECDSA public and private keys with one of the supported,
@@ -99,7 +99,7 @@ def generate_public_and_private(algorithm='ecdsa-sha2-nistp256'):
     True
 
   <Arguments>
-    algorithm:
+    scheme:
       A string indicating which algorithm to use for the generation of the
       public and private ECDSA keys.  'ecdsa-sha2-nistp256' is the only
       currently supported ECDSA algorithm, which is supported by OpenSSH and
@@ -126,12 +126,12 @@ def generate_public_and_private(algorithm='ecdsa-sha2-nistp256'):
   # supported ECDSA algorithms.  It must conform to
   # 'securesystemslib.formats.ECDSAALGORITHMS_SCHEMA'.  Raise
   # 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.ECDSAALGORITHMS_SCHEMA.check_match(algorithm)
+  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
 
   public_key = None
   private_key = None
 
-  if algorithm == 'ecdsa-sha2-nistp256':
+  if scheme == 'ecdsa-sha2-nistp256':
     private_key = ec.generate_private_key(ec.SECP256R1, default_backend())
     public_key = private_key.public_key()
 
@@ -139,8 +139,8 @@ def generate_public_and_private(algorithm='ecdsa-sha2-nistp256'):
   # invalid 'algorithm'.
   else: #pragma: no cover
     raise securesystemslib.exceptions.UnsupportedLibraryError('An unsupported'
-      ' algorithm was specified: ' + repr(algorithm) + '.\n  Supported'
-      ' algorithms: ' + repr(_SUPPORTED_ECDSA_ALGORITHMS))
+      ' algorithm was specified: ' + repr(scheme) + '.\n  Supported'
+      ' algorithms: ' + repr(_SUPPORTED_ECDSA_SCHEMES))
 
   private_pem = private_key.private_bytes(encoding=serialization.Encoding.PEM,
     format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -155,18 +155,18 @@ def generate_public_and_private(algorithm='ecdsa-sha2-nistp256'):
 
 
 
-def create_signature(public_key, private_key, data):
+def create_signature(public_key, private_key, data, scheme='ecdsa-sha2-nistp256'):
   """
   <Purpose>
-    Return a (signature, method) tuple.
+    Return a (signature, scheme) tuple.
 
-    >>> algorithm = 'ecdsa-sha2-nistp256'
-    >>> public, private = generate_public_and_private(algorithm)
+    >>> requested_scheme = 'ecdsa-sha2-nistp256'
+    >>> public, private = generate_public_and_private(requested_scheme)
     >>> data = b'The quick brown fox jumps over the lazy dog'
-    >>> signature, method = create_signature(public, private, data)
+    >>> signature, scheme = create_signature(public, private, data, requested_scheme)
     >>> securesystemslib.formats.ECDSASIGNATURE_SCHEMA.matches(signature)
     True
-    >>> method == algorithm
+    >>> requested_scheme == scheme
     True
 
   <Arguments>
@@ -179,11 +179,18 @@ def create_signature(public_key, private_key, data):
     data:
       Byte data used by create_signature() to generate the signature returned.
 
+    scheme:
+      The signature scheme used to generate the signature.  For example:
+      'ecesa-sha2-nistp256'.
+
   <Exceptions>
     securesystemslib.exceptions.FormatError, if the arguments are improperly
     formatted.
 
     securesystemslib.exceptions.CryptoError, if a signature cannot be created.
+
+    securesystemslib.exceptions.UnsupportedAlgorithmError, if 'scheme' is
+    an not one of the supported signature schemes.
 
   <Side Effects>
     None.
@@ -203,47 +210,56 @@ def create_signature(public_key, private_key, data):
   # Is 'private_key' properly formatted?
   securesystemslib.formats.PEMECDSA_SCHEMA.check_match(private_key)
 
-  method = 'ecdsa-sha2-nistp256'
+  # Is 'scheme' properly formatted?
+  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
 
-  try:
-    private_key = load_pem_private_key(private_key.encode('utf-8'),
-      password=None, backend=default_backend())
+  # A defensive check for a valid 'scheme'.  The check_match() above
+  # should have already validated it...
+  if scheme == 'ecdsa-sha2-nistp256': #pragma: no cover
+    try:
+      private_key = load_pem_private_key(private_key.encode('utf-8'),
+        password=None, backend=default_backend())
 
-    signer = private_key.signer(ec.ECDSA(hashes.SHA256()))
-    signer.update(data)
-    signature = signer.finalize()
+      signer = private_key.signer(ec.ECDSA(hashes.SHA256()))
+      signer.update(data)
+      signature = signer.finalize()
 
-  except TypeError as e:
-    raise securesystemslib.exceptions.CryptoError('Could not create'
-      ' signature: ' + str(e))
+    except TypeError as e:
+      raise securesystemslib.exceptions.CryptoError('Could not create'
+        ' signature: ' + str(e))
 
-  return signature, method
+  else: #pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
+      ' signature scheme is specified: ' + repr(scheme))
+
+  return signature, scheme
 
 
 
 
 
-def verify_signature(public_key, method, signature, data):
+def verify_signature(public_key, scheme, signature, data):
   """
   <Purpose>
-    ...
+    Verify that 'signature' was produced by the private key associated with
+    'public_key'.
 
-    >>> algorithm = 'ecdsa-sha2-nistp256'
-    >>> public, private = generate_public_and_private(algorithm)
+    >>> scheme = 'ecdsa-sha2-nistp256'
+    >>> public, private = generate_public_and_private(scheme)
     >>> data = b'The quick brown fox jumps over the lazy dog'
-    >>> signature, method = create_signature(public, private, data)
-    >>> verify_signature(public, method, signature, data)
+    >>> signature, scheme = create_signature(public, private, data, scheme)
+    >>> verify_signature(public, scheme, signature, data)
     True
-    >>> verify_signature(public, method, signature, b'bad data')
+    >>> verify_signature(public, scheme, signature, b'bad data')
     False
 
   <Arguments>
     public_key:
-      The ECDSA public key in PEM format.  The publi key is needed to verify
+      The ECDSA public key in PEM format.  The public key is needed to verify
       'signature'.
 
-    method:
-      The signature method used to generate 'signature'.  For example:
+    scheme:
+      The signature scheme used to generate 'signature'.  For example:
       'ecdsa-sha2-nistp256'.
 
     signature:
@@ -254,8 +270,11 @@ def verify_signature(public_key, method, signature, data):
       Byte data that was used by create_signature() to generate 'signature'.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError, if any of the arguments are improperly
-    formatted.
+    securesystemslib.exceptions.FormatError, if any of the arguments are
+    improperly formatted.
+
+    securesystemslib.exceptions.UnsupportedAlgorithmError, if 'scheme' is
+    not one of the supported signature schemes.
 
   <Side Effects>
     None.
@@ -268,11 +287,13 @@ def verify_signature(public_key, method, signature, data):
   # Are the arguments properly formatted?
   # If not, raise 'securesystemslib.exceptions.FormatError'.
   securesystemslib.formats.PEMECDSA_SCHEMA.check_match(public_key)
-  securesystemslib.formats.NAME_SCHEMA.check_match(method)
+  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
   securesystemslib.formats.ECDSASIGNATURE_SCHEMA.check_match(signature)
 
-  # Is 'method' one of the supported ECDSA algorithms?
-  if method in _SUPPORTED_ECDSA_ALGORITHMS:
+  # Is 'scheme' one of the supported ECDSA signature schemes?  A defensive
+  # check for a valid 'scheme'.  The check_match() above should have validated
+  # it...
+  if scheme in _SUPPORTED_ECDSA_SCHEMES: #pragma: no cover
     ecdsa_key = load_pem_public_key(public_key.encode('utf-8'), backend=default_backend())
 
     if not isinstance(ecdsa_key, ec.EllipticCurvePublicKey):
@@ -299,10 +320,10 @@ def verify_signature(public_key, method, signature, data):
     except cryptography.exceptions.InvalidSignature:
       return False
 
-  else:
-    raise securesystemslib.exceptions.UnknownMethodError('Unsupported signing'
-      ' method given: ' + repr(method) + '.  \nSupported'
-      ' methods: ' + repr(_SUPPORTED_ECDSA_ALGORITHMS))
+  else: #pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
+      ' signature scheme is given: ' + repr(scheme) + '.  \nSupported'
+      ' schemes: ' + repr(_SUPPORTED_ECDSA_SCHEMES))
 
 
 

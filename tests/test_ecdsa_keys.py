@@ -109,9 +109,12 @@ class TestECDSA_keys(unittest.TestCase):
     global public
     global private
     data = b'The quick brown fox jumps over the lazy dog'
-    signature, method = securesystemslib.ecdsa_keys.create_signature(public, private, data)
+    scheme = 'ecdsa-sha2-nistp256'
+    signature, scheme = securesystemslib.ecdsa_keys.create_signature(public,
+        private, data, scheme)
 
-    valid_signature = securesystemslib.ecdsa_keys.verify_signature(public, method, signature, data)
+    valid_signature = securesystemslib.ecdsa_keys.verify_signature(public,
+        scheme, signature, data)
     self.assertEqual(True, valid_signature)
 
     # Generate an RSA key so that we can verify that non-ECDSA keys are
@@ -120,48 +123,54 @@ class TestECDSA_keys(unittest.TestCase):
 
     # Verify that a non-ECDSA key (via the PEM argument) is rejected.
     self.assertRaises(securesystemslib.exceptions.FormatError,
-      securesystemslib.ecdsa_keys.verify_signature, rsa_pem, method, signature,
+      securesystemslib.ecdsa_keys.verify_signature, rsa_pem, scheme, signature,
       data)
 
     # Check for improperly formatted arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.ecdsa_keys.verify_signature, 123, method,
-                                       signature, data)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.ecdsa_keys.verify_signature, 123, scheme,
+        signature, data)
 
     # Signature method improperly formatted.
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.ecdsa_keys.verify_signature, public, 123,
-                                       signature, data)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.ecdsa_keys.verify_signature, public, 123,
+        signature, data)
 
     # Invalid signature method.
-    self.assertRaises(securesystemslib.exceptions.UnknownMethodError, securesystemslib.ecdsa_keys.verify_signature, public,
-                                       'unsupported_method', signature, data)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.ecdsa_keys.verify_signature, public,
+        'unsupported_scheme', signature, data)
 
     # Signature not a string.
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.ecdsa_keys.verify_signature, public, method,
-                                       123, data)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.ecdsa_keys.verify_signature, public, scheme,
+        123, data)
 
     # Invalid signature..
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.ecdsa_keys.verify_signature, public, method,
-                                       'bad_signature', data)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.ecdsa_keys.verify_signature, public, scheme,
+        'bad_signature', data)
 
     # Check for invalid signature and data.
     # Mismatched data.
     self.assertRaises(securesystemslib.exceptions.FormatError,
-      securesystemslib.ecdsa_keys.verify_signature, public, method,
+      securesystemslib.ecdsa_keys.verify_signature, public, scheme,
       signature, '123')
 
-    self.assertEqual(False, securesystemslib.ecdsa_keys.verify_signature(public, method,
-                                                     signature, b'123'))
+    self.assertEqual(False, securesystemslib.ecdsa_keys.verify_signature(public,
+        scheme, signature, b'123'))
+
     # Mismatched signature.
     bad_signature = b'a'*64
-    self.assertEqual(False, securesystemslib.ecdsa_keys.verify_signature(public, method,
-                                                     bad_signature, data))
+    self.assertEqual(False, securesystemslib.ecdsa_keys.verify_signature(public,
+        scheme, bad_signature, data))
 
     # Generated signature created with different data.
-    new_signature, method = securesystemslib.ecdsa_keys.create_signature(public, private,
-                                                     b'mismatched data')
+    new_signature, scheme = securesystemslib.ecdsa_keys.create_signature(public,
+        private, b'mismatched data')
 
-    self.assertEqual(False, securesystemslib.ecdsa_keys.verify_signature(public, method,
-                                                     new_signature, data))
+    self.assertEqual(False, securesystemslib.ecdsa_keys.verify_signature(public,
+        scheme, new_signature, data))
 
 
 
