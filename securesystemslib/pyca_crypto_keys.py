@@ -307,7 +307,9 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
   # 'private_key' has variable size and can be an empty string.
   if len(private_key):
 
-    if scheme == 'rsassa-pss-sha256':
+    # The check_match() above should have validated 'scheme'.  This is an
+    # extra check...
+    if scheme == 'rsassa-pss-sha256': #pragma: no cover
       # Generate an RSSA-PSS signature.  Raise
       # 'securesystemslib.exceptions.CryptoError' for any of the expected
       # exceptions raised by pyca/cryptography.
@@ -350,7 +352,7 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
       rsa_signer.update(data)
       signature = rsa_signer.finalize()
 
-    else:
+    else: #pragma: no cover
       raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
         ' signature scheme is specified: ' + repr(scheme))
 
@@ -434,8 +436,9 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
   # was used as the signature scheme.
   valid_signature = False
 
-  # Verify the expected 'signature_scheme' value.
-  if signature_scheme != 'rsassa-pss-sha256':
+  # Verify the expected 'signature_scheme' value.  This is an extra check,
+  # since the check_match() should have validated 'signature_scheme'.
+  if signature_scheme != 'rsassa-pss-sha256': #pragma: no cover
     raise securesystemslib.exceptions.UnsupportedAlgorithmError(signature_scheme)
 
   # Verify the RSASSA-PSS signature with pyca/cryptography.
