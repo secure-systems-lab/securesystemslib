@@ -252,8 +252,10 @@ def create_signature(public_key, private_key, data, scheme):
   signature = None
 
   # The private and public keys have been validated above by
-  # 'securesystemslib.formats' and should be 32-byte strings.
-  if scheme == 'ed25519':
+  # 'securesystemslib.formats' and should be 32-byte strings.  This is a
+  # defensive check for a valid 'scheme', which should have already been
+  # validated in the check_match() above.
+  if scheme == 'ed25519': #pragma: no cover
     try:
       nacl_key = nacl.signing.SigningKey(private)
       nacl_sig = nacl_key.sign(data)
@@ -267,7 +269,7 @@ def create_signature(public_key, private_key, data, scheme):
       message = 'An "ed25519" signature could not be created with PyNaCl.'
       raise securesystemslib.exceptions.CryptoError(message + str(e))
 
-  else:
+  else: #pragma: no cover
     raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
       ' signature scheme is specified: ' + repr(scheme))
 
@@ -358,7 +360,9 @@ def verify_signature(public_key, scheme, signature, data, use_pynacl=False):
   public = public_key
   valid_signature = False
 
-  if scheme in _SUPPORTED_ED25519_SIGNING_SCHEMES:
+  # This is a defensive check for a valid 'scheme', which should have already
+  # been validated in the check_match() above.
+  if scheme in _SUPPORTED_ED25519_SIGNING_SCHEMES: #pragma: no cover
     if use_pynacl:
       try:
         nacl_verify_key = nacl.signing.VerifyKey(public)
@@ -383,7 +387,7 @@ def verify_signature(public_key, scheme, signature, data, use_pynacl=False):
       except Exception as e:
         pass
 
-  else:
+  else: #pragma: no cover
     message = 'Unsupported ed25519 signature scheme: ' + repr(scheme) + '.\n' + \
       'Supported schemes: ' + repr(_SUPPORTED_ED25519_SIGNING_SCHEMES) + '.'
     raise securesystemslib.exceptions.UnsupportedAlgorithmError(message)
