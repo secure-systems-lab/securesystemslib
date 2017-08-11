@@ -253,11 +253,19 @@ class TestKeys(unittest.TestCase):
                        securesystemslib.formats.SIGNATURE_SCHEMA.check_match(ed25519_signature),
                        FORMAT_ERROR_MSG)
 
+      # Test for invalid signature scheme.
+      args = (self.rsakey_dict, DATA)
+
+      valid_scheme = self.rsakey_dict['scheme']
+      self.rsakey_dict['scheme'] = 'invalid_scheme'
+      self.assertRaises(securesystemslib.exceptions.UnsupportedAlgorithmError,
+          KEYS.create_signature, *args)
+      self.rsakey_dict['scheme'] = valid_scheme
+
       # Removing private key from 'rsakey_dict' - should raise a TypeError.
       private = self.rsakey_dict['keyval']['private']
       self.rsakey_dict['keyval']['private'] = ''
 
-      args = (self.rsakey_dict, DATA)
       self.assertRaises(ValueError, KEYS.create_signature, *args)
 
       # Supplying an incorrect number of arguments.
@@ -325,15 +333,29 @@ class TestKeys(unittest.TestCase):
                                        DATA)
       self.assertTrue(verified, "Incorrect signature.")
 
+      # Verify that an invalid ed25519 signature scheme is rejected.
+      valid_scheme = self.ed25519key_dict['scheme']
+      self.ed25519key_dict['scheme'] = 'invalid_scheme'
+      self.assertRaises(securesystemslib.exceptions.UnsupportedAlgorithmError,
+          KEYS.verify_signature, self.ed25519key_dict, ed25519_signature, DATA)
+      self.ed25519key_dict['scheme'] = valid_scheme
+
       # Verifying the 'ecdsa_sigature' of 'DATA'.
       if ecdsa_signature:
         verified = KEYS.verify_signature(self.ecdsakey_dict, ecdsa_signature, DATA)
         self.assertTrue(verified, "Incorrect signature.")
 
-        # Verifying the 'ed25519_signature' of 'DATA'.
+        # Verifying the 'ecdsa_signature' of 'DATA'.
         verified = KEYS.verify_signature(self.ecdsakey_dict, ecdsa_signature,
                                          DATA)
         self.assertTrue(verified, "Incorrect signature.")
+
+        # Test for an invalid ecdsa signature scheme.
+        valid_scheme = self.ecdsakey_dict['scheme']
+        self.ecdsakey_dict['scheme'] = 'invalid_scheme'
+        self.assertRaises(securesystemslib.exceptions.UnsupportedAlgorithmError,
+            KEYS.verify_signature, self.ecdsakey_dict, ecdsa_signature, DATA)
+        self.ecdsakey_dict['scheme'] = valid_scheme
 
       # Testing invalid signatures. Same signature is passed, with 'DATA' being
       # different than the original 'DATA' that was used in creating the

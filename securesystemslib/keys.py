@@ -1090,7 +1090,7 @@ def verify_signature(key_dict, signature, data):
                                                             scheme, sig, data,
                                                             use_pynacl=False)
     else:
-      raise securesystemslib.exceptions.UnsupportedAlgorithmsError('Unsupported'
+      raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
           ' signature scheme is specified: ' + repr(scheme))
 
   elif keytype == 'ecdsa-sha2-nistp256':
@@ -1104,7 +1104,7 @@ def verify_signature(key_dict, signature, data):
             ' "settings.ECDSA_CRYPTO_LIBRARY": ' + repr(_ECDSA_CRYPTO_LIBRARY) + '.')
 
     else:
-      raise securesystemslib.exceptions.UnsupportedAlgorithmsError('Unsupported'
+      raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
           ' signature scheme is specified: ' + repr(scheme))
 
   # 'securesystemslib.formats.ANYKEY_SCHEMA' should detect invalid key types.
