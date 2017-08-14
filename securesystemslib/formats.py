@@ -465,7 +465,7 @@ ROLEDB_SCHEMA = SCHEMA.Object(
 # Root role: indicates root keys and top-level roles.
 ROOT_SCHEMA = SCHEMA.Object(
   object_name = 'ROOT_SCHEMA',
-  _type = SCHEMA.String('Root'),
+  _type = SCHEMA.String('root'),
   version = METADATAVERSION_SCHEMA,
   consistent_snapshot = BOOLEAN_SCHEMA,
   compression_algorithms = COMPRESSIONS_SCHEMA,
@@ -476,7 +476,7 @@ ROOT_SCHEMA = SCHEMA.Object(
 # Targets role: Indicates targets and delegates target paths to other roles.
 TARGETS_SCHEMA = SCHEMA.Object(
   object_name = 'TARGETS_SCHEMA',
-  _type = SCHEMA.String('Targets'),
+  _type = SCHEMA.String('targets'),
   version = METADATAVERSION_SCHEMA,
   expires = ISO8601_DATETIME_SCHEMA,
   targets = FILEDICT_SCHEMA,
@@ -485,7 +485,7 @@ TARGETS_SCHEMA = SCHEMA.Object(
 # Snapshot role: indicates the latest versions of all metadata (except timestamp).
 SNAPSHOT_SCHEMA = SCHEMA.Object(
   object_name = 'SNAPSHOT_SCHEMA',
-  _type = SCHEMA.String('Snapshot'),
+  _type = SCHEMA.String('snapshot'),
   version = METADATAVERSION_SCHEMA,
   expires = ISO8601_DATETIME_SCHEMA,
   meta = VERSIONDICT_SCHEMA)
@@ -493,7 +493,7 @@ SNAPSHOT_SCHEMA = SCHEMA.Object(
 # Timestamp role: indicates the latest version of the snapshot file.
 TIMESTAMP_SCHEMA = SCHEMA.Object(
   object_name = 'TIMESTAMP_SCHEMA',
-  _type = SCHEMA.String('Timestamp'),
+  _type = SCHEMA.String('timestamp'),
   version = METADATAVERSION_SCHEMA,
   expires = ISO8601_DATETIME_SCHEMA,
   meta = FILEDICT_SCHEMA)
@@ -532,7 +532,7 @@ MIRRORDICT_SCHEMA = SCHEMA.DictOf(
 # serve.
 MIRRORLIST_SCHEMA = SCHEMA.Object(
   object_name = 'MIRRORLIST_SCHEMA',
-  _type = SCHEMA.String('Mirrors'),
+  _type = SCHEMA.String('mirrors'),
   version = METADATAVERSION_SCHEMA,
   expires = ISO8601_DATETIME_SCHEMA,
   mirrors = SCHEMA.ListOf(MIRROR_SCHEMA))
