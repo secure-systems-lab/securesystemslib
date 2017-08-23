@@ -184,7 +184,7 @@ class TestFormats(unittest.TestCase):
                            'paths': ['path1/', 'path2']}}),
 
       'ROOT_SCHEMA': (securesystemslib.formats.ROOT_SCHEMA,
-                      {'_type': 'Root',
+                      {'_type': 'root',
                        'version': 8,
                        'consistent_snapshot': False,
                        'compression_algorithms': ['gz'],
@@ -198,7 +198,7 @@ class TestFormats(unittest.TestCase):
                                           'paths': ['path1/', 'path2']}}}),
 
       'TARGETS_SCHEMA': (securesystemslib.formats.TARGETS_SCHEMA,
-        {'_type': 'Targets',
+        {'_type': 'targets',
          'version': 8,
          'expires': '1985-10-21T13:20:00Z',
          'targets': {'metadata/targets.json': {'length': 1024,
@@ -213,13 +213,13 @@ class TestFormats(unittest.TestCase):
                                     'paths': ['path1/', 'path2']}]}}),
 
       'SNAPSHOT_SCHEMA': (securesystemslib.formats.SNAPSHOT_SCHEMA,
-        {'_type': 'Snapshot',
+        {'_type': 'snapshot',
          'version': 8,
          'expires': '1985-10-21T13:20:00Z',
          'meta': {'snapshot.json': {'version': 1024}}}),
 
       'TIMESTAMP_SCHEMA': (securesystemslib.formats.TIMESTAMP_SCHEMA,
-        {'_type': 'Timestamp',
+        {'_type': 'timestamp',
          'version': 8,
          'expires': '1985-10-21T13:20:00Z',
          'meta': {'metadattimestamp.json': {'length': 1024,
@@ -240,7 +240,7 @@ class TestFormats(unittest.TestCase):
          'custom': {'type': 'mirror'}}}),
 
       'MIRRORLIST_SCHEMA': (securesystemslib.formats.MIRRORLIST_SCHEMA,
-        {'_type': 'Mirrors',
+        {'_type': 'mirrors',
          'version': 8,
          'expires': '1985-10-21T13:20:00Z',
          'mirrors': [{'url_prefix': 'http://localhost:8001',
