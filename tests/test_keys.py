@@ -390,6 +390,14 @@ class TestKeys(unittest.TestCase):
       # Restore
       self.rsakey_dict['scheme'] = valid_scheme
 
+      # Verify that the KEYIDS of 'key_dict' and 'signature' match.
+      valid_keyid = self.rsakey_dict['keyid'] = '12345'
+      self.rsakey_dict['keyid'] = 'bad123'
+
+      self.assertRaises(securesystemslib.exceptions.CryptoError,
+          KEYS.verify_signature, self.rsakey_dict, rsa_signature, DATA)
+      self.rsakey_dict['keyid'] = valid_keyid
+
       # Passing incorrect number of arguments.
       self.assertRaises(TypeError, KEYS.verify_signature)
 
