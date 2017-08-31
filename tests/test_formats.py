@@ -187,7 +187,6 @@ class TestFormats(unittest.TestCase):
                       {'_type': 'root',
                        'version': 8,
                        'consistent_snapshot': False,
-                       'compression_algorithms': ['gz'],
                        'expires': '1985-10-21T13:20:00Z',
                        'keys': {'123abc': {'keytype': 'rsa',
                                            'scheme': 'rsassa-pss-sha256',
