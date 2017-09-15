@@ -540,7 +540,7 @@ def create_rsa_encrypted_pem(private_key, passphrase):
 
   encrypted_pem = \
     private_key.private_bytes(encoding=serialization.Encoding.PEM,
-    format=serialization.PrivateFormat.PKCS8,
+    format=serialization.PrivateFormat.TraditionalOpenSSL,
     encryption_algorithm=serialization.BestAvailableEncryption(passphrase.encode('utf-8')))
 
   return encrypted_pem.decode()
