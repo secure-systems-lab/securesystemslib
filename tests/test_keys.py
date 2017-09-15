@@ -750,7 +750,7 @@ class TestKeys(unittest.TestCase):
 
     self.assertTrue(KEYS.is_pem_private(private_pem_rsa))
     self.assertTrue(KEYS.is_pem_private(private_pem_ec, 'ec'))
-    self.assertTrue(KEYS.is_pem_private(private_pem_encrypted))
+    self.assertTrue(KEYS.is_pem_private(encrypted_private_pem_rsa))
 
     # Test for a valid non-private PEM string.
     public_pem = self.rsakey_dict['keyval']['public']

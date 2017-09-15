@@ -475,7 +475,7 @@ def create_rsa_encrypted_pem(private_key, passphrase):
   <Purpose>
     Return a string in PEM format (TraditionalOpenSSL), where the
     private part of the RSA key is encrypted using the best available
-    encryption for a given key’s backend. This is a curated encryption choice
+    encryption for a given key's backend. This is a curated encryption choice
     and the algorithm may change over time.
 
     c.f. cryptography.io/en/latest/hazmat/primitives/asymmetric/serialization/
