@@ -473,11 +473,13 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
 def create_rsa_encrypted_pem(private_key, passphrase):
   """
   <Purpose>
-    Return a string in PEM format, where the private part of the RSA key is
-    encrypted.  The private part of the RSA key is encrypted by the Triple
-    Data Encryption Algorithm (3DES) and Cipher-block chaining (CBC) for the
-    mode of operation.  Password-Based Key Derivation Function 1 (PBKF1) + MD5
-    is used to strengthen 'passphrase'.
+    Return a string in PEM format (TraditionalOpenSSL), where the
+    private part of the RSA key is encrypted using the best available
+    encryption for a given key's backend. This is a curated encryption choice
+    and the algorithm may change over time.
+
+    c.f. cryptography.io/en/latest/hazmat/primitives/asymmetric/serialization/
+        #cryptography.hazmat.primitives.serialization.BestAvailableEncryption
 
     >>> public, private = generate_rsa_public_and_private(2048)
     >>> passphrase = 'secret'
@@ -491,26 +493,23 @@ def create_rsa_encrypted_pem(private_key, passphrase):
 
     passphrase:
       The passphrase, or password, to encrypt the private part of the RSA
-      key.  'passphrase' is not used directly as the encryption key, a stronger
-      encryption key is derived from it.
+      key.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError, if the arguments are improperly formatted.
+    securesystemslib.exceptions.FormatError, if the arguments are improperly
+        formatted.
 
-    securesystemslib.exceptions.CryptoError, if an RSA key in encrypted PEM format cannot be created.
+    securesystemslib.exceptions.CryptoError, if the passed RSA key cannot be
+        deserialized by pyca cryptography.
 
     ValueError, if 'private_key' is unset.
 
-  <Side Effects>
-    PyCrypto's Crypto.PublicKey.RSA.exportKey() called to perform the actual
-    generation of the PEM-formatted output.
 
   <Returns>
-    A string in PEM format, where the private RSA key is encrypted.
-    Conforms to 'securesystemslib.formats.PEMRSA_SCHEMA'.
+    A string in PEM format (TraditionalOpenSSL), where the private RSA key is
+    encrypted. Conforms to 'securesystemslib.formats.PEMRSA_SCHEMA'.
   """
 
-  # Does 'private_key' have the correct format?
   # This check will ensure 'private_key' has the appropriate number
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
@@ -519,29 +518,25 @@ def create_rsa_encrypted_pem(private_key, passphrase):
   # Does 'passphrase' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(passphrase)
 
-  # 'private_key' is in PEM format and unencrypted.  The extracted key will be
-  # imported and converted to PyCrypto's RSA key object (i.e.,
-  # Crypto.PublicKey.RSA).  Use PyCrypto's exportKey method, with a passphrase
-  # specified, to create the string.  PyCrypto uses PBKDF1+MD5 to strengthen
-  # 'passphrase', and 3DES with CBC mode for encryption.  'private_key' may
-  # still be a NULL string after the 'securesystemslib.formats.PEMRSA_SCHEMA'
-  # (i.e., 'private_key' has variable size and can be an empty string.
+  # 'private_key' may still be a NULL string after the
+  # 'securesystemslib.formats.PEMRSA_SCHEMA' so we need an additional check
   if len(private_key):
     try:
       private_key = load_pem_private_key(private_key.encode('utf-8'),
                                          password=None,
                                          backend=default_backend())
     except ValueError:
-      raise securesystemslib.exceptions.CryptoError('The private key (in PEM format) could not be'
-        ' deserialized.')
+      raise securesystemslib.exceptions.CryptoError('The private key'
+          ' (in PEM format) could not be deserialized.')
 
   else:
     raise ValueError('The required private key is unset.')
 
-  encrypted_pem = \
-    private_key.private_bytes(encoding=serialization.Encoding.PEM,
-    format=serialization.PrivateFormat.PKCS8,
-    encryption_algorithm=serialization.BestAvailableEncryption(passphrase.encode('utf-8')))
+  encrypted_pem = private_key.private_bytes(
+      encoding=serialization.Encoding.PEM,
+      format=serialization.PrivateFormat.TraditionalOpenSSL,
+      encryption_algorithm=serialization.BestAvailableEncryption(
+      passphrase.encode('utf-8')))
 
   return encrypted_pem.decode()
 

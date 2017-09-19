@@ -427,6 +427,7 @@ class TestKeys(unittest.TestCase):
       scheme = 'rsassa-pss-sha256'
       encrypted_pem = KEYS.create_rsa_encrypted_pem(private, passphrase)
       self.assertTrue(securesystemslib.formats.PEMRSA_SCHEMA.matches(encrypted_pem))
+      self.assertTrue(KEYS.is_pem_private(encrypted_pem))
 
       # Try to import the encrypted PEM file.
       rsakey = KEYS.import_rsakey_from_private_pem(encrypted_pem, scheme, passphrase)
@@ -690,6 +691,13 @@ class TestKeys(unittest.TestCase):
                                    private_pem=False)
     self.assertTrue(securesystemslib.formats.PEMRSA_SCHEMA.matches(public_pem))
 
+    # Test encrypted private pem
+    encrypted_private_pem = KEYS.create_rsa_encrypted_pem(private_pem, "pw")
+    encrypted_private_pem_stripped = KEYS.extract_pem(encrypted_private_pem,
+        private_pem=True)
+    self.assertTrue(securesystemslib.formats.PEMRSA_SCHEMA.matches(
+        encrypted_private_pem_stripped))
+
     # Test for an invalid PEM.
     pem_header = '-----BEGIN RSA PRIVATE KEY-----'
     pem_footer = '-----END RSA PRIVATE KEY-----'
@@ -731,7 +739,7 @@ class TestKeys(unittest.TestCase):
     public_pem = self.rsakey_dict['keyval']['public']
     self.assertTrue(KEYS.is_pem_public(public_pem))
 
-    # Tesst for a valid non-public PEM string.
+    # Test for a valid non-public PEM string.
     private_pem = self.rsakey_dict['keyval']['private']
     self.assertFalse(KEYS.is_pem_public(private_pem))
 
@@ -743,11 +751,14 @@ class TestKeys(unittest.TestCase):
 
   def test_is_pem_private(self):
     # Test for a valid PEM string.
-    private_pem = self.rsakey_dict['keyval']['private']
+    private_pem_rsa = self.rsakey_dict['keyval']['private']
     private_pem_ec = self.ecdsakey_dict['keyval']['private']
+    encrypted_private_pem_rsa = KEYS.create_rsa_encrypted_pem(
+        private_pem_rsa, "pw")
 
-    self.assertTrue(KEYS.is_pem_private(private_pem))
+    self.assertTrue(KEYS.is_pem_private(private_pem_rsa))
     self.assertTrue(KEYS.is_pem_private(private_pem_ec, 'ec'))
+    self.assertTrue(KEYS.is_pem_private(encrypted_private_pem_rsa))
 
     # Test for a valid non-private PEM string.
     public_pem = self.rsakey_dict['keyval']['public']
@@ -757,11 +768,11 @@ class TestKeys(unittest.TestCase):
 
     # Test for unsupported keytype.
     self.assertRaises(securesystemslib.exceptions.FormatError,
-      KEYS.is_pem_private, private_pem, 'bad_keytype')
+        KEYS.is_pem_private, private_pem_rsa, 'bad_keytype')
 
     # Test for an invalid PEM string.
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      KEYS.is_pem_private, 123)
+        KEYS.is_pem_private, 123)
 
 
 
