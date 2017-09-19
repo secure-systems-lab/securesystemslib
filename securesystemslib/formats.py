@@ -429,13 +429,6 @@ DELEGATIONS_SCHEMA = SCHEMA.Object(
   keys = KEYDICT_SCHEMA,
   roles = ROLELIST_SCHEMA)
 
-# Supported compression extension (e.g., 'gz').
-COMPRESSION_SCHEMA = SCHEMA.OneOf([SCHEMA.String(''), SCHEMA.String('gz')])
-
-# List of supported compression extensions.
-COMPRESSIONS_SCHEMA = SCHEMA.ListOf(
-  SCHEMA.OneOf([SCHEMA.String(''), SCHEMA.String('gz')]))
-
 # The fileinfo format of targets specified in the repository and
 # developer tools.  The second element of this list holds custom data about the
 # target, such as file permissions, author(s), last modified, etc.
@@ -456,7 +449,6 @@ ROLEDB_SCHEMA = SCHEMA.Object(
   version = SCHEMA.Optional(METADATAVERSION_SCHEMA),
   expires = SCHEMA.Optional(ISO8601_DATETIME_SCHEMA),
   signatures = SCHEMA.Optional(SIGNATURES_SCHEMA),
-  compressions = SCHEMA.Optional(COMPRESSIONS_SCHEMA),
   paths = SCHEMA.Optional(SCHEMA.OneOf([RELPATHS_SCHEMA, PATH_FILEINFO_SCHEMA])),
   path_hash_prefixes = SCHEMA.Optional(PATH_HASH_PREFIXES_SCHEMA),
   delegations = SCHEMA.Optional(DELEGATIONS_SCHEMA),
@@ -468,7 +460,6 @@ ROOT_SCHEMA = SCHEMA.Object(
   _type = SCHEMA.String('root'),
   version = METADATAVERSION_SCHEMA,
   consistent_snapshot = BOOLEAN_SCHEMA,
-  compression_algorithms = COMPRESSIONS_SCHEMA,
   expires = ISO8601_DATETIME_SCHEMA,
   keys = KEYDICT_SCHEMA,
   roles = ROLEDICT_SCHEMA)
