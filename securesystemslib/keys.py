@@ -988,8 +988,8 @@ def verify_signature(key_dict, signature, data):
       Conformant to 'securesystemslib.formats.SIGNATURE_SCHEMA'.
 
     data:
-      Data object used by securesystemslib.rsa_key.create_signature() to generate
-      'signature'.  'data' is needed here to verify the signature.
+      Data object used by securesystemslib.rsa_key.create_signature() to
+      generate 'signature'.  'data' is needed here to verify the signature.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, raised if either 'key_dict' or
@@ -998,8 +998,11 @@ def verify_signature(key_dict, signature, data):
     securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported or
     unavailable library is detected.
 
-    securesystemslib.exceptions.UnsupportedAlgorithmError.  Raised if the
-    signature scheme specified in 'key_dict' is not supported.
+    securesystemslib.exceptions.UnsupportedAlgorithmError, if the signature
+    scheme specified in 'key_dict' is not supported.
+
+    securesystemslib.exceptions.CryptoError, if the KEYID in the given
+    'key_dict' does not match the KEYID in 'signature'.
 
   <Side Effects>
     The cryptography library specified in 'settings' called to do the actual
@@ -1017,6 +1020,16 @@ def verify_signature(key_dict, signature, data):
 
   # Does 'signature' have the correct format?
   securesystemslib.formats.SIGNATURE_SCHEMA.check_match(signature)
+
+  # Verify that the KEYID in 'key_dict' matches the KEYID listed in the
+  # 'signature'.
+  if key_dict['keyid'] != signature['keyid']:
+    raise securesystemslib.exceptions.CryptoError('The KEYID ('
+        ' ' + repr(key_dict['keyid']) + ' ) in the given key does not match'
+        ' the KEYID ( ' + repr(signature['keyid']) + ' ) in the signature.')
+
+  else:
+    logger.debug('The KEYIDs of key_dict and the signature match.')
 
   # Using the public key belonging to 'key_dict'
   # (i.e., rsakey_dict['keyval']['public']), verify whether 'signature'
@@ -1050,8 +1063,9 @@ def verify_signature(key_dict, signature, data):
             ' pyca-cryptography if that is available instead.')
 
         else:
-          valid_signature = securesystemslib.pycrypto_keys.verify_rsa_signature(sig, scheme,
-                                                                   public, data)
+          valid_signature = securesystemslib.pycrypto_keys.verify_rsa_signature(sig,
+              scheme, public, data)
+
       elif _RSA_CRYPTO_LIBRARY == 'pyca-cryptography':
         if 'pyca-cryptography' not in _available_crypto_libraries: # pragma: no cover
           raise securesystemslib.exceptions.UnsupportedLibraryError('Metadata'
