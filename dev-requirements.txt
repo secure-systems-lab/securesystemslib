@@ -1,6 +1,6 @@
 --editable .
 
 tox
-cryptography==1.9.0
+cryptography==2.0.3
 pycrypto==2.6.1
 pynacl==1.0.1
