@@ -92,15 +92,6 @@ _SUPPORTED_GENERAL_CRYPTO_LIBRARIES = ['pycrypto', 'pyca-cryptography']
 # https://github.com/pyca/ed25519
 _available_crypto_libraries = ['ed25519']
 
-# Try to import the PyCrypto module (pycrypto_keys.py), which is used here
-# for general-purpose cryptography and generation of RSA keys and signatures.
-try:
-  import securesystemslib.pycrypto_keys
-  _available_crypto_libraries.append('pycrypto')
-
-except ImportError: # pragma: no cover
-  pass
-
 # Try to import the pyca/Cryptography module (pyca_crypto_keys.py), which is
 # used for general-purpose cryptography and generation of RSA keys and
 # signatures.
@@ -251,17 +242,7 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-sha256'):
   # the actual key generation.  Raise 'ValueError' if 'bits' is less than 1024
   # or not a multiple of 256, although a 2048-bit minimum is enforced by
   # securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match().
-  if _RSA_CRYPTO_LIBRARY == 'pycrypto':
-    public, private = securesystemslib.pycrypto_keys.generate_rsa_public_and_private(bits)
-
-  # Unlike PyCrypto, PyCA Cryptography does not require 'bits' to be a multiple
-  # 256.
-  elif _RSA_CRYPTO_LIBRARY == 'pyca-cryptography':
-    public, private = securesystemslib.pyca_crypto_keys.generate_rsa_public_and_private(bits)
-
-  else: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError('Invalid crypto'
-      ' library: ' + repr(_RSA_CRYPTO_LIBRARY) + '.')
+  public, private = securesystemslib.pyca_crypto_keys.generate_rsa_public_and_private(bits)
 
   # Generate the keyid of the RSA key.  Note: The private key material is
   # not included in the generation of the 'keyid' identifier.
@@ -886,17 +867,8 @@ def create_signature(key_dict, data):
   # otherwise raise an exception.
   if keytype == 'rsa':
     if scheme == 'rsassa-pss-sha256':
-      if _RSA_CRYPTO_LIBRARY == 'pycrypto':
-        sig, scheme = securesystemslib.pycrypto_keys.create_rsa_signature(private,
-          data.encode('utf-8'), scheme)
-
-      elif _RSA_CRYPTO_LIBRARY == 'pyca-cryptography':
-        sig, scheme = securesystemslib.pyca_crypto_keys.create_rsa_signature(private,
-          data.encode('utf-8'), scheme)
-
-      else: # pragma: no cover
-        raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
-          ' "settings.RSA_CRYPTO_LIBRARY": ' + repr(_RSA_CRYPTO_LIBRARY) + '.')
+      sig, scheme = securesystemslib.pyca_crypto_keys.create_rsa_signature(private,
+        data.encode('utf-8'), scheme)
 
     else:
       raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
@@ -914,13 +886,8 @@ def create_signature(key_dict, data):
         ' PyNaCl library is unavailable.')
 
   elif keytype == 'ecdsa-sha2-nistp256':
-    if _ECDSA_CRYPTO_LIBRARY == 'pyca-cryptography':
-      sig, scheme = securesystemslib.ecdsa_keys.create_signature(public, private,
-        data.encode('utf-8'), scheme)
-
-    else: # pragma: no cover
-      raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
-        ' "settings.ECDSA_CRYPTO_LIBRARY": ' + repr(_ECDSA_CRYPTO_LIBRARY) + '.')
+    sig, scheme = securesystemslib.ecdsa_keys.create_signature(public, private,
+      data.encode('utf-8'), scheme)
 
   # 'securesystemslib.formats.ANYKEY_SCHEMA' should detect invalid key types.
   else: # pragma: no cover
@@ -1052,38 +1019,8 @@ def verify_signature(key_dict, signature, data):
   # otherwise raise an exception.
   if keytype == 'rsa':
     if scheme == 'rsassa-pss-sha256':
-      if _RSA_CRYPTO_LIBRARY == 'pycrypto':
-        if 'pycrypto' not in _available_crypto_libraries: # pragma: no cover
-          raise securesystemslib.exceptions.UnsupportedLibraryError('Metadata'
-            ' downloaded from the remote'
-            ' repository listed an RSA signature.  "pycrypto" was set'
-            ' (in settings.py) to generate RSA signatures, but the PyCrypto'
-            ' library is not installed.  \n$ pip install PyCrypto, or you can'
-            ' try switching your configuration (settings.py) to use'
-            ' pyca-cryptography if that is available instead.')
-
-        else:
-          valid_signature = securesystemslib.pycrypto_keys.verify_rsa_signature(sig,
-              scheme, public, data)
-
-      elif _RSA_CRYPTO_LIBRARY == 'pyca-cryptography':
-        if 'pyca-cryptography' not in _available_crypto_libraries: # pragma: no cover
-          raise securesystemslib.exceptions.UnsupportedLibraryError('Metadata'
-            ' downloaded from the remote'
-            ' repository listed an RSA signature.  "pyca-cryptography" was set'
-            ' (in settings.py) to generate RSA signatures, but the "cryptography"'
-            ' library is not installed.  \n$ pip install cryptography,'
-            ' or you can try switching your configuration'
-            ' (securesystemslib/settings.py) to use PyCrypto if that is'
-            ' available instead.')
-
-        else:
-          valid_signature = securesystemslib.pyca_crypto_keys.verify_rsa_signature(sig,
-            scheme, public, data)
-
-      else: # pragma: no cover
-        raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
-          ' "settings.RSA_CRYPTO_LIBRARY": ' + repr(_RSA_CRYPTO_LIBRARY) + '.')
+      valid_signature = securesystemslib.pyca_crypto_keys.verify_rsa_signature(sig,
+        scheme, public, data)
 
     else:
       raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
@@ -1201,37 +1138,20 @@ def import_rsakey_from_private_pem(pem, scheme='rsassa-pss-sha256', password=Non
     logger.debug('The password/passphrase is unset.  The PEM is expected'
       ' to be unencrypted.')
 
-  # Raise 'securesystemslib.exceptions.UnsupportedLibraryError' if the following
-  # libraries, specified in 'settings', are unsupported or unavailable:
-  # 'settings.RSA_CRYPTO_LIBRARY' and 'settings.GENERAL_CRYPTO_LIBRARY'.
-  check_crypto_libraries(['rsa', 'general'])
-
   # Begin building the RSA key dictionary.
   rsakey_dict = {}
   keytype = 'rsa'
   public = None
   private = None
 
-  # Generate the public and private RSA keys.  The PyCrypto module performs the
-  # actual import operation.
-  if _RSA_CRYPTO_LIBRARY == 'pycrypto':
-    public, private = \
-      securesystemslib.pycrypto_keys.create_rsa_public_and_private_from_pem(pem,
-                                                                      password)
-    public =  extract_pem(public, private_pem=False)
-    private = extract_pem(private, private_pem=True)
+  # Generate the public and private RSA keys.  The pyca/cryptography library
+  # performs the actual crypto operations.
+  public, private = \
+    securesystemslib.pyca_crypto_keys.create_rsa_public_and_private_from_pem(
+    pem, password)
 
-  elif _RSA_CRYPTO_LIBRARY == 'pyca-cryptography':
-    public, private = \
-      securesystemslib.pyca_crypto_keys.create_rsa_public_and_private_from_pem(
-      pem, password)
-
-    public =  extract_pem(public, private_pem=False)
-    private = extract_pem(private, private_pem=True)
-
-  else: #pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError('Invalid crypto'
-      ' library: ' + repr(_RSA_CRYPTO_LIBRARY) + '.')
+  public =  extract_pem(public, private_pem=False)
+  private = extract_pem(private, private_pem=True)
 
   # Generate the keyid of the RSA key.  'key_value' corresponds to the
   # 'keyval' entry of the 'RSAKEY_SCHEMA' dictionary.  The private key
