@@ -1435,19 +1435,14 @@ def extract_pem(pem, private_pem=False):
 def encrypt_key(key_object, password):
   """
   <Purpose>
-    Return a string containing 'key_object' in encrypted form. Encrypted strings
-    may be safely saved to a file.  The corresponding decrypt_key() function can
-    be applied to the encrypted string to restore the original key object.
-    'key_object' is a key (e.g., RSAKEY_SCHEMA, ED25519KEY_SCHEMA).  This
-    function calls the appropriate cryptography module (e.g., pycrypto_keys.py)
-    to perform the encryption.
+    Return a string containing 'key_object' in encrypted form. Encrypted
+    strings may be safely saved to a file.  The corresponding decrypt_key()
+    function can be applied to the encrypted string to restore the original key
+    object.  'key_object' is a key (e.g., RSAKEY_SCHEMA, ED25519KEY_SCHEMA).
+    This function relies on the pyca_crypto_keys.py module to perform the
+    actual encryption.
 
-    The currently supported general-purpose crypto module, 'pycrypto_keys.py',
-    performs the actual cryptographic operation on 'key_object'.  Whereas
-    an encrypted PEM file uses the Triple Data Encryption Algorithm (3DES), the
-    Cipher-block chaining (CBC) mode of operation, and the Password-Based Key
-    Derivation Function 1 (PBKF1) + MD5 to strengthen 'password', encrypted
-    keys use AES-256-CTR-Mode and passwords strengthened with
+    Encrypted keys use AES-256-CTR-Mode, and passwords are strengthened with
     PBKDF2-HMAC-SHA256 (100K iterations by default, but may be overriden in
     'securesystemslib.settings.PBKDF2_ITERATIONS' by the user).
 
@@ -1503,9 +1498,7 @@ def encrypt_key(key_object, password):
   encrypted_key = None
 
   # Generate an encrypted string of 'key_object' using AES-256-CTR-Mode, where
-  # 'password' is strengthened with PBKDF2-HMAC-SHA256.  Ensure the general-
-  # purpose library specified in 'settings.GENERAL_CRYPTO_LIBRARY' is supported.
-
+  # 'password' is strengthened with PBKDF2-HMAC-SHA256.
   encrypted_key = securesystemslib.pyca_crypto_keys.encrypt_key(key_object, password)
 
   return encrypted_key
@@ -1517,18 +1510,12 @@ def encrypt_key(key_object, password):
 def decrypt_key(encrypted_key, passphrase):
   """
   <Purpose>
-    Return a string containing 'encrypted_key' in non-encrypted form.
-    The decrypt_key() function can be applied to the encrypted string to restore
+    Return a string containing 'encrypted_key' in non-encrypted form.  The
+    decrypt_key() function can be applied to the encrypted string to restore
     the original key object, a key (e.g., RSAKEY_SCHEMA, ED25519KEY_SCHEMA).
-    This function calls the appropriate cryptography module (e.g.,
-    pycrypto_keys.py) to perform the decryption.
+    This function calls pyca_crypto_keys.py to perform the actual decryption.
 
-    The currently supported general-purpose crypto module, 'pycrypto_keys.py',
-    performs the actual cryptographic operation on 'key_object'.  Whereas
-    an encrypted PEM file uses the Triple Data Encryption Algorithm (3DES), the
-    Cipher-block chaining (CBC) mode of operation, and the Password-Based Key
-    Derivation Function 1 (PBKF1) + MD5 to strengthen 'password', encrypted
-    keys use AES-256-CTR-Mode and passwords strengthened with
+    Encrypted keys use AES-256-CTR-Mode and passwords are strengthened with
     PBKDF2-HMAC-SHA256 (100K iterations be default, but may be overriden in
     'settings.py' by the user).
 
@@ -1613,14 +1600,15 @@ def decrypt_key(encrypted_key, passphrase):
 def create_rsa_encrypted_pem(private_key, passphrase):
   """
   <Purpose>
-  Return a string in PEM format, where the private part of the RSA key is
-  encrypted. The private part of the RSA key is encrypted by the Triple
-  Data Encryption Algorithm (3DES) and Cipher-block chaining (CBC) for the
-  mode of operation. Password-Based Key Derivation Function 1 (PBKF1) + MD5
-  is used to strengthen 'passphrase'.
+    Return a string in PEM format, where the private part of the RSA key is
+    encrypted. The private part of the RSA key is encrypted with
+    AES-256-CTR-Mode, and passwords are strengthened with PBKDF2-HMAC-SHA256
+    (100K iterations by default, but may be overriden in
+    'securesystemslib.settings.PBKDF2_ITERATIONS' by the user).
 
-  https://en.wikipedia.org/wiki/Triple_DES
-  https://en.wikipedia.org/wiki/PBKDF2
+    http://en.wikipedia.org/wiki/Advanced_Encryption_Standard
+    http://en.wikipedia.org/wiki/CTR_mode#Counter_.28CTR.29
+    https://en.wikipedia.org/wiki/PBKDF2
 
   >>> rsa_key = generate_rsa_key()
   >>> private = rsa_key['keyval']['private']
@@ -1630,29 +1618,29 @@ def create_rsa_encrypted_pem(private_key, passphrase):
   True
 
   <Arguments>
-  private_key:
-  The private key string in PEM format.
+    private_key:
+      The private key string in PEM format.
 
-  passphrase:
-  The passphrase, or password, to encrypt the private part of the RSA
-  key. 'passphrase' is not used directly as the encryption key, a stronger
-  encryption key is derived from it.
+    passphrase:
+      The passphrase, or password, to encrypt the private part of the RSA key.
+      'passphrase' is not used directly as the encryption key, a stronger
+      encryption key is derived from it.
 
   <Exceptions>
-  securesystemslib.exceptions.FormatError, if the arguments are improperly formatted.
+    securesystemslib.exceptions.FormatError, if the arguments are improperly
+    formatted.
 
-  securesystemslib.exceptions.CryptoError, if an RSA key in encrypted PEM format
-  cannot be created.
+    securesystemslib.exceptions.CryptoError, if an RSA key in encrypted PEM
+    format cannot be created.
 
-  TypeError, 'private_key' is unset.
+    TypeError, 'private_key' is unset.
 
   <Side Effects>
-  PyCrypto's Crypto.PublicKey.RSA.exportKey() called to perform the actual
-  generation of the PEM-formatted output.
+    None.
 
   <Returns>
-  A string in PEM format, where the private RSA key is encrypted.
-  Conforms to 'securesystemslib.formats.PEMRSA_SCHEMA'.
+    A string in PEM format, where the private RSA key is encrypted.
+    Conforms to 'securesystemslib.formats.PEMRSA_SCHEMA'.
   """
 
   # Does 'private_key' have the correct format?
@@ -1664,29 +1652,13 @@ def create_rsa_encrypted_pem(private_key, passphrase):
   # Does 'passphrase' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(passphrase)
 
-  # Raise 'securesystemslib.exceptions.UnsupportedLibraryError' if the following
-  # libraries, specified in 'settings', are unsupported or unavailable:
-  # 'settings.GENERAL_CRYPTO_LIBRARY' and 'settings.RSA_CRYPTO_LIBRARY'.
-  check_crypto_libraries(['rsa', 'general'])
-
   encrypted_pem = None
 
-  # Generate the public and private RSA keys. The PyCrypto module performs
-  # the actual key generation. Raise 'ValueError' if 'bits' is less than 1024
-  # or not a multiple of 256, although a 2048-bit minimum is enforced by
+  # Generate the public and private RSA keys. Raise 'ValueError' if 'bits' is
+  # less than 1024, although a 2048-bit minimum is enforced by
   # securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match().
-  if _RSA_CRYPTO_LIBRARY == 'pycrypto':
-    encrypted_pem = \
-      securesystemslib.pycrypto_keys.create_rsa_encrypted_pem(private_key, passphrase)
-
-  elif _RSA_CRYPTO_LIBRARY == 'pyca-cryptography':
-    encrypted_pem = \
-      securesystemslib.pyca_crypto_keys.create_rsa_encrypted_pem(private_key, passphrase)
-
-  # check_crypto_libraries() should have fully verified _RSA_CRYPTO_LIBRARY.
-  else: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError('Invalid crypto'
-      ' library: ' + repr(_RSA_CRYPTO_LIBRARY) + '.')
+  encrypted_pem = \
+    securesystemslib.pyca_crypto_keys.create_rsa_encrypted_pem(private_key, passphrase)
 
   return encrypted_pem
 
@@ -1714,7 +1686,7 @@ def is_pem_public(pem):
       A string in PEM format.
 
   <Exceptions>
-      securesystemslib.exceptions.FormatError, if 'pem' is improperly formatted.
+    securesystemslib.exceptions.FormatError, if 'pem' is improperly formatted.
 
   <Side Effects>
     None
