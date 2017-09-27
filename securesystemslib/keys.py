@@ -1498,11 +1498,6 @@ def encrypt_key(key_object, password):
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
 
-  # Raise 'securesystemslib.exceptions.UnsupportedLibraryError' if the following
-  # libraries, specified in 'settings', are unsupported or unavailable:
-  # 'securesystemslib.settings.GENERAL_CRYPTO_LIBRARY'.
-  check_crypto_libraries(['general'])
-
   # Encrypted string of 'key_object'.  The encrypted string may be safely saved
   # to a file and stored offline.
   encrypted_key = None
@@ -1510,18 +1505,8 @@ def encrypt_key(key_object, password):
   # Generate an encrypted string of 'key_object' using AES-256-CTR-Mode, where
   # 'password' is strengthened with PBKDF2-HMAC-SHA256.  Ensure the general-
   # purpose library specified in 'settings.GENERAL_CRYPTO_LIBRARY' is supported.
-  if _GENERAL_CRYPTO_LIBRARY == 'pycrypto':
-    encrypted_key = \
-      securesystemslib.pycrypto_keys.encrypt_key(key_object, password)
 
-  elif _GENERAL_CRYPTO_LIBRARY == 'pyca-cryptography':
-    encrypted_key = \
-      securesystemslib.pyca_crypto_keys.encrypt_key(key_object, password)
-
-  # check_crypto_libraries() should have fully verified _GENERAL_CRYPTO_LIBRARY.
-  else: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError('Invalid crypto'
-      ' library: ' + repr(_GENERAL_CRYPTO_LIBRARY) + '.')
+  encrypted_key = securesystemslib.pyca_crypto_keys.encrypt_key(key_object, password)
 
   return encrypted_key
 
@@ -1612,20 +1597,8 @@ def decrypt_key(encrypted_key, passphrase):
   # Decrypt 'encrypted_key' so that the original key object is restored.
   # encrypt_key() generates an encrypted string of the key object using
   # AES-256-CTR-Mode, where 'password' is strengthened with PBKDF2-HMAC-SHA256.
-  # Ensure the general-purpose library specified in
-  # 'settings.GENERAL_CRYPTO_LIBRARY' is supported.
-  if _GENERAL_CRYPTO_LIBRARY == 'pycrypto':
-    key_object = \
-      securesystemslib.pycrypto_keys.decrypt_key(encrypted_key, passphrase)
-
-  elif _GENERAL_CRYPTO_LIBRARY == 'pyca-cryptography':
-    key_object = \
-      securesystemslib.pyca_crypto_keys.decrypt_key(encrypted_key, passphrase)
-
-  # check_crypto_libraries() should have fully verified _GENERAL_CRYPTO_LIBRARY.
-  else: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError('Invalid crypto'
-      ' library: ' + repr(_GENERAL_CRYPTO_LIBRARY) + '.')
+  key_object = \
+    securesystemslib.pyca_crypto_keys.decrypt_key(encrypted_key, passphrase)
 
   # The corresponding encrypt_key() encrypts and stores key objects in
   # non-metadata format (i.e., original format of key object argument to
