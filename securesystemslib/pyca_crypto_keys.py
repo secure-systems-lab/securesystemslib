@@ -79,12 +79,7 @@ import cryptography.exceptions
 # generate RSA keys and PS
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-# PyCrypo's RSA module is needed to generate and import encrypted RSA keys.
-# Generating and loading encrypted key files with pyca/cryptography will be
-# added once these routines are supported.
-import Crypto.PublicKey.RSA
-
-# pyca/Cryptography requires hash objects to generate PKCS#1 PSS
+# pyca/cryptography requires hash objects to generate PKCS#1 PSS
 # signatures (i.e., padding.PSS).  The 'hmac' module is needed to verify
 # ciphertexts in encrypted key files.
 from cryptography.hazmat.primitives import hashes
