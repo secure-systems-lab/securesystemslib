@@ -177,9 +177,7 @@ THRESHOLD_SCHEMA = SCHEMA.Integer(lo=1)
 ROLENAME_SCHEMA = SCHEMA.AnyString()
 
 # The minimum number of bits for an RSA key.  Must be 2048 bits, or greater
-# (recommended by TUF). Crypto modules like 'pycrypto_keys.py' may set further
-# restrictions on keys (e.g., the number of bits must be a multiple of 256).
-# Recommended RSA key sizes:
+# (recommended by TUF).  Recommended RSA key sizes:
 # http://www.emc.com/emc-plus/rsa-labs/historical/twirl-and-rsa-key-size.htm#table1
 RSAKEYBITS_SCHEMA = SCHEMA.Integer(lo=2048)
 
