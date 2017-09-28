@@ -8,33 +8,28 @@ Secure Systems Library
    :target: https://coveralls.io/github/secure-systems-lab/securesystemslib?branch=master
 
 A library that provides cryptographic and general-purpose functions for Secure
-Systems Lab projects at NYU.  The routines are general enough to be usable by other
-projects.
+Systems Lab projects at NYU.  The routines are general enough to be usable by
+other projects.
 
 Overview
 ++++++++
 
-The secure systems library (securesystemslib) supports public-key and
-general-purpose cryptography, such as `ECDSA
+securesystemslib supports public-key and general-purpose cryptography, such as
+`ECDSA
 <https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm>`_,
 `Ed25519 <http://ed25519.cr.yp.to/>`_, `RSA
 <https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29>`_, SHA256, SHA512, etc.
-Cryptography operations are performed via configurable cryptography
-libraries (e.g., `cryptography <https://cryptography.io/en/latest/>`_ and
-`PyNaCl <https://github.com/pyca/pynacl>`_).  Users may choose from
-cryptography library options for supported algorithms by modifying the library's
-corresponding entries in settings.py.
+Cryptographic operations are performed by the `cryptography
+<https://cryptography.io/en/latest/>`_ and `PyNaCl
+<https://github.com/pyca/pynacl>`_) libraries.
 
-The cryptography library may be used to generate keys and signatures with the
+The `cryptography` library is used to generate keys and signatures with the
 ECDSA and RSA algorithms, and perform general-purpose cryptography such as
-encrypting keys.  The `PyCrypto <https://www.dlitz.net/software/pycrypto/>`_
-library may be selected to generate RSA keys and `RSA-PSS
-<https://en.wikipedia.org/wiki/RSA-PSS>`_ signatures.  If generation of Ed25519
-signatures is needed, the PyNaCl library setting should be enabled.  PyNaCl is
-a Python binding to the Networking and Cryptography Library.  For key storage,
-RSA keys may be stored in PEM or JSON format, and Ed25519 keys in JSON format.
-Generating, importing, and loading cryptographic key files can be done with
-functions available in securesystemslib.
+encrypting keys.  The PyNaCl library is used to generate Ed25519 keys and
+signatures.  PyNaCl is a Python binding to the Networking and Cryptography
+Library.  For key storage, RSA keys may be stored in PEM or JSON format, and
+Ed25519 keys in JSON format.  Generating, importing, and loading cryptographic
+key files can be done with functions available in securesystemslib.
 
 Installation
 ++++++++++++

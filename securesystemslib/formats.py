@@ -177,9 +177,7 @@ THRESHOLD_SCHEMA = SCHEMA.Integer(lo=1)
 ROLENAME_SCHEMA = SCHEMA.AnyString()
 
 # The minimum number of bits for an RSA key.  Must be 2048 bits, or greater
-# (recommended by TUF). Crypto modules like 'pycrypto_keys.py' may set further
-# restrictions on keys (e.g., the number of bits must be a multiple of 256).
-# Recommended RSA key sizes:
+# (recommended by TUF).  Recommended RSA key sizes:
 # http://www.emc.com/emc-plus/rsa-labs/historical/twirl-and-rsa-key-size.htm#table1
 RSAKEYBITS_SCHEMA = SCHEMA.Integer(lo=2048)
 
@@ -191,9 +189,6 @@ ECDSA_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String('ecdsa-sha2-nistp256')])
 # Tools may require further restrictions on the number of bins, such
 # as requiring them to be a power of 2.
 NUMBINS_SCHEMA = SCHEMA.Integer(lo=1)
-
-# A PyCrypto signature.
-PYCRYPTOSIGNATURE_SCHEMA = SCHEMA.AnyBytes()
 
 # A pyca-cryptography signature.
 PYCACRYPTOSIGNATURE_SCHEMA = SCHEMA.AnyBytes()
@@ -249,9 +244,8 @@ PUBLIC_KEY_SCHEMA = SCHEMA.Object(
   keyval = PUBLIC_KEYVAL_SCHEMA,
   expires = SCHEMA.Optional(ISO8601_DATETIME_SCHEMA))
 
-# A TUF key object.  This schema simplifies validation of keys that may be
-# one of the supported key types.
-# Supported key types: 'rsa', 'ed25519'.
+# A TUF key object.  This schema simplifies validation of keys that may be one
+# of the supported key types.  Supported key types: 'rsa', 'ed25519'.
 ANYKEY_SCHEMA = SCHEMA.Object(
   object_name = 'ANYKEY_SCHEMA',
   keytype = KEYTYPE_SCHEMA,

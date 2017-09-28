@@ -39,20 +39,15 @@ import six
 logger = logging.getLogger('securesystemslib.test_hash')
 
 
-if not 'hashlib' in securesystemslib.hash._supported_libraries:
+if not 'hashlib' in securesystemslib.hash.SUPPORTED_LIBRARIES:
   logger.warn('Not testing hashlib: could not be imported.')
-
-if not 'pycrypto' in securesystemslib.hash._supported_libraries:
-  logger.warn('Not testing pycrypto: could not be imported.')
 
 
 class TestHash(unittest.TestCase):
 
   def _run_with_all_hash_libraries(self, test_func):
-    if 'hashlib' in securesystemslib.hash._supported_libraries:
+    if 'hashlib' in securesystemslib.hash.SUPPORTED_LIBRARIES:
       test_func('hashlib')
-    if 'pycrypto' in securesystemslib.hash._supported_libraries:
-      test_func('pycrypto')
 
 
   def test_md5_update(self):
@@ -62,16 +57,16 @@ class TestHash(unittest.TestCase):
   def _do_md5_update(self, library):
     digest_object = securesystemslib.hash.digest('md5', library)
     self.assertEqual(digest_object.hexdigest(),
-                    'd41d8cd98f00b204e9800998ecf8427e')
+        'd41d8cd98f00b204e9800998ecf8427e')
     digest_object.update('a'.encode('utf-8'))
     self.assertEqual(digest_object.hexdigest(),
-                    '0cc175b9c0f1b6a831c399e269772661')
+        '0cc175b9c0f1b6a831c399e269772661')
     digest_object.update('bbb'.encode('utf-8'))
     self.assertEqual(digest_object.hexdigest(),
-                    'f034e93091235adbb5d2781908e2b313')
+        'f034e93091235adbb5d2781908e2b313')
     digest_object.update(''.encode('utf-8'))
     self.assertEqual(digest_object.hexdigest(),
-                    'f034e93091235adbb5d2781908e2b313')
+        'f034e93091235adbb5d2781908e2b313')
 
 
   def test_sha1_update(self):
@@ -82,16 +77,16 @@ class TestHash(unittest.TestCase):
     digest_object = securesystemslib.hash.digest('sha1', library)
 
     self.assertEqual(digest_object.hexdigest(),
-                    'da39a3ee5e6b4b0d3255bfef95601890afd80709')
+        'da39a3ee5e6b4b0d3255bfef95601890afd80709')
     digest_object.update('a'.encode('utf-8'))
     self.assertEqual(digest_object.hexdigest(),
-                    '86f7e437faa5a7fce15d1ddcb9eaeaea377667b8')
+        '86f7e437faa5a7fce15d1ddcb9eaeaea377667b8')
     digest_object.update('bbb'.encode('utf-8'))
     self.assertEqual(digest_object.hexdigest(),
-                    'd7bfa42fc62b697bf6cf1cda9af1fb7f40a27817')
+        'd7bfa42fc62b697bf6cf1cda9af1fb7f40a27817')
     digest_object.update(''.encode('utf-8'))
     self.assertEqual(digest_object.hexdigest(),
-                    'd7bfa42fc62b697bf6cf1cda9af1fb7f40a27817')
+        'd7bfa42fc62b697bf6cf1cda9af1fb7f40a27817')
 
 
   def test_sha224_update(self):
@@ -102,16 +97,16 @@ class TestHash(unittest.TestCase):
     digest_object = securesystemslib.hash.digest('sha224', library)
 
     self.assertEqual(digest_object.hexdigest(),
-                    'd14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f')
+        'd14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f')
     digest_object.update('a'.encode('utf-8'))
     self.assertEqual(digest_object.hexdigest(),
-                    'abd37534c7d9a2efb9465de931cd7055ffdb8879563ae98078d6d6d5')
+        'abd37534c7d9a2efb9465de931cd7055ffdb8879563ae98078d6d6d5')
     digest_object.update('bbb'.encode('utf-8'))
     self.assertEqual(digest_object.hexdigest(),
-                    'ab1342f31c2a6f242d9a3cefb503fb49465c95eb255c16ad791d688c')
+        'ab1342f31c2a6f242d9a3cefb503fb49465c95eb255c16ad791d688c')
     digest_object.update(''.encode('utf-8'))
     self.assertEqual(digest_object.hexdigest(),
-                    'ab1342f31c2a6f242d9a3cefb503fb49465c95eb255c16ad791d688c')
+        'ab1342f31c2a6f242d9a3cefb503fb49465c95eb255c16ad791d688c')
 
 
   def test_sha256_update(self):
@@ -121,16 +116,16 @@ class TestHash(unittest.TestCase):
   def _do_sha256_update(self, library):
     digest_object = securesystemslib.hash.digest('sha256', library)
     self.assertEqual(digest_object.hexdigest(),
-            'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
+        'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
     digest_object.update('a'.encode('utf-8'))
     self.assertEqual(digest_object.hexdigest(),
-            'ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb')
+        'ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb')
     digest_object.update('bbb'.encode('utf-8'))
     self.assertEqual(digest_object.hexdigest(),
-            '01d162a5c95d4698c0a3e766ae80d85994b549b877ed275803725f43dadc83bd')
+        '01d162a5c95d4698c0a3e766ae80d85994b549b877ed275803725f43dadc83bd')
     digest_object.update(''.encode('utf-8'))
     self.assertEqual(digest_object.hexdigest(),
-            '01d162a5c95d4698c0a3e766ae80d85994b549b877ed275803725f43dadc83bd')
+        '01d162a5c95d4698c0a3e766ae80d85994b549b877ed275803725f43dadc83bd')
 
 
   def test_sha384_update(self):
@@ -185,7 +180,8 @@ class TestHash(unittest.TestCase):
 
 
   def _do_unsupported_algorithm(self, library):
-    self.assertRaises(securesystemslib.exceptions.UnsupportedAlgorithmError, securesystemslib.hash.digest, 'bogus')
+    self.assertRaises(securesystemslib.exceptions.UnsupportedAlgorithmError,
+        securesystemslib.hash.digest, 'bogus')
 
 
   def test_digest_size(self):
@@ -214,7 +210,8 @@ class TestHash(unittest.TestCase):
       for algorithm in ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512']:
         digest_object_truth = securesystemslib.hash.digest(algorithm, library)
         digest_object_truth.update(data.encode('utf-8'))
-        digest_object = securesystemslib.hash.digest_filename(filename, algorithm, library)
+        digest_object = securesystemslib.hash.digest_filename(filename,
+            algorithm, library)
         self.assertEqual(digest_object_truth.digest(), digest_object.digest())
 
     finally:
@@ -232,20 +229,19 @@ class TestHash(unittest.TestCase):
     for algorithm in ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512']:
       digest_object_truth = securesystemslib.hash.digest(algorithm, library)
       digest_object_truth.update(data.encode('utf-8'))
-      digest_object = securesystemslib.hash.digest_fileobject(file_obj, algorithm, library)
+      digest_object = securesystemslib.hash.digest_fileobject(file_obj,
+          algorithm, library)
+
       # Note: we don't seek because the update_file_obj call is supposed
       # to always seek to the beginning.
       self.assertEqual(digest_object_truth.digest(), digest_object.digest())
 
 
   def test_unsupported_digest_algorithm_and_library(self):
-    self.assertRaises(securesystemslib.exceptions.UnsupportedAlgorithmError, securesystemslib.hash.digest,
-                      'sha123', 'hashlib')
-    self.assertRaises(securesystemslib.exceptions.UnsupportedAlgorithmError, securesystemslib.hash.digest,
-                      'sha123', 'pycrypto')
-
-    self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError, securesystemslib.hash.digest,
-                      'sha256', 'badlib')
+    self.assertRaises(securesystemslib.exceptions.UnsupportedAlgorithmError,
+        securesystemslib.hash.digest, 'sha123', 'hashlib')
+    self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError,
+        securesystemslib.hash.digest, 'sha256', 'badlib')
 
 
 # Run unit test.

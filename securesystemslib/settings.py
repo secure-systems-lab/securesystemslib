@@ -44,25 +44,5 @@ temporary_directory = None
 # https://en.wikipedia.org/wiki/PBKDF2
 PBKDF2_ITERATIONS = 100000
 
-# Supported cryptography libraries that can be used to generate and verify RSA
-# keys and signatures:  ['pycrypto', 'pyca-cryptography']
-RSA_CRYPTO_LIBRARY = 'pyca-cryptography'
-
-# Supported Ed25519 cryptography libraries: ['pynacl', 'ed25519']
-ED25519_CRYPTO_LIBRARY = 'ed25519'
-
-# Supported ECDSA cryptography libraries: ['pyca-cryptography']
-ECDSA_CRYPTO_LIBRARY = 'pyca-cryptography'
-
-# General purpose cryptography. Algorithms and functions that fall under
-# general purpose include AES, PBKDF2, cryptographically strong random number
-# generators, and cryptographic hash functions.  The majority of the general
-# cryptography is needed by the repository and developer tools.
-# RSA_CRYPTO_LIBRARY and ED25519_CRYPTO_LIBRARY are needed on the client side
-# of the software updater.
-# Supported libraries for general-purpose cryptography:  ['pycrypto',
-# 'pyca-cryptography']
-GENERAL_CRYPTO_LIBRARY = 'pyca-cryptography'
-
 # The algorithm(s) in HASH_ALGORITHMS are used to generate key IDs.
 HASH_ALGORITHMS = ['sha256', 'sha512']
