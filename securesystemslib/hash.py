@@ -110,7 +110,7 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
       raise securesystemslib.exceptions.UnsupportedAlgorithmError(algorithm)
 
   # Was a pyca_crypto digest object requested and is it supported?
-  elif hash_library == 'pyca_crypto' and hash_library in SUPPORTED_LIBRARIES:
+  elif hash_library == 'pyca_crypto' and hash_library in SUPPORTED_LIBRARIES: #pragma: no cover
     # TODO: Add support for pyca/cryptography's hashing routines.
     pass
 
