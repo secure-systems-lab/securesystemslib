@@ -192,9 +192,6 @@ ECDSA_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String('ecdsa-sha2-nistp256')])
 # as requiring them to be a power of 2.
 NUMBINS_SCHEMA = SCHEMA.Integer(lo=1)
 
-# A PyCrypto signature.
-PYCRYPTOSIGNATURE_SCHEMA = SCHEMA.AnyBytes()
-
 # A pyca-cryptography signature.
 PYCACRYPTOSIGNATURE_SCHEMA = SCHEMA.AnyBytes()
 
