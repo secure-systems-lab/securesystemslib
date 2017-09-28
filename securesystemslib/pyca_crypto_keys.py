@@ -209,20 +209,20 @@ def generate_rsa_public_and_private(bits=_DEFAULT_RSA_KEY_BITS):
   # and a 2048-bit minimum is enforced by
   # securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match().
   private_key = rsa.generate_private_key(public_exponent=65537, key_size=bits,
-                                         backend=default_backend())
+      backend=default_backend())
 
   # Extract the public & private halves of the RSA key and generate their
   # PEM-formatted representations.  Return the key pair as a (public, private)
   # tuple, where each RSA is a string in PEM format.
   private_pem = private_key.private_bytes(encoding=serialization.Encoding.PEM,
-                        format=serialization.PrivateFormat.TraditionalOpenSSL,
-                        encryption_algorithm=serialization.NoEncryption())
+      format=serialization.PrivateFormat.TraditionalOpenSSL,
+      encryption_algorithm=serialization.NoEncryption())
 
   # Need to generate the public pem from the private key before serialization
   # to PEM.
   public_key = private_key.public_key()
   public_pem = public_key.public_bytes(encoding=serialization.Encoding.PEM,
-                    format=serialization.PublicFormat.SubjectPublicKeyInfo)
+      format=serialization.PublicFormat.SubjectPublicKeyInfo)
 
   return public_pem.decode(), private_pem.decode()
 
@@ -313,14 +313,13 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
         # pyca/cryptography private key object before a signature can be
         # generated.
         private_key_object = load_pem_private_key(private_key.encode('utf-8'),
-                                                  password=None,
-                                                  backend=default_backend())
+            password=None, backend=default_backend())
 
         # Calculate the SHA256 hash of 'data' and generate the hash's PKCS1-PSS
         # signature.
         rsa_signer = \
           private_key_object.signer(padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
-                        salt_length=hashes.SHA256().digest_size), hashes.SHA256())
+              salt_length=hashes.SHA256().digest_size), hashes.SHA256())
 
       # If the PEM data could not be decrypted, or if its structure could not be
       # decoded successfully.
@@ -439,14 +438,12 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
   # Verify the RSASSA-PSS signature with pyca/cryptography.
   try:
     public_key_object = serialization.load_pem_public_key(public_key.encode('utf-8'),
-                                                   backend=default_backend())
+        backend=default_backend())
 
-    # 'salt_length' is set to the digest size of the hashing algorithm (to
-    # match the default size used by 'securesystemslib.pycrypto_keys.py').
+    # 'salt_length' is set to the digest size of the hashing algorithm.
     verifier = public_key_object.verifier(signature,
-                                padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
-                                salt_length=hashes.SHA256().digest_size),
-                                hashes.SHA256())
+        padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
+        salt_length=hashes.SHA256().digest_size), hashes.SHA256())
 
     verifier.update(data)
 
@@ -518,8 +515,7 @@ def create_rsa_encrypted_pem(private_key, passphrase):
   if len(private_key):
     try:
       private_key = load_pem_private_key(private_key.encode('utf-8'),
-                                         password=None,
-                                         backend=default_backend())
+          password=None, backend=default_backend())
     except ValueError:
       raise securesystemslib.exceptions.CryptoError('The private key'
           ' (in PEM format) could not be deserialized.')
@@ -616,13 +612,13 @@ def create_rsa_public_and_private_from_pem(pem, passphrase=None):
     securesystemslib.formats.PASSWORD_SCHEMA.check_match(passphrase)
     passphrase = passphrase.encode('utf-8')
 
-  # Generate a pyca/cryptography key object from 'pem'.  The
-  # generated PyCrypto key contains the required export methods needed to
+  # Generate a pyca/cryptography key object from 'pem'.  The generated
+  # pyca/cryptography key contains the required export methods needed to
   # generate the PEM-formatted representations of the public and private RSA
   # key.
   try:
     private_key = load_pem_private_key(pem.encode('utf-8'),
-                                       passphrase, backend=default_backend())
+        passphrase, backend=default_backend())
 
   # pyca/cryptography's expected exceptions for 'load_pem_private_key()':
   # ValueError: If the PEM data could not be decrypted.
@@ -645,14 +641,14 @@ def create_rsa_public_and_private_from_pem(pem, passphrase=None):
   # PEM-formatted representations.  Return the key pair as a (public, private)
   # tuple, where each RSA is a string in PEM format.
   private_pem = private_key.private_bytes(encoding=serialization.Encoding.PEM,
-                        format=serialization.PrivateFormat.TraditionalOpenSSL,
-                        encryption_algorithm=serialization.NoEncryption())
+      format=serialization.PrivateFormat.TraditionalOpenSSL,
+      encryption_algorithm=serialization.NoEncryption())
 
   # Need to generate the public key from the private one before serializing
   # to PEM format.
   public_key = private_key.public_key()
   public_pem = public_key.public_bytes(encoding=serialization.Encoding.PEM,
-                    format=serialization.PublicFormat.SubjectPublicKeyInfo)
+      format=serialization.PublicFormat.SubjectPublicKeyInfo)
 
   return public_pem.decode(), private_pem.decode()
 
@@ -917,7 +913,7 @@ def _encrypt(key_data, derived_key_information):
   # generated IV.
   symmetric_key = derived_key_information['derived_key']
   encryptor = Cipher(algorithms.AES(symmetric_key), modes.CTR(iv),
-                     backend=default_backend()).encryptor()
+      backend=default_backend()).encryptor()
 
   # Encrypt the plaintext and get the associated ciphertext.
   # Do we need to check for any exceptions?
@@ -930,7 +926,7 @@ def _encrypt(key_data, derived_key_information):
   salt = derived_key_information['salt']
   hmac_object = \
     cryptography.hazmat.primitives.hmac.HMAC(symmetric_key, hashes.SHA256(),
-                                             backend=default_backend())
+        backend=default_backend())
   hmac_object.update(ciphertext)
   hmac_value = binascii.hexlify(hmac_object.finalize())
 
@@ -945,10 +941,10 @@ def _encrypt(key_data, derived_key_information):
   # arbitrarily chosen and should not occur in the hexadecimal representations
   # of the fields it is separating.
   return binascii.hexlify(salt).decode() + _ENCRYPTION_DELIMITER + \
-         str(iterations) + _ENCRYPTION_DELIMITER + \
-         hmac_value.decode() + _ENCRYPTION_DELIMITER + \
-         binascii.hexlify(iv).decode() + _ENCRYPTION_DELIMITER + \
-         binascii.hexlify(ciphertext).decode()
+      str(iterations) + _ENCRYPTION_DELIMITER + \
+      hmac_value.decode() + _ENCRYPTION_DELIMITER + \
+      binascii.hexlify(iv).decode() + _ENCRYPTION_DELIMITER + \
+      binascii.hexlify(ciphertext).decode()
 
 
 
@@ -993,7 +989,7 @@ def _decrypt(file_contents, password):
   # a decryption operation.
   generated_hmac_object = \
     cryptography.hazmat.primitives.hmac.HMAC(symmetric_key, hashes.SHA256(),
-                                             backend=default_backend())
+        backend=default_backend())
   generated_hmac_object.update(ciphertext)
   generated_hmac = binascii.hexlify(generated_hmac_object.finalize())
 
@@ -1003,7 +999,7 @@ def _decrypt(file_contents, password):
 
   # Construct a Cipher object, with the key and iv.
   decryptor = Cipher(algorithms.AES(symmetric_key), modes.CTR(iv),
-                     backend=default_backend()).decryptor()
+      backend=default_backend()).decryptor()
 
   # Decryption gets us the authenticated plaintext.
   plaintext = decryptor.update(ciphertext) + decryptor.finalize()
