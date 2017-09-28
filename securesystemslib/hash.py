@@ -58,7 +58,7 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
     # algorithm and library.
     digest_object = securesystemslib.hash.digest()
     digest_object = securesystemslib.hash.digest('sha384')
-    digest_object = securesystemslib.hash.digest('pycrypto')
+    digest_object = securesystemslib.hash.digest('sha256', 'hashlib')
 
     # The expected interface for digest objects.
     digest_object.digest_size

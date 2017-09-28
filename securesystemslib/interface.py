@@ -104,7 +104,7 @@ def _get_password(prompt='Password: ', confirm=False):
 
 
 def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
-                                   password=None):
+    password=None):
   """
   <Purpose>
     Generate an RSA key pair.  The public portion of the generated RSA key is
@@ -113,19 +113,14 @@ def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
     the 'password' is an empty string, the private key is saved unencrypted to
     <'filepath'>.
 
-    Which cryptography library performs the cryptographic decryption is
-    determined by the string set in 'settings.RSA_CRYPTO_LIBRARY'.  The
-    PyCrypto and pyca/cryprtography libraries are currently supported.  If
-    pycrypto is set, the PEM private key is encrypted with 3DES and CBC the
-    mode of operation.  The password is strengthened with PBKDF1-MD5.  If
-    pyca/cryptography is set, the best available form of encryption, for a
-    given key's backend, is used.  According to their documentation, "it is a
-    curated encryption choice and the algorithm may change over time."
+    The best available form of encryption, for a given key's backend, is used
+    with pyca/cryptography.  According to their documentation, "it is a curated
+    encryption choice and the algorithm may change over time."
 
   <Arguments>
     filepath:
-      The public and private key files are saved to <filepath>.pub, <filepath>,
-      respectively.
+      The public and private key files are saved to <filepath>.pub and
+      <filepath>, respectively.
 
     bits:
       The number of bits of the generated RSA key.
@@ -206,13 +201,6 @@ def import_rsa_privatekey_from_file(filepath, password=None,
     Import the encrypted PEM file in 'filepath', decrypt it, and return the key
     object in 'securesystemslib.formats.RSAKEY_SCHEMA' format.
 
-    Which cryptography library performs the cryptographic decryption is
-    determined by the string set in 'settings.RSA_CRYPTO_LIBRARY'.  PyCrypto
-    currently supported.
-
-    The PEM private key is encrypted with 3DES and CBC the mode of operation.
-    The password is strengthened with PBKDF1-MD5.
-
   <Arguments>
     filepath:
       <filepath> file, an RSA encrypted PEM file.  Unlike the public RSA PEM
@@ -264,10 +252,12 @@ def import_rsa_privatekey_from_file(filepath, password=None,
   # Convert 'pem_key' to 'securesystemslib.formats.RSAKEY_SCHEMA' format.
   # Raise 'securesystemslib.exceptions.CryptoError' if 'pem_key' is invalid.
   if len(password):
-    rsa_key = securesystemslib.keys.import_rsakey_from_private_pem(pem, scheme, password)
+    rsa_key = securesystemslib.keys.import_rsakey_from_private_pem(pem,
+        scheme, password)
 
   else:
-    logger.debug('An empty password was given.  Attempting to import an unencrypted file.')
+    logger.debug('An empty password was given.  Attempting to import an'
+        ' unencrypted file.')
     rsa_key = securesystemslib.keys.import_rsakey_from_private_pem(pem,
     scheme, password=None)
 
@@ -284,17 +274,13 @@ def import_rsa_publickey_from_file(filepath):
     format 'securesystemslib.formats.RSAKEY_SCHEMA'.  If the RSA PEM in
     'filepath' contains a private key, it is discarded.
 
-    Which cryptography library performs the cryptographic decryption is
-    determined by the string set in 'settings.RSA_CRYPTO_LIBRARY'.  PyCrypto
-    currently supported.  If the RSA PEM in 'filepath' contains a private key,
-    it is discarded.
-
   <Arguments>
     filepath:
       <filepath>.pub file, an RSA PEM file.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError, if 'filepath' is improperly formatted.
+    securesystemslib.exceptions.FormatError, if 'filepath' is improperly
+    formatted.
 
     securesystemslib.exceptions.Error, if a valid RSA key object cannot be
     generated.  This may be caused by an improperly formatted PEM file.
@@ -336,13 +322,10 @@ def generate_and_write_ed25519_keypair(filepath, password=None):
   <Purpose>
     Generate an Ed25519 key file, create an encrypted key (using 'password'
     as the pass phrase), and store it in 'filepath'.  The public key portion of
-    the generated ED25519 key is stored in <'filepath'>.pub.  Which cryptography
-    library performs the cryptographic decryption is determined by the string
-    set in 'settings.ED25519_CRYPTO_LIBRARY'.
+    the generated ED25519 key is stored in <'filepath'>.pub.
 
-    PyCrypto currently supported.  The Ed25519 private key is encrypted with
-    AES-256 and CTR the mode of operation.  The password is strengthened with
-    PBKDF2-HMAC-SHA256.
+    The Ed25519 private key is encrypted with AES-256 and CTR the mode of
+    operation.  The password is strengthened with PBKDF2-HMAC-SHA256.
 
   <Arguments>
     filepath:
@@ -351,7 +334,7 @@ def generate_and_write_ed25519_keypair(filepath, password=None):
 
     password:
       The password, or passphrase, to encrypt the private portion of the
-      generated ed25519 key.  A symmetric encryption key is derived from
+      generated Ed25519 key.  A symmetric encryption key is derived from
       'password', so it is not directly used.
 
   <Exceptions>
@@ -360,8 +343,8 @@ def generate_and_write_ed25519_keypair(filepath, password=None):
 
     securesystemslib.exceptions.CryptoError, if 'filepath' cannot be encrypted.
 
-    securesystemslib.exceptions.UnsupportedLibraryError, if 'filepath' cannot be
-    encrypted due to an invalid configuration setting (i.e., invalid
+    securesystemslib.exceptions.UnsupportedLibraryError, if 'filepath' cannot
+    be encrypted due to an invalid configuration setting (i.e., invalid
     'settings.py' setting).
 
   <Side Effects>
@@ -404,8 +387,8 @@ def generate_and_write_ed25519_keypair(filepath, password=None):
     securesystemslib.keys.format_keyval_to_metadata(keytype, scheme, keyval,
     private=False)
 
-  # Write the public key, conformant to 'securesystemslib.formats.KEY_SCHEMA', to
-  # '<filepath>.pub'.
+  # Write the public key, conformant to 'securesystemslib.formats.KEY_SCHEMA',
+  # to '<filepath>.pub'.
   securesystemslib.util.ensure_parent_dir(filepath)
 
   # Create a tempororary file, write the contents of the public key, and move
@@ -461,7 +444,8 @@ def import_ed25519_publickey_from_file(filepath):
   # loaded key object in securesystemslib.formats.ED25519KEY_SCHEMA' format that
   # also includes the keyid.
   ed25519_key_metadata = securesystemslib.util.load_json_file(filepath)
-  ed25519_key, junk = securesystemslib.keys.format_metadata_to_key(ed25519_key_metadata)
+  ed25519_key, junk = \
+    securesystemslib.keys.format_metadata_to_key(ed25519_key_metadata)
 
   # Raise an exception if an unexpected key type is imported.  Redundant
   # validation of 'keytype'.  'securesystemslib.keys.format_metadata_to_key()'
@@ -481,10 +465,6 @@ def import_ed25519_privatekey_from_file(filepath, password=None):
   <Purpose>
     Import the encrypted ed25519 key file in 'filepath', decrypt it, and return
     the key object in 'securesystemslib.formats.ED25519KEY_SCHEMA' format.
-
-    Which cryptography library performs the cryptographic decryption is
-    determined by the string set in 'settings.ED25519_CRYPTO_LIBRARY'.
-    PyCrypto and pyca/cryptography currently supported.
 
     The private key (may also contain the public part) is encrypted with AES
     256 and CTR the mode of operation.  The password is strengthened with
@@ -546,7 +526,8 @@ def import_ed25519_privatekey_from_file(filepath, password=None):
   # 'password'.  Raise 'securesystemslib.exceptions.CryptoError' or
   # 'securesystemslib.exceptions.UnsupportedLibraryError' if the decryption
   # fails.
-  key_object = securesystemslib.keys.decrypt_key(encrypted_key.decode('utf-8'), password)
+  key_object = securesystemslib.keys.decrypt_key(encrypted_key.decode('utf-8'),
+      password)
 
   # Raise an exception if an unexpected key type is imported.
   if key_object['keytype'] != 'ed25519':
@@ -634,10 +615,11 @@ def generate_and_write_ecdsa_keypair(filepath, password=None):
   scheme = ecdsa_key['scheme']
 
   ecdsakey_metadata_format = \
-    securesystemslib.keys.format_keyval_to_metadata(keytype, scheme, keyval, private=False)
+    securesystemslib.keys.format_keyval_to_metadata(keytype, scheme,
+        keyval, private=False)
 
-  # Write the public key, conformant to 'securesystemslib.formats.KEY_SCHEMA', to
-  # '<filepath>.pub'.
+  # Write the public key, conformant to 'securesystemslib.formats.KEY_SCHEMA',
+  # to '<filepath>.pub'.
   securesystemslib.util.ensure_parent_dir(filepath)
 
   # Create a tempororary file, write the contents of the public key, and move
@@ -693,7 +675,8 @@ def import_ecdsa_publickey_from_file(filepath):
   # loaded key object in securesystemslib.formats.ECDSAKEY_SCHEMA' format that
   # also includes the keyid.
   ecdsa_key_metadata = securesystemslib.util.load_json_file(filepath)
-  ecdsa_key, junk = securesystemslib.keys.format_metadata_to_key(ecdsa_key_metadata)
+  ecdsa_key, junk = \
+    securesystemslib.keys.format_metadata_to_key(ecdsa_key_metadata)
 
   # Raise an exception if an unexpected key type is imported.  Redundant
   # validation of 'keytype'.  'securesystemslib.keys.format_metadata_to_key()'
@@ -773,7 +756,8 @@ def import_ecdsa_privatekey_from_file(filepath, password=None):
   # 'password'.  Raise 'securesystemslib.exceptions.CryptoError' or
   # 'securesystemslib.exceptions.UnsupportedLibraryError' if the decryption
   # fails.
-  key_object = securesystemslib.keys.decrypt_key(encrypted_key.decode('utf-8'), password)
+  key_object = securesystemslib.keys.decrypt_key(encrypted_key.decode('utf-8'),
+      password)
 
   # Raise an exception if an unexpected key type is imported.
   if key_object['keytype'] != 'ecdsa-sha2-nistp256':
