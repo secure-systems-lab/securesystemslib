@@ -56,7 +56,8 @@ class TestKeys(unittest.TestCase):
 
     # Check if the format of the object returned by generate() corresponds
     # to RSAKEY_SCHEMA format.
-    self.assertEqual(None, securesystemslib.formats.RSAKEY_SCHEMA.check_match(_rsakey_dict),
+    self.assertEqual(None,
+        securesystemslib.formats.RSAKEY_SCHEMA.check_match(_rsakey_dict),
         FORMAT_ERROR_MSG)
 
     # Passing a bit value that is <2048 to generate() - should raise
@@ -81,17 +82,17 @@ class TestKeys(unittest.TestCase):
     # Check if the format of the object returned by generate_ecdsa_key()
     # corresponds to ECDSAKEY_SCHEMA format.
     self.assertEqual(None,
-      securesystemslib.formats.ECDSAKEY_SCHEMA.check_match(_ecdsakey_dict),
-      FORMAT_ERROR_MSG)
+        securesystemslib.formats.ECDSAKEY_SCHEMA.check_match(_ecdsakey_dict),
+        FORMAT_ERROR_MSG)
 
     # Passing an invalid algorithm to generate() should raise
     # 'securesystemslib.exceptions.FormatError'.
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      KEYS.generate_rsa_key, 'bad_algorithm')
+        KEYS.generate_rsa_key, 'bad_algorithm')
 
     # Passing a string instead of integer for a bit value.
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      KEYS.generate_rsa_key, 123)
+        KEYS.generate_rsa_key, 123)
 
 
 
@@ -107,11 +108,13 @@ class TestKeys(unittest.TestCase):
     self.assertEqual(None,
         securesystemslib.formats.KEY_SCHEMA.check_match(key_meta),
         FORMAT_ERROR_MSG)
-    key_meta = KEYS.format_keyval_to_metadata(keytype, scheme, keyvalue, private=True)
+    key_meta = KEYS.format_keyval_to_metadata(keytype, scheme,
+        keyvalue, private=True)
 
     # Check if the format of the object returned by this function corresponds
     # to KEY_SCHEMA format.
-    self.assertEqual(None, securesystemslib.formats.KEY_SCHEMA.check_match(key_meta),
+    self.assertEqual(None,
+        securesystemslib.formats.KEY_SCHEMA.check_match(key_meta),
         FORMAT_ERROR_MSG)
 
     # Supplying a 'bad' keyvalue.
@@ -336,7 +339,8 @@ class TestKeys(unittest.TestCase):
     self.assertFalse(verified,
         'Returned \'True\' on an incorrect signature.')
 
-    verified = KEYS.verify_signature(self.ed25519key_dict, ed25519_signature, _DATA)
+    verified = KEYS.verify_signature(self.ed25519key_dict,
+        ed25519_signature, _DATA)
     self.assertFalse(verified,
         'Returned \'True\' on an incorrect signature.')
 
@@ -371,7 +375,8 @@ class TestKeys(unittest.TestCase):
     # is unavailable) is executed in securesystemslib.keys.verify_signature().
     KEYS._ED25519_CRYPTO_LIBRARY = 'invalid'
     KEYS._available_crypto_libraries = ['invalid']
-    verified = KEYS.verify_signature(self.ed25519key_dict, ed25519_signature, DATA)
+    verified = KEYS.verify_signature(self.ed25519key_dict,
+        ed25519_signature, DATA)
     self.assertTrue(verified, "Incorrect signature.")
 
 
@@ -386,7 +391,8 @@ class TestKeys(unittest.TestCase):
     self.assertTrue(KEYS.is_pem_private(encrypted_pem))
 
     # Try to import the encrypted PEM file.
-    rsakey = KEYS.import_rsakey_from_private_pem(encrypted_pem, scheme, passphrase)
+    rsakey = KEYS.import_rsakey_from_private_pem(encrypted_pem,
+        scheme, passphrase)
     self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(rsakey))
 
     # Test improperly formatted arguments.
@@ -457,8 +463,10 @@ class TestKeys(unittest.TestCase):
     self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(private_rsakey))
 
     # Verify whitespace is stripped.
-    self.assertEqual(public_rsakey, KEYS.import_rsakey_from_pem(public_pem + '\n'))
-    self.assertEqual(private_rsakey, KEYS.import_rsakey_from_pem(private_pem + '\n'))
+    self.assertEqual(public_rsakey,
+        KEYS.import_rsakey_from_pem(public_pem + '\n'))
+    self.assertEqual(private_rsakey,
+        KEYS.import_rsakey_from_pem(private_pem + '\n'))
 
     # Supplying a 'bad_pem' argument.
     self.assertRaises(securesystemslib.exceptions.FormatError,
@@ -498,7 +506,8 @@ class TestKeys(unittest.TestCase):
     # Test for an encrypted PEM.
     scheme = 'ecdsa-sha2-nistp256'
     encrypted_pem = \
-      securesystemslib.ecdsa_keys.create_ecdsa_encrypted_pem(private_pem, 'password')
+      securesystemslib.ecdsa_keys.create_ecdsa_encrypted_pem(private_pem,
+        'password')
     private_ecdsakey = KEYS.import_ecdsakey_from_private_pem(encrypted_pem.decode('utf-8'),
         scheme, 'password')
 
@@ -553,8 +562,10 @@ class TestKeys(unittest.TestCase):
     self.assertTrue(securesystemslib.formats.ECDSAKEY_SCHEMA.matches(private_ecdsakey))
 
     # Verify whitespace is stripped.
-    self.assertEqual(public_ecdsakey, KEYS.import_ecdsakey_from_pem(public_pem + '\n'))
-    self.assertEqual(private_ecdsakey, KEYS.import_ecdsakey_from_pem(private_pem + '\n'))
+    self.assertEqual(public_ecdsakey,
+        KEYS.import_ecdsakey_from_pem(public_pem + '\n'))
+    self.assertEqual(private_ecdsakey,
+        KEYS.import_ecdsakey_from_pem(private_pem + '\n'))
 
     # Supplying a 'bad_pem' argument.
     self.assertRaises(securesystemslib.exceptions.FormatError,
@@ -625,7 +636,8 @@ class TestKeys(unittest.TestCase):
     pem_footer = '-----END RSA PRIVATE KEY-----'
 
     private_header_start = private_pem.index(pem_header)
-    private_footer_start = private_pem.index(pem_footer, private_header_start + len(pem_header))
+    private_footer_start = private_pem.index(pem_footer,
+        private_header_start + len(pem_header))
 
     private_missing_header = private_pem[private_header_start + len(pem_header):private_footer_start + len(pem_footer)]
     private_missing_footer = private_pem[private_header_start:private_footer_start]
@@ -634,7 +646,8 @@ class TestKeys(unittest.TestCase):
     pem_footer = '-----END PUBLIC KEY-----'
 
     public_header_start = public_pem.index(pem_header)
-    public_footer_start = public_pem.index(pem_footer, public_header_start + len(pem_header))
+    public_footer_start = public_pem.index(pem_footer,
+        public_header_start + len(pem_header))
 
     public_missing_header = public_pem[public_header_start + len(pem_header):public_footer_start + len(pem_footer)]
     public_missing_footer = public_pem[public_header_start:public_footer_start]

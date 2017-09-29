@@ -90,7 +90,8 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Test normal case.
     temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
     test_keypath = os.path.join(temporary_directory, 'rsa_key')
-    test_keypath_unencrypted = os.path.join(temporary_directory, 'rsa_key_unencrypted')
+    test_keypath_unencrypted = os.path.join(temporary_directory,
+        'rsa_key_unencrypted')
 
     interface.generate_and_write_rsa_keypair(test_keypath, password='pw')
     self.assertTrue(os.path.exists(test_keypath))
@@ -98,7 +99,8 @@ class TestInterfaceFunctions(unittest.TestCase):
 
     # If an empty string is given for 'password', the private key file
     # is written to disk unencrypted.
-    interface.generate_and_write_rsa_keypair(test_keypath_unencrypted, password='')
+    interface.generate_and_write_rsa_keypair(test_keypath_unencrypted,
+        password='')
     self.assertTrue(os.path.exists(test_keypath_unencrypted))
     self.assertTrue(os.path.exists(test_keypath_unencrypted + '.pub'))
 
@@ -121,7 +123,7 @@ class TestInterfaceFunctions(unittest.TestCase):
     os.remove(test_keypath)
     os.remove(test_keypath + '.pub')
     interface.generate_and_write_rsa_keypair(test_keypath, bits=2048,
-                                             password='pw')
+        password='pw')
     self.assertTrue(os.path.exists(test_keypath))
     self.assertTrue(os.path.exists(test_keypath + '.pub'))
 
@@ -148,35 +150,35 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Test normal case.
     temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
 
-    # Load one of the pre-generated key files from 'securesystemslib/tests/repository_data'.
-    # 'password' unlocks the pre-generated key files.
-    key_filepath = os.path.join('data', 'keystore',
-                                'rsa_key')
+    # Load one of the pre-generated key files from
+    # 'securesystemslib/tests/repository_data'.  'password' unlocks the
+    # pre-generated key files.
+    key_filepath = os.path.join('data', 'keystore', 'rsa_key')
     self.assertTrue(os.path.exists(key_filepath))
 
-    imported_rsa_key = interface.import_rsa_privatekey_from_file(key_filepath,
-                                                                 'password')
+    imported_rsa_key = interface.import_rsa_privatekey_from_file(
+        key_filepath, 'password')
     self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_rsa_key))
 
 
     # Test improperly formatted argument.
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      interface.import_rsa_privatekey_from_file, 3, 'pw')
+        interface.import_rsa_privatekey_from_file, 3, 'pw')
 
 
     # Test invalid argument.
     # Non-existent key file.
     nonexistent_keypath = os.path.join(temporary_directory,
-                                       'nonexistent_keypath')
+        'nonexistent_keypath')
     self.assertRaises(IOError, interface.import_rsa_privatekey_from_file,
-                      nonexistent_keypath, 'pw')
+        nonexistent_keypath, 'pw')
 
     # Invalid key file argument.
     invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
     with open(invalid_keyfile, 'wb') as file_object:
       file_object.write(b'bad keyfile')
-    self.assertRaises(securesystemslib.exceptions.CryptoError, interface.import_rsa_privatekey_from_file,
-                      invalid_keyfile, 'pw')
+    self.assertRaises(securesystemslib.exceptions.CryptoError,
+        interface.import_rsa_privatekey_from_file, invalid_keyfile, 'pw')
 
 
 
@@ -185,8 +187,7 @@ class TestInterfaceFunctions(unittest.TestCase):
     temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
 
     # Load one of the pre-generated key files from 'securesystemslib/tests/data'.
-    key_filepath = os.path.join('data', 'keystore',
-                                'rsa_key.pub')
+    key_filepath = os.path.join('data', 'keystore', 'rsa_key.pub')
     self.assertTrue(os.path.exists(key_filepath))
 
     imported_rsa_key = interface.import_rsa_publickey_from_file(key_filepath)
@@ -195,22 +196,22 @@ class TestInterfaceFunctions(unittest.TestCase):
 
     # Test improperly formatted argument.
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      interface.import_rsa_privatekey_from_file, 3)
+        interface.import_rsa_privatekey_from_file, 3)
 
 
     # Test invalid argument.
     # Non-existent key file.
     nonexistent_keypath = os.path.join(temporary_directory,
-                                       'nonexistent_keypath')
+        'nonexistent_keypath')
     self.assertRaises(IOError, interface.import_rsa_publickey_from_file,
-                      nonexistent_keypath)
+        nonexistent_keypath)
 
     # Invalid key file argument.
     invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
     with open(invalid_keyfile, 'wb') as file_object:
       file_object.write(b'bad keyfile')
-    self.assertRaises(securesystemslib.exceptions.Error, interface.import_rsa_publickey_from_file,
-                      invalid_keyfile)
+    self.assertRaises(securesystemslib.exceptions.Error,
+        interface.import_rsa_publickey_from_file, invalid_keyfile)
 
 
 
@@ -236,10 +237,9 @@ class TestInterfaceFunctions(unittest.TestCase):
 
     # Test improperly formatted arguments.
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      interface.generate_and_write_ed25519_keypair,
-                      3, password='pw')
-    self.assertRaises(securesystemslib.exceptions.FormatError, interface.generate_and_write_rsa_keypair,
-                      test_keypath, password=3)
+        interface.generate_and_write_ed25519_keypair, 3, password='pw')
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        interface.generate_and_write_rsa_keypair, test_keypath, password=3)
 
 
 
@@ -257,23 +257,23 @@ class TestInterfaceFunctions(unittest.TestCase):
 
     # Test improperly formatted argument.
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      interface.import_ed25519_publickey_from_file, 3)
+        interface.import_ed25519_publickey_from_file, 3)
 
 
     # Test invalid argument.
     # Non-existent key file.
     nonexistent_keypath = os.path.join(temporary_directory,
-                                       'nonexistent_keypath')
+        'nonexistent_keypath')
     self.assertRaises(IOError, interface.import_ed25519_publickey_from_file,
-                      nonexistent_keypath)
+        nonexistent_keypath)
 
     # Invalid key file argument.
     invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
     with open(invalid_keyfile, 'wb') as file_object:
       file_object.write(b'bad keyfile')
 
-    self.assertRaises(securesystemslib.exceptions.Error, interface.import_ed25519_publickey_from_file,
-                      invalid_keyfile)
+    self.assertRaises(securesystemslib.exceptions.Error,
+        interface.import_ed25519_publickey_from_file, invalid_keyfile)
 
     # Invalid public key imported (contains unexpected keytype.)
     keytype = imported_ed25519_key['keytype']
@@ -289,8 +289,8 @@ class TestInterfaceFunctions(unittest.TestCase):
       file_object.write(json.dumps(ed25519key_metadata_format).encode('utf-8'))
 
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      interface.import_ed25519_publickey_from_file,
-                      ed25519_keypath + '.pub')
+        interface.import_ed25519_publickey_from_file,
+        ed25519_keypath + '.pub')
 
 
 
@@ -309,15 +309,15 @@ class TestInterfaceFunctions(unittest.TestCase):
 
     # Test improperly formatted argument.
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      interface.import_ed25519_privatekey_from_file, 3, 'pw')
+        interface.import_ed25519_privatekey_from_file, 3, 'pw')
 
 
     # Test invalid argument.
     # Non-existent key file.
     nonexistent_keypath = os.path.join(temporary_directory,
-                                       'nonexistent_keypath')
+        'nonexistent_keypath')
     self.assertRaises(IOError, interface.import_ed25519_privatekey_from_file,
-                      nonexistent_keypath, 'pw')
+        nonexistent_keypath, 'pw')
 
     # Invalid key file argument.
     invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
@@ -338,20 +338,19 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Store the derived key info in a dictionary, the object expected
     # by the non-public _encrypt() routine.
     derived_key_information = {'salt': salt, 'iterations': iterations,
-                               'derived_key': derived_key}
+        'derived_key': derived_key}
 
     # Convert the key object to json string format and encrypt it with the
     # derived key.
     encrypted_key = \
       securesystemslib.pyca_crypto_keys._encrypt(json.dumps(imported_ed25519_key),
-                                 derived_key_information)
+          derived_key_information)
 
     with open(ed25519_keypath, 'wb') as file_object:
       file_object.write(encrypted_key.encode('utf-8'))
 
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      interface.import_ed25519_privatekey_from_file,
-                      ed25519_keypath, 'pw')
+        interface.import_ed25519_privatekey_from_file, ed25519_keypath, 'pw')
 
 
 
@@ -377,10 +376,9 @@ class TestInterfaceFunctions(unittest.TestCase):
 
     # Test improperly formatted arguments.
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      interface.generate_and_write_ecdsa_keypair,
-                      3, password='pw')
+        interface.generate_and_write_ecdsa_keypair, 3, password='pw')
     self.assertRaises(securesystemslib.exceptions.FormatError,
-      interface.generate_and_write_ecdsa_keypair, test_keypath, password=3)
+        interface.generate_and_write_ecdsa_keypair, test_keypath, password=3)
 
 
 
@@ -398,23 +396,23 @@ class TestInterfaceFunctions(unittest.TestCase):
 
     # Test improperly formatted argument.
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      interface.import_ecdsa_publickey_from_file, 3)
+        interface.import_ecdsa_publickey_from_file, 3)
 
 
     # Test invalid argument.
     # Non-existent key file.
     nonexistent_keypath = os.path.join(temporary_directory,
-                                       'nonexistent_keypath')
+        'nonexistent_keypath')
     self.assertRaises(IOError, interface.import_ecdsa_publickey_from_file,
-                      nonexistent_keypath)
+        nonexistent_keypath)
 
     # Invalid key file argument.
     invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
     with open(invalid_keyfile, 'wb') as file_object:
       file_object.write(b'bad keyfile')
 
-    self.assertRaises(securesystemslib.exceptions.Error, interface.import_ecdsa_publickey_from_file,
-                      invalid_keyfile)
+    self.assertRaises(securesystemslib.exceptions.Error,
+        interface.import_ecdsa_publickey_from_file, invalid_keyfile)
 
     # Invalid public key imported (contains unexpected keytype.)
     keytype = imported_ecdsa_key['keytype']
@@ -422,15 +420,16 @@ class TestInterfaceFunctions(unittest.TestCase):
     scheme = imported_ecdsa_key['scheme']
 
     ecdsakey_metadata_format = \
-      securesystemslib.keys.format_keyval_to_metadata(keytype, scheme, keyval, private=False)
+      securesystemslib.keys.format_keyval_to_metadata(keytype,
+          scheme, keyval, private=False)
 
     ecdsakey_metadata_format['keytype'] = 'invalid_keytype'
     with open(ecdsa_keypath + '.pub', 'wb') as file_object:
       file_object.write(json.dumps(ecdsakey_metadata_format).encode('utf-8'))
 
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      interface.import_ecdsa_publickey_from_file,
-                      ecdsa_keypath + '.pub')
+        interface.import_ecdsa_publickey_from_file,
+        ecdsa_keypath + '.pub')
 
 
 
@@ -448,15 +447,14 @@ class TestInterfaceFunctions(unittest.TestCase):
 
     # Test improperly formatted argument.
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      interface.import_ecdsa_privatekey_from_file, 3, 'pw')
+        interface.import_ecdsa_privatekey_from_file, 3, 'pw')
 
 
     # Test invalid argument.
     # Non-existent key file.
-    nonexistent_keypath = os.path.join(temporary_directory,
-                                       'nonexistent_keypath')
+    nonexistent_keypath = os.path.join(temporary_directory, 'nonexistent_keypath')
     self.assertRaises(IOError, interface.import_ecdsa_privatekey_from_file,
-                      nonexistent_keypath, 'pw')
+        nonexistent_keypath, 'pw')
 
     # Invalid key file argument.
     invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
@@ -469,28 +467,27 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Invalid private key imported (contains unexpected keytype.)
     imported_ecdsa_key['keytype'] = 'invalid_keytype'
 
-    # Use 'pyca_crypto_keys.py' to bypass the key format validation performed by
-    # 'keys.py'.
+    # Use 'pyca_crypto_keys.py' to bypass the key format validation performed
+    # by 'keys.py'.
     salt, iterations, derived_key = \
       securesystemslib.pyca_crypto_keys._generate_derived_key('pw')
 
     # Store the derived key info in a dictionary, the object expected
     # by the non-public _encrypt() routine.
     derived_key_information = {'salt': salt, 'iterations': iterations,
-                               'derived_key': derived_key}
+        'derived_key': derived_key}
 
     # Convert the key object to json string format and encrypt it with the
     # derived key.
     encrypted_key = \
       securesystemslib.pyca_crypto_keys._encrypt(json.dumps(imported_ecdsa_key),
-                                 derived_key_information)
+          derived_key_information)
 
     with open(ecdsa_keypath, 'wb') as file_object:
       file_object.write(encrypted_key.encode('utf-8'))
 
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      interface.import_ecdsa_privatekey_from_file,
-                      ecdsa_keypath, 'pw')
+        interface.import_ecdsa_privatekey_from_file, ecdsa_keypath, 'pw')
 
 
 # Run the test cases.

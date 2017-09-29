@@ -97,7 +97,7 @@ class TempFile(object):
         self.temporary_file = tempfile.NamedTemporaryFile(prefix=prefix,
                                                           dir=temp_dir)
       except OSError as err:
-        logger.error('Temp file in ' + temp_dir + ' failed: '+repr(err))
+        logger.error('Temp file in ' + temp_dir + ' failed: ' +repr(err))
         logger.error('Will attempt to use system default temp dir.')
         self._default_temporary_directory(prefix)
 
@@ -221,8 +221,8 @@ class TempFile(object):
     self.seek(0)
     destination_file = open(destination_path, 'wb')
     shutil.copyfileobj(self.temporary_file, destination_file)
-    # Force the destination file to be written to disk from Python's internal and
-    # the operation system's buffers.  os.fsync() should follow flush().
+    # Force the destination file to be written to disk from Python's internal
+    # and the operation system's buffers.  os.fsync() should follow flush().
     destination_file.flush()
     os.fsync(destination_file.fileno())
     destination_file.close()
@@ -238,10 +238,10 @@ class TempFile(object):
 
     <Arguments>
       *args:
-        (*-operator): unpacking argument list is used
-        because seek method accepts two args: offset and whence.  If whence is
-        not specified, its default is 0.  Indicate offset to set the file's
-        current position. Refer to the python manual for more info.
+        (*-operator): unpacking argument list is used because seek method
+        accepts two args: offset and whence.  If whence is not specified, its
+        default is 0.  Indicate offset to set the file's current position.
+        Refer to the python manual for more info.
 
     <Exceptions>
       None.
@@ -295,10 +295,12 @@ class TempFile(object):
     securesystemslib.formats.NAME_SCHEMA.check_match(compression)
 
     if self._orig_file is not None:
-      raise securesystemslib.exceptions.Error('Can only set compression on a TempFile once.')
+      raise securesystemslib.exceptions.Error('Can only set compression on a'
+          ' TempFile once.')
 
     if compression != 'gzip':
-      raise securesystemslib.exceptions.Error('Only gzip compression is supported.')
+      raise securesystemslib.exceptions.Error('Only gzip compression is'
+          ' supported.')
 
     self.seek(0)
     self._compression = compression
@@ -358,7 +360,8 @@ def get_file_details(filepath, hash_algorithms=['sha256']):
     hash_algorithms:
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError: If hash of the file does not match HASHDICT_SCHEMA.
+    securesystemslib.exceptions.FormatError: If hash of the file does not match
+    HASHDICT_SCHEMA.
 
     securesystemslib.exceptions.Error: If 'filepath' does not exist.
 
@@ -376,7 +379,9 @@ def get_file_details(filepath, hash_algorithms=['sha256']):
 
   # Does the path exists?
   if not os.path.exists(filepath):
-    raise securesystemslib.exceptions.Error('Path ' + repr(filepath) + ' doest not exist.')
+    raise securesystemslib.exceptions.Error('Path ' + repr(filepath) + ' doest'
+        ' not exist.')
+
   filepath = os.path.abspath(filepath)
 
   # Obtaining length of the file.
@@ -408,7 +413,8 @@ def ensure_parent_dir(filename):
       A path string.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError: If 'filename' is improperly formatted.
+    securesystemslib.exceptions.FormatError: If 'filename' is improperly
+    formatted.
 
   <Side Effects>
     A directory is created whenever the parent directory of 'filename' does not
@@ -492,7 +498,8 @@ def find_delegated_role(roles, delegated_role):
       The name of the role to be found in the list of roles.
 
   <Exceptions>
-    securesystemslib.exceptions.RepositoryError, if the list of roles has invalid data.
+    securesystemslib.exceptions.RepositoryError, if the list of roles has
+    invalid data.
 
   <Side Effects>
     No known side effects.
@@ -504,8 +511,8 @@ def find_delegated_role(roles, delegated_role):
 
   # Do the arguments have the correct format?
   # Ensure the arguments have the appropriate number of objects and object
-  # types, and that all dict keys are properly named.
-  # Raise 'securesystemslib.exceptions.FormatError' if any are improperly formatted.
+  # types, and that all dict keys are properly named.  Raise
+  # 'securesystemslib.exceptions.FormatError' if any are improperly formatted.
   securesystemslib.formats.ROLELIST_SCHEMA.check_match(roles)
   securesystemslib.formats.ROLENAME_SCHEMA.check_match(delegated_role)
 
@@ -532,7 +539,8 @@ def find_delegated_role(roles, delegated_role):
         # ...there are at least two roles with the same name.
         else:
           duplicate_role_message = 'Duplicate role (' + str(delegated_role) + ').'
-          raise securesystemslib.exceptions.RepositoryError(duplicate_role_message)
+          raise securesystemslib.exceptions.RepositoryError(
+              'Duplicate role (' + str(delegated_role) + ').')
 
       # This role has a different name.
       else:
@@ -544,21 +552,21 @@ def find_delegated_role(roles, delegated_role):
 def ensure_all_targets_allowed(rolename, list_of_targets, parent_delegations):
   """
   <Purpose>
-    Ensure that the list of targets specified by 'rolename' are allowed; this is
-    determined by inspecting the 'delegations' field of the parent role
-    of 'rolename'.  If a target specified by 'rolename' is not found in the
+    Ensure that the list of targets specified by 'rolename' are allowed; this
+    is determined by inspecting the 'delegations' field of the parent role of
+    'rolename'.  If a target specified by 'rolename' is not found in the
     delegations field of 'metadata_object_of_parent', raise an exception.  The
     top-level role 'targets' is allowed to list any target file, so this
     function does not raise an exception if 'rolename' is 'targets'.
 
     Targets allowed are either exlicitly listed under the 'paths' field, or
-    implicitly exist under a subdirectory of a parent directory listed
-    under 'paths'.  A parent role may delegate trust to all files under a
-    particular directory, including files in subdirectories, by simply
-    listing the directory (e.g., '/packages/source/Django/', the equivalent
-    of '/packages/source/Django/*').  Targets listed in hashed bins are
-    also validated (i.e., its calculated path hash prefix must be delegated
-    by the parent role).
+    implicitly exist under a subdirectory of a parent directory listed under
+    'paths'.  A parent role may delegate trust to all files under a particular
+    directory, including files in subdirectories, by simply listing the
+    directory (e.g., '/packages/source/Django/', the equivalent of
+    '/packages/source/Django/*').  Targets listed in hashed bins are also
+    validated (i.e., its calculated path hash prefix must be delegated by the
+    parent role).
 
     TODO: Should the TUF spec restrict the repository to one particular
     algorithm when calcutating path hash prefixes (currently restricted to
@@ -603,8 +611,8 @@ def ensure_all_targets_allowed(rolename, list_of_targets, parent_delegations):
 
   # Do the arguments have the correct format?
   # Ensure the arguments have the appropriate number of objects and object
-  # types, and that all dict keys are properly named.
-  # Raise 'securesystemslib.exceptions.FormatError' if any are improperly formatted.
+  # types, and that all dict keys are properly named.  Raise
+  # 'securesystemslib.exceptions.FormatError' if any are improperly formatted.
   securesystemslib.formats.ROLENAME_SCHEMA.check_match(rolename)
   securesystemslib.formats.RELPATHS_SCHEMA.check_match(list_of_targets)
   securesystemslib.formats.DELEGATIONS_SCHEMA.check_match(parent_delegations)
@@ -615,10 +623,10 @@ def ensure_all_targets_allowed(rolename, list_of_targets, parent_delegations):
     return
 
   # The allowed targets of delegated roles are stored in the parent's metadata
-  # file.  Iterate 'list_of_targets' and confirm they are trusted, or their root
-  # parent directory exists in the role delegated paths, or path hash prefixes,
-  # of the parent role.  First, locate 'rolename' in the 'roles' attribute of
-  # 'parent_delegations'.
+  # file.  Iterate 'list_of_targets' and confirm they are trusted, or their
+  # root parent directory exists in the role delegated paths, or path hash
+  # prefixes, of the parent role.  First, locate 'rolename' in the 'roles'
+  # attribute of 'parent_delegations'.
   roles = parent_delegations['roles']
   role_index = find_delegated_role(roles, rolename)
 
@@ -643,10 +651,10 @@ def ensure_all_targets_allowed(rolename, list_of_targets, parent_delegations):
         raise securesystemslib.exceptions.ForbiddenTargetError(message)
 
     elif allowed_child_paths is not None:
-      # Check that each delegated target is either explicitly listed or a parent
-      # directory is found under role['paths'], otherwise raise an exception.
-      # If the parent role explicitly lists target file paths in 'paths',
-      # this loop will run in O(n^2), the worst-case.  The repository
+      # Check that each delegated target is either explicitly listed or a
+      # parent directory is found under role['paths'], otherwise raise an
+      # exception.  If the parent role explicitly lists target file paths in
+      # 'paths', this loop will run in O(n^2), the worst-case.  The repository
       # maintainer will likely delegate entire directories, and opt for
       # explicit file paths if the targets in a directory are delegated to
       # different roles/developers.
@@ -656,32 +664,31 @@ def ensure_all_targets_allowed(rolename, list_of_targets, parent_delegations):
             break
 
         else:
-          raise securesystemslib.exceptions.ForbiddenTargetError('Role '+repr(rolename)+' specifies'+\
-                                         ' target '+repr(child_target)+','+\
-                                         ' which is not an allowed path'+\
-                                         ' according to the delegations set'+\
-                                         ' by its parent role.')
+          raise securesystemslib.exceptions.ForbiddenTargetError(
+              'Role ' + repr(rolename) + ' specifies'
+              ' target' + repr(child_target) + ',' + ' which is not an allowed'
+              ' path according to the delegations set by its parent role.')
 
     else:
       # 'role' should have been validated when it was downloaded.
       # The 'paths' or 'path_hash_prefixes' attributes should not be missing,
       # so raise an error in case this clause is reached.
-      raise securesystemslib.exceptions.FormatError(repr(role) + ' did not contain one of ' +\
-                            'the required fields ("paths" or ' +\
-                            '"path_hash_prefixes").')
+      raise securesystemslib.exceptions.FormatError(repr(role) + ' did not'
+          ' contain one of the required fields ("paths" or'
+          ' "path_hash_prefixes").')
 
   # Raise an exception if the parent has not delegated to the specified
   # 'rolename' child role.
   else:
-    raise securesystemslib.exceptions.RepositoryError('The parent role has not delegated to '+\
-                              repr(rolename)+'.')
+    raise securesystemslib.exceptions.RepositoryError('The parent role has'
+        ' not delegated to ' + repr(rolename) + '.')
 
 
 def paths_are_consistent_with_hash_prefixes(paths, path_hash_prefixes):
   """
   <Purpose>
-    Determine whether a list of paths are consistent with their alleged
-    path hash prefixes. By default, the SHA256 hash function is used.
+    Determine whether a list of paths are consistent with their alleged path
+    hash prefixes. By default, the SHA256 hash function is used.
 
   <Arguments>
     paths:
@@ -704,8 +711,8 @@ def paths_are_consistent_with_hash_prefixes(paths, path_hash_prefixes):
 
   # Do the arguments have the correct format?
   # Ensure the arguments have the appropriate number of objects and object
-  # types, and that all dict keys are properly named.
-  # Raise 'securesystemslib.exceptions.FormatError' if any are improperly formatted.
+  # types, and that all dict keys are properly named.  Raise
+  # 'securesystemslib.exceptions.FormatError' if any are improperly formatted.
   securesystemslib.formats.RELPATHS_SCHEMA.check_match(paths)
   securesystemslib.formats.PATH_HASH_PREFIXES_SCHEMA.check_match(path_hash_prefixes)
 
@@ -737,8 +744,8 @@ def get_target_hash(target_filepath):
   """
   <Purpose>
     Compute the hash of 'target_filepath'. This is useful in conjunction with
-    the "path_hash_prefixes" attribute in a delegated targets role, which
-    tells us which paths it is implicitly responsible for.
+    the "path_hash_prefixes" attribute in a delegated targets role, which tells
+    us which paths it is implicitly responsible for.
 
     The repository may optionally organize targets into hashed bins to ease
     target delegations and role metadata management.  The use of consistent
@@ -829,7 +836,8 @@ def load_json_string(data):
       A JSON string.
 
   <Exceptions>
-    securesystemslib.exceptions.Error, if 'data' cannot be deserialized to a Python object.
+    securesystemslib.exceptions.Error, if 'data' cannot be deserialized to a
+    Python object.
 
   <Side Effects>
     None.
@@ -865,9 +873,11 @@ def load_json_file(filepath):
       Absolute path of JSON file.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError: If 'filepath' is improperly formatted.
+    securesystemslib.exceptions.FormatError: If 'filepath' is improperly
+    formatted.
 
-    securesystemslib.exceptions.Error: If 'filepath' cannot be deserialized to a Python object.
+    securesystemslib.exceptions.Error: If 'filepath' cannot be deserialized to
+    a Python object.
 
     IOError in case of runtime IO exceptions.
 
@@ -922,7 +932,8 @@ def digests_are_equal(digest1, digest2):
       The second hexadecimal string value to compare.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError: If the arguments are improperly formatted.
+    securesystemslib.exceptions.FormatError: If the arguments are improperly
+    formatted.
 
   <Side Effects>
     None.

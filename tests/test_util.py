@@ -142,7 +142,8 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
     # Test: Unexpected input.
     for bogus_arg in ['abcd', ['abcd'], {'a':'a'}, -100]:
-      self.assertRaises(securesystemslib.exceptions.FormatError, self.temp_fileobj.read, bogus_arg)
+      self.assertRaises(securesystemslib.exceptions.FormatError,
+          self.temp_fileobj.read, bogus_arg)
 
 
 
@@ -184,7 +185,8 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
       return compressed_filepath
 
     else:
-      logger.error('Compression of '+repr(filepath)+' failed. Path does not exist.')
+      logger.error('Compression of ' + repr(filepath)  +' failed.'
+          '  Path does not exist.')
       sys.exit(1)
 
 
@@ -198,8 +200,8 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
       return file_content
 
     else:
-      logger.error('Decompression of '+repr(compressed_filepath)+' failed. '+\
-            'Path does not exist.')
+      logger.error('Decompression of ' + repr(compressed_filepath) + ' failed.'
+          '  Path does not exist.')
       sys.exit(1)
 
 
@@ -219,7 +221,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     bogus_args = ['zip', 1234, self.random_string()]
     for arg in bogus_args:
       self.assertRaises(securesystemslib.exceptions.Error,
-                        self.temp_fileobj.decompress_temp_file_object, arg)
+          self.temp_fileobj.decompress_temp_file_object, arg)
 
     # Test for a valid util.decompress_temp_file_object() call.
     self.temp_fileobj.decompress_temp_file_object('gzip')
@@ -238,14 +240,14 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
     # Try decompressing once more.
     self.assertRaises(securesystemslib.exceptions.Error,
-                      self.temp_fileobj.decompress_temp_file_object, 'gzip')
+        self.temp_fileobj.decompress_temp_file_object, 'gzip')
 
     # Test decompression of invalid gzip file.
     temp_file = securesystemslib.util.TempFile()
     temp_file.write(b'bad zip')
     contents = temp_file.read()
     self.assertRaises(securesystemslib.exceptions.DecompressionError,
-                      temp_file.decompress_temp_file_object, 'gzip')
+        temp_file.decompress_temp_file_object, 'gzip')
 
 
 
@@ -261,17 +263,20 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     file_length = os.path.getsize(filepath)
 
     # Test: Expected input.
-    self.assertEqual(securesystemslib.util.get_file_details(filepath), (file_length, file_hash))
+    self.assertEqual(securesystemslib.util.get_file_details(filepath),
+        (file_length, file_hash))
 
     # Test: Incorrect input.
     bogus_inputs = [self.random_string(), 1234, [self.random_string()],
-                    {'a': 'b'}, None]
+        {'a': 'b'}, None]
 
     for bogus_input in bogus_inputs:
       if isinstance(bogus_input, six.string_types):
-        self.assertRaises(securesystemslib.exceptions.Error, securesystemslib.util.get_file_details, bogus_input)
+        self.assertRaises(securesystemslib.exceptions.Error,
+            securesystemslib.util.get_file_details, bogus_input)
       else:
-        self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.util.get_file_details, bogus_input)
+        self.assertRaises(securesystemslib.exceptions.FormatError,
+            securesystemslib.util.get_file_details, bogus_input)
 
 
 
@@ -283,8 +288,10 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
       if isinstance(parent_dir, six.string_types):
         securesystemslib.util.ensure_parent_dir(os.path.join(parent_dir, 'a.txt'))
         self.assertTrue(os.path.isdir(parent_dir))
+
       else:
-        self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.util.ensure_parent_dir, parent_dir)
+        self.assertRaises(securesystemslib.exceptions.FormatError,
+            securesystemslib.util.ensure_parent_dir, parent_dir)
 
 
 
@@ -297,8 +304,8 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     list_of_filepaths = [12, ['a'], {'a':'a'}, 'a']
     for bogus_confined_directory in list_of_confined_directories:
       for filepath in list_of_filepaths:
-        self.assertRaises(securesystemslib.exceptions.FormatError, in_confined_directory,
-                          filepath, bogus_confined_directory)
+        self.assertRaises(securesystemslib.exceptions.FormatError,
+            in_confined_directory, filepath, bogus_confined_directory)
 
     # Test: Inputs that evaluate to False.
     confined_directories = ['a/b/', 'a/b/c/d/']
@@ -337,9 +344,11 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     self.assertEqual(data, securesystemslib.util.load_json_string(json_string))
 
     # Test invalid arguments.
-    self.assertRaises(securesystemslib.exceptions.Error, securesystemslib.util.load_json_string, 8)
+    self.assertRaises(securesystemslib.exceptions.Error,
+        securesystemslib.util.load_json_string, 8)
     invalid_json_string = json_string + '.'
-    self.assertRaises(securesystemslib.exceptions.Error, securesystemslib.util.load_json_string, invalid_json_string)
+    self.assertRaises(securesystemslib.exceptions.Error,
+        securesystemslib.util.load_json_string, invalid_json_string)
 
 
 
@@ -353,14 +362,17 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
     # Test a gzipped file.
     compressed_filepath = self._compress_existing_file(filepath)
-    self.assertEqual(data, securesystemslib.util.load_json_file(compressed_filepath))
+    self.assertEqual(data,
+        securesystemslib.util.load_json_file(compressed_filepath))
 
     # Improperly formatted arguments.
     for bogus_arg in [1, [b'a'], {'a':b'b'}]:
-      self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.util.load_json_file, bogus_arg)
+      self.assertRaises(securesystemslib.exceptions.FormatError,
+          securesystemslib.util.load_json_file, bogus_arg)
 
     # Non-existent path.
-    self.assertRaises(IOError, securesystemslib.util.load_json_file, 'non-existent.json')
+    self.assertRaises(IOError,
+        securesystemslib.util.load_json_file, 'non-existent.json')
 
     # Invalid JSON content.
     filepath_bad_data = self.make_temp_file()
@@ -386,7 +398,8 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
       self.assertEqual(securesystemslib.util.get_target_hash(filepath), target_hash)
 
     # Test for improperly formatted argument.
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.util.get_target_hash, 8)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.util.get_target_hash, 8)
 
 
 
@@ -417,30 +430,35 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     ]
 
     self.assertTrue(securesystemslib.formats.ROLELIST_SCHEMA.matches(role_list))
-    self.assertEqual(securesystemslib.util.find_delegated_role(role_list, 'targets/tuf'), 1)
-    self.assertEqual(securesystemslib.util.find_delegated_role(role_list, 'targets/warehouse'), 0)
+    self.assertEqual(securesystemslib.util.find_delegated_role(role_list,
+        'targets/tuf'), 1)
+    self.assertEqual(securesystemslib.util.find_delegated_role(role_list,
+        'targets/warehouse'), 0)
 
     # Test for non-existent role.  'find_delegated_role()' returns 'None'
     # if the role is not found.
-    self.assertEqual(securesystemslib.util.find_delegated_role(role_list, 'targets/non-existent'),
-                                              None)
+    self.assertEqual(securesystemslib.util.find_delegated_role(role_list,
+        'targets/non-existent'), None)
 
     # Test improperly formatted arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.util.find_delegated_role, 8, role_list)
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.util.find_delegated_role, 8, 'targets/tuf')
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.util.find_delegated_role, 8, role_list)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.util.find_delegated_role, 8, 'targets/tuf')
 
     # Test duplicate roles.
     role_list.append(role_list[1])
-    self.assertRaises(securesystemslib.exceptions.RepositoryError, securesystemslib.util.find_delegated_role, role_list,
-                      'targets/tuf')
+    self.assertRaises(securesystemslib.exceptions.RepositoryError,
+        securesystemslib.util.find_delegated_role, role_list, 'targets/tuf')
 
     # Test missing 'name' attribute (optional, but required by
     # 'find_delegated_role()').
     # Delete the duplicate role, and the remaining role's 'name' attribute.
     del role_list[2]
     del role_list[0]['name']
-    self.assertRaises(securesystemslib.exceptions.RepositoryError, securesystemslib.util.find_delegated_role, role_list,
-                      'targets/warehouse')
+    self.assertRaises(securesystemslib.exceptions.RepositoryError,
+        securesystemslib.util.find_delegated_role, role_list,
+        'targets/warehouse')
 
 
 
@@ -452,39 +470,40 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     # Ensure the paths of 'list_of_targets' each have the expected path hash
     # prefix listed in 'path_hash_prefixes'.
     for filepath in list_of_targets:
-      self.assertTrue(securesystemslib.util.get_target_hash(filepath)[0:4] in path_hash_prefixes)
+      self.assertTrue(securesystemslib.util.get_target_hash(
+          filepath)[0:4] in path_hash_prefixes)
 
-    self.assertTrue(securesystemslib.util.paths_are_consistent_with_hash_prefixes(list_of_targets,
-                                                            path_hash_prefixes))
+    self.assertTrue(securesystemslib.util.paths_are_consistent_with_hash_prefixes(
+        list_of_targets, path_hash_prefixes))
 
     extra_invalid_prefix = ['e3a3', '8fae', 'd543', '0000']
-    self.assertTrue(securesystemslib.util.paths_are_consistent_with_hash_prefixes(list_of_targets,
-                                                          extra_invalid_prefix))
+    self.assertTrue(securesystemslib.util.paths_are_consistent_with_hash_prefixes(
+        list_of_targets, extra_invalid_prefix))
 
     # Test improperly formatted arguments.
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      securesystemslib.util.paths_are_consistent_with_hash_prefixes, 8,
-                      path_hash_prefixes)
+        securesystemslib.util.paths_are_consistent_with_hash_prefixes, 8,
+        path_hash_prefixes)
 
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      securesystemslib.util.paths_are_consistent_with_hash_prefixes,
-                      list_of_targets, 8)
+        securesystemslib.util.paths_are_consistent_with_hash_prefixes,
+        list_of_targets, 8)
 
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      securesystemslib.util.paths_are_consistent_with_hash_prefixes,
-                      list_of_targets, ['zza1'])
+        securesystemslib.util.paths_are_consistent_with_hash_prefixes,
+        list_of_targets, ['zza1'])
 
     # Test invalid list of targets.
     bad_target_path = '/file5.txt'
-    self.assertTrue(securesystemslib.util.get_target_hash(bad_target_path)[0:4] not in
-                    path_hash_prefixes)
-    self.assertFalse(securesystemslib.util.paths_are_consistent_with_hash_prefixes([bad_target_path],
-                                                            path_hash_prefixes))
+    self.assertTrue(securesystemslib.util.get_target_hash(
+        bad_target_path)[0:4] not in path_hash_prefixes)
+    self.assertFalse(securesystemslib.util.paths_are_consistent_with_hash_prefixes(
+        [bad_target_path], path_hash_prefixes))
 
     # Add invalid target path to 'list_of_targets'.
     list_of_targets.append(bad_target_path)
-    self.assertFalse(securesystemslib.util.paths_are_consistent_with_hash_prefixes(list_of_targets,
-                                                            path_hash_prefixes))
+    self.assertFalse(securesystemslib.util.paths_are_consistent_with_hash_prefixes(
+        list_of_targets, path_hash_prefixes))
 
 
 
@@ -519,58 +538,64 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     self.assertTrue(securesystemslib.formats.DELEGATIONS_SCHEMA.matches(parent_delegations))
 
     securesystemslib.util.ensure_all_targets_allowed(rolename, list_of_targets,
-                                    parent_delegations)
+        parent_delegations)
 
     # The target files of 'targets' are always allowed.  'list_of_targets' and
     # 'parent_delegations' are not checked in this case.
     securesystemslib.util.ensure_all_targets_allowed('targets', list_of_targets,
-                                    parent_delegations)
+        parent_delegations)
 
     # Test improperly formatted arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.util.ensure_all_targets_allowed,
-                      8, list_of_targets, parent_delegations)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.util.ensure_all_targets_allowed, 8, list_of_targets,
+        parent_delegations)
 
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.util.ensure_all_targets_allowed,
-                      rolename, 8, parent_delegations)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.util.ensure_all_targets_allowed, rolename, 8,
+        parent_delegations)
 
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.util.ensure_all_targets_allowed,
-                      rolename, list_of_targets, 8)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.util.ensure_all_targets_allowed, rolename,
+        list_of_targets, 8)
 
     # Test for invalid 'rolename', which has not been delegated by its parent,
     # 'targets'.
-    self.assertRaises(securesystemslib.exceptions.RepositoryError, securesystemslib.util.ensure_all_targets_allowed,
-                      'targets/non-delegated_rolename', list_of_targets,
-                      parent_delegations)
+    self.assertRaises(securesystemslib.exceptions.RepositoryError,
+        securesystemslib.util.ensure_all_targets_allowed,
+        'targets/non-delegated_rolename', list_of_targets, parent_delegations)
 
     # Test for target file that is not allowed by the parent role.
-    self.assertRaises(securesystemslib.exceptions.ForbiddenTargetError, securesystemslib.util.ensure_all_targets_allowed,
-                      'targets/warehouse', ['file1.zip'], parent_delegations)
+    self.assertRaises(securesystemslib.exceptions.ForbiddenTargetError,
+        securesystemslib.util.ensure_all_targets_allowed, 'targets/warehouse',
+        ['file1.zip'], parent_delegations)
 
-    self.assertRaises(securesystemslib.exceptions.ForbiddenTargetError, securesystemslib.util.ensure_all_targets_allowed,
-                      'targets/warehouse', ['file1.txt', 'bad-README.txt'],
-                      parent_delegations)
+    self.assertRaises(securesystemslib.exceptions.ForbiddenTargetError,
+        securesystemslib.util.ensure_all_targets_allowed, 'targets/warehouse',
+        ['file1.txt', 'bad-README.txt'], parent_delegations)
 
     # Test for required attributes.
     # Missing 'paths' attribute.
     del parent_delegations['roles'][0]['paths']
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.util.ensure_all_targets_allowed,
-                      'targets/warehouse', list_of_targets, parent_delegations)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.util.ensure_all_targets_allowed,
+        'targets/warehouse', list_of_targets, parent_delegations)
 
     # Test 'path_hash_prefixes' attribute.
     path_hash_prefixes = ['e3a3', '8fae', 'd543']
     parent_delegations['roles'][0]['path_hash_prefixes'] = path_hash_prefixes
 
     # Test normal case for 'path_hash_prefixes'.
-    securesystemslib.util.ensure_all_targets_allowed('targets/warehouse', list_of_targets,
-                                    parent_delegations)
+    securesystemslib.util.ensure_all_targets_allowed('targets/warehouse',
+        list_of_targets, parent_delegations)
 
     # Test target file with a path_hash_prefix that is not allowed in its
     # parent role.
     path_hash_prefix = securesystemslib.util.get_target_hash('file5.txt')[0:4]
     self.assertTrue(path_hash_prefix not in parent_delegations['roles'][0]
-                                                        ['path_hash_prefixes'])
-    self.assertRaises(securesystemslib.exceptions.ForbiddenTargetError, securesystemslib.util.ensure_all_targets_allowed,
-                      'targets/warehouse', ['file5.txt'], parent_delegations)
+        ['path_hash_prefixes'])
+    self.assertRaises(securesystemslib.exceptions.ForbiddenTargetError,
+        securesystemslib.util.ensure_all_targets_allowed,
+        'targets/warehouse', ['file5.txt'], parent_delegations)
 
 
 
@@ -608,20 +633,20 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     self.assertFalse(securesystemslib.util.digests_are_equal(digest, '0a8df1'))
 
     # Test for invalid arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.util.digests_are_equal, 7,
-                      digest)
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.util.digests_are_equal, digest,
-                      7)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.util.digests_are_equal, 7, digest)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.util.digests_are_equal, digest, 7)
 
     # Test that digests_are_equal() takes the same amount of time to compare
     # equal and unequal arguments.
     runtime = timeit.timeit('digests_are_equal("ab8df", "ab8df")',
-                            setup='from securesystemslib.util import digests_are_equal',
-                            number=100000)
+        setup='from securesystemslib.util import digests_are_equal',
+        number=100000)
 
     runtime2 = timeit.timeit('digests_are_equal("ab8df", "1b8df")',
-                             setup='from securesystemslib.util import digests_are_equal',
-                             number=100000)
+        setup='from securesystemslib.util import digests_are_equal',
+        number=100000)
 
     runtime3 = timeit.timeit('"ab8df" == "ab8df"', number=100000)
 

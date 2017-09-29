@@ -49,39 +49,43 @@ class TestFormats(unittest.TestCase):
     # Test conditions for valid schemas.
     valid_schemas = {
       'ISO8601_DATETIME_SCHEMA': (securesystemslib.formats.ISO8601_DATETIME_SCHEMA,
-                                  '1985-10-21T13:20:00Z'),
+          '1985-10-21T13:20:00Z'),
 
-      'UNIX_TIMESTAMP_SCHEMA': (securesystemslib.formats.UNIX_TIMESTAMP_SCHEMA, 499137720),
+      'UNIX_TIMESTAMP_SCHEMA': (securesystemslib.formats.UNIX_TIMESTAMP_SCHEMA,
+          499137720),
 
       'HASH_SCHEMA': (securesystemslib.formats.HASH_SCHEMA, 'A4582BCF323BCEF'),
 
       'HASHDICT_SCHEMA': (securesystemslib.formats.HASHDICT_SCHEMA,
-                          {'sha256': 'A4582BCF323BCEF'}),
+          {'sha256': 'A4582BCF323BCEF'}),
 
       'HEX_SCHEMA': (securesystemslib.formats.HEX_SCHEMA, 'A4582BCF323BCEF'),
 
       'KEYID_SCHEMA': (securesystemslib.formats.KEYID_SCHEMA, '123456789abcdef'),
 
       'KEYIDS_SCHEMA': (securesystemslib.formats.KEYIDS_SCHEMA,
-                        ['123456789abcdef', '123456789abcdef']),
+          ['123456789abcdef', '123456789abcdef']),
 
-      'SIG_SCHEME_SCHEMA': (securesystemslib.formats.SIG_SCHEME_SCHEMA, 'ecdsa-sha2-nistp256'),
+      'SIG_SCHEME_SCHEMA': (securesystemslib.formats.SIG_SCHEME_SCHEMA,
+          'ecdsa-sha2-nistp256'),
 
-      'RELPATH_SCHEMA': (securesystemslib.formats.RELPATH_SCHEMA, 'metadata/root/'),
+      'RELPATH_SCHEMA': (securesystemslib.formats.RELPATH_SCHEMA,
+          'metadata/root/'),
 
       'RELPATHS_SCHEMA': (securesystemslib.formats.RELPATHS_SCHEMA,
-                          ['targets/role1/', 'targets/role2/']),
+          ['targets/role1/', 'targets/role2/']),
 
-      'PATH_SCHEMA': (securesystemslib.formats.PATH_SCHEMA, '/home/someuser/'),
+      'PATH_SCHEMA': (securesystemslib.formats.PATH_SCHEMA,
+          '/home/someuser/'),
 
       'PATHS_SCHEMA': (securesystemslib.formats.PATHS_SCHEMA,
-                       ['/home/McFly/', '/home/Tannen/']),
+          ['/home/McFly/', '/home/Tannen/']),
 
       'URL_SCHEMA': (securesystemslib.formats.URL_SCHEMA,
-                     'https://www.updateframework.com/'),
+          'https://www.updateframework.com/'),
 
       'VERSION_SCHEMA': (securesystemslib.formats.VERSION_SCHEMA,
-                         {'major': 1, 'minor': 0, 'fix': 8}),
+          {'major': 1, 'minor': 0, 'fix': 8}),
 
       'LENGTH_SCHEMA': (securesystemslib.formats.LENGTH_SCHEMA, 8),
 
@@ -97,119 +101,118 @@ class TestFormats(unittest.TestCase):
 
       'PASSWORD_SCHEMA': (securesystemslib.formats.PASSWORD_SCHEMA, 'secret'),
 
-      'PASSWORDS_SCHEMA': (securesystemslib.formats.PASSWORDS_SCHEMA, ['pass1', 'pass2']),
+      'PASSWORDS_SCHEMA': (securesystemslib.formats.PASSWORDS_SCHEMA,
+          ['pass1', 'pass2']),
 
       'KEYVAL_SCHEMA': (securesystemslib.formats.KEYVAL_SCHEMA,
-                        {'public': 'pubkey', 'private': 'privkey'}),
+          {'public': 'pubkey', 'private': 'privkey'}),
 
       'PUBLIC_KEYVAL_SCHEMA': (securesystemslib.formats.PUBLIC_KEYVAL_SCHEMA,
-                        {'public': 'pubkey'}),
+          {'public': 'pubkey'}),
 
       'PUBLIC_KEYVAL_SCHEMA2': (securesystemslib.formats.PUBLIC_KEYVAL_SCHEMA,
-                        {'public': 'pubkey', 'private': ''}),
+          {'public': 'pubkey', 'private': ''}),
 
       'KEY_SCHEMA': (securesystemslib.formats.KEY_SCHEMA,
-                     {'keytype': 'rsa',
-                      'scheme': 'rsassa-pss-sha256',
-                      'keyval': {'public': 'pubkey',
-                                 'private': 'privkey'}}),
+          {'keytype': 'rsa',
+           'scheme': 'rsassa-pss-sha256',
+           'keyval': {'public': 'pubkey',
+           'private': 'privkey'}}),
 
       'PUBLIC_KEY_SCHEMA': (securesystemslib.formats.KEY_SCHEMA,
-                     {'keytype': 'rsa',
-                      'scheme': 'rsassa-pss-sha256',
-                      'keyval': {'public': 'pubkey'}}),
+          {'keytype': 'rsa',
+           'scheme': 'rsassa-pss-sha256',
+           'keyval': {'public': 'pubkey'}}),
 
       'PUBLIC_KEY_SCHEMA2': (securesystemslib.formats.KEY_SCHEMA,
-                     {'keytype': 'rsa',
-                      'scheme': 'rsassa-pss-sha256',
-                      'keyval': {'public': 'pubkey',
-                                 'private': ''}}),
+          {'keytype': 'rsa',
+           'scheme': 'rsassa-pss-sha256',
+           'keyval': {'public': 'pubkey',
+                      'private': ''}}),
 
       'RSAKEY_SCHEMA': (securesystemslib.formats.RSAKEY_SCHEMA,
-                        {'keytype': 'rsa',
-                         'scheme': 'rsassa-pss-sha256',
-                         'keyid': '123456789abcdef',
-                         'keyval': {'public': 'pubkey',
-                                    'private': 'privkey'}}),
+          {'keytype': 'rsa',
+           'scheme': 'rsassa-pss-sha256',
+           'keyid': '123456789abcdef',
+           'keyval': {'public': 'pubkey',
+                      'private': 'privkey'}}),
 
       'FILEINFO_SCHEMA': (securesystemslib.formats.FILEINFO_SCHEMA,
-                          {'length': 1024,
-                           'hashes': {'sha256': 'A4582BCF323BCEF'},
-                           'custom': {'type': 'paintjob'}}),
+          {'length': 1024,
+           'hashes': {'sha256': 'A4582BCF323BCEF'},
+           'custom': {'type': 'paintjob'}}),
 
       'FILEDICT_SCHEMA': (securesystemslib.formats.FILEDICT_SCHEMA,
-                          {'metadata/root.json': {'length': 1024,
-                                                 'hashes': {'sha256': 'ABCD123'},
-                                                 'custom': {'type': 'metadata'}}}),
+          {'metadata/root.json': {'length': 1024,
+           'hashes': {'sha256': 'ABCD123'},
+           'custom': {'type': 'metadata'}}}),
 
       'SIGNATURE_SCHEMA': (securesystemslib.formats.SIGNATURE_SCHEMA,
-                           {'keyid': '123abc',
-                            'method': 'evp',
-                            'sig': 'A4582BCF323BCEF'}),
+          {'keyid': '123abc',
+           'method': 'evp',
+           'sig': 'A4582BCF323BCEF'}),
 
       'SIGNATURESTATUS_SCHEMA': (securesystemslib.formats.SIGNATURESTATUS_SCHEMA,
-                                 {'threshold': 1,
-                                  'good_sigs': ['123abc'],
-                                  'bad_sigs': ['123abc'],
-                                  'unknown_sigs': ['123abc'],
-                                  'untrusted_sigs': ['123abc'],
-                                  'unknown_method_sigs': ['123abc']}),
+          {'threshold': 1,
+           'good_sigs': ['123abc'],
+           'bad_sigs': ['123abc'],
+           'unknown_sigs': ['123abc'],
+           'untrusted_sigs': ['123abc'],
+           'unknown_method_sigs': ['123abc']}),
 
       'SIGNABLE_SCHEMA': (securesystemslib.formats.SIGNABLE_SCHEMA,
-                          {'signed': 'signer',
-                           'signatures': [{'keyid': '123abc',
-                                           'method': 'evp',
-                                           'sig': 'A4582BCF323BCEF'}]}),
+          {'signed': 'signer',
+           'signatures': [{'keyid': '123abc',
+           'method': 'evp',
+           'sig': 'A4582BCF323BCEF'}]}),
 
       'KEYDICT_SCHEMA': (securesystemslib.formats.KEYDICT_SCHEMA,
-                         {'123abc': {'keytype': 'rsa',
-                                     'scheme': 'rsassa-pss-sha256',
-                                     'keyval': {'public': 'pubkey',
-                                                'private': 'privkey'}}}),
+          {'123abc': {'keytype': 'rsa',
+           'scheme': 'rsassa-pss-sha256',
+           'keyval': {'public': 'pubkey', 'private': 'privkey'}}}),
 
       'KEYDB_SCHEMA': (securesystemslib.formats.KEYDB_SCHEMA,
-                       {'123abc': {'keytype': 'rsa',
-                                   'keyid': '123456789abcdef',
-                                   'keyval': {'public': 'pubkey',
-                                              'private': 'privkey'}}}),
+          {'123abc': {'keytype': 'rsa',
+           'keyid': '123456789abcdef',
+           'keyval': {'public': 'pubkey', 'private': 'privkey'}}}),
 
       'ROLE_SCHEMA': (securesystemslib.formats.ROLE_SCHEMA,
-                      {'keyids': ['123abc'],
-                       'threshold': 1,
-                       'paths': ['path1/', 'path2']}),
+          {'keyids': ['123abc'],
+           'threshold': 1,
+           'paths': ['path1/', 'path2']}),
 
       'ROLEDICT_SCHEMA': (securesystemslib.formats.ROLEDICT_SCHEMA,
-                          {'root': {'keyids': ['123abc'],
-                           'threshold': 1,
-                           'paths': ['path1/', 'path2']}}),
+          {'root': {'keyids': ['123abc'],
+           'threshold': 1,
+           'paths': ['path1/', 'path2']}}),
 
       'ROOT_SCHEMA': (securesystemslib.formats.ROOT_SCHEMA,
-                      {'_type': 'root',
-                       'version': 8,
-                       'consistent_snapshot': False,
-                       'expires': '1985-10-21T13:20:00Z',
-                       'keys': {'123abc': {'keytype': 'rsa',
-                                           'scheme': 'rsassa-pss-sha256',
-                                           'keyval': {'public': 'pubkey',
-                                                      'private': 'privkey'}}},
-                       'roles': {'root': {'keyids': ['123abc'],
-                                          'threshold': 1,
-                                          'paths': ['path1/', 'path2']}}}),
+          {'_type': 'root',
+           'version': 8,
+           'consistent_snapshot': False,
+           'expires': '1985-10-21T13:20:00Z',
+           'keys': {'123abc': {'keytype': 'rsa',
+           'scheme': 'rsassa-pss-sha256',
+           'keyval': {'public': 'pubkey',
+           'private': 'privkey'}}},
+           'roles': {'root': {'keyids': ['123abc'],
+           'threshold': 1,
+           'paths': ['path1/', 'path2']}}}),
 
       'TARGETS_SCHEMA': (securesystemslib.formats.TARGETS_SCHEMA,
         {'_type': 'targets',
          'version': 8,
          'expires': '1985-10-21T13:20:00Z',
          'targets': {'metadata/targets.json': {'length': 1024,
-                                              'hashes': {'sha256': 'ABCD123'},
-                                              'custom': {'type': 'metadata'}}},
+         'hashes': {'sha256': 'ABCD123'},
+         'custom': {'type': 'metadata'}}},
          'delegations': {'keys': {'123abc': {'keytype':'rsa',
-                                             'scheme': 'rsassa-pss-sha256',
-                                             'keyval': {'public': 'pubkey',
-                                                        'private': 'privkey'}}},
-                         'roles': [{'name': 'root', 'keyids': ['123abc'],
-                                    'threshold': 1,
-                                    'paths': ['path1/', 'path2']}]}}),
+         'scheme': 'rsassa-pss-sha256',
+         'keyval': {'public': 'pubkey',
+         'private': 'privkey'}}},
+         'roles': [{'name': 'root', 'keyids': ['123abc'],
+         'threshold': 1,
+         'paths': ['path1/', 'path2']}]}}),
 
       'SNAPSHOT_SCHEMA': (securesystemslib.formats.SNAPSHOT_SCHEMA,
         {'_type': 'snapshot',
@@ -222,7 +225,7 @@ class TestFormats(unittest.TestCase):
          'version': 8,
          'expires': '1985-10-21T13:20:00Z',
          'meta': {'metadattimestamp.json': {'length': 1024,
-                                            'hashes': {'sha256': 'AB1245'}}}}),
+         'hashes': {'sha256': 'AB1245'}}}}),
 
       'MIRROR_SCHEMA': (securesystemslib.formats.MIRROR_SCHEMA,
         {'url_prefix': 'http://localhost:8001',
@@ -253,6 +256,7 @@ class TestFormats(unittest.TestCase):
     for schema_name, (schema_type, valid_schema) in six.iteritems(valid_schemas):
       if not schema_type.matches(valid_schema):
         print('bad schema: ' + repr(valid_schema))
+
       self.assertEqual(True, schema_type.matches(valid_schema))
 
     # Test conditions for invalid schemas.
@@ -260,6 +264,7 @@ class TestFormats(unittest.TestCase):
     # value and test that it does not match 'schema_type'.
     for schema_name, (schema_type, valid_schema) in six.iteritems(valid_schemas):
       invalid_schema = 0xBAD
+
       if isinstance(schema_type, securesystemslib.schema.Integer):
         invalid_schema = 'BAD'
       self.assertEqual(False, schema_type.matches(invalid_schema))
@@ -270,53 +275,76 @@ class TestFormats(unittest.TestCase):
   def test_unix_timestamp_to_datetime(self):
     # Test conditions for valid arguments.
     UNIX_TIMESTAMP_SCHEMA = securesystemslib.formats.UNIX_TIMESTAMP_SCHEMA
-    self.assertTrue(datetime.datetime, securesystemslib.formats.unix_timestamp_to_datetime(499137720))
+    self.assertTrue(datetime.datetime,
+        securesystemslib.formats.unix_timestamp_to_datetime(499137720))
     datetime_object = datetime.datetime(1985, 10, 26, 1, 22)
-    self.assertEqual(datetime_object, securesystemslib.formats.unix_timestamp_to_datetime(499137720))
+    self.assertEqual(datetime_object,
+        securesystemslib.formats.unix_timestamp_to_datetime(499137720))
 
     # Test conditions for invalid arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.formats.unix_timestamp_to_datetime, 'bad')
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.formats.unix_timestamp_to_datetime, 1000000000000000000000)
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.formats.unix_timestamp_to_datetime, -1)
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.formats.unix_timestamp_to_datetime, ['5'])
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.formats.unix_timestamp_to_datetime, 'bad')
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.formats.unix_timestamp_to_datetime,
+        1000000000000000000000)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.formats.unix_timestamp_to_datetime, -1)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.formats.unix_timestamp_to_datetime, ['5'])
 
 
 
   def test_datetime_to_unix_timestamp(self):
     # Test conditions for valid arguments.
     datetime_object = datetime.datetime(2015, 10, 21, 19, 28)
-    self.assertEqual(1445455680, securesystemslib.formats.datetime_to_unix_timestamp(datetime_object))
+    self.assertEqual(1445455680,
+        securesystemslib.formats.datetime_to_unix_timestamp(datetime_object))
 
     # Test conditions for invalid arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.formats.datetime_to_unix_timestamp, 'bad')
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.formats.datetime_to_unix_timestamp, 1000000000000000000000)
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.formats.datetime_to_unix_timestamp, ['1'])
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.formats.datetime_to_unix_timestamp, 'bad')
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.formats.datetime_to_unix_timestamp,
+        1000000000000000000000)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.formats.datetime_to_unix_timestamp, ['1'])
 
 
 
   def test_format_base64(self):
     # Test conditions for valid arguments.
     data = 'updateframework'.encode('utf-8')
-    self.assertEqual('dXBkYXRlZnJhbWV3b3Jr', securesystemslib.formats.format_base64(data))
-    self.assertTrue(isinstance(securesystemslib.formats.format_base64(data), six.string_types))
+    self.assertEqual('dXBkYXRlZnJhbWV3b3Jr',
+        securesystemslib.formats.format_base64(data))
+    self.assertTrue(isinstance(securesystemslib.formats.format_base64(data),
+        six.string_types))
 
     # Test conditions for invalid arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.formats.format_base64, 123)
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.formats.format_base64, True)
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.formats.format_base64, ['123'])
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.formats.format_base64, 123)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.formats.format_base64, True)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.formats.format_base64, ['123'])
 
 
   def test_parse_base64(self):
     # Test conditions for valid arguments.
     base64 = 'dXBkYXRlZnJhbWV3b3Jr'
-    self.assertEqual(b'updateframework', securesystemslib.formats.parse_base64(base64))
-    self.assertTrue(isinstance(securesystemslib.formats.parse_base64(base64), six.binary_type))
+    self.assertEqual(b'updateframework',
+        securesystemslib.formats.parse_base64(base64))
+    self.assertTrue(isinstance(securesystemslib.formats.parse_base64(base64),
+        six.binary_type))
 
     # Test conditions for invalid arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.formats.parse_base64, 123)
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.formats.parse_base64, True)
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.formats.parse_base64, ['123'])
-    self.assertRaises(securesystemslib.exceptions.FormatError, securesystemslib.formats.parse_base64, '/')
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.formats.parse_base64, 123)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.formats.parse_base64, True)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.formats.parse_base64, ['123'])
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        securesystemslib.formats.parse_base64, '/')
 
 
 
@@ -346,12 +374,17 @@ class TestFormats(unittest.TestCase):
     self.assertEqual('[1,2,3]', ''.join(result))
 
     # Test conditions for invalid arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError, encode, securesystemslib.exceptions.FormatError)
-    self.assertRaises(securesystemslib.exceptions.FormatError, encode, 8.0)
-    self.assertRaises(securesystemslib.exceptions.FormatError, encode, {"x": 8.0})
-    self.assertRaises(securesystemslib.exceptions.FormatError, encode, 8.0, output)
+    self.assertRaises(securesystemslib.exceptions.FormatError, encode,
+        securesystemslib.exceptions.FormatError)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        encode, 8.0)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        encode, {"x": 8.0})
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        encode, 8.0, output)
 
-    self.assertRaises(securesystemslib.exceptions.FormatError, encode, {"x": securesystemslib.exceptions.FormatError})
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        encode, {"x": securesystemslib.exceptions.FormatError})
 
 
 # Run unit test.

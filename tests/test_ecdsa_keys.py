@@ -84,25 +84,26 @@ class TestECDSA_keys(unittest.TestCase):
     global public
     global private
     data = b'The quick brown fox jumps over the lazy dog'
-    signature, method = securesystemslib.ecdsa_keys.create_signature(public, private, data)
+    signature, method = securesystemslib.ecdsa_keys.create_signature(public,
+        private, data)
 
     # Verify format of returned values.
     self.assertEqual(True,
-                     securesystemslib.formats.ECDSASIGNATURE_SCHEMA.matches(signature))
+        securesystemslib.formats.ECDSASIGNATURE_SCHEMA.matches(signature))
 
     self.assertEqual(True, securesystemslib.formats.NAME_SCHEMA.matches(method))
     self.assertEqual('ecdsa-sha2-nistp256', method)
 
     # Check for improperly formatted argument.
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      securesystemslib.ecdsa_keys.create_signature, 123, private, data)
+        securesystemslib.ecdsa_keys.create_signature, 123, private, data)
 
     self.assertRaises(securesystemslib.exceptions.FormatError,
-                      securesystemslib.ecdsa_keys.create_signature, public, 123, data)
+        securesystemslib.ecdsa_keys.create_signature, public, 123, data)
 
     # Check for invalid 'data'.
     self.assertRaises(securesystemslib.exceptions.CryptoError,
-                      securesystemslib.ecdsa_keys.create_signature, public, private, 123)
+        securesystemslib.ecdsa_keys.create_signature, public, private, 123)
 
 
   def test_verify_signature(self):

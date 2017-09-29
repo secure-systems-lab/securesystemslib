@@ -67,14 +67,18 @@ class TestSchema(unittest.TestCase):
           raise securesystemslib.exceptions.FormatError(message)
 
     new_schema2 = NewSchema2('test')
-    self.assertRaises(securesystemslib.exceptions.FormatError, new_schema2.check_match, 'bad')
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        new_schema2.check_match, 'bad')
     self.assertFalse(new_schema2.matches('bad'))
     self.assertTrue(new_schema2.matches('test'))
 
     # Test conditions for invalid arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError, new_schema2.check_match, True)
-    self.assertRaises(securesystemslib.exceptions.FormatError, new_schema2.check_match, NewSchema2)
-    self.assertRaises(securesystemslib.exceptions.FormatError, new_schema2.check_match, 123)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        new_schema2.check_match, True)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        new_schema2.check_match, NewSchema2)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        new_schema2.check_match, 123)
 
     self.assertFalse(new_schema2.matches(True))
     self.assertFalse(new_schema2.matches(NewSchema2))
@@ -106,9 +110,12 @@ class TestSchema(unittest.TestCase):
     self.assertFalse(string_schema.matches(SCHEMA.Schema))
 
     # Test conditions for invalid arguments in a schema definition.
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.String, 1)
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.String, [1])
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.String, {'a': 1})
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.String, 1)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.String, [1])
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.String, {'a': 1})
 
 
 
@@ -129,8 +136,7 @@ class TestSchema(unittest.TestCase):
   def test_OneOf(self):
     # Test conditions for valid arguments.
     oneof_schema = SCHEMA.OneOf([SCHEMA.ListOf(SCHEMA.Integer()),
-                                     SCHEMA.String('Hello'),
-                                     SCHEMA.String('bye')])
+        SCHEMA.String('Hello'), SCHEMA.String('bye')])
 
     self.assertTrue(oneof_schema.matches([]))
     self.assertTrue(oneof_schema.matches('bye'))
@@ -141,18 +147,21 @@ class TestSchema(unittest.TestCase):
     self.assertFalse(oneof_schema.matches(['Hi']))
 
     # Test conditions for invalid arguments in a schema definition.
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.OneOf, 1)
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.OneOf, [1])
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.OneOf, {'a': 1})
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.OneOf, [SCHEMA.AnyString(), 1])
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.OneOf, 1)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.OneOf, [1])
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.OneOf, {'a': 1})
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.OneOf, [SCHEMA.AnyString(), 1])
 
 
 
   def test_AllOf(self):
     # Test conditions for valid arguments.
     allof_schema = SCHEMA.AllOf([SCHEMA.Any(),
-                                     SCHEMA.AnyString(),
-                                     SCHEMA.String('a')])
+        SCHEMA.AnyString(), SCHEMA.String('a')])
 
     self.assertTrue(allof_schema.matches('a'))
 
@@ -160,18 +169,21 @@ class TestSchema(unittest.TestCase):
     self.assertFalse(allof_schema.matches('b'))
 
     # Test conditions for invalid arguments in a schema definition.
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.AllOf, 1)
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.AllOf, [1])
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.AllOf, {'a': 1})
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.AllOf, [SCHEMA.AnyString(), 1])
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.AllOf, 1)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.AllOf, [1])
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.AllOf, {'a': 1})
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.AllOf, [SCHEMA.AnyString(), 1])
 
 
   def test_Boolean(self):
     # Test conditions for valid arguments.
     boolean_schema = SCHEMA.Boolean()
 
-    self.assertTrue(boolean_schema.matches(True) and
-                    boolean_schema.matches(False))
+    self.assertTrue(boolean_schema.matches(True) and boolean_schema.matches(False))
 
     # Test conditions for invalid arguments.
     self.assertFalse(boolean_schema.matches(11))
@@ -182,11 +194,11 @@ class TestSchema(unittest.TestCase):
     # Test conditions for valid arguments.
     listof_schema = SCHEMA.ListOf(SCHEMA.RegularExpression('(?:..)*'))
     listof2_schema = SCHEMA.ListOf(SCHEMA.Integer(),
-                                       min_count=3, max_count=10)
+        min_count=3, max_count=10)
 
     self.assertTrue(listof_schema.matches([]))
     self.assertTrue(listof_schema.matches(['Hi', 'this', 'list', 'is',
-                                           'full', 'of', 'even', 'strs']))
+        'full', 'of', 'even', 'strs']))
 
     self.assertTrue(listof2_schema.matches([3]*3))
     self.assertTrue(listof2_schema.matches([3]*10))
@@ -200,9 +212,12 @@ class TestSchema(unittest.TestCase):
     self.assertFalse(listof2_schema.matches(([3]*11)))
 
     # Test conditions for invalid arguments in a schema definition.
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.ListOf, 1)
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.ListOf, [1])
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.ListOf, {'a': 1})
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.ListOf, 1)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.ListOf, [1])
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.ListOf, {'a': 1})
 
 
 
@@ -223,8 +238,7 @@ class TestSchema(unittest.TestCase):
   def test_DictOf(self):
     # Test conditions for valid arguments.
     dictof_schema = SCHEMA.DictOf(SCHEMA.RegularExpression(r'[aeiou]+'),
-                                      SCHEMA.Struct([SCHEMA.AnyString(),
-                                                         SCHEMA.AnyString()]))
+        SCHEMA.Struct([SCHEMA.AnyString(), SCHEMA.AnyString()]))
 
     self.assertTrue(dictof_schema.matches({}))
     self.assertTrue(dictof_schema.matches({'a': ['x', 'y'], 'e' : ['', '']}))
@@ -233,20 +247,24 @@ class TestSchema(unittest.TestCase):
     self.assertFalse(dictof_schema.matches(''))
     self.assertFalse(dictof_schema.matches({'a': ['x', 3], 'e' : ['', '']}))
     self.assertFalse(dictof_schema.matches({'a': ['x', 'y'], 'e' : ['', ''],
-                                            'd' : ['a', 'b']}))
+        'd' : ['a', 'b']}))
 
     # Test conditions for invalid arguments in a schema definition.
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.DictOf, 1, 1)
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.DictOf, [1], [1])
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.DictOf, {'a': 1}, 1)
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.DictOf, SCHEMA.AnyString(), 1)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.DictOf, 1, 1)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.DictOf, [1], [1])
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.DictOf, {'a': 1}, 1)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.DictOf, SCHEMA.AnyString(), 1)
 
 
 
   def test_Optional(self):
     # Test conditions for valid arguments.
     optional_schema = SCHEMA.Object(k1=SCHEMA.String('X'),
-                                k2=SCHEMA.Optional(SCHEMA.String('Y')))
+        k2=SCHEMA.Optional(SCHEMA.String('Y')))
 
     self.assertTrue(optional_schema.matches({'k1': 'X', 'k2': 'Y'}))
     self.assertTrue(optional_schema.matches({'k1': 'X'}))
@@ -255,17 +273,19 @@ class TestSchema(unittest.TestCase):
     self.assertFalse(optional_schema.matches({'k1': 'X', 'k2': 'Z'}))
 
     # Test conditions for invalid arguments in a schema definition.
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.Optional, 1)
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.Optional, [1])
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.Optional, {'a': 1})
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.Optional, 1)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.Optional, [1])
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.Optional, {'a': 1})
 
 
 
   def test_Object(self):
     # Test conditions for valid arguments.
     object_schema = SCHEMA.Object(a=SCHEMA.AnyString(),
-                                      bc=SCHEMA.Struct([SCHEMA.Integer(),
-                                                            SCHEMA.Integer()]))
+        bc=SCHEMA.Struct([SCHEMA.Integer(), SCHEMA.Integer()]))
 
     self.assertTrue(object_schema.matches({'a':'ZYYY', 'bc':[5,9]}))
     self.assertTrue(object_schema.matches({'a':'ZYYY', 'bc':[5,9], 'xx':5}))
@@ -275,10 +295,12 @@ class TestSchema(unittest.TestCase):
     self.assertFalse(object_schema.matches({'a':'ZYYY'}))
 
     # Test conditions for invalid arguments in a schema definition.
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.Object, a='a')
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.Object, a=[1])
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.Object, a=SCHEMA.AnyString(),
-                                                          b=1)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.Object, a='a')
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.Object, a=[1])
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.Object, a=SCHEMA.AnyString(), b=1)
 
     # Test condition for invalid non-dict arguments.
     self.assertFalse(object_schema.matches([{'a':'XYZ'}]))
@@ -289,11 +311,10 @@ class TestSchema(unittest.TestCase):
   def test_Struct(self):
     # Test conditions for valid arguments.
     struct_schema = SCHEMA.Struct([SCHEMA.ListOf(SCHEMA.AnyString()),
-                                                         SCHEMA.AnyString(),
-                                                         SCHEMA.String('X')])
+        SCHEMA.AnyString(), SCHEMA.String('X')])
     struct2_schema = SCHEMA.Struct([SCHEMA.String('X')], allow_more=True)
     struct3_schema = SCHEMA.Struct([SCHEMA.String('X'),
-                     SCHEMA.Integer()], [SCHEMA.Integer()])
+        SCHEMA.Integer()], [SCHEMA.Integer()])
 
     self.assertTrue(struct_schema.matches([[], 'Q', 'X']))
 
@@ -321,11 +342,14 @@ class TestSchema(unittest.TestCase):
     self.assertFalse(struct3_schema.matches(['X', 3, 'A']))
 
     # Test conditions for invalid arguments in a schema definition.
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.Struct, 1)
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.Struct, [1])
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.Struct, {'a': 1})
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.Struct,
-                      [SCHEMA.AnyString(), 1])
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.Struct, 1)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.Struct, [1])
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.Struct, {'a': 1})
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.Struct, [SCHEMA.AnyString(), 1])
 
 
 
@@ -338,31 +362,25 @@ class TestSchema(unittest.TestCase):
 
     # Provide a pattern that contains the trailing '$'
     re_schema_2 = SCHEMA.RegularExpression(pattern='abc$',
-                                               modifiers=0,
-                                               re_object=None,
-                                               re_name='my_re')
+        modifiers=0, re_object=None, re_name='my_re')
 
     self.assertTrue(re_schema_2.matches('abc'))
 
     # Test for valid optional arguments.
     compiled_re = re.compile('^[a-z].*')
     re_schema_optional = SCHEMA.RegularExpression(pattern='abc',
-                                                      modifiers=0,
-                                                      re_object=compiled_re,
-                                                      re_name='my_re')
+        modifiers=0, re_object=compiled_re, re_name='my_re')
     self.assertTrue(re_schema_optional.matches('abc'))
 
     # Valid arguments, but the 'pattern' argument is unset (required if the
     # 're_object' is 'None'.)
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.RegularExpression, None, 0,
-                                                      None, None)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.RegularExpression, None, 0, None, None)
 
     # Valid arguments, 're_name' is unset, and 'pattern' is None.  An exception
     # is not raised, but 're_name' is set to 'pattern'.
     re_schema_optional = SCHEMA.RegularExpression(pattern=None,
-                                                      modifiers=0,
-                                                      re_object=compiled_re,
-                                                      re_name=None)
+        modifiers=0, re_object=compiled_re, re_name=None)
 
     self.assertTrue(re_schema_optional.matches('abc'))
     self.assertTrue(re_schema_optional._re_name == 'pattern')
@@ -372,7 +390,8 @@ class TestSchema(unittest.TestCase):
     self.assertFalse(re_schema.matches('hello world!'))
     self.assertFalse(re_schema.matches([33, 'Hello']))
 
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.RegularExpression, 8)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.RegularExpression, 8)
 
 
 
@@ -384,7 +403,8 @@ class TestSchema(unittest.TestCase):
     self.assertTrue(length_string.matches('Hello Marty'))
 
     # Test conditions for invalid arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.LengthString, 'hello')
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.LengthString, 'hello')
 
     self.assertFalse(length_string.matches('hello'))
     self.assertFalse(length_string.matches(8))
@@ -399,8 +419,10 @@ class TestSchema(unittest.TestCase):
     self.assertTrue(length_bytes.matches(b'Hello Marty'))
 
     # Test conditions for invalid arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.LengthBytes, 'hello')
-    self.assertRaises(securesystemslib.exceptions.FormatError, SCHEMA.LengthBytes, True)
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.LengthBytes, 'hello')
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        SCHEMA.LengthBytes, True)
 
     self.assertFalse(length_bytes.matches(b'hello'))
     self.assertFalse(length_bytes.matches(8))

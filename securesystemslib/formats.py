@@ -467,7 +467,8 @@ TARGETS_SCHEMA = SCHEMA.Object(
   targets = FILEDICT_SCHEMA,
   delegations = SCHEMA.Optional(DELEGATIONS_SCHEMA))
 
-# Snapshot role: indicates the latest versions of all metadata (except timestamp).
+# Snapshot role: indicates the latest versions of all metadata (except
+# timestamp).
 SNAPSHOT_SCHEMA = SCHEMA.Object(
   object_name = 'SNAPSHOT_SCHEMA',
   _type = SCHEMA.String('snapshot'),
@@ -787,8 +788,8 @@ def encode_canonical(object, output_function=None):
       (e.g., output_function('result')).
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError, if 'object' cannot be encoded or 'output_function'
-    is not callable.
+    securesystemslib.exceptions.FormatError, if 'object' cannot be encoded or
+    'output_function' is not callable.
 
   <Side Effects>
     The results are fed to 'output_function()' if 'output_function' is set.

@@ -42,18 +42,22 @@ class TestExceptions(unittest.TestCase):
 
 
   def test_bad_signature_error(self):
-    bad_signature_error = securesystemslib.exceptions.BadSignatureError('bad sig')
+    bad_signature_error = securesystemslib.exceptions.BadSignatureError(
+        'bad sig')
     logger.error(bad_signature_error)
 
 
   def test_bad_hash_error(self):
-    bad_hash_error = securesystemslib.exceptions.BadHashError('01234', '56789')
+    bad_hash_error = securesystemslib.exceptions.BadHashError(
+        '01234', '56789')
     logger.error(bad_hash_error)
 
 
   def test_invalid_metadata_json_error(self):
-    format_error = securesystemslib.exceptions.FormatError('Improperly formatted JSON')
-    invalid_metadata_json_error = securesystemslib.exceptions.InvalidMetadataJSONError(format_error)
+    format_error = securesystemslib.exceptions.FormatError(
+        'Improperly formatted JSON')
+    invalid_metadata_json_error = \
+        securesystemslib.exceptions.InvalidMetadataJSONError(format_error)
     logger.error(invalid_metadata_json_error)
 
 

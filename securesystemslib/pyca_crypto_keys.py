@@ -160,9 +160,9 @@ _PBKDF2_ITERATIONS = securesystemslib.settings.PBKDF2_ITERATIONS
 def generate_rsa_public_and_private(bits=_DEFAULT_RSA_KEY_BITS):
   """
   <Purpose>
-    Generate public and private RSA keys with modulus length 'bits'.
-    The public and private keys returned conform to 'securesystemslib.formats.PEMRSA_SCHEMA'
-    and have the form:
+    Generate public and private RSA keys with modulus length 'bits'.  The
+    public and private keys returned conform to
+    'securesystemslib.formats.PEMRSA_SCHEMA' and have the form:
 
     '-----BEGIN RSA PUBLIC KEY----- ...'
 
@@ -188,7 +188,8 @@ def generate_rsa_public_and_private(bits=_DEFAULT_RSA_KEY_BITS):
       greater.  'bits' defaults to 3072 if not specified.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError, if 'bits' does not contain the correct format.
+    securesystemslib.exceptions.FormatError, if 'bits' does not contain the
+    correct format.
 
   <Side Effects>
     The RSA keys are generated from pyca/cryptography's
@@ -199,9 +200,10 @@ def generate_rsa_public_and_private(bits=_DEFAULT_RSA_KEY_BITS):
   """
 
   # Does 'bits' have the correct format?
-  # This check will ensure 'bits' conforms to 'securesystemslib.formats.RSAKEYBITS_SCHEMA'.
-  # 'bits' must be an integer object, with a minimum value of 2048.
-  # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
+  # This check will ensure 'bits' conforms to
+  # 'securesystemslib.formats.RSAKEYBITS_SCHEMA'.  'bits' must be an integer
+  # object, with a minimum value of 2048.  Raise
+  # 'securesystemslib.exceptions.FormatError' if the check fails.
   securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match(bits)
 
   # Generate the public and private RSA keys.  The pyca/cryptography 'rsa'
@@ -701,8 +703,9 @@ def encrypt_key(key_object, password):
       encryption key is derived from it.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError, if any of the arguments are improperly
-    formatted or 'key_object' does not contain the private portion of the key.
+    securesystemslib.exceptions.FormatError, if any of the arguments are
+    improperly formatted or 'key_object' does not contain the private portion
+    of the key.
 
     securesystemslib.exceptions.CryptoError, if an Ed25519 key in encrypted TUF
     format cannot be created.
@@ -788,8 +791,8 @@ def decrypt_key(encrypted_key, password):
     encrypted_key:
       An encrypted TUF key (additional data is also included, such as salt,
       number of password iterations used for the derived encryption key, etc)
-      of the form 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA'.  'encrypted_key'
-      should have been generated with encrypted_key().
+      of the form 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA'.
+      'encrypted_key' should have been generated with encrypted_key().
 
     password:
       The password, or passphrase, to encrypt the private part of the RSA
@@ -800,8 +803,8 @@ def decrypt_key(encrypted_key, password):
     securesystemslib.exceptions.FormatError, if the arguments are improperly
     formatted.
 
-    securesystemslib.exceptions.CryptoError, if a TUF key cannot be decrypted from
-    'encrypted_key'.
+    securesystemslib.exceptions.CryptoError, if a TUF key cannot be decrypted
+    from 'encrypted_key'.
 
     securesystemslib.exceptions.Error, if a valid TUF key object is not found in
     'encrypted_key'.
@@ -828,8 +831,9 @@ def decrypt_key(encrypted_key, password):
   # data like salts and password iterations) to re-derive the decryption key.
   json_data = _decrypt(encrypted_key, password)
 
-  # Raise 'securesystemslib.exceptions.Error' if 'json_data' cannot be deserialized
-  # to a valid 'securesystemslib.formats.ANYKEY_SCHEMA' key object.
+  # Raise 'securesystemslib.exceptions.Error' if 'json_data' cannot be
+  # deserialized to a valid 'securesystemslib.formats.ANYKEY_SCHEMA' key
+  # object.
   key_object = securesystemslib.util.load_json_string(json_data.decode())
 
   return key_object
@@ -961,9 +965,8 @@ def _decrypt(file_contents, password):
   # from 'file_contents'.  These five values are delimited by
   # '_ENCRYPTION_DELIMITER'.  This delimiter is arbitrarily chosen and should
   # not occur in the hexadecimal representations of the fields it is
-  # separating.  Raise 'securesystemslib.exceptions.CryptoError', if 'file_contents'
-  # does not contains the expected
-  # data layout.
+  # separating.  Raise 'securesystemslib.exceptions.CryptoError', if
+  # 'file_contents' does not contains the expected data layout.
   try:
     salt, iterations, hmac, iv, ciphertext = \
       file_contents.split(_ENCRYPTION_DELIMITER)
@@ -977,9 +980,10 @@ def _decrypt(file_contents, password):
   iv = binascii.unhexlify(iv.encode('utf-8'))
   ciphertext = binascii.unhexlify(ciphertext.encode('utf-8'))
 
-  # Generate derived key from 'password'.  The salt and iterations are specified
-  # so that the expected derived key is regenerated correctly.  Discard the old
-  # "salt" and "iterations" values, as we only need the old derived key.
+  # Generate derived key from 'password'.  The salt and iterations are
+  # specified so that the expected derived key is regenerated correctly.
+  # Discard the old "salt" and "iterations" values, as we only need the old
+  # derived key.
   junk_old_salt, junk_old_iterations, symmetric_key = \
     _generate_derived_key(password, salt, iterations)
 
