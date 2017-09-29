@@ -85,7 +85,7 @@ class Modified_TestCase(unittest.TestCase):
       try:
         # OSError will occur if the directory was already removed.
         cleanup_function()
-      
+
       except OSError:
         pass
 
@@ -95,6 +95,7 @@ class Modified_TestCase(unittest.TestCase):
     """Creates and returns an absolute path of a directory."""
     prefix = self.__class__.__name__+'_'
     temp_directory = tempfile.mkdtemp(prefix=prefix, dir=directory)
+
     def _destroy_temp_directory():
       shutil.rmtree(temp_directory)
     self._cleanup.append(_destroy_temp_directory)
@@ -104,8 +105,10 @@ class Modified_TestCase(unittest.TestCase):
 
   def make_temp_file(self, suffix='.txt', directory=None):
     """Creates and returns an absolute path of an empty file."""
+
     prefix='tmp_file_'+self.__class__.__name__+'_'
     temp_file = tempfile.mkstemp(suffix=suffix, prefix=prefix, dir=directory)
+
     def _destroy_temp_file():
       os.unlink(temp_file[1])
     self._cleanup.append(_destroy_temp_file)
@@ -115,10 +118,12 @@ class Modified_TestCase(unittest.TestCase):
 
   def make_temp_data_file(self, suffix='', directory=None, data = 'junk data'):
     """Returns an absolute path of a temp file containing data."""
+
     temp_file_path = self.make_temp_file(suffix=suffix, directory=directory)
     temp_file = open(temp_file_path, 'wt')
     temp_file.write(data)
     temp_file.close()
+
     return temp_file_path
 
 
@@ -140,6 +145,6 @@ class Modified_TestCase(unittest.TestCase):
 
     rand_str = ''
     for letter in range(length):
-      rand_str += random.choice('abcdefABCDEF'+string.digits)
+      rand_str += random.choice('abcdefABCDEF' +string.digits)
 
     return rand_str

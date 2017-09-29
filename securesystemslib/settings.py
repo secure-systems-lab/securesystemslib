@@ -32,11 +32,11 @@ from __future__ import unicode_literals
 # unusable.
 temporary_directory = None
 
-# The current "good enough" number of PBKDF2 passphrase iterations.
-# We recommend that important keys, such as root, be kept offline.
-# 'toto.settings.PBKDF2_ITERATIONS' should increase as CPU speeds increase, set here
-# at 100,000 iterations by default (in 2013).  The repository maintainer may opt
-# to modify the default setting according to their security needs and
+# The current "good enough" number of PBKDF2 passphrase iterations.  We
+# recommend that important keys, such as root, be kept offline.
+# 'toto.settings.PBKDF2_ITERATIONS' should increase as CPU speeds increase, set
+# here at 100,000 iterations by default (in 2013).  The repository maintainer
+# may opt to modify the default setting according to their security needs and
 # computational restrictions.  A strong user password is still important.
 # Modifying the number of iterations will result in a new derived key+PBDKF2
 # combination if the key is loaded and re-saved, overriding any previous

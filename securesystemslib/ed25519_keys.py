@@ -120,8 +120,10 @@ def generate_public_and_private():
   """
   <Purpose>
     Generate a pair of ed25519 public and private keys with PyNaCl.  The public
-    and private keys returned conform to 'securesystemslib.formats.ED25519PULIC_SCHEMA' and
-    'securesystemslib.formats.ED25519SEED_SCHEMA', respectively, and have the form:
+    and private keys returned conform to
+    'securesystemslib.formats.ED25519PULIC_SCHEMA' and
+    'securesystemslib.formats.ED25519SEED_SCHEMA', respectively, and have the
+    form:
 
     '\xa2F\x99\xe0\x86\x80%\xc8\xee\x11\xb95T\xd9\...'
 
@@ -138,7 +140,8 @@ def generate_public_and_private():
     None.
 
   <Exceptions>
-    securesystemslib.exceptions.UnsupportedLibraryError, if the PyNaCl ('nacl') module is unavailable.
+    securesystemslib.exceptions.UnsupportedLibraryError, if the PyNaCl ('nacl')
+    module is unavailable.
 
     NotImplementedError, if a randomness source is not found by 'os.urandom'.
 
@@ -147,8 +150,9 @@ def generate_public_and_private():
     with os.urandom() and then calling PyNaCl's nacl.signing.SigningKey().
 
   <Returns>
-    A (public, private) tuple that conform to 'securesystemslib.formats.ED25519PUBLIC_SCHEMA'
-    and 'securesystemslib.formats.ED25519SEED_SCHEMA', respectively.
+    A (public, private) tuple that conform to
+    'securesystemslib.formats.ED25519PUBLIC_SCHEMA' and
+    'securesystemslib.formats.ED25519SEED_SCHEMA', respectively.
   """
 
   # Generate ed25519's seed key by calling os.urandom().  The random bytes
@@ -379,7 +383,8 @@ def verify_signature(public_key, scheme, signature, data, use_pynacl=False):
     # Verify 'ed25519' signature with the pure Python implementation.
     else:
       try:
-        securesystemslib._vendor.ed25519.ed25519.checkvalid(signature, data, public)
+        securesystemslib._vendor.ed25519.ed25519.checkvalid(signature,
+            data, public)
         valid_signature = True
 
       # The pure Python implementation raises 'Exception' if 'signature' is

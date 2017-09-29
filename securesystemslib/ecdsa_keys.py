@@ -294,7 +294,8 @@ def verify_signature(public_key, scheme, signature, data):
   # check for a valid 'scheme'.  The check_match() above should have validated
   # it...
   if scheme in _SUPPORTED_ECDSA_SCHEMES: #pragma: no cover
-    ecdsa_key = load_pem_public_key(public_key.encode('utf-8'), backend=default_backend())
+    ecdsa_key = load_pem_public_key(public_key.encode('utf-8'),
+        backend=default_backend())
 
     if not isinstance(ecdsa_key, ec.EllipticCurvePublicKey):
       raise securesystemslib.exceptions.FormatError('Invalid ECDSA public'

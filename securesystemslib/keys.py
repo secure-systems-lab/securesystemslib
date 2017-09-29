@@ -173,11 +173,10 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-sha256'):
     Conforms to 'securesystemslib.formats.RSAKEY_SCHEMA'.
   """
 
-  # Does 'bits' have the correct format?
-  # This check will ensure 'bits' conforms to
-  # 'securesystemslib.formats.RSAKEYBITS_SCHEMA'.  'bits' must be an integer object,
-  # with a minimum value of 2048.  Raise 'securesystemslib.exceptions.FormatError'
-  # if the check fails.
+  # Does 'bits' have the correct format?  This check will ensure 'bits'
+  # conforms to 'securesystemslib.formats.RSAKEYBITS_SCHEMA'.  'bits' must be
+  # an integer object, with a minimum value of 2048.  Raise
+  # 'securesystemslib.exceptions.FormatError' if the check fails.
   securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match(bits)
   securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme)
 
@@ -516,8 +515,8 @@ def format_metadata_to_key(key_metadata):
                   'private': '...'}}
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError, if 'key_metadata' does not conform to
-    'securesystemslib.formats.KEY_SCHEMA'.
+    securesystemslib.exceptions.FormatError, if 'key_metadata' does not conform
+    to 'securesystemslib.formats.KEY_SCHEMA'.
 
   <Side Effects>
     None.
@@ -700,8 +699,8 @@ def create_signature(key_dict, data):
   elif keytype == 'ed25519':
     public = binascii.unhexlify(public.encode('utf-8'))
     private = binascii.unhexlify(private.encode('utf-8'))
-    sig, scheme = securesystemslib.ed25519_keys.create_signature(public, private,
-      data.encode('utf-8'), scheme)
+    sig, scheme = securesystemslib.ed25519_keys.create_signature(public,
+      private, data.encode('utf-8'), scheme)
 
   elif keytype == 'ecdsa-sha2-nistp256':
     sig, scheme = securesystemslib.ecdsa_keys.create_signature(public, private,
@@ -909,16 +908,17 @@ def import_rsakey_from_private_pem(pem, scheme='rsassa-pss-sha256', password=Non
       The signature scheme used by the imported key.
 
     password: (optional)
-      The password, or passphrase, to decrypt the private part of the RSA
-      key if it is encrypted.  'password' is not used directly as the encryption
+      The password, or passphrase, to decrypt the private part of the RSA key
+      if it is encrypted.  'password' is not used directly as the encryption
       key, a stronger encryption key is derived from it.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if the arguments are improperly
     formatted.
 
-    securesystemslib.exceptions.UnsupportedLibraryError, if any of the cryptography
-    libraries specified in 'settings.py' are unsupported or unavailable.
+    securesystemslib.exceptions.UnsupportedLibraryError, if any of the
+    cryptography libraries specified in 'settings.py' are unsupported or
+    unavailable.
 
   <Side Effects>
     None.
@@ -1038,7 +1038,8 @@ def import_rsakey_from_public_pem(pem, scheme='rsassa-pss-sha256'):
     public_pem = extract_pem(pem, private_pem=False)
 
   else:
-    raise securesystemslib.exceptions.FormatError('Invalid public pem: ' + repr(pem))
+    raise securesystemslib.exceptions.FormatError('Invalid public'
+        ' pem: ' + repr(pem))
 
   # Begin building the RSA key dictionary.
   rsakey_dict = {}
@@ -1117,8 +1118,8 @@ def import_rsakey_from_pem(pem, scheme='rsassa-pss-sha256'):
     return import_rsakey_from_private_pem(pem, password=None)
 
   else:
-    raise securesystemslib.exceptions.FormatError('PEM contains neither a public'
-      ' nor private key: ' + repr(pem))
+    raise securesystemslib.exceptions.FormatError('PEM contains neither a'
+      ' public nor private key: ' + repr(pem))
 
   # Begin building the RSA key dictionary.
   rsakey_dict = {}
@@ -1207,7 +1208,8 @@ def extract_pem(pem, private_pem=False):
     # Be careful not to print private key material in exception message.
     if not private_pem:
       raise securesystemslib.exceptions.FormatError('Required PEM'
-        ' header ' + repr(pem_header) + '\n not found in PEM string: ' + repr(pem))
+        ' header ' + repr(pem_header) + '\n not found in PEM'
+        ' string: ' + repr(pem))
 
     else:
       raise securesystemslib.exceptions.FormatError('Required PEM'
@@ -1221,7 +1223,8 @@ def extract_pem(pem, private_pem=False):
     # Be careful not to print private key material in exception message.
     if not private_pem:
       raise securesystemslib.exceptions.FormatError('Required PEM'
-        ' footer ' + repr(pem_footer) + '\n not found in PEM string ' + repr(pem))
+        ' footer ' + repr(pem_footer) + '\n not found in PEM'
+        ' string ' + repr(pem))
 
     else:
       raise securesystemslib.exceptions.FormatError('Required PEM'
@@ -1275,7 +1278,8 @@ def encrypt_key(key_object, password):
     securesystemslib.exceptions.FormatError, if the arguments are improperly
     formatted.
 
-    securesystemslib.exceptions.CryptoError, if 'key_object' cannot be encrypted.
+    securesystemslib.exceptions.CryptoError, if 'key_object' cannot be
+    encrypted.
 
     securesystemslib.exceptions.UnsupportedLibraryError, if the general-purpose
     cryptography library specified in 'settings.GENERAL_CRYPTO_LIBRARY' is
@@ -1286,7 +1290,8 @@ def encrypt_key(key_object, password):
     'securesystemslib.formats.GENERAL_CRYPTO_LIBRARY' and 'password'.
 
   <Returns>
-    An encrypted string of the form: 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA'.
+    An encrypted string of the form:
+    'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA'.
   """
 
   # Does 'key_object' have the correct format?
@@ -1354,7 +1359,8 @@ def decrypt_key(encrypted_key, passphrase):
     securesystemslib.exceptions.FormatError, if the arguments are improperly
     formatted.
 
-    securesystemslib.exceptions.CryptoError, if 'encrypted_key' cannot be decrypted.
+    securesystemslib.exceptions.CryptoError, if 'encrypted_key' cannot be
+    decrypted.
 
     securesystemslib.exceptions.UnsupportedLibraryError, if the general-purpose
     cryptography library specified in 'settings.GENERAL_CRYPTO_LIBRARY' is
@@ -1538,8 +1544,8 @@ def is_pem_private(pem, keytype='rsa'):
       A string in PEM format.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError, if any of the arguments are improperly
-    formatted.
+    securesystemslib.exceptions.FormatError, if any of the arguments are
+    improperly formatted.
 
   <Side Effects>
     None
@@ -1619,8 +1625,9 @@ def import_ecdsakey_from_private_pem(pem, scheme='ecdsa-sha2-nistp256', password
     securesystemslib.exceptions.FormatError, if the arguments are improperly
     formatted.
 
-    securesystemslib.exceptions.UnsupportedLibraryError, if any of the cryptography
-    libraries specified in 'settings.py' are unsupported or unavailable.
+    securesystemslib.exceptions.UnsupportedLibraryError, if any of the
+    cryptography libraries specified in 'settings.py' are unsupported or
+    unavailable.
 
   <Side Effects>
     None.
@@ -1744,7 +1751,8 @@ def import_ecdsakey_from_public_pem(pem, scheme='ecdsa-sha2-nistp256'):
     public_pem = extract_pem(pem, private_pem=False)
 
   else:
-    raise securesystemslib.exceptions.FormatError('Invalid public pem: ' + repr(pem))
+    raise securesystemslib.exceptions.FormatError('Invalid public'
+        ' pem: ' + repr(pem))
 
   # Begin building the ECDSA key dictionary.
   ecdsakey_dict = {}

@@ -117,7 +117,8 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
   # The requested hash library is not supported.
   else:
     raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
-        ' library requested.  Supported hash libraries: ' + repr(SUPPORTED_LIBRARIES))
+        ' library requested.  Supported hash'
+        ' libraries: ' + repr(SUPPORTED_LIBRARIES))
 
 
 
