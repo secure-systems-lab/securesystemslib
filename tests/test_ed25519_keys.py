@@ -135,20 +135,20 @@ class TestEd25519_keys(unittest.TestCase):
 
     # Check for invalid signature and data.
     # Mismatched data.
-    self.assertEqual(False, securesystemslib.ed25519_keys.verify_signature(public,
-        scheme, signature, '123'))
+    self.assertEqual(False, securesystemslib.ed25519_keys.verify_signature(
+        public, scheme, signature, '123'))
 
     # Mismatched signature.
     bad_signature = b'a'*64
-    self.assertEqual(False, securesystemslib.ed25519_keys.verify_signature(public,
-        scheme, bad_signature, data))
+    self.assertEqual(False, securesystemslib.ed25519_keys.verify_signature(
+        public, scheme, bad_signature, data))
 
     # Generated signature created with different data.
-    new_signature, scheme = securesystemslib.ed25519_keys.create_signature(public, private,
-        b'mismatched data', scheme)
+    new_signature, scheme = securesystemslib.ed25519_keys.create_signature(
+        public, private, b'mismatched data', scheme)
 
-    self.assertEqual(False, securesystemslib.ed25519_keys.verify_signature(public,
-        scheme, new_signature, data))
+    self.assertEqual(False, securesystemslib.ed25519_keys.verify_signature(
+        public, scheme, new_signature, data))
 
 
 

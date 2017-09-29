@@ -189,12 +189,18 @@ class TestHash(unittest.TestCase):
 
 
   def _do_digest_size(self, library):
-    self.assertEqual(16, securesystemslib.hash.digest('md5', library).digest_size)
-    self.assertEqual(20, securesystemslib.hash.digest('sha1', library).digest_size)
-    self.assertEqual(28, securesystemslib.hash.digest('sha224', library).digest_size)
-    self.assertEqual(32, securesystemslib.hash.digest('sha256', library).digest_size)
-    self.assertEqual(48, securesystemslib.hash.digest('sha384', library).digest_size)
-    self.assertEqual(64, securesystemslib.hash.digest('sha512', library).digest_size)
+    self.assertEqual(16,
+        securesystemslib.hash.digest('md5', library).digest_size)
+    self.assertEqual(20,
+        securesystemslib.hash.digest('sha1', library).digest_size)
+    self.assertEqual(28,
+        securesystemslib.hash.digest('sha224', library).digest_size)
+    self.assertEqual(32,
+        securesystemslib.hash.digest('sha256', library).digest_size)
+    self.assertEqual(48,
+        securesystemslib.hash.digest('sha384', library).digest_size)
+    self.assertEqual(64,
+        securesystemslib.hash.digest('sha512', library).digest_size)
 
 
   def test_update_filename(self):
