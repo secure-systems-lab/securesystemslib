@@ -31,16 +31,6 @@ requirements:
     update: all
     pin: True
 
-# add a label to pull requests, default is not set
-# requires private repo permissions, even on public repos
-# default: empty
-label_prs:
-
-# assign users to pull requests, default is not set
-# requires private repo permissions, even on public repos
-# default: empty
-assignees:
-
 # configure the branch prefix the bot is using
 # default: pyup-
 branch_prefix: pyup-
@@ -48,8 +38,3 @@ branch_prefix: pyup-
 # allow to close stale PRs
 # default: True
 close_prs: True
-
-# set a global prefix for PRs
-# default: empty
-pr_prefix:
-
