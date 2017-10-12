@@ -1,5 +1,5 @@
 --editable .
 
-tox
+tox==2.9.1
 cryptography==2.0.3
 pynacl==1.0.1
