@@ -27,9 +27,9 @@ search: False
 # allowed: list
 requirements:
   - dev-requirements.txt:
-    # update all dependencies and pin them
-    update: all
-    pin: True
+      # update all dependencies and pin them
+      update: all
+      pin: True
 
 # configure the branch prefix the bot is using
 # default: pyup-
