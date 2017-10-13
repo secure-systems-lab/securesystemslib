@@ -7,6 +7,10 @@ Secure Systems Library
 .. image:: https://coveralls.io/repos/github/secure-systems-lab/securesystemslib/badge.svg?branch=master
    :target: https://coveralls.io/github/secure-systems-lab/securesystemslib?branch=master
 
+.. image:: https://pyup.io/repos/github/secure-systems-lab/securesystemslib/shield.svg
+     :target: https://pyup.io/repos/github/secure-systems-lab/securesystemslib/
+     :alt: Updates
+
 A library that provides cryptographic and general-purpose functions for Secure
 Systems Lab projects at NYU.  The routines are general enough to be usable by
 other projects.
@@ -21,7 +25,7 @@ securesystemslib supports public-key and general-purpose cryptography, such as
 <https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29>`_, SHA256, SHA512, etc.
 Cryptographic operations are performed by the `cryptography
 <https://cryptography.io/en/latest/>`_ and `PyNaCl
-<https://github.com/pyca/pynacl>`_) libraries.
+<https://github.com/pyca/pynacl>`_ libraries.
 
 The `cryptography` library is used to generate keys and signatures with the
 ECDSA and RSA algorithms, and perform general-purpose cryptography such as
