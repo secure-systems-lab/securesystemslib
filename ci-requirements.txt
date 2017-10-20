@@ -1,0 +1,6 @@
+cryptography
+pynacl
+tox
+coverage
+coveralls
+six
