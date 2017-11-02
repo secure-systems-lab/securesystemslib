@@ -1460,11 +1460,11 @@ def create_rsa_encrypted_pem(private_key, passphrase):
 
   encrypted_pem = None
 
-  # Generate the public and private RSA keys. Raise 'ValueError' if 'bits' is
-  # less than 1024, although a 2048-bit minimum is enforced by
+  # Generate the public and private RSA keys. A 2048-bit minimum is enforced by
+  # create_rsa_encrypted_pem() via a
   # securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match().
-  encrypted_pem = \
-    securesystemslib.pyca_crypto_keys.create_rsa_encrypted_pem(private_key, passphrase)
+  encrypted_pem = securesystemslib.pyca_crypto_keys.create_rsa_encrypted_pem(
+      private_key, passphrase)
 
   return encrypted_pem
 
