@@ -18,7 +18,7 @@
   digest objects, and providing a central location for hash routines are the
   main goals of this module.  Support routines implemented include functions to
   create digest objects given a filename or file object.  Only the standard
-  hashlib library is currently supported, but pyca/crytography support will be
+  hashlib library is currently supported, but pyca/cryptography support will be
   added in the future.
 """
 
