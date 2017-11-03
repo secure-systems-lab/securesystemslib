@@ -178,7 +178,7 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-sha256'):
   # an integer object, with a minimum value of 2048.  Raise
   # 'securesystemslib.exceptions.FormatError' if the check fails.
   securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match(bits)
-  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   # Begin building the RSA key dictionary.
   rsakey_dict = {}
@@ -251,10 +251,10 @@ def generate_ecdsa_key(scheme='ecdsa-sha2-nistp256'):
     Conforms to 'securesystemslib.formats.ECDSAKEY_SCHEMA'.
   """
 
-  # Does 'algorithm' have the correct format?  This check will ensure
-  # 'algorithm is properly formatted and is a supported ECDSA algorithm.  Raise
+  # Does 'scheme' have the correct format?  This check will ensure 'scheme' is
+  # properly formatted and is a supported ECDSA algorithm.  Raise
   # 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   # Begin building the ECDSA key dictionary.
   ecdsa_key = {}
@@ -441,7 +441,7 @@ def format_keyval_to_metadata(keytype, scheme, key_value, private=False):
   securesystemslib.formats.KEYTYPE_SCHEMA.check_match(keytype)
 
   # Does 'scheme' have the correct format?
-  securesystemslib.formats.SIG_SCHEME_SCHEMA.check_match(scheme)
+  securesystemslib.formats.SCHEME_SCHEMA.check_match(scheme)
 
   # Does 'key_value' have the correct format?
   securesystemslib.formats.KEYVAL_SCHEMA.check_match(key_value)
@@ -930,7 +930,7 @@ def import_rsakey_from_private_pem(pem, scheme='rsassa-pss-sha256', password=Non
   securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   if password is not None:
     securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
@@ -1023,7 +1023,7 @@ def import_rsakey_from_public_pem(pem, scheme='rsassa-pss-sha256'):
   securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
 
   # Does 'scheme' have the correct format?
-  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   # Ensure the PEM string has a public header and footer.  Although a simple
   # validation of 'pem' is performed here, a fully valid PEM string is needed
@@ -1097,7 +1097,7 @@ def import_rsakey_from_pem(pem, scheme='rsassa-pss-sha256'):
   securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   public_pem = ''
   private_pem = ''
@@ -1626,7 +1626,7 @@ def import_ecdsakey_from_private_pem(pem, scheme='ecdsa-sha2-nistp256', password
   securesystemslib.formats.PEMECDSA_SCHEMA.check_match(pem)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   if password is not None:
     securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
@@ -1724,7 +1724,7 @@ def import_ecdsakey_from_public_pem(pem, scheme='ecdsa-sha2-nistp256'):
   securesystemslib.formats.PEMECDSA_SCHEMA.check_match(pem)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   # Ensure the PEM string has a public header and footer.  Although a simple
   # validation of 'pem' is performed here, a fully valid PEM string is needed
@@ -1797,7 +1797,7 @@ def import_ecdsakey_from_pem(pem, scheme='ecdsa-sha2-nistp256'):
   securesystemslib.formats.PEMECDSA_SCHEMA.check_match(pem)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   public_pem = ''
   private_pem = ''

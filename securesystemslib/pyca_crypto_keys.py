@@ -291,7 +291,7 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
   # 'securesystemslib.exceptions.FormatError' if the checks fail.
   securesystemslib.formats.PEMRSA_SCHEMA.check_match(private_key)
   securesystemslib.formats.DATA_SCHEMA.check_match(data)
-  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   # Signing 'data' requires a private key.  'rsassa-pss-sha256' is the only
   # signature scheme currently supported.
@@ -419,7 +419,7 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
   securesystemslib.formats.PEMRSA_SCHEMA.check_match(public_key)
 
   # Does 'signature_scheme' have the correct format?
-  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(signature_scheme)
+  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(signature_scheme)
 
   # Does 'signature' have the correct format?
   securesystemslib.formats.PYCACRYPTOSIGNATURE_SCHEMA.check_match(signature)

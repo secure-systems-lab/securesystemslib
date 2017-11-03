@@ -66,7 +66,7 @@ class TestFormats(unittest.TestCase):
       'KEYIDS_SCHEMA': (securesystemslib.formats.KEYIDS_SCHEMA,
           ['123456789abcdef', '123456789abcdef']),
 
-      'SIG_SCHEME_SCHEMA': (securesystemslib.formats.SIG_SCHEME_SCHEMA,
+      'SCHEME_SCHEMA': (securesystemslib.formats.SCHEME_SCHEMA,
           'ecdsa-sha2-nistp256'),
 
       'RELPATH_SCHEMA': (securesystemslib.formats.RELPATH_SCHEMA,

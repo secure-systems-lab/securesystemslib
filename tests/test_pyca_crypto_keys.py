@@ -69,7 +69,8 @@ class TestPyca_crypto_keys(unittest.TestCase):
 
     # Verify format of returned values.
     self.assertNotEqual(None, signature)
-    self.assertEqual(None, securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme),
+    self.assertEqual(None,
+        securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme),
         FORMAT_ERROR_MSG)
     self.assertEqual('rsassa-pss-sha256', scheme)
 

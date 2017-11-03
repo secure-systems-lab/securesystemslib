@@ -233,7 +233,7 @@ def import_rsa_privatekey_from_file(filepath, password=None,
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   # If the caller does not provide a password argument, prompt for one.
   # Password confirmation disabled here, which should ideally happen only

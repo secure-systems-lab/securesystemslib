@@ -121,12 +121,12 @@ def generate_public_and_private(scheme='ecdsa-sha2-nistp256'):
     'securesystemslib.formats.PEMECDSA_SCHEMA', respectively.
   """
 
-  # Does 'algorithm' have the correct format?
-  # Verify that 'algorithm' is of the correct type, and that it's one of the
-  # supported ECDSA algorithms.  It must conform to
-  # 'securesystemslib.formats.ECDSAALGORITHMS_SCHEMA'.  Raise
+  # Does 'scheme' have the correct format?
+  # Verify that 'scheme' is of the correct type, and that it's one of the
+  # supported ECDSA .  It must conform to
+  # 'securesystemslib.formats.ECDSA_SCHEME_SCHEMA'.  Raise
   # 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   public_key = None
   private_key = None
@@ -135,7 +135,7 @@ def generate_public_and_private(scheme='ecdsa-sha2-nistp256'):
     private_key = ec.generate_private_key(ec.SECP256R1, default_backend())
     public_key = private_key.public_key()
 
-  # The formats ECDSAALGORITHMS_SCHEMA check above should have detected any
+  # The formats ECDSA_SCHEME_SCHEMA check above should have detected any
   # invalid 'algorithm'.
   else: #pragma: no cover
     raise securesystemslib.exceptions.UnsupportedAlgorithmError('An unsupported'
@@ -211,7 +211,7 @@ def create_signature(public_key, private_key, data, scheme='ecdsa-sha2-nistp256'
   securesystemslib.formats.PEMECDSA_SCHEMA.check_match(private_key)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   # A defensive check for a valid 'scheme'.  The check_match() above
   # should have already validated it...
@@ -287,7 +287,7 @@ def verify_signature(public_key, scheme, signature, data):
   # Are the arguments properly formatted?
   # If not, raise 'securesystemslib.exceptions.FormatError'.
   securesystemslib.formats.PEMECDSA_SCHEMA.check_match(public_key)
-  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
   securesystemslib.formats.ECDSASIGNATURE_SCHEMA.check_match(signature)
 
   # Is 'scheme' one of the supported ECDSA signature schemes?  A defensive
