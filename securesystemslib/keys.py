@@ -218,8 +218,8 @@ def generate_ecdsa_key(scheme='ecdsa-sha2-nistp256'):
   """
   <Purpose>
     Generate public and private ECDSA keys, with NIST P-256 + SHA256 (for
-    hashing) being the default algorithm.  In addition, a keyid identifier for
-    the ECDSA key is generated.  The object returned conforms to
+    hashing) being the default scheme.  In addition, a keyid identifier for the
+    ECDSA key is generated.  The object returned conforms to
     'securesystemslib.formats.ECDSAKEY_SCHEMA' and has the form:
 
     {'keytype': 'ecdsa-sha2-nistp256',
@@ -236,12 +236,13 @@ def generate_ecdsa_key(scheme='ecdsa-sha2-nistp256'):
 
   <Arguments>
     scheme:
-      The ECDSA algorithm.  By default, ECDSA NIST P-256 is used, with SHA256
-      for hashing.
+      The ECDSA signature scheme.  By default, ECDSA NIST P-256 is used, with
+      SHA256 for hashing.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError, if 'algorithm' is improperly or
-    invalid (i.e., not one of the supported ECDSA algorithms).
+    securesystemslib.exceptions.FormatError, if 'scheme' is improperly
+    formatted or invalid (i.e., not one of the supported ECDSA signature
+    schemes).
 
   <Side Effects>
     None.
@@ -251,9 +252,10 @@ def generate_ecdsa_key(scheme='ecdsa-sha2-nistp256'):
     Conforms to 'securesystemslib.formats.ECDSAKEY_SCHEMA'.
   """
 
-  # Does 'scheme' have the correct format?  This check will ensure 'scheme' is
-  # properly formatted and is a supported ECDSA algorithm.  Raise
-  # 'securesystemslib.exceptions.FormatError' if the check fails.
+  # Does 'scheme' have the correct format?
+  # This check will ensure 'scheme' is properly formatted and is a supported
+  # ECDSA signature scheme.  Raise 'securesystemslib.exceptions.FormatError' if
+  # the check fails.
   securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   # Begin building the ECDSA key dictionary.
@@ -694,7 +696,7 @@ def create_signature(key_dict, data):
 
     else:
       raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
-        ' RSA signature algorithm specified: ' + repr(scheme))
+        ' RSA signature scheme specified: ' + repr(scheme))
 
   elif keytype == 'ed25519':
     public = binascii.unhexlify(public.encode('utf-8'))
