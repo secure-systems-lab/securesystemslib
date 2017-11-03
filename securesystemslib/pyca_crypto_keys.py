@@ -342,7 +342,7 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
       # encrypted with a symmetric cipher that is not supported by the backend.
       except cryptography.exceptions.UnsupportedAlgorithm: #pragma: no cover
         raise securesystemslib.exceptions.CryptoError('The private key is'
-          ' encrypted with a unsupported algorithm.')
+          ' encrypted with an unsupported algorithm.')
 
       # Generate an RSSA-PSS signature.
       rsa_signer.update(data)
