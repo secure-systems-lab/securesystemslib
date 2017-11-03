@@ -181,7 +181,7 @@ def create_signature(public_key, private_key, data, scheme='ecdsa-sha2-nistp256'
 
     scheme:
       The signature scheme used to generate the signature.  For example:
-      'ecesa-sha2-nistp256'.
+      'ecdsa-sha2-nistp256'.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if the arguments are improperly
