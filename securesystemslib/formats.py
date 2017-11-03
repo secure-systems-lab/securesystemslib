@@ -181,7 +181,8 @@ ROLENAME_SCHEMA = SCHEMA.AnyString()
 # http://www.emc.com/emc-plus/rsa-labs/historical/twirl-and-rsa-key-size.htm#table1
 RSAKEYBITS_SCHEMA = SCHEMA.Integer(lo=2048)
 
-# The supported ECDSA schemes (ecdsa-sha2-nistp256 is supported by default).
+# The supported ECDSA signature schemes (ecdsa-sha2-nistp256 is supported by
+# default).
 ECDSA_SCHEME_SCHEMA = SCHEMA.OneOf([SCHEMA.String('ecdsa-sha2-nistp256')])
 
 # The number of hashed bins, or the number of delegated roles.  See
@@ -269,9 +270,6 @@ RSAKEY_SCHEMA = SCHEMA.Object(
   keyid = KEYID_SCHEMA,
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
   keyval = KEYVAL_SCHEMA)
-
-# ECDSA signature schemes.
-ECDSA_SCHEME_SCHEMA = SCHEMA.OneOf([SCHEMA.String('ecdsa-sha2-nistp256')])
 
 # An ECDSA TUF key.
 ECDSAKEY_SCHEMA = SCHEMA.Object(
