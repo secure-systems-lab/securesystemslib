@@ -343,10 +343,6 @@ def generate_and_write_ed25519_keypair(filepath, password=None):
 
     securesystemslib.exceptions.CryptoError, if 'filepath' cannot be encrypted.
 
-    securesystemslib.exceptions.UnsupportedLibraryError, if 'filepath' cannot
-    be encrypted due to an invalid configuration setting (i.e., invalid
-    'settings.py' setting).
-
   <Side Effects>
     Writes key files to '<filepath>' and '<filepath>.pub'.
 
@@ -368,12 +364,9 @@ def generate_and_write_ed25519_keypair(filepath, password=None):
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
 
-  # Generate a new ED25519 key object and encrypt it.  The cryptography library
-  # used is determined by the user, or by default (set in
-  # 'settings.ED25519_CRYPTO_LIBRARY').  Raise
-  # 'securesystemslib.exceptions.CryptoError' or
-  # 'securesystemslib.exceptions.UnsupportedLibraryError', if 'ed25519_key'
-  # cannot be encrypted.
+  # Generate a new Ed25519 key object and encrypt it.  Raise
+  # 'securesystemslib.exceptions.CryptoError' if 'ed25519_key' cannot be
+  # encrypted.
   ed25519_key = securesystemslib.keys.generate_ed25519_key()
   encrypted_key = securesystemslib.keys.encrypt_key(ed25519_key, password)
 
@@ -486,10 +479,6 @@ def import_ed25519_privatekey_from_file(filepath, password=None):
 
     securesystemslib.exceptions.CryptoError, if 'filepath' cannot be decrypted.
 
-    securesystemslib.exceptions.UnsupportedLibraryError, if 'filepath' cannot
-    be decrypted due to an invalid configuration setting (i.e., invalid
-    'settings.py' setting).
-
   <Side Effects>
     'password' is used to decrypt the 'filepath' key file.
 
@@ -521,11 +510,9 @@ def import_ed25519_privatekey_from_file(filepath, password=None):
   with open(filepath, 'rb') as file_object:
     encrypted_key = file_object.read()
 
-  # Decrypt the loaded key file, calling the appropriate cryptography library
-  # (i.e., set by the user) and generating the derived encryption key from
-  # 'password'.  Raise 'securesystemslib.exceptions.CryptoError' or
-  # 'securesystemslib.exceptions.UnsupportedLibraryError' if the decryption
-  # fails.
+  # Decrypt the loaded key file, calling the 'cryptography' library to generate
+  # the derived encryption key from 'password'.  Raise
+  # 'securesystemslib.exceptions.CryptoError' if the decryption fails.
   key_object = securesystemslib.keys.decrypt_key(encrypted_key.decode('utf-8'),
       password)
 
@@ -550,13 +537,11 @@ def generate_and_write_ecdsa_keypair(filepath, password=None):
   <Purpose>
     Generate an ECDSA key file, create an encrypted key (using 'password' as
     the pass phrase), and store it in 'filepath'.  The public key portion of
-    the generated ECDSA key is stored in <'filepath'>.pub.  Which cryptography
-    library performs the cryptographic decryption is determined by the string
-    set in 'settings.ECDSA_CRYPTO_LIBRARY'.  'cryptography' library currently
-    supported.  The private key is encrypted according to 'cryptography's
-    approach: "Encrypt using the best available encryption for a given key's
-    backend. This is a curated encryption choice and the algorithm may
-    change over time."
+    the generated ECDSA key is stored in <'filepath'>.pub.  The 'cryptography'
+    library currently supported.  The private key is encrypted according to
+    'cryptography's approach: "Encrypt using the best available encryption for
+    a given key's backend. This is a curated encryption choice and the
+    algorithm may change over time."
 
   <Arguments>
     filepath:
@@ -573,10 +558,6 @@ def generate_and_write_ecdsa_keypair(filepath, password=None):
     formatted.
 
     securesystemslib.exceptions.CryptoError, if 'filepath' cannot be encrypted.
-
-    securesystemslib.exceptions.UnsupportedLibraryError, if 'filepath' cannot be
-    encrypted due to an invalid configuration setting (i.e., invalid
-    'settings.py' setting).
 
   <Side Effects>
     Writes key files to '<filepath>' and '<filepath>.pub'.
@@ -599,12 +580,10 @@ def generate_and_write_ecdsa_keypair(filepath, password=None):
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
 
-  # Generate a new ECDSA key object and encrypt it.  The cryptography library
-  # used is determined by the user, or by default (set in
-  # 'settings.ECDSA_CRYPTO_LIBRARY').  Raise
-  # 'securesystemslib.exceptions.CryptoError' or
-  # 'securesystemslib.exceptions.UnsupportedLibraryError', if 'ed25519_key'
-  # cannot be encrypted.
+  # Generate a new ECDSA key object and encrypt it.  The 'cryptography' library
+  # is currently supported and performs the actual cryptographic routine.
+  # Raise 'securesystemslib.exceptions.CryptoError' if 'ed25519_key' cannot be
+  # encrypted.
   ecdsa_key = securesystemslib.keys.generate_ecdsa_key()
   encrypted_key = securesystemslib.keys.encrypt_key(ecdsa_key, password)
 
@@ -697,9 +676,8 @@ def import_ecdsa_privatekey_from_file(filepath, password=None):
     Import the encrypted ECDSA key file in 'filepath', decrypt it, and return
     the key object in 'securesystemslib.formats.ECDSAKEY_SCHEMA' format.
 
-    Which cryptography library performs the cryptographic decryption is
-    determined by the string set in 'settings.ECDSA_CRYPTO_LIBRARY'.
-    currently supported.  The 'cryptography' library currently supported.
+    The 'cryptography' library is currently supported and performs the actual
+    cryptographic routine.
 
   <Arguments>
     filepath:
@@ -716,10 +694,6 @@ def import_ecdsa_privatekey_from_file(filepath, password=None):
     not 'ecdsa-sha2-nistp256').
 
     securesystemslib.exceptions.CryptoError, if 'filepath' cannot be decrypted.
-
-    securesystemslib.exceptions.UnsupportedLibraryError, if 'filepath' cannot be
-    decrypted due to an invalid configuration setting (i.e., invalid
-    'settings.py' setting).
 
   <Side Effects>
     'password' is used to decrypt the 'filepath' key file.
@@ -751,11 +725,9 @@ def import_ecdsa_privatekey_from_file(filepath, password=None):
   with open(filepath, 'rb') as file_object:
     encrypted_key = file_object.read()
 
-  # Decrypt the loaded key file, calling the appropriate cryptography library
-  # (i.e., set by the user) and generating the derived encryption key from
-  # 'password'.  Raise 'securesystemslib.exceptions.CryptoError' or
-  # 'securesystemslib.exceptions.UnsupportedLibraryError' if the decryption
-  # fails.
+  # Decrypt the loaded key file, calling the 'cryptography' library to generate
+  # the derived encryption key from 'password'.  Raise
+  # 'securesystemslib.exceptions.CryptoError' if the decryption fails.
   key_object = securesystemslib.keys.decrypt_key(encrypted_key.decode('utf-8'),
       password)
 

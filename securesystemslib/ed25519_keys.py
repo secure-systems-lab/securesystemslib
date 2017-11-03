@@ -12,13 +12,13 @@
   See LICENSE for licensing information.
 
 <Purpose>
-  The goal of this module is to support ed25519 signatures.  ed25519 is an
+  The goal of this module is to support Ed25519 signatures.  Ed25519 is an
   elliptic-curve public key signature scheme, its main strength being small
   signatures (64 bytes) and small public keys (32 bytes).
   http://ed25519.cr.yp.to/
 
-  'securesystemslib/ed25519_keys.py' calls 'ed25519.py', which is the pure Python
-  implementation of ed25519 optimized for a faster runtime.  The Python
+  'securesystemslib/ed25519_keys.py' calls 'ed25519.py', which is the pure
+  Python implementation of ed25519 optimized for a faster runtime.  The Python
   reference implementation is concise, but very slow (verifying signatures
   takes ~9 seconds on an Intel core 2 duo @ 2.2 ghz x 2).  The optimized
   version can verify signatures in ~2 seconds.
@@ -100,7 +100,7 @@ with warnings.catch_warnings():
   except (ImportError, IOError): # pragma: no cover
     pass
 
-# The optimized pure Python implementation of ed25519 provided by TUF.  If
+# The optimized pure Python implementation of Ed25519 provided by TUF.  If
 # PyNaCl cannot be imported and an attempt to use is made in this module, a
 # 'securesystemslib.exceptions.UnsupportedLibraryError' exception is raised.
 import securesystemslib._vendor.ed25519.ed25519
@@ -170,8 +170,9 @@ def generate_public_and_private():
     public = nacl_key.verify_key.encode(encoder=nacl.encoding.RawEncoder())
 
   except NameError: # pragma: no cover
-    message = 'The PyNaCl library and/or its dependencies unavailable.'
-    raise securesystemslib.exceptions.UnsupportedLibraryError(message)
+    raise securesystemslib.exceptions.UnsupportedLibraryError('The PyNaCl'
+        ' library and/or its dependencies unavailable.')
+
 
   return public, seed
 
@@ -266,12 +267,12 @@ def create_signature(public_key, private_key, data, scheme):
       signature = nacl_sig.signature
 
     except NameError: # pragma: no cover
-      message = 'The PyNaCl library and/or its dependencies unavailable.'
-      raise securesystemslib.exceptions.UnsupportedLibraryError(message)
+      raise securesystemslib.exceptions.UnsupportedLibraryError('The PyNaCl'
+          ' library and/or its dependencies unavailable.')
 
     except (ValueError, TypeError, nacl.exceptions.CryptoError) as e:
-      message = 'An "ed25519" signature could not be created with PyNaCl.'
-      raise securesystemslib.exceptions.CryptoError(message + str(e))
+      raise securesystemslib.exceptions.CryptoError('An "ed25519" signature'
+          ' could not be created with PyNaCl.' + str(e))
 
   else: #pragma: no cover
     raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
@@ -374,8 +375,8 @@ def verify_signature(public_key, scheme, signature, data, use_pynacl=False):
         valid_signature = True
 
       except NameError: # pragma: no cover
-        message = 'The PyNaCl library and/or its dependencies unavailable.'
-        raise securesystemslib.exceptions.UnsupportedLibraryError(message)
+        raise securesystemslib.exceptions.UnsupportedLibraryError('The PyNaCl'
+            ' library and/or its dependencies unavailable.')
 
       except nacl.exceptions.BadSignatureError:
         pass
