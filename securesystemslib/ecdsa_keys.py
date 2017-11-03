@@ -109,8 +109,8 @@ def generate_public_and_private(scheme='ecdsa-sha2-nistp256'):
     securesystemslib.exceptions.FormatError, if 'algorithm' is improperly
     formatted.
 
-    securesystemslib.exceptions.UnsupportedLibraryError, if a required cryptography
-    library unavailable.
+    securesystemslib.exceptions.UnsupportedAlgorithmError, if 'scheme' is an
+    unsupported algorithm.
 
   <Side Effects>
     None.
@@ -138,8 +138,8 @@ def generate_public_and_private(scheme='ecdsa-sha2-nistp256'):
   # The formats ECDSAALGORITHMS_SCHEMA check above should have detected any
   # invalid 'algorithm'.
   else: #pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError('An unsupported'
-      ' algorithm was specified: ' + repr(scheme) + '.\n  Supported'
+    raise securesystemslib.exceptions.UnsupportedAlgorithmError('An unsupported'
+      ' scheme specified: ' + repr(scheme) + '.\n  Supported'
       ' algorithms: ' + repr(_SUPPORTED_ECDSA_SCHEMES))
 
   private_pem = private_key.private_bytes(encoding=serialization.Encoding.PEM,
@@ -367,8 +367,8 @@ def create_ecdsa_public_and_private_from_pem(pem, password=None):
     securesystemslib.exceptions.FormatError, if the arguments are improperly
     formatted.
 
-    securesystemslib.exceptions.UnsupportedLibraryError, if any of the cryptography
-    libraries specified in 'settings.py' are unsupported or unavailable.
+    securesystemslib.exceptions.UnsupportedAlgorithmError, if the ECDSA key
+    pair could not be extracted, possibly due to an unsupported algorithm.
 
   <Side Effects>
     None.

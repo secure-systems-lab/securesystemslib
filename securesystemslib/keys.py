@@ -645,8 +645,8 @@ def create_signature(key_dict, data):
     securesystemslib.exceptions.FormatError, if 'key_dict' is improperly
     formatted.
 
-    securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported or
-    unavailable library is detected.
+    securesystemslib.exceptions.UnsupportedAlgorithmError, if 'key_dict'
+    specifies an unsupported key type or signing scheme.
 
     TypeError, if 'key_dict' contains an invalid keytype.
 
@@ -685,7 +685,7 @@ def create_signature(key_dict, data):
   # expected by the cryptography functions called below.
   data = securesystemslib.formats.encode_canonical(data)
 
-  # Call the appropriate cryptography libraries for the supported key types,
+  # Call the appropriate cryptography modules for the supported key types,
   # otherwise raise an exception.
   if keytype == 'rsa':
     if scheme == 'rsassa-pss-sha256':
@@ -779,11 +779,8 @@ def verify_signature(key_dict, signature, data):
     securesystemslib.exceptions.FormatError, raised if either 'key_dict' or
     'signature' are improperly formatted.
 
-    securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported or
-    unavailable library is detected.
-
-    securesystemslib.exceptions.UnsupportedAlgorithmError, if the signature
-    scheme specified in 'key_dict' is not supported.
+    securesystemslib.exceptions.UnsupportedAlgorithmError, if 'key_dict' or
+    'signature' specifies an unsupported algorithm.
 
     securesystemslib.exceptions.CryptoError, if the KEYID in the given
     'key_dict' does not match the KEYID in 'signature'.
@@ -916,9 +913,8 @@ def import_rsakey_from_private_pem(pem, scheme='rsassa-pss-sha256', password=Non
     securesystemslib.exceptions.FormatError, if the arguments are improperly
     formatted.
 
-    securesystemslib.exceptions.UnsupportedLibraryError, if any of the
-    cryptography libraries specified in 'settings.py' are unsupported or
-    unavailable.
+    securesystemslib.exceptions.UnsupportedAlgorithmError, if 'pem' specifies
+    an unsupported key type.
 
   <Side Effects>
     None.
@@ -1281,13 +1277,8 @@ def encrypt_key(key_object, password):
     securesystemslib.exceptions.CryptoError, if 'key_object' cannot be
     encrypted.
 
-    securesystemslib.exceptions.UnsupportedLibraryError, if the general-purpose
-    cryptography library specified in 'settings.GENERAL_CRYPTO_LIBRARY' is
-    unsupported.
-
   <Side Effects>
-    Perform crytographic operations using the library specified in
-    'securesystemslib.formats.GENERAL_CRYPTO_LIBRARY' and 'password'.
+    None.
 
   <Returns>
     An encrypted string of the form:
@@ -1362,13 +1353,8 @@ def decrypt_key(encrypted_key, passphrase):
     securesystemslib.exceptions.CryptoError, if 'encrypted_key' cannot be
     decrypted.
 
-    securesystemslib.exceptions.UnsupportedLibraryError, if the general-purpose
-    cryptography library specified in 'settings.GENERAL_CRYPTO_LIBRARY' is
-    unsupported.
-
   <Side Effects>
-    Perform crytographic operations using the library specified in
-    'securesystemslib.formats.GENERAL_CRYPTO_LIBRARY' and 'password'.
+    None.
 
   <Returns>
     A key object of the form: 'securesystemslib.formats.ANYKEY_SCHEMA' (e.g.,
@@ -1406,15 +1392,13 @@ def decrypt_key(encrypted_key, passphrase):
 def create_rsa_encrypted_pem(private_key, passphrase):
   """
   <Purpose>
-    Return a string in PEM format, where the private part of the RSA key is
-    encrypted. The private part of the RSA key is encrypted with
-    AES-256-CTR-Mode, and passwords are strengthened with PBKDF2-HMAC-SHA256
-    (100K iterations by default, but may be overriden in
-    'securesystemslib.settings.PBKDF2_ITERATIONS' by the user).
+    Return a string in PEM format (TraditionalOpenSSL), where the private part
+    of the RSA key is encrypted using the best available encryption for a given
+    key's backend. This is a curated (by cryptography.io) encryption choice and
+    the algorithm may change over time.
 
-    http://en.wikipedia.org/wiki/Advanced_Encryption_Standard
-    http://en.wikipedia.org/wiki/CTR_mode#Counter_.28CTR.29
-    https://en.wikipedia.org/wiki/PBKDF2
+    c.f. cryptography.io/en/latest/hazmat/primitives/asymmetric/serialization/
+        #cryptography.hazmat.primitives.serialization.BestAvailableEncryption
 
   >>> rsa_key = generate_rsa_key()
   >>> private = rsa_key['keyval']['private']
@@ -1460,11 +1444,11 @@ def create_rsa_encrypted_pem(private_key, passphrase):
 
   encrypted_pem = None
 
-  # Generate the public and private RSA keys. Raise 'ValueError' if 'bits' is
-  # less than 1024, although a 2048-bit minimum is enforced by
+  # Generate the public and private RSA keys. A 2048-bit minimum is enforced by
+  # create_rsa_encrypted_pem() via a
   # securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match().
-  encrypted_pem = \
-    securesystemslib.pyca_crypto_keys.create_rsa_encrypted_pem(private_key, passphrase)
+  encrypted_pem = securesystemslib.pyca_crypto_keys.create_rsa_encrypted_pem(
+      private_key, passphrase)
 
   return encrypted_pem
 
@@ -1625,9 +1609,8 @@ def import_ecdsakey_from_private_pem(pem, scheme='ecdsa-sha2-nistp256', password
     securesystemslib.exceptions.FormatError, if the arguments are improperly
     formatted.
 
-    securesystemslib.exceptions.UnsupportedLibraryError, if any of the
-    cryptography libraries specified in 'settings.py' are unsupported or
-    unavailable.
+    securesystemslib.exceptions.UnsupportedAlgorithmError, if 'pem' specifies
+    an unsupported key type.
 
   <Side Effects>
     None.
@@ -1659,7 +1642,8 @@ def import_ecdsakey_from_private_pem(pem, scheme='ecdsa-sha2-nistp256', password
   private = None
 
   public, private = \
-    securesystemslib.ecdsa_keys.create_ecdsa_public_and_private_from_pem(pem, password)
+      securesystemslib.ecdsa_keys.create_ecdsa_public_and_private_from_pem(pem,
+      password)
 
   # Generate the keyid of the ECDSA key.  'key_value' corresponds to the
   # 'keyval' entry of the 'ECDSAKEY_SCHEMA' dictionary.  The private key
