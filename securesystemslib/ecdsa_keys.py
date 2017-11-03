@@ -213,9 +213,11 @@ def create_signature(public_key, private_key, data, scheme='ecdsa-sha2-nistp256'
   # Is 'scheme' properly formatted?
   securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
-  # A defensive check for a valid 'scheme'.  The check_match() above
-  # should have already validated it...
-  if scheme == 'ecdsa-sha2-nistp256': #pragma: no cover
+  # 'ecdsa-sha2-nistp256' is the only currently supported ECDSA scheme, so this
+  # if-clause isn't strictly needed.  Nevertheless, the conditional statement
+  # is included to accommodate multiple schemes that can potentially be added
+  # in the future.
+  if scheme == 'ecdsa-sha2-nistp256':
     try:
       private_key = load_pem_private_key(private_key.encode('utf-8'),
         password=None, backend=default_backend())
