@@ -1406,15 +1406,13 @@ def decrypt_key(encrypted_key, passphrase):
 def create_rsa_encrypted_pem(private_key, passphrase):
   """
   <Purpose>
-    Return a string in PEM format, where the private part of the RSA key is
-    encrypted. The private part of the RSA key is encrypted with
-    AES-256-CTR-Mode, and passwords are strengthened with PBKDF2-HMAC-SHA256
-    (100K iterations by default, but may be overriden in
-    'securesystemslib.settings.PBKDF2_ITERATIONS' by the user).
+    Return a string in PEM format (TraditionalOpenSSL), where the private part
+    of the RSA key is encrypted using the best available encryption for a given
+    key's backend. This is a curated (by cryptography.io) encryption choice and
+    the algorithm may change over time.
 
-    http://en.wikipedia.org/wiki/Advanced_Encryption_Standard
-    http://en.wikipedia.org/wiki/CTR_mode#Counter_.28CTR.29
-    https://en.wikipedia.org/wiki/PBKDF2
+    c.f. cryptography.io/en/latest/hazmat/primitives/asymmetric/serialization/
+        #cryptography.hazmat.primitives.serialization.BestAvailableEncryption
 
   >>> rsa_key = generate_rsa_key()
   >>> private = rsa_key['keyval']['private']
