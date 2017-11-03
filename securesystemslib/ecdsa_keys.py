@@ -189,8 +189,8 @@ def create_signature(public_key, private_key, data, scheme='ecdsa-sha2-nistp256'
 
     securesystemslib.exceptions.CryptoError, if a signature cannot be created.
 
-    securesystemslib.exceptions.UnsupportedAlgorithmError, if 'scheme' is
-    an not one of the supported signature schemes.
+    securesystemslib.exceptions.UnsupportedAlgorithmError, if 'scheme' is not
+    one of the supported signature schemes.
 
   <Side Effects>
     None.
