@@ -434,11 +434,6 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
   # was used as the signature scheme.
   valid_signature = False
 
-  # Verify the expected 'signature_scheme' value.  This is an extra check,
-  # since the check_match() should have validated 'signature_scheme'.
-  if signature_scheme != 'rsassa-pss-sha256': #pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedAlgorithmError(signature_scheme)
-
   # Verify the RSASSA-PSS signature with pyca/cryptography.
   try:
     public_key_object = serialization.load_pem_public_key(public_key.encode('utf-8'),
