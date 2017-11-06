@@ -687,8 +687,6 @@ def create_signature(key_dict, data):
   # expected by the cryptography functions called below.
   data = securesystemslib.formats.encode_canonical(data)
 
-  # Call the appropriate cryptography modules for the supported key types,
-  # otherwise raise an exception.
   if keytype == 'rsa':
     if scheme == 'rsassa-pss-sha256':
       sig, scheme = securesystemslib.pyca_crypto_keys.create_rsa_signature(private,
@@ -708,7 +706,8 @@ def create_signature(key_dict, data):
     sig, scheme = securesystemslib.ecdsa_keys.create_signature(public, private,
       data.encode('utf-8'), scheme)
 
-  # 'securesystemslib.formats.ANYKEY_SCHEMA' should detect invalid key types.
+  # 'securesystemslib.formats.ANYKEY_SCHEMA' should have detected invalid key
+  # types.  This is a defensive check against an invalid key type.
   else: # pragma: no cover
     raise TypeError('Invalid key type.')
 
@@ -831,8 +830,6 @@ def verify_signature(key_dict, signature, data):
   # expected by the cryptography functions called below.
   data = securesystemslib.formats.encode_canonical(data).encode('utf-8')
 
-  # Call the appropriate cryptography libraries for the supported key types,
-  # otherwise raise an exception.
   if keytype == 'rsa':
     if scheme == 'rsassa-pss-sha256':
       valid_signature = securesystemslib.pyca_crypto_keys.verify_rsa_signature(sig,
@@ -861,7 +858,8 @@ def verify_signature(key_dict, signature, data):
       raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
           ' signature scheme is specified: ' + repr(scheme))
 
-  # 'securesystemslib.formats.ANYKEY_SCHEMA' should detect invalid key types.
+  # 'securesystemslib.formats.ANYKEY_SCHEMA' should have detected invalid key
+  # types.  This is a defensive check against an invalid key type.
   else: # pragma: no cover
     raise TypeError('Unsupported key type.')
 
