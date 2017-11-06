@@ -178,7 +178,7 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-sha256'):
   # an integer object, with a minimum value of 2048.  Raise
   # 'securesystemslib.exceptions.FormatError' if the check fails.
   securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match(bits)
-  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   # Begin building the RSA key dictionary.
   rsakey_dict = {}
@@ -218,8 +218,8 @@ def generate_ecdsa_key(scheme='ecdsa-sha2-nistp256'):
   """
   <Purpose>
     Generate public and private ECDSA keys, with NIST P-256 + SHA256 (for
-    hashing) being the default algorithm.  In addition, a keyid identifier for
-    the ECDSA key is generated.  The object returned conforms to
+    hashing) being the default scheme.  In addition, a keyid identifier for the
+    ECDSA key is generated.  The object returned conforms to
     'securesystemslib.formats.ECDSAKEY_SCHEMA' and has the form:
 
     {'keytype': 'ecdsa-sha2-nistp256',
@@ -236,12 +236,13 @@ def generate_ecdsa_key(scheme='ecdsa-sha2-nistp256'):
 
   <Arguments>
     scheme:
-      The ECDSA algorithm.  By default, ECDSA NIST P-256 is used, with SHA256
-      for hashing.
+      The ECDSA signature scheme.  By default, ECDSA NIST P-256 is used, with
+      SHA256 for hashing.
 
   <Exceptions>
-    securesystemslib.exceptions.FormatError, if 'algorithm' is improperly or
-    invalid (i.e., not one of the supported ECDSA algorithms).
+    securesystemslib.exceptions.FormatError, if 'scheme' is improperly
+    formatted or invalid (i.e., not one of the supported ECDSA signature
+    schemes).
 
   <Side Effects>
     None.
@@ -251,10 +252,11 @@ def generate_ecdsa_key(scheme='ecdsa-sha2-nistp256'):
     Conforms to 'securesystemslib.formats.ECDSAKEY_SCHEMA'.
   """
 
-  # Does 'algorithm' have the correct format?  This check will ensure
-  # 'algorithm is properly formatted and is a supported ECDSA algorithm.  Raise
-  # 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
+  # Does 'scheme' have the correct format?
+  # This check will ensure 'scheme' is properly formatted and is a supported
+  # ECDSA signature scheme.  Raise 'securesystemslib.exceptions.FormatError' if
+  # the check fails.
+  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   # Begin building the ECDSA key dictionary.
   ecdsa_key = {}
@@ -441,7 +443,7 @@ def format_keyval_to_metadata(keytype, scheme, key_value, private=False):
   securesystemslib.formats.KEYTYPE_SCHEMA.check_match(keytype)
 
   # Does 'scheme' have the correct format?
-  securesystemslib.formats.SIG_SCHEME_SCHEMA.check_match(scheme)
+  securesystemslib.formats.SCHEME_SCHEMA.check_match(scheme)
 
   # Does 'key_value' have the correct format?
   securesystemslib.formats.KEYVAL_SCHEMA.check_match(key_value)
@@ -685,8 +687,6 @@ def create_signature(key_dict, data):
   # expected by the cryptography functions called below.
   data = securesystemslib.formats.encode_canonical(data)
 
-  # Call the appropriate cryptography modules for the supported key types,
-  # otherwise raise an exception.
   if keytype == 'rsa':
     if scheme == 'rsassa-pss-sha256':
       sig, scheme = securesystemslib.pyca_crypto_keys.create_rsa_signature(private,
@@ -694,7 +694,7 @@ def create_signature(key_dict, data):
 
     else:
       raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
-        ' RSA signature algorithm specified: ' + repr(scheme))
+        ' RSA signature scheme specified: ' + repr(scheme))
 
   elif keytype == 'ed25519':
     public = binascii.unhexlify(public.encode('utf-8'))
@@ -706,7 +706,8 @@ def create_signature(key_dict, data):
     sig, scheme = securesystemslib.ecdsa_keys.create_signature(public, private,
       data.encode('utf-8'), scheme)
 
-  # 'securesystemslib.formats.ANYKEY_SCHEMA' should detect invalid key types.
+  # 'securesystemslib.formats.ANYKEY_SCHEMA' should have detected invalid key
+  # types.  This is a defensive check against an invalid key type.
   else: # pragma: no cover
     raise TypeError('Invalid key type.')
 
@@ -829,8 +830,6 @@ def verify_signature(key_dict, signature, data):
   # expected by the cryptography functions called below.
   data = securesystemslib.formats.encode_canonical(data).encode('utf-8')
 
-  # Call the appropriate cryptography libraries for the supported key types,
-  # otherwise raise an exception.
   if keytype == 'rsa':
     if scheme == 'rsassa-pss-sha256':
       valid_signature = securesystemslib.pyca_crypto_keys.verify_rsa_signature(sig,
@@ -859,7 +858,8 @@ def verify_signature(key_dict, signature, data):
       raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
           ' signature scheme is specified: ' + repr(scheme))
 
-  # 'securesystemslib.formats.ANYKEY_SCHEMA' should detect invalid key types.
+  # 'securesystemslib.formats.ANYKEY_SCHEMA' should have detected invalid key
+  # types.  This is a defensive check against an invalid key type.
   else: # pragma: no cover
     raise TypeError('Unsupported key type.')
 
@@ -930,7 +930,7 @@ def import_rsakey_from_private_pem(pem, scheme='rsassa-pss-sha256', password=Non
   securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   if password is not None:
     securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
@@ -1023,7 +1023,7 @@ def import_rsakey_from_public_pem(pem, scheme='rsassa-pss-sha256'):
   securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
 
   # Does 'scheme' have the correct format?
-  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   # Ensure the PEM string has a public header and footer.  Although a simple
   # validation of 'pem' is performed here, a fully valid PEM string is needed
@@ -1097,7 +1097,7 @@ def import_rsakey_from_pem(pem, scheme='rsassa-pss-sha256'):
   securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   public_pem = ''
   private_pem = ''
@@ -1626,7 +1626,7 @@ def import_ecdsakey_from_private_pem(pem, scheme='ecdsa-sha2-nistp256', password
   securesystemslib.formats.PEMECDSA_SCHEMA.check_match(pem)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   if password is not None:
     securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
@@ -1724,7 +1724,7 @@ def import_ecdsakey_from_public_pem(pem, scheme='ecdsa-sha2-nistp256'):
   securesystemslib.formats.PEMECDSA_SCHEMA.check_match(pem)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   # Ensure the PEM string has a public header and footer.  Although a simple
   # validation of 'pem' is performed here, a fully valid PEM string is needed
@@ -1797,7 +1797,7 @@ def import_ecdsakey_from_pem(pem, scheme='ecdsa-sha2-nistp256'):
   securesystemslib.formats.PEMECDSA_SCHEMA.check_match(pem)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.ECDSA_SIG_SCHEMA.check_match(scheme)
+  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   public_pem = ''
   private_pem = ''

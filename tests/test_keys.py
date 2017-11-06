@@ -217,7 +217,7 @@ class TestKeys(unittest.TestCase):
 
     # Check format of 'scheme'.
     self.assertEqual(None,
-        securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme),
+        securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme),
         FORMAT_ERROR_MSG)
 
     keyid = KEYS._get_keyid(keytype, scheme, keyvalue)

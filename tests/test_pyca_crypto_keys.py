@@ -69,7 +69,8 @@ class TestPyca_crypto_keys(unittest.TestCase):
 
     # Verify format of returned values.
     self.assertNotEqual(None, signature)
-    self.assertEqual(None, securesystemslib.formats.RSA_SIG_SCHEMA.check_match(scheme),
+    self.assertEqual(None,
+        securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme),
         FORMAT_ERROR_MSG)
     self.assertEqual('rsassa-pss-sha256', scheme)
 
@@ -77,8 +78,13 @@ class TestPyca_crypto_keys(unittest.TestCase):
     self.assertRaises(securesystemslib.exceptions.FormatError,
         securesystemslib.pyca_crypto_keys.create_rsa_signature, 123, data)
 
+    # Check for an unset private key.
     self.assertRaises(ValueError,
         securesystemslib.pyca_crypto_keys.create_rsa_signature, '', data)
+
+    # Check for an invalid PEM.
+    self.assertRaises(securesystemslib.exceptions.CryptoError,
+        securesystemslib.pyca_crypto_keys.create_rsa_signature, '123', data)
 
     # Check for invalid 'data'.
     self.assertRaises(securesystemslib.exceptions.FormatError,
@@ -87,10 +93,17 @@ class TestPyca_crypto_keys(unittest.TestCase):
     self.assertRaises(securesystemslib.exceptions.FormatError,
         securesystemslib.pyca_crypto_keys.create_rsa_signature, private_rsa, 123)
 
-    # Check for missing private key.
+    # Check for a missing private key.
     self.assertRaises(securesystemslib.exceptions.CryptoError,
         securesystemslib.pyca_crypto_keys.create_rsa_signature, public_rsa, data)
 
+    # Check for a TypeError by attempting to create a signature with an
+    # encrypted key.
+    encrypted_pem = securesystemslib.pyca_crypto_keys.create_rsa_encrypted_pem(
+        private_rsa, 'pw')
+    self.assertRaises(securesystemslib.exceptions.CryptoError,
+        securesystemslib.pyca_crypto_keys.create_rsa_signature, encrypted_pem,
+        data)
 
 
   def test_verify_rsa_signature(self):

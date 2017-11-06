@@ -117,7 +117,7 @@ KEYIDS_SCHEMA = SCHEMA.ListOf(KEYID_SCHEMA)
 
 # The signing scheme used by a key to generate a signature (e.g.,
 # 'rsassa-pss-sha256' is one of the signing schemes for key type 'rsa').
-SIG_SCHEME_SCHEMA = SCHEMA.AnyString()
+SCHEME_SCHEMA = SCHEMA.AnyString()
 
 # A relative file path (e.g., 'metadata/root/').
 RELPATH_SCHEMA = SCHEMA.AnyString()
@@ -181,8 +181,9 @@ ROLENAME_SCHEMA = SCHEMA.AnyString()
 # http://www.emc.com/emc-plus/rsa-labs/historical/twirl-and-rsa-key-size.htm#table1
 RSAKEYBITS_SCHEMA = SCHEMA.Integer(lo=2048)
 
-# The supported ECDSA algorithms (ecdsa-sha2-nistp256 is supported by default).
-ECDSA_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String('ecdsa-sha2-nistp256')])
+# The supported ECDSA signature schemes (ecdsa-sha2-nistp256 is supported by
+# default).
+ECDSA_SCHEME_SCHEMA = SCHEMA.OneOf([SCHEMA.String('ecdsa-sha2-nistp256')])
 
 # The number of hashed bins, or the number of delegated roles.  See
 # delegate_hashed_bins() in 'repository_tool.py' for an example.  Note:
@@ -230,7 +231,7 @@ KEYTYPE_SCHEMA = SCHEMA.OneOf(
 KEY_SCHEMA = SCHEMA.Object(
   object_name = 'KEY_SCHEMA',
   keytype = SCHEMA.AnyString(),
-  scheme = SIG_SCHEME_SCHEMA,
+  scheme = SCHEME_SCHEMA,
   keyval = KEYVAL_SCHEMA,
   expires = SCHEMA.Optional(ISO8601_DATETIME_SCHEMA))
 
@@ -249,7 +250,7 @@ PUBLIC_KEY_SCHEMA = SCHEMA.Object(
 ANYKEY_SCHEMA = SCHEMA.Object(
   object_name = 'ANYKEY_SCHEMA',
   keytype = KEYTYPE_SCHEMA,
-  scheme = SIG_SCHEME_SCHEMA,
+  scheme = SCHEME_SCHEMA,
   keyid = KEYID_SCHEMA,
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
   keyval = KEYVAL_SCHEMA,
@@ -259,25 +260,22 @@ ANYKEY_SCHEMA = SCHEMA.Object(
 ANYKEYLIST_SCHEMA = SCHEMA.ListOf(ANYKEY_SCHEMA)
 
 # RSA signature schemes.
-RSA_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String('rsassa-pss-sha256')])
+RSA_SCHEME_SCHEMA = SCHEMA.OneOf([SCHEMA.String('rsassa-pss-sha256')])
 
 # An RSA TUF key.
 RSAKEY_SCHEMA = SCHEMA.Object(
   object_name = 'RSAKEY_SCHEMA',
   keytype = SCHEMA.String('rsa'),
-  scheme = RSA_SIG_SCHEMA,
+  scheme = RSA_SCHEME_SCHEMA,
   keyid = KEYID_SCHEMA,
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
   keyval = KEYVAL_SCHEMA)
-
-# ECDSA signature schemes.
-ECDSA_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String('ecdsa-sha2-nistp256')])
 
 # An ECDSA TUF key.
 ECDSAKEY_SCHEMA = SCHEMA.Object(
   object_name = 'ECDSAKEY_SCHEMA',
   keytype = SCHEMA.String('ecdsa-sha2-nistp256'),
-  scheme = ECDSA_SIG_SCHEMA,
+  scheme = ECDSA_SCHEME_SCHEMA,
   keyid = KEYID_SCHEMA,
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
   keyval = KEYVAL_SCHEMA)
