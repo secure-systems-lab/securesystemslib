@@ -285,16 +285,14 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
   """
 
   # Does the arguments have the correct format?
-  # This check will ensure the arguments conform to
-  # 'securesystemslib.formats.PEMRSA_SCHEMA'.  and
-  # 'securesystemslib.formats.DATA_SCHEMA' Raise
-  # 'securesystemslib.exceptions.FormatError' if the checks fail.
+  # If not, raise 'securesystemslib.exceptions.FormatError' if any of the
+  # checks fail.
   securesystemslib.formats.PEMRSA_SCHEMA.check_match(private_key)
   securesystemslib.formats.DATA_SCHEMA.check_match(data)
   securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   # Signing 'data' requires a private key.  'rsassa-pss-sha256' is the only
-  # signature scheme currently supported.
+  # currently supported signature scheme.
   signature = None
 
   # Verify the signature, but only if the private key has been set.  The
@@ -304,9 +302,10 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
   # 'private_key' has variable size and can be an empty string.
   if len(private_key):
 
-    # The check_match() above should have validated 'scheme'.  This is an
-    # extra check...
-    if scheme == 'rsassa-pss-sha256': #pragma: no cover
+    # An if-clause isn't strictly needed here, since 'rsasssa-pss-sha256' is
+    # the only currently supported RSA scheme.  Nevertheless, include the
+    # conditional statement to accomodate future schemes that might be added.
+    if scheme == 'rsassa-pss-sha256':
       # Generate an RSSA-PSS signature.  Raise
       # 'securesystemslib.exceptions.CryptoError' for any of the expected
       # exceptions raised by pyca/cryptography.
@@ -323,23 +322,24 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
           private_key_object.signer(padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
               salt_length=hashes.SHA256().digest_size), hashes.SHA256())
 
-      # If the PEM data could not be decrypted, or if its structure could not be
-      # decoded successfully.
-      except ValueError: #pragma: no cover
+      # If the PEM data could not be decrypted, or if its structure could not
+      # be decoded successfully.
+      except ValueError:
         raise securesystemslib.exceptions.CryptoError('The private key'
           ' (in PEM format) could not be deserialized.')
 
-      # 'TypeError' raised if a password was given and the private key was not
-      # encrypted, or if the key was encrypted but no password was supplied.
-      # Note: A passphrase or password is not used when generating
+      # 'TypeError' is raised if a password was given and the private key was
+      # not encrypted, or if the key was encrypted but no password was
+      # supplied.  Note: A passphrase or password is not used when generating
       # 'private_key', since it should not be encrypted.
-      except TypeError: #pragma: no cover
+      except TypeError:
         raise securesystemslib.exceptions.CryptoError('The private key was'
           ' unexpectedly encrypted.')
 
-      # 'cryptography.exceptions.UnsupportedAlgorithm' raised if the serialized
-      # key is of a type that is not supported by the backend, or if the key is
-      # encrypted with a symmetric cipher that is not supported by the backend.
+      # 'cryptography.exceptions.UnsupportedAlgorithm' is raised if the
+      # serialized key is of a type that is not supported by the backend, or if
+      # the key is encrypted with a symmetric cipher that is not supported by
+      # the backend.
       except cryptography.exceptions.UnsupportedAlgorithm: #pragma: no cover
         raise securesystemslib.exceptions.CryptoError('The private key is'
           ' encrypted with an unsupported algorithm.')
@@ -348,6 +348,8 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
       rsa_signer.update(data)
       signature = rsa_signer.finalize()
 
+    # The RSA_SCHEME_SCHEMA.check_match() above should have validated 'scheme'.
+    # This is a defensive check check..
     else: #pragma: no cover
       raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
         ' signature scheme is specified: ' + repr(scheme))

@@ -230,6 +230,8 @@ def create_signature(public_key, private_key, data, scheme='ecdsa-sha2-nistp256'
       raise securesystemslib.exceptions.CryptoError('Could not create'
         ' signature: ' + str(e))
 
+  # A defensive check for an invalid 'scheme'.  The
+  # ECDSA_SCHEME_SCHEMA.check_match() above should have already validated it.
   else: #pragma: no cover
     raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
       ' signature scheme is specified: ' + repr(scheme))
