@@ -131,12 +131,15 @@ def generate_public_and_private(scheme='ecdsa-sha2-nistp256'):
   public_key = None
   private_key = None
 
+  # An if-clause is strictly not needed, since 'ecdsa_sha2-nistp256' is the
+  # only currently supported ECDSA signature scheme.  Nevertheness, include the
+  # conditional statement to accomodate any schemes that might be added.
   if scheme == 'ecdsa-sha2-nistp256':
     private_key = ec.generate_private_key(ec.SECP256R1, default_backend())
     public_key = private_key.public_key()
 
-  # The formats ECDSA_SCHEME_SCHEMA check above should have detected any
-  # invalid 'algorithm'.
+  # The ECDSA_SCHEME_SCHEMA.check_match() above should have detected any
+  # invalid 'scheme'.  This is a defensive check.
   else: #pragma: no cover
     raise securesystemslib.exceptions.UnsupportedAlgorithmError('An unsupported'
       ' scheme specified: ' + repr(scheme) + '.\n  Supported'
@@ -294,41 +297,32 @@ def verify_signature(public_key, scheme, signature, data):
   securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
   securesystemslib.formats.ECDSASIGNATURE_SCHEMA.check_match(signature)
 
-  # Is 'scheme' one of the supported ECDSA signature schemes?  A defensive
-  # check for a valid 'scheme'.  The check_match() above should have validated
-  # it...
-  if scheme in _SUPPORTED_ECDSA_SCHEMES: #pragma: no cover
-    ecdsa_key = load_pem_public_key(public_key.encode('utf-8'),
-        backend=default_backend())
+  ecdsa_key = load_pem_public_key(public_key.encode('utf-8'),
+      backend=default_backend())
 
-    if not isinstance(ecdsa_key, ec.EllipticCurvePublicKey):
-      raise securesystemslib.exceptions.FormatError('Invalid ECDSA public'
-        ' key: ' + repr(public_key))
+  if not isinstance(ecdsa_key, ec.EllipticCurvePublicKey):
+    raise securesystemslib.exceptions.FormatError('Invalid ECDSA public'
+      ' key: ' + repr(public_key))
 
-    else:
-      logger.debug('Loaded a valid ECDSA public key.')
+  else:
+    logger.debug('Loaded a valid ECDSA public key.')
 
-    try:
-      verifier = ecdsa_key.verifier(signature, ec.ECDSA(hashes.SHA256()))
-      verifier.update(data)
+  try:
+    verifier = ecdsa_key.verifier(signature, ec.ECDSA(hashes.SHA256()))
+    verifier.update(data)
 
-    except TypeError as e:
-      raise securesystemslib.exceptions.FormatError('Invalid signature or'
-        ' data: ' + str(e))
+  except TypeError as e:
+    raise securesystemslib.exceptions.FormatError('Invalid signature or'
+      ' data: ' + str(e))
 
-    # verify() raises an 'InvalidSignature' exception if 'signature'
-    # is invalid.
-    try:
-      verifier.verify()
-      return True
+  # verify() raises an 'InvalidSignature' exception if 'signature'
+  # is invalid.
+  try:
+    verifier.verify()
+    return True
 
-    except cryptography.exceptions.InvalidSignature:
-      return False
-
-  else: #pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
-      ' signature scheme is given: ' + repr(scheme) + '.  \nSupported'
-      ' schemes: ' + repr(_SUPPORTED_ECDSA_SCHEMES))
+  except cryptography.exceptions.InvalidSignature:
+    return False
 
 
 
