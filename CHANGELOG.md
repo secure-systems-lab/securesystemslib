@@ -1,5 +1,21 @@
 # Changelog
 
+## securesystemslib v0.10.8
+
+* Drop support for Python 2.6 and 3.3
+
+* Add support for Python 3.6
+
+* Fix bug in PEM parser. See https://github.com/secure-systems-lab/securesystemslib/issues/54
+
+* Drop PyCrypto and multiple-library support
+
+* Update dependencies
+
+* Verify that the arguments to verify_signature() have matching KEYIDs
+
+* Add a changelog file (this one :)
+
 ## securesystemslib v0.10.7
 @vladimir-v-diaz vladimir-v-diaz released this on Aug 23 · 79 commits to master since this release
 
