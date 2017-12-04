@@ -2,14 +2,9 @@
 
 export PATH := $(CURDIR)/bin:$(PATH)
 export PYBUILD_DESTDIR = debian/python-securesystemslib
-export PYBUILD_TEST_ARGS = 
-export PYBUILD_BEFORE_TEST = 
-export PYBUILD_AFTER_TEST = 
-export PYBUILD_AFTER_INSTALL = 
+export PYBUILD_SYSTEM=distutils
+export PYBUILD_TEST_ARGS = tests
 export PYBUILD_NAME = securesystemslib
 
 %:
-	dh $@ --with python2 --with bash-completion --buildsystem=pybuild
-
-debian/%.1: debian/%.1.rst
-	rst2man $< $@
+	dh $@ --with python2,python3 --buildsystem=pybuild

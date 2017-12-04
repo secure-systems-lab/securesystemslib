@@ -2,4 +2,4 @@ python-securesystemslib (0.10.8) unstable; urgency=low
 
   * Initial Debian release.
 
- -- Saintiago Torres-Arias <santiago@nyu.edu>  Thu, 02 Oct 2014 13:52:55 +0200
+ -- Saintiago Torres-Arias <santiago@nyu.edu>  Mon, 4 Dec 2017 14:46:07 -0500
