@@ -29,7 +29,7 @@ Description: A secure cryptography and general purpose library for python.
 Package: python3-securesystemslib
 Architecture: all
 Depends:
- dh-python3,
+ dh-python,
  python3-cryptography,
  python3-nacl,
 Description: A secure cryptography and general purpose library for python
