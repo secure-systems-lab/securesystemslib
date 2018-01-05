@@ -95,7 +95,7 @@ setup(
     'Topic :: Security',
     'Topic :: Software Development'
   ],
-  install_requires = ['six>=1.11.0', 'cryptography>=2.1.3', 'pynacl>=1.2.0', 'colorama>=0.3.9],
+  install_requires = ['six>=1.11.0', 'cryptography>=2.1.3', 'pynacl>=1.2.0', 'colorama>=0.3.9'],
   packages = find_packages(exclude=['tests']),
   scripts = []
 )
