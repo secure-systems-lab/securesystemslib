@@ -157,7 +157,7 @@ def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
 
     # Make sure the prompt for the password specifies the relative path of
     # 'filepath', to prevent unnessary leakage of a sensitive key path.
-    relative_path = os.path.relpath(filepath)
+    relative_path = os.path.basename(filepath)
     password = _get_password('Enter a password for the encrypted RSA'
         ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
         confirm=False)
@@ -249,7 +249,7 @@ def import_rsa_privatekey_from_file(filepath, password=None,
 
     # Make sure the prompt for the password specifies the relative path of
     # 'filepath', to prevent unnessary leakage of a sensitive key path.
-    relative_path = os.path.relpath(filepath)
+    relative_path = os.path.basename(filepath)
     password = _get_password('Enter a password for the encrypted RSA'
         ' file (' + Fore.RED + relative_path + Fore.RESET + '): ',
         confirm=False)
@@ -373,7 +373,7 @@ def generate_and_write_ed25519_keypair(filepath, password=None):
 
     # Make sure the prompt for the password specifies the relative path of
     # 'filepath', to prevent unnessary leakage of a sensitive key path.
-    relative_path = os.path.relpath(filepath)
+    relative_path = os.path.basename(filepath)
     password = _get_password('Enter a password for the Ed25519'
         ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
         confirm=False)
@@ -517,7 +517,7 @@ def import_ed25519_privatekey_from_file(filepath, password=None):
 
     # Make sure the prompt for the password specifies the relative path of
     # 'filepath', to prevent unnessary leakage of a sensitive key path.
-    relative_path = os.path.relpath(filepath)
+    relative_path = os.path.basename(filepath)
     password = _get_password('Enter a password for the encrypted Ed25519'
         ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
         confirm=False)
@@ -599,7 +599,7 @@ def generate_and_write_ecdsa_keypair(filepath, password=None):
 
     # Make sure the prompt for the password specifies the relative path of
     # 'filepath', to prevent unnessary leakage of a sensitive key path.
-    relative_path = os.path.relpath(filepath)
+    relative_path = os.path.basename(filepath)
     password = _get_password('Enter a password for the ECDSA'
         ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
         confirm=False)
@@ -742,7 +742,7 @@ def import_ecdsa_privatekey_from_file(filepath, password=None):
 
     # Make sure the prompt for the password specifies the relative path of
     # 'filepath', to prevent unnessary leakage of a sensitive key path.
-    relative_path = os.path.relpath(filepath)
+    relative_path = os.path.basename(filepath)
     password = _get_password('Enter a password for the encrypted ECDSA'
         ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
         confirm=False)
