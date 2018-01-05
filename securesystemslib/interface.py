@@ -48,6 +48,8 @@ import securesystemslib.keys
 
 import six
 
+from colorama import Fore
+
 # See 'log.py' to learn how logging is handled in securesystemslib.
 logger = logging.getLogger('securesystemslib_interface')
 
@@ -152,8 +154,13 @@ def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
 
   # If the caller does not provide a password argument, prompt for one.
   if password is None: # pragma: no cover
-    message = 'Enter a password for the RSA key file: '
-    password = _get_password(message, confirm=True)
+
+    # Make sure the prompt for the password specifies the relative path of
+    # 'filepath', to prevent unnessary leakage of a sensitive key path.
+    relative_path = os.path.relpath(filepath)
+    password = _get_password('Enter a password for the encrypted RSA'
+        ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
+        confirm=False)
 
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
@@ -239,8 +246,13 @@ def import_rsa_privatekey_from_file(filepath, password=None,
   # Password confirmation disabled here, which should ideally happen only
   # when creating encrypted key files (i.e., improve usability).
   if password is None: # pragma: no cover
-    message = 'Enter a password for the encrypted RSA file: '
-    password = _get_password(message, confirm=False)
+
+    # Make sure the prompt for the password specifies the relative path of
+    # 'filepath', to prevent unnessary leakage of a sensitive key path.
+    relative_path = os.path.relpath(filepath)
+    password = _get_password('Enter a password for the encrypted RSA'
+        ' file (' + Fore.RED + relative_path + Fore.RESET + '): ',
+        confirm=False)
 
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
@@ -358,8 +370,13 @@ def generate_and_write_ed25519_keypair(filepath, password=None):
 
   # If the caller does not provide a password argument, prompt for one.
   if password is None: # pragma: no cover
-    message = 'Enter a password for the Ed25519 key: '
-    password = _get_password(message, confirm=True)
+
+    # Make sure the prompt for the password specifies the relative path of
+    # 'filepath', to prevent unnessary leakage of a sensitive key path.
+    relative_path = os.path.relpath(filepath)
+    password = _get_password('Enter a password for the Ed25519'
+        ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
+        confirm=False)
 
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
@@ -497,8 +514,13 @@ def import_ed25519_privatekey_from_file(filepath, password=None):
   # Password confirmation disabled here, which should ideally happen only
   # when creating encrypted key files (i.e., improve usability).
   if password is None: # pragma: no cover
-    message = 'Enter a password for the encrypted Ed25519 key: '
-    password = _get_password(message, confirm=False)
+
+    # Make sure the prompt for the password specifies the relative path of
+    # 'filepath', to prevent unnessary leakage of a sensitive key path.
+    relative_path = os.path.relpath(filepath)
+    password = _get_password('Enter a password for the encrypted Ed25519'
+        ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
+        confirm=False)
 
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
@@ -574,8 +596,13 @@ def generate_and_write_ecdsa_keypair(filepath, password=None):
 
   # If the caller does not provide a password argument, prompt for one.
   if password is None: # pragma: no cover
-    message = 'Enter a password for the ECDSA key: '
-    password = _get_password(message, confirm=True)
+
+    # Make sure the prompt for the password specifies the relative path of
+    # 'filepath', to prevent unnessary leakage of a sensitive key path.
+    relative_path = os.path.relpath(filepath)
+    password = _get_password('Enter a password for the ECDSA'
+        ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
+        confirm=False)
 
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
@@ -712,8 +739,13 @@ def import_ecdsa_privatekey_from_file(filepath, password=None):
   # Password confirmation disabled here, which should ideally happen only
   # when creating encrypted key files (i.e., improve usability).
   if password is None: # pragma: no cover
-    message = 'Enter a password for the encrypted ECDSA key: '
-    password = _get_password(message, confirm=False)
+
+    # Make sure the prompt for the password specifies the relative path of
+    # 'filepath', to prevent unnessary leakage of a sensitive key path.
+    relative_path = os.path.relpath(filepath)
+    password = _get_password('Enter a password for the encrypted ECDSA'
+        ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
+        confirm=False)
 
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
