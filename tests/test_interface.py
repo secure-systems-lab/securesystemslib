@@ -93,9 +93,11 @@ class TestInterfaceFunctions(unittest.TestCase):
     test_keypath_unencrypted = os.path.join(temporary_directory,
         'rsa_key_unencrypted')
 
-    interface.generate_and_write_rsa_keypair(test_keypath, password='pw')
+    returned_path = interface.generate_and_write_rsa_keypair(test_keypath,
+        password='pw')
     self.assertTrue(os.path.exists(test_keypath))
     self.assertTrue(os.path.exists(test_keypath + '.pub'))
+    self.assertEqual(returned_path, test_keypath)
 
     # If an empty string is given for 'password', the private key file
     # is written to disk unencrypted.
@@ -127,6 +129,14 @@ class TestInterfaceFunctions(unittest.TestCase):
     self.assertTrue(os.path.exists(test_keypath))
     self.assertTrue(os.path.exists(test_keypath + '.pub'))
 
+    # Test for a default filepath.  If 'filepath' is not given, the key's
+    # KEYID is used as the filename.  The key is saved to the current working
+    # directory.
+    default_keypath = interface.generate_and_write_rsa_keypair(password='pw')
+    self.assertTrue(os.path.exists(default_keypath))
+    self.assertTrue(os.path.exists(default_keypath + '.pub'))
+    os.remove(default_keypath)
+    os.remove(default_keypath + '.pub')
 
     # Test improperly formatted arguments.
     self.assertRaises(securesystemslib.exceptions.FormatError,
