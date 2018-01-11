@@ -231,9 +231,11 @@ class TestInterfaceFunctions(unittest.TestCase):
     temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
     test_keypath = os.path.join(temporary_directory, 'ed25519_key')
 
-    interface.generate_and_write_ed25519_keypair(test_keypath, password='pw')
+    returned_path = interface.generate_and_write_ed25519_keypair(
+        test_keypath, password='pw')
     self.assertTrue(os.path.exists(test_keypath))
     self.assertTrue(os.path.exists(test_keypath + '.pub'))
+    self.assertEqual(returned_path, test_keypath)
 
     # Ensure the generated key files are importable.
     imported_pubkey = \
@@ -244,6 +246,14 @@ class TestInterfaceFunctions(unittest.TestCase):
       interface.import_ed25519_privatekey_from_file(test_keypath, 'pw')
     self.assertTrue(securesystemslib.formats.ED25519KEY_SCHEMA.matches(imported_privkey))
 
+    # Test for a default filepath.  If 'filepath' is not given, the key's
+    # KEYID is used as the filename.  The key is saved to the current working
+    # directory.
+    default_keypath = interface.generate_and_write_rsa_keypair(password='pw')
+    self.assertTrue(os.path.exists(default_keypath))
+    self.assertTrue(os.path.exists(default_keypath + '.pub'))
+    os.remove(default_keypath)
+    os.remove(default_keypath + '.pub')
 
     # Test improperly formatted arguments.
     self.assertRaises(securesystemslib.exceptions.FormatError,
@@ -364,7 +374,7 @@ class TestInterfaceFunctions(unittest.TestCase):
 
 
 
-  def test_generate_and_write_ed25519_keypair(self):
+  def test_generate_and_write_ecdsa_keypair(self):
 
     # Test normal case.
     temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
