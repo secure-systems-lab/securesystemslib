@@ -105,7 +105,7 @@ def _get_password(prompt='Password: ', confirm=False):
 
 
 
-def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
+def generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
     password=None):
   """
   <Purpose>
@@ -113,7 +113,8 @@ def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
     saved to <'filepath'>.pub, whereas the private key portion is saved to
     <'filepath'>.  If no password is given, the user is prompted for one.  If
     the 'password' is an empty string, the private key is saved unencrypted to
-    <'filepath'>.
+    <'filepath'>.  If the filepath is not given, the KEYID is used as the
+    filename and the keypair saved to the current working directory.
 
     The best available form of encryption, for a given key's backend, is used
     with pyca/cryptography.  According to their documentation, "it is a curated
@@ -122,7 +123,9 @@ def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
   <Arguments>
     filepath:
       The public and private key files are saved to <filepath>.pub and
-      <filepath>, respectively.
+      <filepath>, respectively.  If the filepath is not given, the public and
+      private keys are saved to the current working directory as <KEYID>.pub
+      and <KEYID>.  KEYID is the generated key's KEYID.
 
     bits:
       The number of bits of the generated RSA key.
@@ -140,17 +143,29 @@ def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
     Writes key files to '<filepath>' and '<filepath>.pub'.
 
   <Returns>
-    None.
+    The 'filepath' of the written key.
   """
 
-  # Do the arguments have the correct format?
+  # Does 'bits' have the correct format?
   # This check ensures arguments have the appropriate number of
   # objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
-  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
-
-  # Does 'bits' have the correct format?
   securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match(bits)
+
+  # Generate the public and private RSA keys.
+  rsa_key = securesystemslib.keys.generate_rsa_key(bits)
+  public = rsa_key['keyval']['public']
+  private = rsa_key['keyval']['private']
+
+  if not filepath:
+    filepath = os.path.join(os.getcwd(), rsa_key['keyid'])
+
+  else:
+    logger.debug('The filepath has been specified.  Not using the key\'s'
+        ' KEYID as the default filepath.')
+
+  # Does 'filepath' have the correct format?
+  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
   # If the caller does not provide a password argument, prompt for one.
   if password is None: # pragma: no cover
@@ -162,15 +177,13 @@ def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
         ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
         confirm=False)
 
+  else:
+    logger.debug('The password has been specified.  Not prompting for one')
+
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
 
-  # Generate public and private RSA keys, encrypted the private portion
-  # and store them in PEM format.
-  rsa_key = securesystemslib.keys.generate_rsa_key(bits)
-  public = rsa_key['keyval']['public']
-  private = rsa_key['keyval']['private']
-
+  # Encrypt the private key if 'password' is set.
   if len(password):
     private = securesystemslib.keys.create_rsa_encrypted_pem(private, password)
 
@@ -197,6 +210,7 @@ def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
   file_object.write(private.encode('utf-8'))
   file_object.move(filepath)
 
+  return filepath
 
 
 
