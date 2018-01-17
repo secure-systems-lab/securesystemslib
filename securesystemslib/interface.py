@@ -170,11 +170,12 @@ def generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
   # If the caller does not provide a password argument, prompt for one.
   if password is None: # pragma: no cover
 
-    # Make sure the prompt for the password specifies the relative path of
-    # 'filepath', to prevent unnessary leakage of a sensitive key path.
-    relative_path = os.path.basename(filepath)
+    # It is safe to specify the full path of 'filepath' in the prompt and not
+    # worry about leaking sensitive information about the key's location.
+    # However, care should be taken when including the full path in exceptions
+    # and log files.
     password = _get_password('Enter a password for the encrypted RSA'
-        ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
+        ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
         confirm=False)
 
   else:
@@ -261,11 +262,12 @@ def import_rsa_privatekey_from_file(filepath, password=None,
   # when creating encrypted key files (i.e., improve usability).
   if password is None: # pragma: no cover
 
-    # Make sure the prompt for the password specifies the relative path of
-    # 'filepath', to prevent unnessary leakage of a sensitive key path.
-    relative_path = os.path.basename(filepath)
+    # It is safe to specify the full path of 'filepath' in the prompt and not
+    # worry about leaking sensitive information about the key's location.
+    # However, care should be taken when including the full path in exceptions
+    # and log files.
     password = _get_password('Enter a password for the encrypted RSA'
-        ' file (' + Fore.RED + relative_path + Fore.RESET + '): ',
+        ' file (' + Fore.RED + filepath + Fore.RESET + '): ',
         confirm=False)
 
   # Does 'password' have the correct format?
@@ -401,11 +403,12 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None):
   # If the caller does not provide a password argument, prompt for one.
   if password is None: # pragma: no cover
 
-    # Make sure the prompt for the password specifies the relative path of
-    # 'filepath', to prevent unnessary leakage of a sensitive key path.
-    relative_path = os.path.basename(filepath)
+    # It is safe to specify the full path of 'filepath' in the prompt and not
+    # worry about leaking sensitive information about the key's location.
+    # However, care should be taken when including the full path in exceptions
+    # and log files.
     password = _get_password('Enter a password for the Ed25519'
-        ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
+        ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
         confirm=False)
 
   else:
@@ -546,11 +549,12 @@ def import_ed25519_privatekey_from_file(filepath, password=None):
   # when creating encrypted key files (i.e., improve usability).
   if password is None: # pragma: no cover
 
-    # Make sure the prompt for the password specifies the relative path of
-    # 'filepath', to prevent unnessary leakage of a sensitive key path.
-    relative_path = os.path.basename(filepath)
+    # It is safe to specify the full path of 'filepath' in the prompt and not
+    # worry about leaking sensitive information about the key's location.
+    # However, care should be taken when including the full path in exceptions
+    # and log files.
     password = _get_password('Enter a password for the encrypted Ed25519'
-        ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
+        ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
         confirm=False)
 
   # Does 'password' have the correct format?
@@ -644,11 +648,12 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None):
   # If the caller does not provide a password argument, prompt for one.
   if password is None: # pragma: no cover
 
-    # Make sure the prompt for the password specifies the relative path of
-    # 'filepath', to prevent unnessary leakage of a sensitive key path.
-    relative_path = os.path.basename(filepath)
+    # It is safe to specify the full path of 'filepath' in the prompt and not
+    # worry about leaking sensitive information about the key's location.
+    # However, care should be taken when including the full path in exceptions
+    # and log files.
     password = _get_password('Enter a password for the ECDSA'
-        ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
+        ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
         confirm=False)
 
   else:
@@ -786,11 +791,12 @@ def import_ecdsa_privatekey_from_file(filepath, password=None):
   # when creating encrypted key files (i.e., improve usability).
   if password is None: # pragma: no cover
 
-    # Make sure the prompt for the password specifies the relative path of
-    # 'filepath', to prevent unnessary leakage of a sensitive key path.
-    relative_path = os.path.basename(filepath)
+    # It is safe to specify the full path of 'filepath' in the prompt and not
+    # worry about leaking sensitive information about the key's location.
+    # However, care should be taken when including the full path in exceptions
+    # and log files.
     password = _get_password('Enter a password for the encrypted ECDSA'
-        ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
+        ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
         confirm=False)
 
   # Does 'password' have the correct format?
