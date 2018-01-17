@@ -420,7 +420,7 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None):
   # create it (and all its parent directories, if necessary).
   securesystemslib.util.ensure_parent_dir(filepath)
 
-  # Create a tempororary file, write the contents of the public key, and move
+  # Create a temporary file, write the contents of the public key, and move
   # to final destination.
   file_object = securesystemslib.util.TempFile()
 
@@ -668,7 +668,7 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None):
   # create it (and all its parent directories, if necessary).
   securesystemslib.util.ensure_parent_dir(filepath)
 
-  # Create a tempororary file, write the contents of the public key, and move
+  # Create a temporary file, write the contents of the public key, and move
   # to final destination.
   file_object = securesystemslib.util.TempFile()
 
