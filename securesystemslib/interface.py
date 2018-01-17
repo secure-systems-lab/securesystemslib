@@ -600,7 +600,7 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None):
     given, the KEYID is used as the filename and the keypair saved to the
     current working directory.
 
-    The 'cryptography' library currently supported.  The private key is
+    The 'cryptography' library is currently supported.  The private key is
     encrypted according to 'cryptography's approach: "Encrypt using the best
     available encryption for a given key's backend. This is a curated
     encryption choice and the algorithm may change over time."
