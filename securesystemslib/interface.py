@@ -105,7 +105,7 @@ def _get_password(prompt='Password: ', confirm=False):
 
 
 
-def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
+def generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
     password=None):
   """
   <Purpose>
@@ -113,7 +113,8 @@ def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
     saved to <'filepath'>.pub, whereas the private key portion is saved to
     <'filepath'>.  If no password is given, the user is prompted for one.  If
     the 'password' is an empty string, the private key is saved unencrypted to
-    <'filepath'>.
+    <'filepath'>.  If the filepath is not given, the KEYID is used as the
+    filename and the keypair saved to the current working directory.
 
     The best available form of encryption, for a given key's backend, is used
     with pyca/cryptography.  According to their documentation, "it is a curated
@@ -122,7 +123,9 @@ def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
   <Arguments>
     filepath:
       The public and private key files are saved to <filepath>.pub and
-      <filepath>, respectively.
+      <filepath>, respectively.  If the filepath is not given, the public and
+      private keys are saved to the current working directory as <KEYID>.pub
+      and <KEYID>.  KEYID is the generated key's KEYID.
 
     bits:
       The number of bits of the generated RSA key.
@@ -140,53 +143,61 @@ def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
     Writes key files to '<filepath>' and '<filepath>.pub'.
 
   <Returns>
-    None.
+    The 'filepath' of the written key.
   """
 
-  # Do the arguments have the correct format?
-  # This check ensures arguments have the appropriate number of
-  # objects and object types, and that all dict keys are properly named.
-  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
-  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
-
   # Does 'bits' have the correct format?
+  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match(bits)
 
-  # If the caller does not provide a password argument, prompt for one.
-  if password is None: # pragma: no cover
-
-    # Make sure the prompt for the password specifies the relative path of
-    # 'filepath', to prevent unnessary leakage of a sensitive key path.
-    relative_path = os.path.basename(filepath)
-    password = _get_password('Enter a password for the encrypted RSA'
-        ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
-        confirm=False)
-
-  # Does 'password' have the correct format?
-  securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
-
-  # Generate public and private RSA keys, encrypted the private portion
-  # and store them in PEM format.
+  # Generate the public and private RSA keys.
   rsa_key = securesystemslib.keys.generate_rsa_key(bits)
   public = rsa_key['keyval']['public']
   private = rsa_key['keyval']['private']
 
+  if not filepath:
+    filepath = os.path.join(os.getcwd(), rsa_key['keyid'])
+
+  else:
+    logger.debug('The filepath has been specified.  Not using the key\'s'
+        ' KEYID as the default filepath.')
+
+  # Does 'filepath' have the correct format?
+  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+
+  # If the caller does not provide a password argument, prompt for one.
+  if password is None: # pragma: no cover
+
+    # It is safe to specify the full path of 'filepath' in the prompt and not
+    # worry about leaking sensitive information about the key's location.
+    # However, care should be taken when including the full path in exceptions
+    # and log files.
+    password = _get_password('Enter a password for the encrypted RSA'
+        ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
+        confirm=False)
+
+  else:
+    logger.debug('The password has been specified.  Not prompting for one')
+
+  # Does 'password' have the correct format?
+  securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+
+  # Encrypt the private key if 'password' is set.
   if len(password):
     private = securesystemslib.keys.create_rsa_encrypted_pem(private, password)
 
   else:
     logger.debug('An empty password was given.  Not encrypting the private key.')
 
-  # Write public key (i.e., 'public', which is in PEM format) to
-  # '<filepath>.pub'.  If the parent directory of filepath does not exist,
+  # If the parent directory of filepath does not exist,
   # create it (and all its parent directories, if necessary).
   securesystemslib.util.ensure_parent_dir(filepath)
 
-  # Create a tempororary file, write the contents of the public key, and move
-  # to final destination.
+  # Write the public key (i.e., 'public', which is in PEM format) to
+  # '<filepath>.pub'.  (1) Create a temporary file, (2) write the contents of
+  # the public key, and (3) move to final destination.
   file_object = securesystemslib.util.TempFile()
   file_object.write(public.encode('utf-8'))
-
   # The temporary file is closed after the final move.
   file_object.move(filepath + '.pub')
 
@@ -197,6 +208,7 @@ def generate_and_write_rsa_keypair(filepath, bits=DEFAULT_RSA_KEY_BITS,
   file_object.write(private.encode('utf-8'))
   file_object.move(filepath)
 
+  return filepath
 
 
 
@@ -247,11 +259,12 @@ def import_rsa_privatekey_from_file(filepath, password=None,
   # when creating encrypted key files (i.e., improve usability).
   if password is None: # pragma: no cover
 
-    # Make sure the prompt for the password specifies the relative path of
-    # 'filepath', to prevent unnessary leakage of a sensitive key path.
-    relative_path = os.path.basename(filepath)
+    # It is safe to specify the full path of 'filepath' in the prompt and not
+    # worry about leaking sensitive information about the key's location.
+    # However, care should be taken when including the full path in exceptions
+    # and log files.
     password = _get_password('Enter a password for the encrypted RSA'
-        ' file (' + Fore.RED + relative_path + Fore.RESET + '): ',
+        ' file (' + Fore.RED + filepath + Fore.RESET + '): ',
         confirm=False)
 
   # Does 'password' have the correct format?
@@ -329,20 +342,26 @@ def import_rsa_publickey_from_file(filepath):
 
 
 
-def generate_and_write_ed25519_keypair(filepath, password=None):
+def generate_and_write_ed25519_keypair(filepath=None, password=None):
   """
   <Purpose>
-    Generate an Ed25519 key file, create an encrypted key (using 'password'
-    as the pass phrase), and store it in 'filepath'.  The public key portion of
-    the generated ED25519 key is stored in <'filepath'>.pub.
+    Generate an Ed25519 keypair, where the encrypted key (using 'password' as
+    the passphrase) is saved to <'filepath'>.  The public key portion of the
+    generated Ed25519 key is saved to <'filepath'>.pub.  If the filepath is not
+    given, the KEYID is used as the filename and the keypair saved to the
+    current working directory.
 
-    The Ed25519 private key is encrypted with AES-256 and CTR the mode of
-    operation.  The password is strengthened with PBKDF2-HMAC-SHA256.
+    The private key is encrypted according to 'cryptography's approach:
+    "Encrypt using the best available encryption for a given key's backend.
+    This is a curated encryption choice and the algorithm may change over
+    time."
 
   <Arguments>
     filepath:
       The public and private key files are saved to <filepath>.pub and
-      <filepath>, respectively.
+      <filepath>, respectively.  If the filepath is not given, the public and
+      private keys are saved to the current working directory as <KEYID>.pub
+      and <KEYID>.  KEYID is the generated key's KEYID.
 
     password:
       The password, or passphrase, to encrypt the private portion of the
@@ -359,8 +378,18 @@ def generate_and_write_ed25519_keypair(filepath, password=None):
     Writes key files to '<filepath>' and '<filepath>.pub'.
 
   <Returns>
-    None.
+    The 'filepath' of the written key.
   """
+
+  # Generate a new Ed25519 key object.
+  ed25519_key = securesystemslib.keys.generate_ed25519_key()
+
+  if not filepath:
+    filepath = os.path.join(os.getcwd(), ed25519_key['keyid'])
+
+  else:
+    logger.debug('The filepath has been specified.  Not using the key\'s'
+        ' KEYID as the default filepath.')
 
   # Does 'filepath' have the correct format?
   # Ensure the arguments have the appropriate number of objects and object
@@ -371,50 +400,55 @@ def generate_and_write_ed25519_keypair(filepath, password=None):
   # If the caller does not provide a password argument, prompt for one.
   if password is None: # pragma: no cover
 
-    # Make sure the prompt for the password specifies the relative path of
-    # 'filepath', to prevent unnessary leakage of a sensitive key path.
-    relative_path = os.path.basename(filepath)
+    # It is safe to specify the full path of 'filepath' in the prompt and not
+    # worry about leaking sensitive information about the key's location.
+    # However, care should be taken when including the full path in exceptions
+    # and log files.
     password = _get_password('Enter a password for the Ed25519'
-        ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
+        ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
         confirm=False)
+
+  else:
+    logger.debug('The password has been specified.  Not prompting for one')
 
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
 
-  # Generate a new Ed25519 key object and encrypt it.  Raise
-  # 'securesystemslib.exceptions.CryptoError' if 'ed25519_key' cannot be
-  # encrypted.
-  ed25519_key = securesystemslib.keys.generate_ed25519_key()
-  encrypted_key = securesystemslib.keys.encrypt_key(ed25519_key, password)
+  # If the parent directory of filepath does not exist,
+  # create it (and all its parent directories, if necessary).
+  securesystemslib.util.ensure_parent_dir(filepath)
 
-  # ed25519 public key file contents in metadata format (i.e., does not include
-  # the keyid portion).
+  # Create a temporary file, write the contents of the public key, and move
+  # to final destination.
+  file_object = securesystemslib.util.TempFile()
+
+  # Generate the ed25519 public key file contents in metadata format (i.e.,
+  # does not include the keyid portion).
   keytype = ed25519_key['keytype']
   keyval = ed25519_key['keyval']
   scheme = ed25519_key['scheme']
+  ed25519key_metadata_format = securesystemslib.keys.format_keyval_to_metadata(
+      keytype, scheme, keyval, private=False)
 
-  ed25519key_metadata_format = \
-    securesystemslib.keys.format_keyval_to_metadata(keytype, scheme, keyval,
-    private=False)
-
-  # Write the public key, conformant to 'securesystemslib.formats.KEY_SCHEMA',
-  # to '<filepath>.pub'.
-  securesystemslib.util.ensure_parent_dir(filepath)
-
-  # Create a tempororary file, write the contents of the public key, and move
-  # to final destination.
-  file_object = securesystemslib.util.TempFile()
   file_object.write(json.dumps(ed25519key_metadata_format).encode('utf-8'))
 
+  # Write the public key (i.e., 'public', which is in PEM format) to
+  # '<filepath>.pub'.  (1) Create a temporary file, (2) write the contents of
+  # the public key, and (3) move to final destination.
   # The temporary file is closed after the final move.
   file_object.move(filepath + '.pub')
 
   # Write the encrypted key string, conformant to
   # 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA', to '<filepath>'.
   file_object = securesystemslib.util.TempFile()
+
+  # Raise 'securesystemslib.exceptions.CryptoError' if 'ed25519_key' cannot be
+  # encrypted.
+  encrypted_key = securesystemslib.keys.encrypt_key(ed25519_key, password)
   file_object.write(encrypted_key.encode('utf-8'))
   file_object.move(filepath)
 
+  return filepath
 
 
 
@@ -515,11 +549,12 @@ def import_ed25519_privatekey_from_file(filepath, password=None):
   # when creating encrypted key files (i.e., improve usability).
   if password is None: # pragma: no cover
 
-    # Make sure the prompt for the password specifies the relative path of
-    # 'filepath', to prevent unnessary leakage of a sensitive key path.
-    relative_path = os.path.basename(filepath)
+    # It is safe to specify the full path of 'filepath' in the prompt and not
+    # worry about leaking sensitive information about the key's location.
+    # However, care should be taken when including the full path in exceptions
+    # and log files.
     password = _get_password('Enter a password for the encrypted Ed25519'
-        ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
+        ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
         confirm=False)
 
   # Does 'password' have the correct format?
@@ -554,21 +589,26 @@ def import_ed25519_privatekey_from_file(filepath, password=None):
 
 
 
-def generate_and_write_ecdsa_keypair(filepath, password=None):
+def generate_and_write_ecdsa_keypair(filepath=None, password=None):
   """
   <Purpose>
-    Generate an ECDSA key file, create an encrypted key (using 'password' as
-    the pass phrase), and store it in 'filepath'.  The public key portion of
-    the generated ECDSA key is stored in <'filepath'>.pub.  The 'cryptography'
-    library currently supported.  The private key is encrypted according to
-    'cryptography's approach: "Encrypt using the best available encryption for
-    a given key's backend. This is a curated encryption choice and the
-    algorithm may change over time."
+    Generate an ECDSA keypair, where the encrypted key (using 'password' as the
+    passphrase) is saved to <'filepath'>.  The public key portion of the
+    generated ECDSA key is saved to <'filepath'>.pub.  If the filepath is not
+    given, the KEYID is used as the filename and the keypair saved to the
+    current working directory.
+
+    The 'cryptography' library is currently supported.  The private key is
+    encrypted according to 'cryptography's approach: "Encrypt using the best
+    available encryption for a given key's backend. This is a curated
+    encryption choice and the algorithm may change over time."
 
   <Arguments>
     filepath:
       The public and private key files are saved to <filepath>.pub and
-      <filepath>, respectively.
+      <filepath>, respectively.  If the filepath is not given, the public and
+      private keys are saved to the current working directory as <KEYID>.pub
+      and <KEYID>.  KEYID is the generated key's KEYID.
 
     password:
       The password, or passphrase, to encrypt the private portion of the
@@ -585,63 +625,74 @@ def generate_and_write_ecdsa_keypair(filepath, password=None):
     Writes key files to '<filepath>' and '<filepath>.pub'.
 
   <Returns>
-    None.
+    The 'filepath' of the written key.
   """
 
+  # Generate a new ECDSA key object.  The 'cryptography' library is currently
+  # supported and performs the actual cryptographic operations.
+  ecdsa_key = securesystemslib.keys.generate_ecdsa_key()
+
+  if not filepath:
+    filepath = os.path.join(os.getcwd(), ecdsa_key['keyid'])
+
+  else:
+    logger.debug('The filepath has been specified.  Not using the key\'s'
+        ' KEYID as the default filepath.')
+
   # Does 'filepath' have the correct format?
-  # Ensure the arguments have the appropriate number of objects and object
-  # types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
   # If the caller does not provide a password argument, prompt for one.
   if password is None: # pragma: no cover
 
-    # Make sure the prompt for the password specifies the relative path of
-    # 'filepath', to prevent unnessary leakage of a sensitive key path.
-    relative_path = os.path.basename(filepath)
+    # It is safe to specify the full path of 'filepath' in the prompt and not
+    # worry about leaking sensitive information about the key's location.
+    # However, care should be taken when including the full path in exceptions
+    # and log files.
     password = _get_password('Enter a password for the ECDSA'
-        ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
+        ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
         confirm=False)
+
+  else:
+    logger.debug('The password has been specified.  Not prompting for one')
 
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
 
-  # Generate a new ECDSA key object and encrypt it.  The 'cryptography' library
-  # is currently supported and performs the actual cryptographic routine.
-  # Raise 'securesystemslib.exceptions.CryptoError' if 'ed25519_key' cannot be
-  # encrypted.
-  ecdsa_key = securesystemslib.keys.generate_ecdsa_key()
-  encrypted_key = securesystemslib.keys.encrypt_key(ecdsa_key, password)
+  # If the parent directory of filepath does not exist,
+  # create it (and all its parent directories, if necessary).
+  securesystemslib.util.ensure_parent_dir(filepath)
 
-  # ECDSA public key file contents in metadata format (i.e., does not include
-  # the keyid portion).
+  # Create a temporary file, write the contents of the public key, and move
+  # to final destination.
+  file_object = securesystemslib.util.TempFile()
+
+  # Generate the ECDSA public key file contents in metadata format (i.e., does
+  # not include the keyid portion).
   keytype = ecdsa_key['keytype']
   keyval = ecdsa_key['keyval']
   scheme = ecdsa_key['scheme']
+  ecdsakey_metadata_format = securesystemslib.keys.format_keyval_to_metadata(
+      keytype, scheme, keyval, private=False)
 
-  ecdsakey_metadata_format = \
-    securesystemslib.keys.format_keyval_to_metadata(keytype, scheme,
-        keyval, private=False)
-
-  # Write the public key, conformant to 'securesystemslib.formats.KEY_SCHEMA',
-  # to '<filepath>.pub'.
-  securesystemslib.util.ensure_parent_dir(filepath)
-
-  # Create a tempororary file, write the contents of the public key, and move
-  # to final destination.
-  file_object = securesystemslib.util.TempFile()
   file_object.write(json.dumps(ecdsakey_metadata_format).encode('utf-8'))
 
-  # The temporary file is closed after the final move.
+  # Write the public key (i.e., 'public', which is in PEM format) to
+  # '<filepath>.pub'.  (1) Create a temporary file, (2) write the contents of
+  # the public key, and (3) move to final destination.
   file_object.move(filepath + '.pub')
 
   # Write the encrypted key string, conformant to
   # 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA', to '<filepath>'.
   file_object = securesystemslib.util.TempFile()
+  # Raise 'securesystemslib.exceptions.CryptoError' if 'ecdsa_key' cannot be
+  # encrypted.
+  encrypted_key = securesystemslib.keys.encrypt_key(ecdsa_key, password)
   file_object.write(encrypted_key.encode('utf-8'))
   file_object.move(filepath)
 
+  return filepath
 
 
 
@@ -740,11 +791,12 @@ def import_ecdsa_privatekey_from_file(filepath, password=None):
   # when creating encrypted key files (i.e., improve usability).
   if password is None: # pragma: no cover
 
-    # Make sure the prompt for the password specifies the relative path of
-    # 'filepath', to prevent unnessary leakage of a sensitive key path.
-    relative_path = os.path.basename(filepath)
+    # It is safe to specify the full path of 'filepath' in the prompt and not
+    # worry about leaking sensitive information about the key's location.
+    # However, care should be taken when including the full path in exceptions
+    # and log files.
     password = _get_password('Enter a password for the encrypted ECDSA'
-        ' key (' + Fore.RED + relative_path + Fore.RESET + '): ',
+        ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
         confirm=False)
 
   # Does 'password' have the correct format?

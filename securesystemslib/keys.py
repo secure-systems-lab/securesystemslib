@@ -192,6 +192,12 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-sha256'):
   # securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match().
   public, private = securesystemslib.pyca_crypto_keys.generate_rsa_public_and_private(bits)
 
+  # When loading in PEM keys, extract_pem() is called, which strips any
+  # leading or trailing new line characters. Do the same here before generating
+  # the keyid.
+  public =  extract_pem(public, private_pem=False)
+  private = extract_pem(private, private_pem=True)
+
   # Generate the keyid of the RSA key.  Note: The private key material is
   # not included in the generation of the 'keyid' identifier.
   key_value = {'public': public,

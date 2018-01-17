@@ -226,7 +226,7 @@ def generate_rsa_public_and_private(bits=_DEFAULT_RSA_KEY_BITS):
   public_pem = public_key.public_bytes(encoding=serialization.Encoding.PEM,
       format=serialization.PublicFormat.SubjectPublicKeyInfo)
 
-  return public_pem.decode(), private_pem.decode()
+  return public_pem.decode('utf-8'), private_pem.decode('utf-8')
 
 
 

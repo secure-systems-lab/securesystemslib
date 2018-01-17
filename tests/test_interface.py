@@ -93,9 +93,11 @@ class TestInterfaceFunctions(unittest.TestCase):
     test_keypath_unencrypted = os.path.join(temporary_directory,
         'rsa_key_unencrypted')
 
-    interface.generate_and_write_rsa_keypair(test_keypath, password='pw')
+    returned_path = interface.generate_and_write_rsa_keypair(test_keypath,
+        password='pw')
     self.assertTrue(os.path.exists(test_keypath))
     self.assertTrue(os.path.exists(test_keypath + '.pub'))
+    self.assertEqual(returned_path, test_keypath)
 
     # If an empty string is given for 'password', the private key file
     # is written to disk unencrypted.
@@ -127,6 +129,18 @@ class TestInterfaceFunctions(unittest.TestCase):
     self.assertTrue(os.path.exists(test_keypath))
     self.assertTrue(os.path.exists(test_keypath + '.pub'))
 
+    # Test for a default filepath.  If 'filepath' is not given, the key's
+    # KEYID is used as the filename.  The key is saved to the current working
+    # directory.
+    default_keypath = interface.generate_and_write_rsa_keypair(password='pw')
+    self.assertTrue(os.path.exists(default_keypath))
+    self.assertTrue(os.path.exists(default_keypath + '.pub'))
+
+    written_key = interface.import_rsa_publickey_from_file(default_keypath + '.pub')
+    self.assertEqual(written_key['keyid'], os.path.basename(default_keypath))
+
+    os.remove(default_keypath)
+    os.remove(default_keypath + '.pub')
 
     # Test improperly formatted arguments.
     self.assertRaises(securesystemslib.exceptions.FormatError,
@@ -221,9 +235,11 @@ class TestInterfaceFunctions(unittest.TestCase):
     temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
     test_keypath = os.path.join(temporary_directory, 'ed25519_key')
 
-    interface.generate_and_write_ed25519_keypair(test_keypath, password='pw')
+    returned_path = interface.generate_and_write_ed25519_keypair(
+        test_keypath, password='pw')
     self.assertTrue(os.path.exists(test_keypath))
     self.assertTrue(os.path.exists(test_keypath + '.pub'))
+    self.assertEqual(returned_path, test_keypath)
 
     # Ensure the generated key files are importable.
     imported_pubkey = \
@@ -233,6 +249,19 @@ class TestInterfaceFunctions(unittest.TestCase):
     imported_privkey = \
       interface.import_ed25519_privatekey_from_file(test_keypath, 'pw')
     self.assertTrue(securesystemslib.formats.ED25519KEY_SCHEMA.matches(imported_privkey))
+
+    # Test for a default filepath.  If 'filepath' is not given, the key's
+    # KEYID is used as the filename.  The key is saved to the current working
+    # directory.
+    default_keypath = interface.generate_and_write_ed25519_keypair(password='pw')
+    self.assertTrue(os.path.exists(default_keypath))
+    self.assertTrue(os.path.exists(default_keypath + '.pub'))
+
+    written_key = interface.import_ed25519_publickey_from_file(default_keypath + '.pub')
+    self.assertEqual(written_key['keyid'], os.path.basename(default_keypath))
+
+    os.remove(default_keypath)
+    os.remove(default_keypath + '.pub')
 
 
     # Test improperly formatted arguments.
@@ -354,15 +383,16 @@ class TestInterfaceFunctions(unittest.TestCase):
 
 
 
-  def test_generate_and_write_ed25519_keypair(self):
+  def test_generate_and_write_ecdsa_keypair(self):
 
     # Test normal case.
     temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
     test_keypath = os.path.join(temporary_directory, 'ecdsa_key')
 
-    interface.generate_and_write_ecdsa_keypair(test_keypath, password='pw')
+    returned_path = interface.generate_and_write_ecdsa_keypair(test_keypath, password='pw')
     self.assertTrue(os.path.exists(test_keypath))
     self.assertTrue(os.path.exists(test_keypath + '.pub'))
+    self.assertEqual(returned_path, test_keypath)
 
     # Ensure the generated key files are importable.
     imported_pubkey = \
@@ -373,6 +403,18 @@ class TestInterfaceFunctions(unittest.TestCase):
       interface.import_ecdsa_privatekey_from_file(test_keypath, 'pw')
     self.assertTrue(securesystemslib.formats.ECDSAKEY_SCHEMA.matches(imported_privkey))
 
+    # Test for a default filepath.  If 'filepath' is not given, the key's
+    # KEYID is used as the filename.  The key is saved to the current working
+    # directory.
+    default_keypath = interface.generate_and_write_ecdsa_keypair(password='pw')
+    self.assertTrue(os.path.exists(default_keypath))
+    self.assertTrue(os.path.exists(default_keypath + '.pub'))
+
+    written_key = interface.import_ecdsa_publickey_from_file(default_keypath + '.pub')
+    self.assertEqual(written_key['keyid'], os.path.basename(default_keypath))
+
+    os.remove(default_keypath)
+    os.remove(default_keypath + '.pub')
 
     # Test improperly formatted arguments.
     self.assertRaises(securesystemslib.exceptions.FormatError,
