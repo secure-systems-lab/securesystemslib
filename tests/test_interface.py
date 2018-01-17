@@ -135,6 +135,10 @@ class TestInterfaceFunctions(unittest.TestCase):
     default_keypath = interface.generate_and_write_rsa_keypair(password='pw')
     self.assertTrue(os.path.exists(default_keypath))
     self.assertTrue(os.path.exists(default_keypath + '.pub'))
+
+    written_key = interface.import_rsa_publickey_from_file(default_keypath + '.pub')
+    self.assertEqual(written_key['keyid'], os.path.basename(default_keypath))
+
     os.remove(default_keypath)
     os.remove(default_keypath + '.pub')
 
@@ -252,8 +256,13 @@ class TestInterfaceFunctions(unittest.TestCase):
     default_keypath = interface.generate_and_write_ed25519_keypair(password='pw')
     self.assertTrue(os.path.exists(default_keypath))
     self.assertTrue(os.path.exists(default_keypath + '.pub'))
+
+    written_key = interface.import_ed25519_publickey_from_file(default_keypath + '.pub')
+    self.assertEqual(written_key['keyid'], os.path.basename(default_keypath))
+
     os.remove(default_keypath)
     os.remove(default_keypath + '.pub')
+
 
     # Test improperly formatted arguments.
     self.assertRaises(securesystemslib.exceptions.FormatError,
@@ -400,6 +409,10 @@ class TestInterfaceFunctions(unittest.TestCase):
     default_keypath = interface.generate_and_write_ecdsa_keypair(password='pw')
     self.assertTrue(os.path.exists(default_keypath))
     self.assertTrue(os.path.exists(default_keypath + '.pub'))
+
+    written_key = interface.import_ecdsa_publickey_from_file(default_keypath + '.pub')
+    self.assertEqual(written_key['keyid'], os.path.basename(default_keypath))
+
     os.remove(default_keypath)
     os.remove(default_keypath + '.pub')
 
