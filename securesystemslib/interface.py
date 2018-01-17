@@ -147,8 +147,6 @@ def generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
   """
 
   # Does 'bits' have the correct format?
-  # This check ensures arguments have the appropriate number of
-  # objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match(bits)
 
@@ -642,8 +640,6 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None):
         ' KEYID as the default filepath.')
 
   # Does 'filepath' have the correct format?
-  # Ensure the arguments have the appropriate number of objects and object
-  # types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
