@@ -191,16 +191,15 @@ def generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
   else:
     logger.debug('An empty password was given.  Not encrypting the private key.')
 
-  # Write public key (i.e., 'public', which is in PEM format) to
-  # '<filepath>.pub'.  If the parent directory of filepath does not exist,
+  # If the parent directory of filepath does not exist,
   # create it (and all its parent directories, if necessary).
   securesystemslib.util.ensure_parent_dir(filepath)
 
-  # Create a tempororary file, write the contents of the public key, and move
-  # to final destination.
+  # Write the public key (i.e., 'public', which is in PEM format) to
+  # '<filepath>.pub'.  (1) Create a temporary file, (2) write the contents of
+  # the public key, and (3) move to final destination.
   file_object = securesystemslib.util.TempFile()
   file_object.write(public.encode('utf-8'))
-
   # The temporary file is closed after the final move.
   file_object.move(filepath + '.pub')
 
@@ -417,8 +416,8 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None):
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
 
-  # Write the public key, conformant to 'securesystemslib.formats.KEY_SCHEMA',
-  # to '<filepath>.pub'.
+  # If the parent directory of filepath does not exist,
+  # create it (and all its parent directories, if necessary).
   securesystemslib.util.ensure_parent_dir(filepath)
 
   # Create a tempororary file, write the contents of the public key, and move
@@ -435,6 +434,9 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None):
 
   file_object.write(json.dumps(ed25519key_metadata_format).encode('utf-8'))
 
+  # Write the public key (i.e., 'public', which is in PEM format) to
+  # '<filepath>.pub'.  (1) Create a temporary file, (2) write the contents of
+  # the public key, and (3) move to final destination.
   # The temporary file is closed after the final move.
   file_object.move(filepath + '.pub')
 
@@ -662,8 +664,8 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None):
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
 
-  # Write the public key, conformant to 'securesystemslib.formats.KEY_SCHEMA',
-  # to '<filepath>.pub'.
+  # If the parent directory of filepath does not exist,
+  # create it (and all its parent directories, if necessary).
   securesystemslib.util.ensure_parent_dir(filepath)
 
   # Create a tempororary file, write the contents of the public key, and move
@@ -680,7 +682,9 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None):
 
   file_object.write(json.dumps(ecdsakey_metadata_format).encode('utf-8'))
 
-  # The temporary file is closed after the final move.
+  # Write the public key (i.e., 'public', which is in PEM format) to
+  # '<filepath>.pub'.  (1) Create a temporary file, (2) write the contents of
+  # the public key, and (3) move to final destination.
   file_object.move(filepath + '.pub')
 
   # Write the encrypted key string, conformant to
