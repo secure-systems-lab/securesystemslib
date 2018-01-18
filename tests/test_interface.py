@@ -167,7 +167,8 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Load one of the pre-generated key files from
     # 'securesystemslib/tests/repository_data'.  'password' unlocks the
     # pre-generated key files.
-    key_filepath = os.path.join('data', 'keystore', 'rsa_key')
+    key_filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 
+        'data', 'keystore', 'rsa_key')
     self.assertTrue(os.path.exists(key_filepath))
 
     imported_rsa_key = interface.import_rsa_privatekey_from_file(
@@ -201,7 +202,8 @@ class TestInterfaceFunctions(unittest.TestCase):
     temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
 
     # Load one of the pre-generated key files from 'securesystemslib/tests/data'.
-    key_filepath = os.path.join('data', 'keystore', 'rsa_key.pub')
+    key_filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+        'data', 'keystore', 'rsa_key.pub')
     self.assertTrue(os.path.exists(key_filepath))
 
     imported_rsa_key = interface.import_rsa_publickey_from_file(key_filepath)
