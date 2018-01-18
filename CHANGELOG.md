@@ -4,8 +4,8 @@
 
 * Add `debian` directory (and files) that can be used to package a .deb file.
 
-* Modify the functions that import keys so that the key file's path is
-  specified in the function's prompt.
+* Modify functions that generate or import keys so that the key file's path is
+  shown if the function prompts for a password.
 
 * Add colorama dependency.  It is used to colorize some of the prompts.
 
