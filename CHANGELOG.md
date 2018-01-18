@@ -1,5 +1,27 @@
 # Changelog
 
+## securesystemslib v0.10.9
+
+* Add `debian` directory (and files) that can be used to package a .deb file.
+
+* Modify functions that generate or import keys so that the key file's path is
+  shown if the function prompts for a password.
+
+* Add colorama dependency.  It is used to colorize some of the prompts.
+
+* Update dependencies to their latest version.
+
+* Support KEYID filenames for generated key files.  KEYID filenames are used
+  if a filename is not specified.
+
+* Minor edits to comments, indentation, whitespace, etc.
+
+* Modify generate_rsa_key() so that leading and trailing newline characters
+  are stripped before generating the KEYID.  This is done so that the
+  KEYID generated from imported keys match. Imported PEM keys are
+  stripped of any leading and trailing newline characters before the KEYID is
+  generated.
+
 ## securesystemslib v0.10.8
 
 * Drop support for Python 2.6 and 3.3
