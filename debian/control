@@ -11,6 +11,7 @@ Build-Depends:
  python,
  python-nacl,
  python-cryptography,
+ python-colorama,
  dh-python (>= 2.20160818~),
  dpkg-dev (>= 1.17.14),
 Standards-Version: 4.1.1
@@ -23,6 +24,7 @@ Architecture: all
 Depends:
  dh-python,
  python-cryptography,
+ python-colorama,
  python-nacl,
 Description: A secure cryptography and general purpose library for python.
 
@@ -31,6 +33,7 @@ Architecture: all
 Depends:
  dh-python,
  python3-cryptography,
+ python3-colorama,
  python3-nacl,
 Description: A secure cryptography and general purpose library for python
  (python 3 version).
