@@ -55,10 +55,9 @@ logger = logging.getLogger('securesystemslib_interface')
 
 
 # Recommended RSA key sizes:
-# http://www.emc.com/emc-plus/rsa-labs/historical/twirl-and-rsa-key-size.htm#table1
-# According to the document above, revised May 6, 2003, RSA keys of
-# size 3072 provide security through 2031 and beyond. 2048-bit keys
-# are the recommended minimum and are good from the present through 2030.
+# https://en.wikipedia.org/wiki/Key_size#Asymmetric_algorithm_key_lengths
+# Based on the above, RSA keys of size 3072 bits are expected to provide
+# security through 2031 and beyond.
 DEFAULT_RSA_KEY_BITS = 3072
 
 # Supported key types.
