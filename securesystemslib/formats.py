@@ -155,6 +155,9 @@ NAMES_SCHEMA = SCHEMA.ListOf(NAME_SCHEMA)
 # A byte string representing data.
 DATA_SCHEMA = SCHEMA.AnyBytes()
 
+# A text string.  For instance, a string entered by the user.
+TEXT_SCHEMA = SCHEMA.AnyString()
+
 # Supported hash algorithms.
 HASHALGORITHMS_SCHEMA = SCHEMA.ListOf(SCHEMA.OneOf(
   [SCHEMA.String('md5'), SCHEMA.String('sha1'),

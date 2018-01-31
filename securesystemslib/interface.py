@@ -55,10 +55,9 @@ logger = logging.getLogger('securesystemslib_interface')
 
 
 # Recommended RSA key sizes:
-# http://www.emc.com/emc-plus/rsa-labs/historical/twirl-and-rsa-key-size.htm#table1
-# According to the document above, revised May 6, 2003, RSA keys of
-# size 3072 provide security through 2031 and beyond. 2048-bit keys
-# are the recommended minimum and are good from the present through 2030.
+# https://en.wikipedia.org/wiki/Key_size#Asymmetric_algorithm_key_lengths
+# Based on the above, RSA keys of size 3072 bits are expected to provide
+# security through 2031 and beyond.
 DEFAULT_RSA_KEY_BITS = 3072
 
 # Supported key types.
@@ -79,12 +78,36 @@ def _prompt(message, result_type=str):
 
 
 
-def _get_password(prompt='Password: ', confirm=False):
+def get_password(prompt='Password: ', confirm=False):
   """
-    Non-public function that returns the password entered by the user.  If
-    'confirm' is True, the user is asked to enter the previously entered
-    password once again.  If they match, the password is returned to the caller.
+  <Purpose>
+    Return the password entered by the user.  If 'confirm' is True, the user is
+    asked to enter the previously entered password once again.  If they match,
+    the password is returned to the caller.
+
+  <Arguments>
+    prompt:
+      The text of the password prompt that is displayed to the user.
+
+    confirm:
+      Boolean indicating whether the user should be prompted for the password
+      a second time.  The two entered password must match, otherwise the
+      user is again prompted for a password.
+
+  <Exceptions>
+    None.
+
+  <Side Effects>
+    None.
+
+  <Returns>
+    The password entered by the user.
   """
+
+  # Are the arguments the expected type?
+  # If not, raise 'securesystemslib.exceptions.FormatError'.
+  securesystemslib.formats.TEXT_SCHEMA.check_match(prompt)
+  securesystemslib.formats.BOOLEAN_SCHEMA.check_match(confirm)
 
   while True:
     # getpass() prompts the user for a password without echoing
@@ -172,9 +195,9 @@ def generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
     # worry about leaking sensitive information about the key's location.
     # However, care should be taken when including the full path in exceptions
     # and log files.
-    password = _get_password('Enter a password for the encrypted RSA'
+    password = get_password('Enter a password for the encrypted RSA'
         ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
-        confirm=False)
+        confirm=True)
 
   else:
     logger.debug('The password has been specified.  Not prompting for one')
@@ -263,7 +286,7 @@ def import_rsa_privatekey_from_file(filepath, password=None,
     # worry about leaking sensitive information about the key's location.
     # However, care should be taken when including the full path in exceptions
     # and log files.
-    password = _get_password('Enter a password for the encrypted RSA'
+    password = get_password('Enter a password for the encrypted RSA'
         ' file (' + Fore.RED + filepath + Fore.RESET + '): ',
         confirm=False)
 
@@ -404,9 +427,9 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None):
     # worry about leaking sensitive information about the key's location.
     # However, care should be taken when including the full path in exceptions
     # and log files.
-    password = _get_password('Enter a password for the Ed25519'
+    password = get_password('Enter a password for the Ed25519'
         ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
-        confirm=False)
+        confirm=True)
 
   else:
     logger.debug('The password has been specified.  Not prompting for one')
@@ -553,7 +576,7 @@ def import_ed25519_privatekey_from_file(filepath, password=None):
     # worry about leaking sensitive information about the key's location.
     # However, care should be taken when including the full path in exceptions
     # and log files.
-    password = _get_password('Enter a password for the encrypted Ed25519'
+    password = get_password('Enter a password for the encrypted Ed25519'
         ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
         confirm=False)
 
@@ -650,9 +673,9 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None):
     # worry about leaking sensitive information about the key's location.
     # However, care should be taken when including the full path in exceptions
     # and log files.
-    password = _get_password('Enter a password for the ECDSA'
+    password = get_password('Enter a password for the ECDSA'
         ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
-        confirm=False)
+        confirm=True)
 
   else:
     logger.debug('The password has been specified.  Not prompting for one')
@@ -795,7 +818,7 @@ def import_ecdsa_privatekey_from_file(filepath, password=None):
     # worry about leaking sensitive information about the key's location.
     # However, care should be taken when including the full path in exceptions
     # and log files.
-    password = _get_password('Enter a password for the encrypted ECDSA'
+    password = get_password('Enter a password for the encrypted ECDSA'
         ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
         confirm=False)
 

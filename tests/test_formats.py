@@ -91,6 +91,8 @@ class TestFormats(unittest.TestCase):
 
       'NAME_SCHEMA': (securesystemslib.formats.NAME_SCHEMA, 'Marty McFly'),
 
+      'TEXT_SCHEMA': (securesystemslib.formats.TEXT_SCHEMA, 'Password: '),
+
       'BOOLEAN_SCHEMA': (securesystemslib.formats.BOOLEAN_SCHEMA, True),
 
       'THRESHOLD_SCHEMA': (securesystemslib.formats.THRESHOLD_SCHEMA, 1),
