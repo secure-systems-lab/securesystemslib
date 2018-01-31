@@ -1,4 +1,15 @@
 # Changelog
+## securesystemslib v0.10.10
+
+* Add get_password() to API.
+
+* Enable password confirmation in all `generate_and_write_XXX_keypair()`
+  functions.
+
+* Minor:
+  Fix broken link in comment (recommended # of bits for RSA keys).
+  Add `TEXT_SCHEMA`.
+  Remove obsolete function (check_crypto_libaries) from `.coveragerc`.
 
 ## securesystemslib v0.10.9
 
