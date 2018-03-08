@@ -247,7 +247,7 @@ def import_rsa_privatekey_from_file(filepath, password=None,
     If no password is passed or entered, or if the entered password is an empty
     string, omit decryption.
 
-    Passing and prompting for a passowrd is not possible.
+    Passing and prompting for a password is not possible.
 
     The returned key is an object in the
     'securesystemslib.formats.RSAKEY_SCHEMA' format.
