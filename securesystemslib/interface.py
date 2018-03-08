@@ -312,7 +312,7 @@ def import_rsa_privatekey_from_file(filepath, password=None,
 
     # TODO: PASSWORD_SCHEMA should be securesystemslib.schema.AnyString(min=1)
     if not len(password):
-      raise ValueError('Password must be 1 or more charcters')
+      raise ValueError('Password must be 1 or more characters')
 
   elif prompt:
     # Password confirmation disabled here, which should ideally happen only
