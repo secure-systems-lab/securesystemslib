@@ -120,6 +120,14 @@ class TestInterfaceFunctions(unittest.TestCase):
     interface.import_rsa_privatekey_from_file(test_keypath_unencrypted)
     self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_privkey))
 
+    # Fail importing unencrypted key passing a password
+    with self.assertRaises(securesystemslib.exceptions.CryptoError):
+      interface.import_rsa_privatekey_from_file(test_keypath_unencrypted, 'pw')
+
+    # Fail importing encrypted key passing no password
+    with self.assertRaises(securesystemslib.exceptions.CryptoError):
+      interface.import_rsa_privatekey_from_file(test_keypath)
+
     # Custom 'bits' argument.
     os.remove(test_keypath)
     os.remove(test_keypath + '.pub')
