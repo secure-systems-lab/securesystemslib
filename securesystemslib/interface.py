@@ -314,7 +314,7 @@ def import_rsa_privatekey_from_file(filepath, password=None,
     if not len(password):
       raise ValueError('Password must be 1 or more charcters')
 
-  elif prompt: # pragma: no cover
+  elif prompt:
     # Password confirmation disabled here, which should ideally happen only
     # when creating encrypted key files (i.e., improve usability).
     # It is safe to specify the full path of 'filepath' in the prompt and not
