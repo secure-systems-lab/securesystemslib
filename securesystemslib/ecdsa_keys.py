@@ -225,9 +225,7 @@ def create_signature(public_key, private_key, data, scheme='ecdsa-sha2-nistp256'
       private_key = load_pem_private_key(private_key.encode('utf-8'),
         password=None, backend=default_backend())
 
-      signer = private_key.signer(ec.ECDSA(hashes.SHA256()))
-      signer.update(data)
-      signature = signer.finalize()
+      signature = private_key.sign(data, ec.ECDSA(hashes.SHA256()))
 
     except TypeError as e:
       raise securesystemslib.exceptions.CryptoError('Could not create'
@@ -307,21 +305,13 @@ def verify_signature(public_key, scheme, signature, data):
   else:
     logger.debug('Loaded a valid ECDSA public key.')
 
-  try:
-    verifier = ecdsa_key.verifier(signature, ec.ECDSA(hashes.SHA256()))
-    verifier.update(data)
-
-  except TypeError as e:
-    raise securesystemslib.exceptions.FormatError('Invalid signature or'
-      ' data: ' + str(e))
-
   # verify() raises an 'InvalidSignature' exception if 'signature'
   # is invalid.
   try:
-    verifier.verify()
+    ecdsa_key.verify(signature, data, ec.ECDSA(hashes.SHA256()))
     return True
 
-  except cryptography.exceptions.InvalidSignature:
+  except (TypeError, cryptography.exceptions.InvalidSignature):
     return False
 
 
