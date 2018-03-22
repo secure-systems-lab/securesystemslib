@@ -153,11 +153,6 @@ class TestECDSA_keys(unittest.TestCase):
         'bad_signature', data)
 
     # Check for invalid signature and data.
-    # Mismatched data.
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-      securesystemslib.ecdsa_keys.verify_signature, public, scheme,
-      signature, '123')
-
     self.assertEqual(False, securesystemslib.ecdsa_keys.verify_signature(public,
         scheme, signature, b'123'))
 

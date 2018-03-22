@@ -316,11 +316,9 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
         private_key_object = load_pem_private_key(private_key.encode('utf-8'),
             password=None, backend=default_backend())
 
-        # Calculate the SHA256 hash of 'data' and generate the hash's PKCS1-PSS
-        # signature.
-        rsa_signer = \
-          private_key_object.signer(padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
-              salt_length=hashes.SHA256().digest_size), hashes.SHA256())
+        signature = private_key_object.sign(
+            data, padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
+            salt_length=hashes.SHA256().digest_size), hashes.SHA256())
 
       # If the PEM data could not be decrypted, or if its structure could not
       # be decoded successfully.
@@ -343,10 +341,6 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
       except cryptography.exceptions.UnsupportedAlgorithm: #pragma: no cover
         raise securesystemslib.exceptions.CryptoError('The private key is'
           ' encrypted with an unsupported algorithm.')
-
-      # Generate an RSSA-PSS signature.
-      rsa_signer.update(data)
-      signature = rsa_signer.finalize()
 
     # The RSA_SCHEME_SCHEMA.check_match() above should have validated 'scheme'.
     # This is a defensive check check..
@@ -439,17 +433,14 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
     public_key_object = serialization.load_pem_public_key(public_key.encode('utf-8'),
         backend=default_backend())
 
-    # 'salt_length' is set to the digest size of the hashing algorithm.
-    verifier = public_key_object.verifier(signature,
-        padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
-        salt_length=hashes.SHA256().digest_size), hashes.SHA256())
-
-    verifier.update(data)
-
-    # verify() raises 'cryptograpahy.exceptions.InvalidSignature' if the
-    # signature is invalid.
+    # verify() raises 'cryptography.exceptions.InvalidSignature' if the
+    # signature is invalid. 'salt_length' is set to the digest size of the
+    # hashing algorithm.
     try:
-      verifier.verify()
+      public_key_object.verify(signature, data,
+          padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
+          salt_length=hashes.SHA256().digest_size),
+          hashes.SHA256())
       return True
 
     except cryptography.exceptions.InvalidSignature:
