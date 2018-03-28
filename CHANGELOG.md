@@ -1,4 +1,11 @@
 # Changelog
+## securesystemslib v0.10.11
+
+* Replace deprecated `cryptography` methods.  signer() and verifier()
+  should be replaced with sign() and verify(), respectively.
+
+* Update dependencies.
+
 ## securesystemslib v0.10.10
 
 * Add get_password() to API.
