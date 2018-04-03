@@ -14,7 +14,7 @@
   See LICENSE for licensing information.
 
 <Purpose>
-  Provide an interface to the cryptography funtions available in
+  Provide an interface to the cryptography functions available in
   securesystemslib.  The interface can be used with the Python interpreter in
   interactive mode, or imported directly into a Python module.  See
   'securesystemslib/README' for the complete guide to using 'interface.py'.
@@ -244,10 +244,10 @@ def import_rsa_privatekey_from_file(filepath, password=None,
 
     If password is passed use passed password for decryption.
     If prompt is True use entered password for decryption.
-    If no password is passed or entered, or if the entered password is an empty
-    string, omit decryption.
-
-    Passing and prompting for a password is not possible.
+    If no password is passed and either prompt is False or if the password
+    entered at the prompt is an empty string, omit decryption, treating the
+    key as if it is not encrypted.
+    If password is passed and prompt is True, an error is raised. (See below.)
 
     The returned key is an object in the
     'securesystemslib.formats.RSAKEY_SCHEMA' format.
