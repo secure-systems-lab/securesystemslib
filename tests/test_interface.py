@@ -42,6 +42,13 @@ if sys.version_info >= (2, 7):
 else:
   import unittest2 as unittest
 
+# Use external backport 'mock' on versions under 3.3
+if sys.version_info >= (3, 3):
+  import unittest.mock as mock
+
+else:
+  import mock
+
 import securesystemslib.formats
 import securesystemslib.formats
 import securesystemslib.hash
@@ -116,10 +123,25 @@ class TestInterfaceFunctions(unittest.TestCase):
       'pw')
     self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_privkey))
 
-    # Try to import the unencrypted key file.
-    imported_privkey = interface.import_rsa_privatekey_from_file(test_keypath_unencrypted,
-      '')
+    # Try to import the unencrypted key file, by not passing a password
+    interface.import_rsa_privatekey_from_file(test_keypath_unencrypted)
     self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_privkey))
+
+    # Try to import the unencrypted key file, by entering an empty password
+    with mock.patch('securesystemslib.interface.get_password',
+        return_value=''):
+      interface.import_rsa_privatekey_from_file(test_keypath_unencrypted,
+          prompt=True)
+      self.assertTrue(
+          securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_privkey))
+
+    # Fail importing unencrypted key passing a password
+    with self.assertRaises(securesystemslib.exceptions.CryptoError):
+      interface.import_rsa_privatekey_from_file(test_keypath_unencrypted, 'pw')
+
+    # Fail importing encrypted key passing no password
+    with self.assertRaises(securesystemslib.exceptions.CryptoError):
+      interface.import_rsa_privatekey_from_file(test_keypath)
 
     # Custom 'bits' argument.
     os.remove(test_keypath)
@@ -167,7 +189,7 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Load one of the pre-generated key files from
     # 'securesystemslib/tests/repository_data'.  'password' unlocks the
     # pre-generated key files.
-    key_filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 
+    key_filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
         'data', 'keystore', 'rsa_key')
     self.assertTrue(os.path.exists(key_filepath))
 
@@ -175,11 +197,30 @@ class TestInterfaceFunctions(unittest.TestCase):
         key_filepath, 'password')
     self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_rsa_key))
 
+    # Test load encrypted key prompt for password
+    with mock.patch('securesystemslib.interface.get_password',
+        return_value='password'):
+      imported_rsa_key = interface.import_rsa_privatekey_from_file(
+          key_filepath, prompt=True)
+      self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(
+          imported_rsa_key))
 
-    # Test improperly formatted argument.
+    # Test improperly formatted 'filepath' argument.
     self.assertRaises(securesystemslib.exceptions.FormatError,
         interface.import_rsa_privatekey_from_file, 3, 'pw')
 
+    # Test improperly formatted 'password' argument.
+    with self.assertRaises(securesystemslib.exceptions.FormatError):
+      interface.import_rsa_privatekey_from_file(key_filepath, 123)
+
+    # Test unallowed empty 'password'
+    with self.assertRaises(ValueError):
+      interface.import_rsa_privatekey_from_file(key_filepath, '')
+
+    # Test unallowed passing 'prompt' and 'password'
+    with self.assertRaises(ValueError):
+      interface.import_rsa_privatekey_from_file(key_filepath,
+          password='pw', prompt=True)
 
     # Test invalid argument.
     # Non-existent key file.
