@@ -1,4 +1,10 @@
 # Changelog
+## securesystemslib v0.11.0
+
+* Add `prompt` parameter to interface.import_rsa_privatekey_from_file() (pr #124).
+
+* Update dependencies
+
 ## securesystemslib v0.10.11
 
 * Replace deprecated `cryptography` methods.  signer() and verifier()
