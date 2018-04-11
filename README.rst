@@ -87,9 +87,12 @@ Import RSA Keys
     # Import an existing public key.
     >>> public_rsa_key1 = import_rsa_publickey_from_file("rsa_key1.pub")
 
-    # Import an existing private key.  Importing a private key requires a
-    # password, whereas importing a public key does not.
-    >>> private_rsa_key1 = import_rsa_privatekey_from_file("rsa_key1")
+    # Import an existing private key.  If your private key is encrypted,
+    # which it should be, you either have to pass a 'password' or enter one
+    # on the prompt.
+    >>> private_rsa_key1 = import_rsa_privatekey_from_file("rsa_key1", password='some passphrase")
+    OR:
+    >>> private_rsa_key1 = import_rsa_privatekey_from_file("rsa_key1", prompt=True)
     Enter a password for the encrypted RSA key:
 
 **import_rsa_privatekey_from_file()** raises a
