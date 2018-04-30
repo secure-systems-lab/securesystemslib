@@ -198,9 +198,11 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-sha256'):
   public =  extract_pem(public, private_pem=False)
   private = extract_pem(private, private_pem=True)
 
-  # Generate the keyid of the RSA key.  Note: The private key material is
-  # not included in the generation of the 'keyid' identifier.
-  key_value = {'public': public,
+  # Generate the keyid of the RSA key.  Note: The private key material is not
+  # included in the generation of the 'keyid' identifier.  Convert any '\r\n'
+  # (e.g., Windows) newline characters to '\n' so that a consistent keyid is
+  # generated.
+  key_value = {'public': public.replace('\r\n', '\n'),
                'private': ''}
   keyid = _get_keyid(keytype, scheme, key_value)
 
@@ -278,7 +280,9 @@ def generate_ecdsa_key(scheme='ecdsa-sha2-nistp256'):
   # Generate the keyid of the Ed25519 key.  'key_value' corresponds to the
   # 'keyval' entry of the 'Ed25519KEY_SCHEMA' dictionary.  The private key
   # information is not included in the generation of the 'keyid' identifier.
-  key_value = {'public': public,
+  # Convert any '\r\n' (e.g., Windows) newline characters to '\n' so that a
+  # consistent keyid is generated.
+  key_value = {'public': public.replace('\r\n', '\n'),
                'private': ''}
   keyid = _get_keyid(keytype, scheme, key_value)
 
@@ -695,6 +699,7 @@ def create_signature(key_dict, data):
 
   if keytype == 'rsa':
     if scheme == 'rsassa-pss-sha256':
+      private = private.replace('\r\n', '\n')
       sig, scheme = securesystemslib.pyca_crypto_keys.create_rsa_signature(private,
         data.encode('utf-8'), scheme)
 
@@ -963,7 +968,9 @@ def import_rsakey_from_private_pem(pem, scheme='rsassa-pss-sha256', password=Non
   # Generate the keyid of the RSA key.  'key_value' corresponds to the
   # 'keyval' entry of the 'RSAKEY_SCHEMA' dictionary.  The private key
   # information is not included in the generation of the 'keyid' identifier.
-  key_value = {'public': public,
+  # Convert any '\r\n' (e.g., Windows) newline characters to '\n' so that a
+  # consistent keyid is generated.
+  key_value = {'public': public.replace('\r\n', '\n'),
                'private': ''}
   keyid = _get_keyid(keytype, scheme, key_value)
 
@@ -1050,7 +1057,9 @@ def import_rsakey_from_public_pem(pem, scheme='rsassa-pss-sha256'):
   # Generate the keyid of the RSA key.  'key_value' corresponds to the
   # 'keyval' entry of the 'RSAKEY_SCHEMA' dictionary.  The private key
   # information is not included in the generation of the 'keyid' identifier.
-  key_value = {'public': public_pem,
+  # Convert any '\r\n' (e.g., Windows) newline characters to '\n' so that a
+  # consistent keyid is generated.
+  key_value = {'public': public_pem.replace('\r\n', '\n'),
                'private': ''}
   keyid = _get_keyid(keytype, scheme, key_value)
 
@@ -1127,13 +1136,14 @@ def import_rsakey_from_pem(pem, scheme='rsassa-pss-sha256'):
   rsakey_dict = {}
   keytype = 'rsa'
 
-  # Generate the keyid of the RSA key.  'key_value' corresponds to the
-  # 'keyval' entry of the 'RSAKEY_SCHEMA' dictionary.  The private key
-  # information is not included in the generation of the 'keyid' identifier.
-  # If a PEM is found to contain a private key, the generated rsakey object
-  # should be returned above.  The following key object is for the case of a
-  # PEM with only a public key.
-  key_value = {'public': public_pem,
+  # Generate the keyid of the RSA key.  'key_value' corresponds to the 'keyval'
+  # entry of the 'RSAKEY_SCHEMA' dictionary.  The private key information is
+  # not included in the generation of the 'keyid' identifier.  If a PEM is
+  # found to contain a private key, the generated rsakey object should be
+  # returned above.  The following key object is for the case of a PEM with
+  # only a public key.  Convert any '\r\n' (e.g., Windows) newline characters
+  # to '\n' so that a consistent keyid is generated.
+  key_value = {'public': public_pem.replace('\r\n', '\n'),
                'private': ''}
   keyid = _get_keyid(keytype, scheme, key_value)
 
@@ -1654,7 +1664,9 @@ def import_ecdsakey_from_private_pem(pem, scheme='ecdsa-sha2-nistp256', password
   # Generate the keyid of the ECDSA key.  'key_value' corresponds to the
   # 'keyval' entry of the 'ECDSAKEY_SCHEMA' dictionary.  The private key
   # information is not included in the generation of the 'keyid' identifier.
-  key_value = {'public': public,
+  # Convert any '\r\n' (e.g., Windows) newline characters to '\n' so that a
+  # consistent keyid is generated.
+  key_value = {'public': public.replace('\r\n', '\n'),
                'private': ''}
   keyid = _get_keyid(keytype, scheme, key_value)
 
@@ -1751,7 +1763,9 @@ def import_ecdsakey_from_public_pem(pem, scheme='ecdsa-sha2-nistp256'):
   # Generate the keyid of the ECDSA key.  'key_value' corresponds to the
   # 'keyval' entry of the 'ECDSAKEY_SCHEMA' dictionary.  The private key
   # information is not included in the generation of the 'keyid' identifier.
-  key_value = {'public': public_pem,
+  # Convert any '\r\n' (e.g., Windows) newline characters to '\n' so that a
+  # consistent keyid is generated.
+  key_value = {'public': public_pem.replace('\r\n', '\n'),
                'private': ''}
   keyid = _get_keyid(keytype, scheme, key_value)
 
@@ -1832,8 +1846,9 @@ def import_ecdsakey_from_pem(pem, scheme='ecdsa-sha2-nistp256'):
   # information is not included in the generation of the 'keyid' identifier.
   # If a PEM is found to contain a private key, the generated rsakey object
   # should be returned above.  The following key object is for the case of a
-  # PEM with only a public key.
-  key_value = {'public': public_pem,
+  # PEM with only a public key.  Convert any '\r\n' (e.g., Windows) newline
+  # characters to '\n' so that a consistent keyid is generated.
+  key_value = {'public': public_pem.replace('\r\n', '\n'),
                'private': ''}
   keyid = _get_keyid(keytype, scheme, key_value)
 
