@@ -1,4 +1,9 @@
 # Changelog
+## securesystemslib v0.11.1
+
+* Convert `\r\n` newline characters to `\n`, so that the same KEYID is
+  generated for key data regardless of the newline style used (pr #146).
+
 ## securesystemslib v0.11.0
 
 * Add `prompt` parameter to interface.import_rsa_privatekey_from_file() (pr #124).
