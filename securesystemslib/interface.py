@@ -645,41 +645,10 @@ def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False):
         ' file \'' + Fore.RED + filepath + Fore.RESET + '\': ',
         confirm=False) or None
 
-  # Store the encrypted contents of 'filepath' prior to calling the decryption
-  # routine.
-  encrypted_key = None
-
-  with open(filepath, 'rb') as file_object:
-    encrypted_key = file_object.read()
-
-  if password is not None:
-    # This check will not fail, because a mal-formatted passed password fails
-    # above and an entered password will always be a string (see get_password)
-    # However, we include it in case PASSWORD_SCHEMA or get_password changes.
-    securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
-
-    # Decrypt the loaded key file, calling the 'cryptography' library to
-    # generate the derived encryption key from 'password'.  Raise
-    # 'securesystemslib.exceptions.CryptoError' if the decryption fails.
-    key_object = securesystemslib.keys.\
-                 decrypt_key(encrypted_key.decode('utf-8'), password)
-
-  else:
-    logger.debug('No password was given. Attempting to import an'
-        ' unencrypted file.')
-    key_object = json.loads(encrypted_key.decode('utf-8'))
-
-  # Raise an exception if an unexpected key type is imported.
-  if key_object['keytype'] != 'ed25519':
-    message = 'Invalid key type loaded: ' + repr(key_object['keytype'])
-    raise securesystemslib.exceptions.FormatError(message)
-
-  # Add "keyid_hash_algorithms" so that equal ed25519 keys with
-  # different keyids can be associated using supported keyid_hash_algorithms.
-  key_object['keyid_hash_algorithms'] = \
-      securesystemslib.settings.HASH_ALGORITHMS
-
-  return key_object
+    with open(filepath, 'rb') as file_object:
+      jsons = file_object.read()
+      return securesystemslib.keys.\
+             import_ed25519key_from_private_json(jsons, password=password)
 
 
 
