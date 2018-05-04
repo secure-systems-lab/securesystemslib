@@ -477,15 +477,6 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None):
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
 
-  # Encrypt the private key if 'password' is set.
-  if len(password):
-    ed25519_key = securesystemslib.keys.encrypt_key(ed25519_key, password)
-
-  else:
-    logger.debug('An empty password was given. '
-                 'Not encrypting the private key.')
-    ed25519_key = json.dumps(ed25519_key)
-
   # If the parent directory of filepath does not exist,
   # create it (and all its parent directories, if necessary).
   securesystemslib.util.ensure_parent_dir(filepath)
@@ -513,6 +504,15 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None):
   # Write the encrypted key string, conformant to
   # 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA', to '<filepath>'.
   file_object = securesystemslib.util.TempFile()
+
+  # Encrypt the private key if 'password' is set.
+  if len(password):
+    ed25519_key = securesystemslib.keys.encrypt_key(ed25519_key, password)
+
+  else:
+    logger.debug('An empty password was given. '
+                 'Not encrypting the private key.')
+    ed25519_key = json.dumps(ed25519_key)
 
   # Raise 'securesystemslib.exceptions.CryptoError' if 'ed25519_key' cannot be
   # encrypted.
