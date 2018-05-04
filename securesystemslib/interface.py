@@ -484,7 +484,7 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None):
   else:
     logger.debug('An empty password was given. '
                  'Not encrypting the private key.')
-    ed25519_key = json.dumps(ed25519key)
+    ed25519_key = json.dumps(ed25519_key)
 
   # If the parent directory of filepath does not exist,
   # create it (and all its parent directories, if necessary).
