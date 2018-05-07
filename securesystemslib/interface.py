@@ -643,7 +643,12 @@ def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False):
     # Hence, we treat an empty password here, as if no 'password' was passed.
     password = get_password('Enter a password for an encrypted RSA'
         ' file \'' + Fore.RED + filepath + Fore.RESET + '\': ',
-        confirm=False) or None
+        confirm=False)
+
+    # If user sets an empty string for the password, explicitly set the
+    # password to None, because some functions may expect this later.
+    if len(password) == 0: # pragma: no cover
+      password = None
 
   # Finally, regardless of password, try decrypting the key, if necessary.
   # Otherwise, load it straight from the disk.
