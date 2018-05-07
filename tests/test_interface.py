@@ -124,14 +124,15 @@ class TestInterfaceFunctions(unittest.TestCase):
     self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_privkey))
 
     # Try to import the unencrypted key file, by not passing a password
-    interface.import_rsa_privatekey_from_file(test_keypath_unencrypted)
+    imported_privkey = interface.import_rsa_privatekey_from_file(test_keypath_unencrypted)
     self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_privkey))
 
     # Try to import the unencrypted key file, by entering an empty password
     with mock.patch('securesystemslib.interface.get_password',
         return_value=''):
-      interface.import_rsa_privatekey_from_file(test_keypath_unencrypted,
-          prompt=True)
+      imported_privkey = \
+            interface.import_rsa_privatekey_from_file(test_keypath_unencrypted,
+                                                      prompt=True)
       self.assertTrue(
           securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_privkey))
 
