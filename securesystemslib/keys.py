@@ -59,9 +59,6 @@ from __future__ import unicode_literals
 # hexlified.
 import binascii
 
-# Required to load JSON files / strings.
-import json
-
 # NOTE:  'warnings' needed to temporarily suppress user warnings raised by
 # 'pynacl' (as of version 0.2.3).
 # http://docs.python.org/2/library/warnings.html#temporarily-suppressing-warnings
@@ -1606,10 +1603,11 @@ def import_ed25519key_from_private_json(json_str, password=None):
     logger.debug('No password was given. Attempting to import an'
         ' unencrypted file.')
     try:
-      key_object = json.loads(json_str.decode('utf-8'))
+      key_object = \
+               securesystemslib.util.load_json_string(json_str.decode('utf-8'))
     # If the JSON could not be decoded, it is very likely, but not necessarily,
     # due to a non-empty password.
-    except ValueError:
+    except securesystemslib.exceptions.Error:
       raise securesystemslib.exceptions\
             .CryptoError('Malformed Ed25519 key JSON, '
                          'possibly due to encryption, '
