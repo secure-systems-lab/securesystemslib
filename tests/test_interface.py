@@ -277,6 +277,8 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Test normal case.
     temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
     test_keypath = os.path.join(temporary_directory, 'ed25519_key')
+    test_keypath_unencrypted = os.path.join(temporary_directory,
+                                            'ed25519_key_unencrypted')
 
     returned_path = interface.generate_and_write_ed25519_keypair(
         test_keypath, password='pw')
@@ -284,14 +286,58 @@ class TestInterfaceFunctions(unittest.TestCase):
     self.assertTrue(os.path.exists(test_keypath + '.pub'))
     self.assertEqual(returned_path, test_keypath)
 
+    # If an empty string is given for 'password', the private key file
+    # is written to disk unencrypted.
+    interface.generate_and_write_ed25519_keypair(test_keypath_unencrypted,
+                                                 password='')
+    self.assertTrue(os.path.exists(test_keypath_unencrypted))
+    self.assertTrue(os.path.exists(test_keypath_unencrypted + '.pub'))
+
     # Ensure the generated key files are importable.
     imported_pubkey = \
       interface.import_ed25519_publickey_from_file(test_keypath + '.pub')
-    self.assertTrue(securesystemslib.formats.ED25519KEY_SCHEMA.matches(imported_pubkey))
+    self.assertTrue(securesystemslib.formats.ED25519KEY_SCHEMA\
+                    .matches(imported_pubkey))
 
     imported_privkey = \
       interface.import_ed25519_privatekey_from_file(test_keypath, 'pw')
-    self.assertTrue(securesystemslib.formats.ED25519KEY_SCHEMA.matches(imported_privkey))
+    self.assertTrue(securesystemslib.formats.ED25519KEY_SCHEMA\
+                    .matches(imported_privkey))
+
+    # Fail importing encrypted key passing password and prompt
+    with self.assertRaises(ValueError):
+      interface.import_ed25519_privatekey_from_file(test_keypath,
+                                                    password='pw',
+                                                    prompt=True)
+
+    # Fail importing encrypted key passing an empty string for passwd 
+    with self.assertRaises(ValueError):
+      interface.import_ed25519_privatekey_from_file(test_keypath,
+                                                    password='')
+
+    # Try to import the unencrypted key file, by not passing a password
+    imported_privkey = \
+        interface.import_ed25519_privatekey_from_file(test_keypath_unencrypted)
+    self.assertTrue(securesystemslib.formats.ED25519KEY_SCHEMA.\
+                    matches(imported_privkey))
+
+    # Try to import the unencrypted key file, by entering an empty password
+    with mock.patch('securesystemslib.interface.get_password',
+        return_value=''):
+      imported_privkey = \
+        interface.import_ed25519_privatekey_from_file(test_keypath_unencrypted,
+                                                      prompt=True)
+      self.assertTrue(
+          securesystemslib.formats.ED25519KEY_SCHEMA.matches(imported_privkey))
+
+    # Fail importing unencrypted key passing a password
+    with self.assertRaises(securesystemslib.exceptions.CryptoError):
+      interface.import_ed25519_privatekey_from_file(test_keypath_unencrypted,
+                                                    'pw')
+
+    # Fail importing encrypted key passing no password
+    with self.assertRaises(securesystemslib.exceptions.CryptoError):
+      interface.import_ed25519_privatekey_from_file(test_keypath)
 
     # Test for a default filepath.  If 'filepath' is not given, the key's
     # KEYID is used as the filename.  The key is saved to the current working

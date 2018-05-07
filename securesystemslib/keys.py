@@ -1605,7 +1605,15 @@ def import_ed25519key_from_private_json(json_str, password=None):
   else:
     logger.debug('No password was given. Attempting to import an'
         ' unencrypted file.')
-    key_object = json.loads(json_str.decode('utf-8'))
+    try:
+      key_object = json.loads(json_str.decode('utf-8'))
+    # If the JSON could not be decoded, it is very likely, but not necessarily,
+    # due to a non-empty password.
+    except ValueError:
+      raise securesystemslib.exceptions\
+            .CryptoError('Malformed Ed25519 key JSON, '
+                         'possibly due to encryption, '
+                         'but no password provided?')
 
   # Raise an exception if an unexpected key type is imported.
   if key_object['keytype'] != 'ed25519':

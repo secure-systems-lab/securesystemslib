@@ -645,10 +645,12 @@ def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False):
         ' file \'' + Fore.RED + filepath + Fore.RESET + '\': ',
         confirm=False) or None
 
-    with open(filepath, 'rb') as file_object:
-      jsons = file_object.read()
-      return securesystemslib.keys.\
-             import_ed25519key_from_private_json(jsons, password=password)
+  # Finally, regardless of password, try decrypting the key, if necessary.
+  # Otherwise, load it straight from the disk.
+  with open(filepath, 'rb') as file_object:
+    json_str = file_object.read()
+    return securesystemslib.keys.\
+           import_ed25519key_from_private_json(json_str, password=password)
 
 
 
