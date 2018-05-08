@@ -472,7 +472,7 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None):
         confirm=True)
 
   else:
-    logger.debug('The password has been specified.  Not prompting for one')
+    logger.debug('The password has been specified. Not prompting for one.')
 
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
@@ -505,10 +505,18 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None):
   # 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA', to '<filepath>'.
   file_object = securesystemslib.util.TempFile()
 
+  # Encrypt the private key if 'password' is set.
+  if len(password):
+    ed25519_key = securesystemslib.keys.encrypt_key(ed25519_key, password)
+
+  else:
+    logger.debug('An empty password was given. '
+                 'Not encrypting the private key.')
+    ed25519_key = json.dumps(ed25519_key)
+
   # Raise 'securesystemslib.exceptions.CryptoError' if 'ed25519_key' cannot be
   # encrypted.
-  encrypted_key = securesystemslib.keys.encrypt_key(ed25519_key, password)
-  file_object.write(encrypted_key.encode('utf-8'))
+  file_object.write(ed25519_key.encode('utf-8'))
   file_object.move(filepath)
 
   return filepath
@@ -567,7 +575,7 @@ def import_ed25519_publickey_from_file(filepath):
 
 
 
-def import_ed25519_privatekey_from_file(filepath, password=None):
+def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False):
   """
   <Purpose>
     Import the encrypted ed25519 key file in 'filepath', decrypt it, and return
@@ -585,6 +593,10 @@ def import_ed25519_privatekey_from_file(filepath, password=None):
       The password, or passphrase, to import the private key (i.e., the
       encrypted key file 'filepath' must be decrypted before the ed25519 key
       object can be returned.
+
+    prompt:
+      If True the user is prompted for a passphrase to decrypt 'filepath'.
+      Default is False.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if the arguments are improperly
@@ -607,46 +619,43 @@ def import_ed25519_privatekey_from_file(filepath, password=None):
   # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
-  # If the caller does not provide a password argument, prompt for one.
-  # Password confirmation disabled here, which should ideally happen only
-  # when creating encrypted key files (i.e., improve usability).
-  if password is None: # pragma: no cover
+  if password and prompt:
+    raise ValueError("Passing 'password' and 'prompt' True is not allowed.")
 
+  # If 'password' was passed check format and that it is not empty.
+  if password is not None:
+    securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+
+    # TODO: PASSWORD_SCHEMA should be securesystemslib.schema.AnyString(min=1)
+    if not len(password):
+      raise ValueError('Password must be 1 or more characters')
+
+  elif prompt:
+    # Password confirmation disabled here, which should ideally happen only
+    # when creating encrypted key files (i.e., improve usability).
     # It is safe to specify the full path of 'filepath' in the prompt and not
     # worry about leaking sensitive information about the key's location.
     # However, care should be taken when including the full path in exceptions
     # and log files.
-    password = get_password('Enter a password for the encrypted Ed25519'
-        ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
+    # NOTE: A user who gets prompted for a password, can only signal that the
+    # key is not encrypted by entering no password in the prompt, as opposed
+    # to a programmer who can call the function with or without a 'password'.
+    # Hence, we treat an empty password here, as if no 'password' was passed.
+    password = get_password('Enter a password for an encrypted RSA'
+        ' file \'' + Fore.RED + filepath + Fore.RESET + '\': ',
         confirm=False)
 
-  # Does 'password' have the correct format?
-  securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+    # If user sets an empty string for the password, explicitly set the
+    # password to None, because some functions may expect this later.
+    if len(password) == 0: # pragma: no cover
+      password = None
 
-  # Store the encrypted contents of 'filepath' prior to calling the decryption
-  # routine.
-  encrypted_key = None
-
+  # Finally, regardless of password, try decrypting the key, if necessary.
+  # Otherwise, load it straight from the disk.
   with open(filepath, 'rb') as file_object:
-    encrypted_key = file_object.read()
-
-  # Decrypt the loaded key file, calling the 'cryptography' library to generate
-  # the derived encryption key from 'password'.  Raise
-  # 'securesystemslib.exceptions.CryptoError' if the decryption fails.
-  key_object = securesystemslib.keys.decrypt_key(encrypted_key.decode('utf-8'),
-      password)
-
-  # Raise an exception if an unexpected key type is imported.
-  if key_object['keytype'] != 'ed25519':
-    message = 'Invalid key type loaded: ' + repr(key_object['keytype'])
-    raise securesystemslib.exceptions.FormatError(message)
-
-  # Add "keyid_hash_algorithms" so that equal ed25519 keys with
-  # different keyids can be associated using supported keyid_hash_algorithms.
-  key_object['keyid_hash_algorithms'] = \
-      securesystemslib.settings.HASH_ALGORITHMS
-
-  return key_object
+    json_str = file_object.read()
+    return securesystemslib.keys.\
+           import_ed25519key_from_private_json(json_str, password=password)
 
 
 

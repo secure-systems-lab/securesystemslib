@@ -1586,6 +1586,49 @@ def is_pem_private(pem, keytype='rsa'):
 
 
 
+def import_ed25519key_from_private_json(json_str, password=None):
+  if password is not None:
+    # This check will not fail, because a mal-formatted passed password fails
+    # above and an entered password will always be a string (see get_password)
+    # However, we include it in case PASSWORD_SCHEMA or get_password changes.
+    securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+
+    # Decrypt the loaded key file, calling the 'cryptography' library to
+    # generate the derived encryption key from 'password'.  Raise
+    # 'securesystemslib.exceptions.CryptoError' if the decryption fails.
+    key_object = securesystemslib.keys.\
+                 decrypt_key(json_str.decode('utf-8'), password)
+
+  else:
+    logger.debug('No password was given. Attempting to import an'
+        ' unencrypted file.')
+    try:
+      key_object = \
+               securesystemslib.util.load_json_string(json_str.decode('utf-8'))
+    # If the JSON could not be decoded, it is very likely, but not necessarily,
+    # due to a non-empty password.
+    except securesystemslib.exceptions.Error:
+      raise securesystemslib.exceptions\
+            .CryptoError('Malformed Ed25519 key JSON, '
+                         'possibly due to encryption, '
+                         'but no password provided?')
+
+  # Raise an exception if an unexpected key type is imported.
+  if key_object['keytype'] != 'ed25519':
+    message = 'Invalid key type loaded: ' + repr(key_object['keytype'])
+    raise securesystemslib.exceptions.FormatError(message)
+
+  # Add "keyid_hash_algorithms" so that equal ed25519 keys with
+  # different keyids can be associated using supported keyid_hash_algorithms.
+  key_object['keyid_hash_algorithms'] = \
+      securesystemslib.settings.HASH_ALGORITHMS
+
+  return key_object
+
+
+
+
+
 def import_ecdsakey_from_private_pem(pem, scheme='ecdsa-sha2-nistp256', password=None):
   """
   <Purpose>
