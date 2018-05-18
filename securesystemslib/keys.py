@@ -71,7 +71,7 @@ import logging
 try:
   import securesystemslib.pyca_crypto_keys
 
-except ImportError:
+except ImportError: #pragma: no cover
   pass
 
 # Import the PyNaCl library, if available.  It is recommended this library be
@@ -101,7 +101,7 @@ import securesystemslib.ed25519_keys
 try:
   import securesystemslib.ecdsa_keys
 
-except ImportError:
+except ImportError: #pragma: no cover
   pass
 
 import securesystemslib.exceptions
