@@ -68,7 +68,11 @@ import logging
 # Try to import the pyca/Cryptography module (pyca_crypto_keys.py), which is
 # used for general-purpose cryptography and generation of RSA keys and
 # signatures.
-import securesystemslib.pyca_crypto_keys
+try:
+  import securesystemslib.pyca_crypto_keys
+
+except ImportError:
+  pass
 
 # Import the PyNaCl library, if available.  It is recommended this library be
 # used over the pure python implementation of ed25519, due to its speedier
@@ -82,17 +86,24 @@ with warnings.catch_warnings():
   try:
     import nacl
     import nacl.signing
+    USE_PYNACL = True
 
   # PyNaCl's 'cffi' dependency may raise an 'IOError' exception when importing
   # 'nacl.signing'.
   except (ImportError, IOError): # pragma: no cover
+    USE_PYNACL = False
     pass
 
 # The optimized version of the Ed25519 library provided by default is imported
 # regardless of the availability of PyNaCl.
 import securesystemslib.ed25519_keys
 
-import securesystemslib.ecdsa_keys
+try:
+  import securesystemslib.ecdsa_keys
+
+except ImportError:
+  pass
+
 import securesystemslib.exceptions
 
 # Digest objects needed to generate hashes.
@@ -854,7 +865,7 @@ def verify_signature(key_dict, signature, data):
     if scheme == 'ed25519':
       public = binascii.unhexlify(public.encode('utf-8'))
       valid_signature = securesystemslib.ed25519_keys.verify_signature(public,
-          scheme, sig, data, use_pynacl=True)
+          scheme, sig, data, use_pynacl=USE_PYNACL)
 
     else:
       raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
