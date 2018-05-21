@@ -43,6 +43,16 @@ Installation
     $ pip install securesystemslib
 
 
+The default installation only supports Ed25519 keys and signatures (in pure
+Python).  Support for RSA, ECDSA, and E25519 via the `cryptography` and
+`PyNaCl` libraries is available by installing the `crypto` and `pynacl` extras:
+
+::
+
+    $ pip install securesystemslib[crypto]
+    $ pip install securesystemslib[pynacl]
+
+
 Create RSA Keys
 ~~~~~~~~~~~~~~~
 
