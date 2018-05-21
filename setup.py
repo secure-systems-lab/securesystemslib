@@ -69,7 +69,8 @@ with open('README.rst') as file_object:
 setup(
   name = 'securesystemslib',
   version = '0.11.1',
-  description = 'A library that provides cryptographic and general-purpose routines for Secure Systems Lab projects at NYU',
+  description = 'A library that provides cryptographic and general-purpose'
+      ' routines for Secure Systems Lab projects at NYU',
   long_description = long_description,
   author = 'https://www.updateframework.com',
   author_email = 'theupdateframework@googlegroups.com',
@@ -95,7 +96,9 @@ setup(
     'Topic :: Security',
     'Topic :: Software Development'
   ],
-  install_requires = ['six>=1.11.0', 'cryptography>=2.2.2', 'pynacl>=1.2.0', 'colorama>=0.3.9'],
+  install_requires = ['six>=1.11.0'],
+  extras_require = {'crypto': ['cryptography>=2.2.2', 'colorama>=0.3.9'],
+      'pynacl': ['pynacl>1.2.0']},
   packages = find_packages(exclude=['tests', 'debian']),
   scripts = []
 )
