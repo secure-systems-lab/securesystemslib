@@ -1,4 +1,15 @@
 # Changelog
+## securesystemslib v0.11.2
+
+* No (en|de)cryption of ed25519 key files when given empty password (pr #148).
+
+* Support ed25519 crypto in pure python with default installation (pr #149).
+
+* Update installation instructions to indicate commands needed to install
+  optional dependencies for RSA and ECDSA support (pr #150).
+
+* Edit setup.py's license classifier to `OSI LIcense :: MIT` (pr #151).
+
 ## securesystemslib v0.11.1
 
 * Convert `\r\n` newline characters to `\n`, so that the same KEYID is
