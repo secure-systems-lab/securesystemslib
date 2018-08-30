@@ -1,4 +1,4 @@
-cryptography==2.3
+cryptography==2.3.1
 pynacl==1.2.1
 six==1.11.0
 tox==3.2.1
