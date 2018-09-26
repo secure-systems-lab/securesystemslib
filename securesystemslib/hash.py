@@ -41,6 +41,7 @@ import securesystemslib.formats
 # Import securesystemslib logger to log warning messages.
 logger = logging.getLogger('securesystemslib.hash')
 
+DEFAULT_CHUNK_SIZE = 4096
 DEFAULT_HASH_ALGORITHM = 'sha256'
 DEFAULT_HASH_LIBRARY = 'hashlib'
 SUPPORTED_LIBRARIES = ['hashlib']
@@ -125,7 +126,7 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
 
 
 def digest_fileobject(file_object, algorithm=DEFAULT_HASH_ALGORITHM,
-    hash_library=DEFAULT_HASH_LIBRARY):
+    hash_library=DEFAULT_HASH_LIBRARY, normalize_line_endings=False):
   """
   <Purpose>
     Generate a digest object given a file object.  The new digest object
@@ -142,6 +143,9 @@ def digest_fileobject(file_object, algorithm=DEFAULT_HASH_ALGORITHM,
 
     hash_library:
       The library providing the hash algorithms (e.g., 'hashlib').
+
+    normalize_line_endings:
+      Whether or not to normalize line endings for cross-platform support.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if the arguments are
@@ -179,10 +183,25 @@ def digest_fileobject(file_object, algorithm=DEFAULT_HASH_ALGORITHM,
   # Update the hash with the data read from each chunk and return after
   # the entire file is processed.
   while True:
-    chunksize = 4096
-    data = file_object.read(chunksize)
+    data = file_object.read(DEFAULT_CHUNK_SIZE)
     if not data:
       break
+
+    if normalize_line_endings:
+      while data[-1:] == b'\r':
+        c = file_object.read(1)
+        if not c:
+          break
+
+        data += c
+
+      data = (
+        data
+        # First Windows
+        .replace(b'\r\n', b'\n')
+        # Then Mac
+        .replace(b'\r', b'\n')
+      )
 
     if not isinstance(data, six.binary_type):
       digest_object.update(data.encode('utf-8'))
@@ -197,7 +216,7 @@ def digest_fileobject(file_object, algorithm=DEFAULT_HASH_ALGORITHM,
 
 
 def digest_filename(filename, algorithm=DEFAULT_HASH_ALGORITHM,
-    hash_library=DEFAULT_HASH_LIBRARY):
+    hash_library=DEFAULT_HASH_LIBRARY, normalize_line_endings=False):
   """
   <Purpose>
     Generate a digest object, update its hash using a file object
@@ -212,6 +231,9 @@ def digest_filename(filename, algorithm=DEFAULT_HASH_ALGORITHM,
 
     hash_library:
       The library providing the hash algorithms (e.g., 'hashlib').
+
+    normalize_line_endings:
+      Whether or not to normalize line endings for cross-platform support.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if the arguments are
@@ -243,6 +265,6 @@ def digest_filename(filename, algorithm=DEFAULT_HASH_ALGORITHM,
     # digest_fileobject() raises:
     # securesystemslib.exceptions.UnsupportedAlgorithmError
     # securesystemslib.exceptions.UnsupportedLibraryError
-    digest_object = digest_fileobject(file_object, algorithm, hash_library)
+    digest_object = digest_fileobject(file_object, algorithm, hash_library, normalize_line_endings)
 
   return digest_object
