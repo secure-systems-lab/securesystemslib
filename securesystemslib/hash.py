@@ -144,8 +144,13 @@ def digest_fileobject(file_object, algorithm=DEFAULT_HASH_ALGORITHM,
     hash_library:
       The library providing the hash algorithms (e.g., 'hashlib').
 
-    normalize_line_endings:
+    normalize_line_endings: (default False)
       Whether or not to normalize line endings for cross-platform support.
+      Note that this results in ambiguous hashes (e.g. 'abc\n' and 'abc\r\n'
+      will produce the same hash), so be careful to only apply this to text
+      files (not binary), when that equivalence is desirable and cannot result
+      in easily-maliciously-corrupted files producing the same hash as a valid
+      file.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if the arguments are
