@@ -243,7 +243,7 @@ class TestHash(unittest.TestCase):
         self.assertEqual(digest_object_truth.digest(), digest_object.digest())
 
     finally:
-        os.remove(filename)
+      os.remove(filename)
 
 
   def test_update_file_obj(self):

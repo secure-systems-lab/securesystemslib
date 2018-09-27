@@ -196,11 +196,11 @@ def digest_fileobject(file_object, algorithm=DEFAULT_HASH_ALGORITHM,
         data += c
 
       data = (
-        data
-        # First Windows
-        .replace(b'\r\n', b'\n')
-        # Then Mac
-        .replace(b'\r', b'\n')
+          data
+          # First Windows
+          .replace(b'\r\n', b'\n')
+          # Then Mac
+          .replace(b'\r', b'\n')
       )
 
     if not isinstance(data, six.binary_type):
@@ -265,6 +265,7 @@ def digest_filename(filename, algorithm=DEFAULT_HASH_ALGORITHM,
     # digest_fileobject() raises:
     # securesystemslib.exceptions.UnsupportedAlgorithmError
     # securesystemslib.exceptions.UnsupportedLibraryError
-    digest_object = digest_fileobject(file_object, algorithm, hash_library, normalize_line_endings)
+    digest_object = digest_fileobject(
+        file_object, algorithm, hash_library, normalize_line_endings)
 
   return digest_object
