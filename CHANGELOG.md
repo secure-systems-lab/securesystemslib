@@ -1,4 +1,13 @@
 # Changelog
+
+## securesystemslib v0.11.3
+
+* Provide option to normalize line endings (`\r\n` -> `\n`, `\r` -> `\n`) when
+calculating the hash of a file (default: do not normalize).
+* Update developer dependencies (dev-requirements.txt):
+  * cryptography 2.2.2 to 2.3.1
+  * tox 3.0.0 to 3.2.1
+
 ## securesystemslib v0.11.2
 
 * No (en|de)cryption of ed25519 key files when given empty password (pr #148).
