@@ -224,6 +224,28 @@ class TestHash(unittest.TestCase):
         os.remove(filename)
 
 
+  def test_update_filename_normalize(self):
+    self._run_with_all_hash_libraries(self._do_update_filename_normalize)
+
+
+  def _do_update_filename_normalize(self, library):
+    data = b'ab\r\nd\nf\r' * 4096
+    normalized_data = data.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+    fd, filename = tempfile.mkstemp()
+    try:
+      os.write(fd, data)
+      os.close(fd)
+      for algorithm in ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512']:
+        digest_object_truth = securesystemslib.hash.digest(algorithm, library)
+        digest_object_truth.update(normalized_data)
+        digest_object = securesystemslib.hash.digest_filename(filename,
+            algorithm, library, normalize_line_endings=True)
+        self.assertEqual(digest_object_truth.digest(), digest_object.digest())
+
+    finally:
+      os.remove(filename)
+
+
   def test_update_file_obj(self):
     self._run_with_all_hash_libraries(self._do_update_file_obj)
 
