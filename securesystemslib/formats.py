@@ -79,6 +79,14 @@ import datetime
 import time
 import six
 
+# Try to import pyspx to get access to lengths of SPX signatures and keys
+try:
+  import pyspx
+
+# pyspx's 'cffi' dependency may raise an 'IOError' exception when importing
+except (ImportError, IOError): # pragma: no cover
+  pass
+
 import securesystemslib.schema as SCHEMA
 import securesystemslib.exceptions
 
@@ -227,7 +235,7 @@ PUBLIC_KEYVAL_SCHEMA = SCHEMA.Object(
 # Supported TUF key types.
 KEYTYPE_SCHEMA = SCHEMA.OneOf(
   [SCHEMA.String('rsa'), SCHEMA.String('ed25519'),
-   SCHEMA.String('ecdsa-sha2-nistp256')])
+   SCHEMA.String('ecdsa-sha2-nistp256'),SCHEMA.String('spx')])
 
 # A generic TUF key.  All TUF keys should be saved to metadata files in this
 # format.
@@ -249,7 +257,7 @@ PUBLIC_KEY_SCHEMA = SCHEMA.Object(
   expires = SCHEMA.Optional(ISO8601_DATETIME_SCHEMA))
 
 # A TUF key object.  This schema simplifies validation of keys that may be one
-# of the supported key types.  Supported key types: 'rsa', 'ed25519'.
+# of the supported key types.  Supported key types: 'rsa', 'ed25519', 'spx'.
 ANYKEY_SCHEMA = SCHEMA.Object(
   object_name = 'ANYKEY_SCHEMA',
   keytype = KEYTYPE_SCHEMA,
@@ -292,6 +300,14 @@ ED25519SEED_SCHEMA = SCHEMA.LengthBytes(32)
 # An ED25519 raw signature, which must be 64 bytes.
 ED25519SIGNATURE_SCHEMA = SCHEMA.LengthBytes(64)
 
+# Lengths of SPX raw keys and signatures
+try:
+    SPXPUBLIC_SCHEMA = SCHEMA.LengthBytes(pyspx.crypto_sign_PUBLICKEYBYTES)
+    SPXSEED_SCHEMA = SCHEMA.LengthBytes(pyspx.crypto_sign_SECRETKEYBYTES) #XXX: already assuming different API
+    SPXSIGNATURE_SCHEMA = SCHEMA.LengthBytes(pyspx.crypto_sign_BYTES)
+except NameError:
+    pass
+
 # An ECDSA signature.
 ECDSASIGNATURE_SCHEMA = SCHEMA.AnyBytes()
 
@@ -299,7 +315,7 @@ ECDSASIGNATURE_SCHEMA = SCHEMA.AnyBytes()
 # cryptography modules.
 REQUIRED_LIBRARIES_SCHEMA = SCHEMA.ListOf(SCHEMA.OneOf(
   [SCHEMA.String('general'), SCHEMA.String('ed25519'), SCHEMA.String('rsa'),
-   SCHEMA.String('ecdsa-sha2-nistp256')]))
+   SCHEMA.String('ecdsa-sha2-nistp256'), SCHEMA.String('spx')]))
 
 # Ed25519 signature schemes.  The vanilla Ed25519 signature scheme is currently
 # supported.
@@ -313,6 +329,19 @@ ED25519KEY_SCHEMA = SCHEMA.Object(
   keyid = KEYID_SCHEMA,
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
   keyval = KEYVAL_SCHEMA)
+
+# SPX signature schemes.  The vanilla SPX signature scheme is currently supported
+SPX_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String('spx')])
+
+# An SPX TUF key.
+SPXKEY_SCHEMA = SCHEMA.Object(
+  object_name = 'SPXKEY_SCHEMA',
+  keytype = SCHEMA.String('spx'),
+  scheme = SPX_SIG_SCHEMA,
+  keyid = KEYID_SCHEMA,
+  keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
+  keyval = KEYVAL_SCHEMA)
+
 
 # Information about target files, like file length and file hash(es).  This
 # schema allows the storage of multiple hashes for the same file (e.g., sha256
