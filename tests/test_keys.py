@@ -233,6 +233,7 @@ class TestKeys(unittest.TestCase):
     # Creating a signature for 'DATA'.
     rsa_signature = KEYS.create_signature(self.rsakey_dict, DATA)
     ed25519_signature = KEYS.create_signature(self.ed25519key_dict, DATA)
+    spx_signature = KEYS.create_signature(self.spxkey_dict, DATA)
 
     # Check format of output.
     self.assertEqual(None,
@@ -241,6 +242,10 @@ class TestKeys(unittest.TestCase):
     self.assertEqual(None,
         securesystemslib.formats.SIGNATURE_SCHEMA.check_match(ed25519_signature),
         FORMAT_ERROR_MSG)
+    self.assertEqual(None,
+        securesystemslib.formats.SIGNATURE_SCHEMA.check_match(spx_signature),
+        FORMAT_ERROR_MSG)
+
 
     # Test for invalid signature scheme.
     args = (self.rsakey_dict, DATA)
@@ -293,6 +298,7 @@ class TestKeys(unittest.TestCase):
     # Creating a signature of 'DATA' to be verified.
     rsa_signature = KEYS.create_signature(self.rsakey_dict, DATA)
     ed25519_signature = KEYS.create_signature(self.ed25519key_dict, DATA)
+    spx_signature = KEYS.create_signature(self.spxkey_dict, DATA)
     ecdsa_signature = None
 
     ecdsa_signature = KEYS.create_signature(self.ecdsakey_dict, DATA)
@@ -306,12 +312,26 @@ class TestKeys(unittest.TestCase):
                                      DATA)
     self.assertTrue(verified, "Incorrect signature.")
 
+    # Verifying the 'spx_signature' of 'DATA'.
+    verified = KEYS.verify_signature(self.spxkey_dict, spx_signature,
+                                     DATA)
+    self.assertTrue(verified, "Incorrect signature.")
+
+
     # Verify that an invalid ed25519 signature scheme is rejected.
     valid_scheme = self.ed25519key_dict['scheme']
     self.ed25519key_dict['scheme'] = 'invalid_scheme'
     self.assertRaises(securesystemslib.exceptions.UnsupportedAlgorithmError,
         KEYS.verify_signature, self.ed25519key_dict, ed25519_signature, DATA)
     self.ed25519key_dict['scheme'] = valid_scheme
+
+    # Verify that an invalid spx signature scheme is rejected.
+    valid_scheme = self.spxkey_dict['scheme']
+    self.spxkey_dict['scheme'] = 'invalid_scheme'
+    self.assertRaises(securesystemslib.exceptions.UnsupportedAlgorithmError,
+        KEYS.verify_signature, self.spxkey_dict, spx_signature, DATA)
+    self.spxkey_dict['scheme'] = valid_scheme
+
 
     verified = KEYS.verify_signature(self.ecdsakey_dict, ecdsa_signature, DATA)
     self.assertTrue(verified, "Incorrect signature.")
@@ -343,6 +363,11 @@ class TestKeys(unittest.TestCase):
 
     verified = KEYS.verify_signature(self.ed25519key_dict,
         ed25519_signature, _DATA)
+    self.assertFalse(verified,
+        'Returned \'True\' on an incorrect signature.')
+
+    verified = KEYS.verify_signature(self.spxkey_dict,
+        spx_signature, _DATA)
     self.assertFalse(verified,
         'Returned \'True\' on an incorrect signature.')
 

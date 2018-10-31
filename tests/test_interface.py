@@ -473,6 +473,207 @@ class TestInterfaceFunctions(unittest.TestCase):
 
 
 
+
+  def test_generate_and_write_spx_keypair(self):
+
+    # Test normal case.
+    temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
+    test_keypath = os.path.join(temporary_directory, 'spx_key')
+    test_keypath_unencrypted = os.path.join(temporary_directory,
+                                            'spx_key_unencrypted')
+
+    returned_path = interface.generate_and_write_spx_keypair(
+        test_keypath, password='pw')
+    self.assertTrue(os.path.exists(test_keypath))
+    self.assertTrue(os.path.exists(test_keypath + '.pub'))
+    self.assertEqual(returned_path, test_keypath)
+
+    # If an empty string is given for 'password', the private key file
+    # is written to disk unencrypted.
+    interface.generate_and_write_spx_keypair(test_keypath_unencrypted,
+                                                 password='')
+    self.assertTrue(os.path.exists(test_keypath_unencrypted))
+    self.assertTrue(os.path.exists(test_keypath_unencrypted + '.pub'))
+
+    # Ensure the generated key files are importable.
+    imported_pubkey = \
+      interface.import_spx_publickey_from_file(test_keypath + '.pub')
+    self.assertTrue(securesystemslib.formats.SPXKEY_SCHEMA\
+                    .matches(imported_pubkey))
+
+    imported_privkey = \
+      interface.import_spx_privatekey_from_file(test_keypath, 'pw')
+    self.assertTrue(securesystemslib.formats.SPXKEY_SCHEMA\
+                    .matches(imported_privkey))
+
+    # Fail importing encrypted key passing password and prompt
+    with self.assertRaises(ValueError):
+      interface.import_spx_privatekey_from_file(test_keypath,
+                                                    password='pw',
+                                                    prompt=True)
+
+    # Fail importing encrypted key passing an empty string for passwd 
+    with self.assertRaises(ValueError):
+      interface.import_spx_privatekey_from_file(test_keypath,
+                                                    password='')
+
+    # Try to import the unencrypted key file, by not passing a password
+    imported_privkey = \
+        interface.import_spx_privatekey_from_file(test_keypath_unencrypted)
+    self.assertTrue(securesystemslib.formats.SPXKEY_SCHEMA.\
+                    matches(imported_privkey))
+
+    # Try to import the unencrypted key file, by entering an empty password
+    with mock.patch('securesystemslib.interface.get_password',
+        return_value=''):
+      imported_privkey = \
+        interface.import_spx_privatekey_from_file(test_keypath_unencrypted,
+                                                      prompt=True)
+      self.assertTrue(
+          securesystemslib.formats.SPXKEY_SCHEMA.matches(imported_privkey))
+
+    # Fail importing unencrypted key passing a password
+    with self.assertRaises(securesystemslib.exceptions.CryptoError):
+      interface.import_spx_privatekey_from_file(test_keypath_unencrypted,
+                                                    'pw')
+
+    # Fail importing encrypted key passing no password
+    with self.assertRaises(securesystemslib.exceptions.CryptoError):
+      interface.import_spx_privatekey_from_file(test_keypath)
+
+    # Test for a default filepath.  If 'filepath' is not given, the key's
+    # KEYID is used as the filename.  The key is saved to the current working
+    # directory.
+    default_keypath = interface.generate_and_write_spx_keypair(password='pw')
+    self.assertTrue(os.path.exists(default_keypath))
+    self.assertTrue(os.path.exists(default_keypath + '.pub'))
+
+    written_key = interface.import_spx_publickey_from_file(default_keypath + '.pub')
+    self.assertEqual(written_key['keyid'], os.path.basename(default_keypath))
+
+    os.remove(default_keypath)
+    os.remove(default_keypath + '.pub')
+
+
+    # Test improperly formatted arguments.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        interface.generate_and_write_spx_keypair, 3, password='pw')
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        interface.generate_and_write_rsa_keypair, test_keypath, password=3)
+
+
+
+  def test_import_spx_publickey_from_file(self):
+    # Test normal case.
+    # Generate spx keys that can be imported.
+    temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
+    spx_keypath = os.path.join(temporary_directory, 'spx_key')
+    interface.generate_and_write_spx_keypair(spx_keypath, password='pw')
+
+    imported_spx_key = \
+      interface.import_spx_publickey_from_file(spx_keypath + '.pub')
+    self.assertTrue(securesystemslib.formats.SPXKEY_SCHEMA.matches(imported_spx_key))
+
+
+    # Test improperly formatted argument.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        interface.import_spx_publickey_from_file, 3)
+
+
+    # Test invalid argument.
+    # Non-existent key file.
+    nonexistent_keypath = os.path.join(temporary_directory,
+        'nonexistent_keypath')
+    self.assertRaises(IOError, interface.import_spx_publickey_from_file,
+        nonexistent_keypath)
+
+    # Invalid key file argument.
+    invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
+    with open(invalid_keyfile, 'wb') as file_object:
+      file_object.write(b'bad keyfile')
+
+    self.assertRaises(securesystemslib.exceptions.Error,
+        interface.import_spx_publickey_from_file, invalid_keyfile)
+
+    # Invalid public key imported (contains unexpected keytype.)
+    keytype = imported_spx_key['keytype']
+    keyval = imported_spx_key['keyval']
+    scheme = imported_spx_key['scheme']
+
+    spxkey_metadata_format = \
+      securesystemslib.keys.format_keyval_to_metadata(keytype, scheme,
+      keyval, private=False)
+
+    spxkey_metadata_format['keytype'] = 'invalid_keytype'
+    with open(spx_keypath + '.pub', 'wb') as file_object:
+      file_object.write(json.dumps(spxkey_metadata_format).encode('utf-8'))
+
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        interface.import_spx_publickey_from_file,
+        spx_keypath + '.pub')
+
+
+
+  def test_import_spx_privatekey_from_file(self):
+    # Test normal case.
+    # Generate spx keys that can be imported.
+    scheme = 'spx'
+    temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
+    spx_keypath = os.path.join(temporary_directory, 'spx_key')
+    interface.generate_and_write_spx_keypair(spx_keypath, password='pw')
+
+    imported_spx_key = \
+      interface.import_spx_privatekey_from_file(spx_keypath, 'pw')
+    self.assertTrue(securesystemslib.formats.SPXKEY_SCHEMA.matches(imported_spx_key))
+
+
+    # Test improperly formatted argument.
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        interface.import_spx_privatekey_from_file, 3, 'pw')
+
+
+    # Test invalid argument.
+    # Non-existent key file.
+    nonexistent_keypath = os.path.join(temporary_directory,
+        'nonexistent_keypath')
+    self.assertRaises(IOError, interface.import_spx_privatekey_from_file,
+        nonexistent_keypath, 'pw')
+
+    # Invalid key file argument.
+    invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
+    with open(invalid_keyfile, 'wb') as file_object:
+      file_object.write(b'bad keyfile')
+
+    self.assertRaises(securesystemslib.exceptions.Error,
+      interface.import_spx_privatekey_from_file, invalid_keyfile, 'pw')
+
+    # Invalid private key imported (contains unexpected keytype.)
+    imported_spx_key['keytype'] = 'invalid_keytype'
+
+    # Use 'pyca_crypto_keys.py' to bypass the key format validation performed
+    # by 'keys.py'.
+    salt, iterations, derived_key = \
+      securesystemslib.pyca_crypto_keys._generate_derived_key('pw')
+
+    # Store the derived key info in a dictionary, the object expected
+    # by the non-public _encrypt() routine.
+    derived_key_information = {'salt': salt, 'iterations': iterations,
+        'derived_key': derived_key}
+
+    # Convert the key object to json string format and encrypt it with the
+    # derived key.
+    encrypted_key = \
+      securesystemslib.pyca_crypto_keys._encrypt(json.dumps(imported_spx_key),
+          derived_key_information)
+
+    with open(spx_keypath, 'wb') as file_object:
+      file_object.write(encrypted_key.encode('utf-8'))
+
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+        interface.import_spx_privatekey_from_file, spx_keypath, 'pw')
+
+
+
   def test_generate_and_write_ecdsa_keypair(self):
 
     # Test normal case.
