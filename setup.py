@@ -75,7 +75,7 @@ setup(
   author = 'https://www.updateframework.com',
   author_email = 'theupdateframework@googlegroups.com',
   url = 'https://github.com/secure-systems-lab/securesystemslib',
-  keywords = 'cryptography, keys, signatures, rsa, ed25519, ecdsa',
+  keywords = 'cryptography, keys, signatures, rsa, ed25519, ecdsa, spx',
   classifiers = [
     'Development Status :: 4 - Beta',
     'Intended Audience :: Developers',

@@ -303,7 +303,7 @@ ED25519SIGNATURE_SCHEMA = SCHEMA.LengthBytes(64)
 # Lengths of SPX raw keys and signatures
 try:
     SPXPUBLIC_SCHEMA = SCHEMA.LengthBytes(pyspx.crypto_sign_PUBLICKEYBYTES)
-    SPXSEED_SCHEMA = SCHEMA.LengthBytes(pyspx.crypto_sign_SECRETKEYBYTES) #XXX: already assuming different API
+    SPXSEED_SCHEMA = SCHEMA.LengthBytes(pyspx.crypto_sign_SECRETKEYBYTES)
     SPXSIGNATURE_SCHEMA = SCHEMA.LengthBytes(pyspx.crypto_sign_BYTES)
 except NameError:
     pass
