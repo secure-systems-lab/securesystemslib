@@ -47,12 +47,11 @@ import os
 # Note: A 'pragma: no cover' comment is intended for test 'coverage'.  Lines
 # or code blocks with this comment should not be flagged as uncovered.
 try:
-  import pyspx
+  import pyspx.shake256_192s as pyspx
 
 # pyspx's 'cffi' dependency may raise an 'IOError' exception when importing
 except (ImportError, IOError): # pragma: no cover
   pass
-
 
 import securesystemslib.formats
 import securesystemslib.exceptions
@@ -104,14 +103,13 @@ def generate_public_and_private():
 
   # Generate the public key.  pyspx performs the actual key generation.
   try:
-    pyspx_key = pyspx.signing.SigningKey(seed)
-    public = pyspx_key.verify_key.encode(encoder=pyspx.encoding.RawEncoder()) #XXX: different API?
+    public, private = pyspx.generate_keypair(seed)
 
   except NameError: # pragma: no cover
     raise securesystemslib.exceptions.UnsupportedLibraryError('The pyspx'
         ' library and/or its dependencies unavailable.')
 
-  return public, seed
+  return public, private
 
 
 
@@ -190,9 +188,7 @@ def create_signature(public_key, private_key, data, scheme):
   # statement to accommodate schemes that might be added in the future.
   if scheme == 'spx':
     try:
-      spx_key = spx.signing.SigningKey(private)
-      spx_sig = spx_key.sign(data)
-      signature = spx_sig.signature
+        signature = pyspx.sign(data, private)
 
     # The unit tests expect required libraries to be installed.
     except NameError: # pragma: no cover
@@ -284,17 +280,12 @@ def verify_signature(public_key, scheme, signature, data):
 
   if scheme in _SUPPORTED_SPX_SIGNING_SCHEMES:
     try:
-      spx_verify_key = spx.signing.VerifyKey(public)
-      spx_message = spx_verify_key.verify(data, signature)
-      valid_signature = True
+      valid_signature = pyspx.verify(data, signature, public)
 
       # The unit tests expect PyNaCl to be installed.
     except NameError: # pragma: no cover
       raise securesystemslib.exceptions.UnsupportedLibraryError('The pyspx'
           ' library and/or its dependencies unavailable.')
-
-    except spx.exceptions.BadSignatureError:
-      pass
 
 
   # This is a defensive check for a valid 'scheme', which should have already
