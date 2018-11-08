@@ -50,6 +50,7 @@ class TestKeys(unittest.TestCase):
     cls.rsakey_dict = KEYS.generate_rsa_key()
     cls.ed25519key_dict = KEYS.generate_ed25519_key()
     cls.ecdsakey_dict = KEYS.generate_ecdsa_key()
+    cls.spxkey_dict = KEYS.generate_spx_key()
 
   def test_generate_rsa_key(self):
     _rsakey_dict = KEYS.generate_rsa_key()
