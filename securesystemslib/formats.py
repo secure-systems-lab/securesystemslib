@@ -81,7 +81,7 @@ import six
 
 # Try to import pyspx to get access to lengths of SPX signatures and keys
 try:
-  import pyspx
+  import pyspx.shake256_192s as pyspx
 
 # pyspx's 'cffi' dependency may raise an 'IOError' exception when importing
 except (ImportError, IOError): # pragma: no cover
