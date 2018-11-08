@@ -1,5 +1,6 @@
 cryptography
 pynacl
+pyspx
 tox
 coverage
 coveralls

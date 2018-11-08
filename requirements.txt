@@ -1,4 +1,5 @@
 cryptography
 pynacl
+pyspx
 six
 colorama
