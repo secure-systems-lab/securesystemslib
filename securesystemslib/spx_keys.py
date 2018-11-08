@@ -195,7 +195,7 @@ def create_signature(public_key, private_key, data, scheme):
       raise securesystemslib.exceptions.UnsupportedLibraryError('The pyspx'
           ' library and/or its dependencies unavailable.')
 
-    except (ValueError, TypeError, spx.exceptions.CryptoError) as e:
+    except (ValueError, TypeError) as e:
       raise securesystemslib.exceptions.CryptoError('An "spx" signature'
           ' could not be created with pyspx.' + str(e))
 
