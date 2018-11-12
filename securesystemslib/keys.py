@@ -942,6 +942,9 @@ def verify_signature(key_dict, signature, data):
       public = binascii.unhexlify(public.encode('utf-8'))
       valid_signature = securesystemslib.ed25519_keys.verify_signature(public,
           scheme, sig, data, use_pynacl=USE_PYNACL)
+    else:
+      raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
+          ' signature scheme is specified: ' + repr(scheme))
 
   elif keytype == 'spx':
     if scheme == 'spx':
