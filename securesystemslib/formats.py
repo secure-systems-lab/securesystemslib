@@ -305,6 +305,7 @@ try:
     SPXPUBLIC_SCHEMA = SCHEMA.LengthBytes(pyspx.crypto_sign_PUBLICKEYBYTES)
     SPXSEED_SCHEMA = SCHEMA.LengthBytes(pyspx.crypto_sign_SECRETKEYBYTES)
     SPXSIGNATURE_SCHEMA = SCHEMA.LengthBytes(pyspx.crypto_sign_BYTES)
+
 except NameError:  # pragma: no cover
     pass  # raised when pyspx was not available on import
 
