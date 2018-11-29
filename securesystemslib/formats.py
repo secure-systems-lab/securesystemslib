@@ -235,7 +235,7 @@ PUBLIC_KEYVAL_SCHEMA = SCHEMA.Object(
 # Supported TUF key types.
 KEYTYPE_SCHEMA = SCHEMA.OneOf(
   [SCHEMA.String('rsa'), SCHEMA.String('ed25519'),
-   SCHEMA.String('ecdsa-sha2-nistp256'),SCHEMA.String('spx')])
+   SCHEMA.String('ecdsa-sha2-nistp256'), SCHEMA.String('spx')])
 
 # A generic TUF key.  All TUF keys should be saved to metadata files in this
 # format.
