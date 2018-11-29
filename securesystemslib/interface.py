@@ -641,7 +641,7 @@ def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False):
     # key is not encrypted by entering no password in the prompt, as opposed
     # to a programmer who can call the function with or without a 'password'.
     # Hence, we treat an empty password here, as if no 'password' was passed.
-    password = get_password('Enter a password for an encrypted RSA'
+    password = get_password('Enter a password for an encrypted Ed25519'
         ' file \'' + Fore.RED + filepath + Fore.RESET + '\': ',
         confirm=False)
 
@@ -1136,7 +1136,7 @@ def import_spx_privatekey_from_file(filepath, password=None, prompt=False):
     # key is not encrypted by entering no password in the prompt, as opposed
     # to a programmer who can call the function with or without a 'password'.
     # Hence, we treat an empty password here, as if no 'password' was passed.
-    password = get_password('Enter a password for an encrypted RSA'
+    password = get_password('Enter a password for an encrypted SPX'
         ' file \'' + Fore.RED + filepath + Fore.RESET + '\': ',
         confirm=False)
 
