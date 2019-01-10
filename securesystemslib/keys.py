@@ -662,7 +662,10 @@ def create_signature(key_dict, data):
       The public and private keys are strings in PEM format.
 
     data:
-      Data object used by create_signature() to generate the signature.
+      Data to be signed. This should be a bytes object; data should be
+      encoded/serialized before it is passed here.  The same value can be be
+      passed into securesystemslib.verify_signature() (along with the public
+      key) to later verify the signature.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'key_dict' is improperly
@@ -702,17 +705,11 @@ def create_signature(key_dict, data):
   keyid = key_dict['keyid']
   sig = None
 
-  # Convert 'data' to canonical JSON format so that repeatable signatures are
-  # generated across different platforms and Python key dictionaries.  The
-  # resulting 'data' is a string encoded in UTF-8 and compatible with the input
-  # expected by the cryptography functions called below.
-  data = securesystemslib.formats.encode_canonical(data)
-
   if keytype == 'rsa':
     if scheme == 'rsassa-pss-sha256':
       private = private.replace('\r\n', '\n')
-      sig, scheme = securesystemslib.pyca_crypto_keys.create_rsa_signature(private,
-        data.encode('utf-8'), scheme)
+      sig, scheme = securesystemslib.pyca_crypto_keys.create_rsa_signature(
+          private, data, scheme)
 
     else:
       raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
@@ -721,12 +718,12 @@ def create_signature(key_dict, data):
   elif keytype == 'ed25519':
     public = binascii.unhexlify(public.encode('utf-8'))
     private = binascii.unhexlify(private.encode('utf-8'))
-    sig, scheme = securesystemslib.ed25519_keys.create_signature(public,
-      private, data.encode('utf-8'), scheme)
+    sig, scheme = securesystemslib.ed25519_keys.create_signature(
+        public, private, data, scheme)
 
   elif keytype == 'ecdsa-sha2-nistp256':
-    sig, scheme = securesystemslib.ecdsa_keys.create_signature(public, private,
-      data.encode('utf-8'), scheme)
+    sig, scheme = securesystemslib.ecdsa_keys.create_signature(
+        public, private, data, scheme)
 
   # 'securesystemslib.formats.ANYKEY_SCHEMA' should have detected invalid key
   # types.  This is a defensive check against an invalid key type.
@@ -795,8 +792,10 @@ def verify_signature(key_dict, signature, data):
       Conformant to 'securesystemslib.formats.SIGNATURE_SCHEMA'.
 
     data:
-      Data object used by securesystemslib.rsa_key.create_signature() to
-      generate 'signature'.  'data' is needed here to verify the signature.
+      Data that the signature is expected to be over.  This should be a bytes
+      object; data should be encoded/serialized before it is passed here.)
+      This is the same value that can be passed into
+      securesystemslib.create_signature() in order to create the signature.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, raised if either 'key_dict' or
@@ -846,11 +845,6 @@ def verify_signature(key_dict, signature, data):
   scheme = key_dict['scheme']
   valid_signature = False
 
-  # Convert 'data' to canonical JSON format so that repeatable signatures are
-  # generated across different platforms and Python key dictionaries.  The
-  # resulting 'data' is a string encoded in UTF-8 and compatible with the input
-  # expected by the cryptography functions called below.
-  data = securesystemslib.formats.encode_canonical(data).encode('utf-8')
 
   if keytype == 'rsa':
     if scheme == 'rsassa-pss-sha256':
