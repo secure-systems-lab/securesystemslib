@@ -16,16 +16,16 @@
 """
 import binascii
 
-import cryptography.hazmat.primitives.hashes as hashing
-import cryptography.hazmat.primitives.asymmetric.rsa as rsa
+import cryptography.exceptions
 import cryptography.hazmat.backends as backends
 import cryptography.hazmat.primitives.asymmetric.padding as padding
+import cryptography.hazmat.primitives.asymmetric.rsa as rsa
 import cryptography.hazmat.primitives.asymmetric.utils as utils
-import cryptography.exceptions
+import cryptography.hazmat.primitives.hashes as hashing
 
-import securesystemslib.gpg.util
 import securesystemslib.gpg.exceptions
 import securesystemslib.gpg.formats
+import securesystemslib.gpg.util
 
 
 def create_pubkey(pubkey_info):
@@ -171,11 +171,11 @@ def gpg_verify_signature(signature_object, pubkey_info, content):
   # we are skipping this if on the tests because well, how would one test this
   # deterministically.
   pubkey_length = len(pubkey_info['keyval']['public']['n'])
-  signature_length = len(signature_object['signature'])
+  signature_length = len(signature_object['sig'])
   if pubkey_length != signature_length: # pragma: no cover
     zero_pad = "0"*(pubkey_length - signature_length)
-    signature_object['signature'] = "{}{}".format(zero_pad,
-        signature_object['signature'])
+    signature_object['sig'] = "{}{}".format(zero_pad,
+        signature_object['sig'])
 
   digest = securesystemslib.gpg.util.hash_object(
       binascii.unhexlify(signature_object['other_headers']),
@@ -183,7 +183,7 @@ def gpg_verify_signature(signature_object, pubkey_info, content):
 
   try:
     pubkey_object.verify(
-      binascii.unhexlify(signature_object['signature']),
+      binascii.unhexlify(signature_object['sig']),
       digest,
       padding.PKCS1v15(),
       utils.Prehashed(hashing.SHA256())

@@ -142,7 +142,7 @@ SIGNATURE_SCHEMA = ssl_schema.Object(
     keyid = ssl_formats.KEYID_SCHEMA,
     short_keyid = ssl_schema.Optional(ssl_formats.KEYID_SCHEMA),
     other_headers = ssl_formats.HEX_SCHEMA,
-    signature = ssl_formats.HEX_SCHEMA
+    sig = ssl_formats.HEX_SCHEMA
   )
 
 ANY_STRING_SCHEMA = ssl_schema.AnyString()

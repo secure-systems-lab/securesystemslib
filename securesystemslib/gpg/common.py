@@ -17,21 +17,23 @@
   call them.
 
 """
-import struct
 import binascii
 import logging
+import struct
 
 import securesystemslib.gpg.util
-from securesystemslib.gpg.exceptions import (PacketVersionNotSupportedError,
-    SignatureAlgorithmNotSupportedError, KeyNotFoundError)
-from securesystemslib.gpg.constants import (PACKET_TYPES,
-        SUPPORTED_PUBKEY_PACKET_VERSIONS, SIGNATURE_TYPE_BINARY,
-        SUPPORTED_SIGNATURE_PACKET_VERSIONS, SUPPORTED_SIGNATURE_ALGORITHMS,
-        SUPPORTED_HASH_ALGORITHMS, SIGNATURE_HANDLERS, FULL_KEYID_SUBPACKET,
-        PARTIAL_KEYID_SUBPACKET)
-
+from securesystemslib.gpg.constants import (FULL_KEYID_SUBPACKET, PACKET_TYPES,
+                                            PARTIAL_KEYID_SUBPACKET,
+                                            SIGNATURE_HANDLERS,
+                                            SIGNATURE_TYPE_BINARY,
+                                            SUPPORTED_HASH_ALGORITHMS,
+                                            SUPPORTED_PUBKEY_PACKET_VERSIONS,
+                                            SUPPORTED_SIGNATURE_ALGORITHMS,
+                                            SUPPORTED_SIGNATURE_PACKET_VERSIONS)
+from securesystemslib.gpg.exceptions import (KeyNotFoundError,
+                                             PacketVersionNotSupportedError,
+                                             SignatureAlgorithmNotSupportedError)
 from securesystemslib.gpg.formats import GPG_HASH_ALGORITHM_STRING
-
 
 log = logging.getLogger('securesystemslib.gpg.common')
 
@@ -338,5 +340,5 @@ def parse_signature_packet(data):
     'short_keyid': "{}".format(short_keyid),
     'other_headers': \
         binascii.hexlify(data[:other_headers_ptr]).decode('ascii'),
-    'signature': binascii.hexlify(signature).decode('ascii')
+    'sig': binascii.hexlify(signature).decode('ascii')
   }

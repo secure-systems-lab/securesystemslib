@@ -16,15 +16,15 @@
 """
 import binascii
 
-import cryptography.hazmat.primitives.hashes as hashing
-import cryptography.hazmat.primitives.asymmetric.dsa as dsa
-import cryptography.hazmat.backends as backends
-import cryptography.hazmat.primitives.asymmetric.utils as dsautils
 import cryptography.exceptions
+import cryptography.hazmat.backends as backends
+import cryptography.hazmat.primitives.asymmetric.dsa as dsa
+import cryptography.hazmat.primitives.asymmetric.utils as dsautils
+import cryptography.hazmat.primitives.hashes as hashing
 
-import securesystemslib.gpg.util
 import securesystemslib.gpg.exceptions
 import securesystemslib.gpg.formats
+import securesystemslib.gpg.util
 
 
 def create_pubkey(pubkey_info):
@@ -205,7 +205,7 @@ def gpg_verify_signature(signature_object, pubkey_info, content):
 
   try:
     pubkey_object.verify(
-      binascii.unhexlify(signature_object['signature']),
+      binascii.unhexlify(signature_object['sig']),
       digest,
       dsautils.Prehashed(hashing.SHA256())
     )
