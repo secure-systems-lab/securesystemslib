@@ -90,7 +90,7 @@ def run(cmd, check=True, timeout=SUBPROCESS_TIMEOUT, **kwargs):
   <Exceptions>
     securesystemslib.exceptions.FormatError:
             If the `cmd` is a list and does not match
-            in_toto.formats.LIST_OF_ANY_STRING_SCHEMA.
+            securesystemslib.gpg.formats.LIST_OF_ANY_STRING_SCHEMA.
 
     OSError:
             If the given command is not present or non-executable.
