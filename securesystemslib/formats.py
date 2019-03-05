@@ -354,18 +354,12 @@ FILEDICT_SCHEMA = SCHEMA.DictOf(
 # being the keyid and the value being the signature schema without the keyid.
 # That would be under the argument that a key should only be able to sign a
 # file once.
-# SIGNATURE_SCHEMA = SCHEMA.Object(
-#   object_name = 'SIGNATURE_SCHEMA',
-#   keyid = KEYID_SCHEMA,
-#   sig = HEX_SCHEMA)
-# Signature schema with gpg support
 SIGNATURE_SCHEMA = SCHEMA.Object(
-    object_name = "SIGNATURE_SCHEMA",
-    keyid = KEYID_SCHEMA,
-    short_keyid = SCHEMA.Optional(KEYID_SCHEMA),
-    other_headers = SCHEMA.Optional(HEX_SCHEMA),
-    sig = HEX_SCHEMA
-  )
+  object_name = "SIGNATURE_SCHEMA",
+  keyid = KEYID_SCHEMA,
+  short_keyid = SCHEMA.Optional(KEYID_SCHEMA),
+  other_headers = SCHEMA.Optional(HEX_SCHEMA),
+  sig = HEX_SCHEMA)
 
 # List of SIGNATURE_SCHEMA.
 SIGNATURES_SCHEMA = SCHEMA.ListOf(SIGNATURE_SCHEMA)
