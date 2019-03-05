@@ -20,6 +20,7 @@ import os
 import tempfile
 import unittest
 
+import securesystemslib.exceptions
 import securesystemslib.gpg.process
 
 
@@ -35,8 +36,7 @@ class Test_Process(unittest.TestCase):
     os.close(fd)
 
     stdin_file = open(path)
-    cmd = \
-        "python -c \"import sys; assert(sys.stdin.read() == '{}')\""
+    cmd = "python -c \"import sys; assert(sys.stdin.read() == '{}')\""
 
     # input is used in favor of stdin
     securesystemslib.gpg.process.run(cmd.format("use input kwarg"),
@@ -44,12 +44,19 @@ class Test_Process(unittest.TestCase):
         stdin=stdin_file)
 
     # stdin is only used if input is not supplied
-    securesystemslib.gpg.process.run(cmd.format("use stdin kwarg"), stdin=stdin_file)
+    securesystemslib.gpg.process.run(cmd.format("use stdin kwarg"),
+        stdin=stdin_file)
 
     # Clean up
     stdin_file.close()
     os.remove(path)
 
+
+
+  def test_incorrect_cmd_argument(self):
+    """Test that exception is raised when cmd argument is not a string. """
+    with self.assertRaises(securesystemslib.exceptions.FormatError):
+      securesystemslib.gpg.process.run(1)
 
 if __name__ == "__main__":
   unittest.main()

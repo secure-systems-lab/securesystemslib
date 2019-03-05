@@ -126,6 +126,18 @@ class TestGPGRSA(unittest.TestCase):
     self.assertDictEqual(key_data, key_data2)
 
 
+  def test_gpg_export_pubkey_invalid_keyid(self):
+    """Test that exception is raised when keyid argument is not valid. """
+    with self.assertRaises(ValueError):
+      gpg_export_pubkey("_", homedir=self.gnupg_home)
+
+
+  def test_gpg_export_pubkey_key_not_found(self):
+    """Test that exception is raised when keyid argument is not valid. """
+    with self.assertRaises(securesystemslib.gpg.exceptions.KeyNotFoundError):
+      gpg_export_pubkey("abc", homedir=self.gnupg_home)
+
+
   def test_gpg_sign_and_verify_object_with_default_key(self):
     """Create a signature using the default key on the keyring """
 

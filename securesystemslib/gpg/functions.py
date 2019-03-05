@@ -66,7 +66,7 @@ def gpg_sign_object(content, keyid=None, homedir=None):
     OSError:
             If the gpg command is not present or non-executable.
 
-    securesystemslib.gpg.execeptions.KeyNotFoundError:
+    securesystemslib.gpg.exceptions.KeyNotFoundError:
             If the used gpg version is not fully supported
             and no public key can be found for short keyid.
 
@@ -204,7 +204,7 @@ def gpg_export_pubkey(keyid, homedir=None):
     ValueError
             if the keyid does not match the required format.
 
-    securesystemslib.gpg.execeptions.KeyNotFoundError
+    securesystemslib.gpg.exceptions.KeyNotFoundError
             if no key or subkey was found for that keyid.
 
 
