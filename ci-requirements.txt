@@ -5,5 +5,5 @@ coverage
 coveralls
 six
 colorama
-mock; python_version < '3.3'
+mock;
 subprocess32; python_version < '3'
