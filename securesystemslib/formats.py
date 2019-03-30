@@ -99,7 +99,7 @@ ISO8601_DATETIME_SCHEMA = SCHEMA.RegularExpression(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{
 UNIX_TIMESTAMP_SCHEMA = SCHEMA.Integer(lo=0, hi=2147483647)
 
 # A hexadecimal value in '23432df87ab..' format.
-HASH_SCHEMA = SCHEMA.RegularExpression(r'[a-fA-F0-9]+')
+HASH_SCHEMA = SCHEMA.RegularExpression(r'^[a-fA-F0-9]+$')
 
 # A dict in {'sha256': '23432df87ab..', 'sha512': '34324abc34df..', ...} format.
 HASHDICT_SCHEMA = SCHEMA.DictOf(
@@ -107,7 +107,7 @@ HASHDICT_SCHEMA = SCHEMA.DictOf(
   value_schema = HASH_SCHEMA)
 
 # A hexadecimal value in '23432df87ab..' format.
-HEX_SCHEMA = SCHEMA.RegularExpression(r'[a-fA-F0-9]+')
+HEX_SCHEMA = SCHEMA.RegularExpression(r'^[a-fA-F0-9]+$')
 
 # A key identifier (e.g., a hexadecimal value identifying an RSA key).
 KEYID_SCHEMA = HASH_SCHEMA
