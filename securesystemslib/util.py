@@ -27,12 +27,10 @@ from __future__ import division
 from __future__ import unicode_literals
 
 import os
-import sys
 import gzip
 import shutil
 import logging
 import tempfile
-import fnmatch
 
 import securesystemslib.exceptions
 import securesystemslib.settings
