@@ -75,37 +75,8 @@ class BadHashError(Error):
            ') != expected hash (' + repr(self.expected_hash)+')'
 
 
-class BadVersionNumberError(Error):
-  """Indicate an error for metadata that contains an invalid version number."""
-
-
 class BadPasswordError(Error):
   """Indicate an error after encountering an invalid password."""
-  pass
-
-
-class UnknownKeyError(Error):
-  """Indicate an error while verifying key-like objects (e.g., keyids)."""
-  pass
-
-
-class RepositoryError(Error):
-  """Indicate an error with a repository's state, such as a missing file."""
-  pass
-
-
-class InsufficientKeysError(Error):
-  """Indicate that metadata role lacks a threshold of pubic or private keys."""
-  pass
-
-
-class ForbiddenTargetError(RepositoryError):
-  """Indicate that a role signed for a target that it was not delegated to."""
-  pass
-
-
-class ExpiredMetadataError(Error):
-  """Indicate that a Metadata file has expired."""
   pass
 
 
@@ -115,7 +86,7 @@ class CryptoError(Error):
 
 
 class BadSignatureError(CryptoError):
-  """Indicate that some metadata file has a bad signature."""
+  """Indicate that some metadata has a bad signature."""
 
   def __init__(self, metadata_role_name):
     self.metadata_role_name = metadata_role_name
@@ -134,6 +105,7 @@ class UnsupportedLibraryError(Error):
   pass
 
 
+# TODO: Consider removal alongside the compression functions.
 class DecompressionError(Error):
   """Indicate that some error happened while decompressing a file."""
 
@@ -144,31 +116,6 @@ class DecompressionError(Error):
   def __str__(self):
     # Show the original exception.
     return repr(self.exception)
-
-
-class DownloadError(Error):
-  """Indicate an error occurred while attempting to download a file."""
-  pass
-
-
-class KeyAlreadyExistsError(Error):
-  """Indicate that a key already exists and cannot be added."""
-  pass
-
-
-class RoleAlreadyExistsError(Error):
-  """Indicate that a role already exists and cannot be added."""
-  pass
-
-
-class UnknownRoleError(Error):
-  """Indicate an error trying to locate or identify a specified role."""
-  pass
-
-
-class UnknownTargetError(Error):
-  """Indicate an error trying to locate or identify a specified target."""
-  pass
 
 
 class InvalidNameError(Error):
