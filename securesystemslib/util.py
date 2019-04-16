@@ -103,6 +103,7 @@ class TempFile(object):
       self._default_temporary_directory(prefix)
 
 
+  # TODO: No code across ssl, tuf, and in-toto uses this function. Remove?
   def get_compressed_length(self):
     """
     <Purpose>
@@ -251,6 +252,7 @@ class TempFile(object):
     self.temporary_file.seek(*args)
 
 
+  # TODO: No code across ssl, tuf, and in-toto uses this function. Remove?
   def decompress_temp_file_object(self, compression):
     """
     <Purpose>
