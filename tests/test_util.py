@@ -393,7 +393,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
       '/warehouse/file2.txt': 'd543a573a2cec67026eff06e75702303559e64e705eba06f65799baaf0424417'
     }
     for filepath, target_hash in six.iteritems(expected_target_hashes):
-      self.assertTrue(securesystemslib.formats.RELPATH_SCHEMA.matches(filepath))
+      self.assertTrue(securesystemslib.formats.PATH_SCHEMA.matches(filepath))
       self.assertTrue(securesystemslib.formats.HASH_SCHEMA.matches(target_hash))
       self.assertEqual(securesystemslib.util.get_target_hash(filepath), target_hash)
 

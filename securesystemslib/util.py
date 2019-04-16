@@ -460,8 +460,8 @@ def file_in_confined_directories(filepath, confined_directories):
 
   # Do the arguments have the correct format?
   # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
-  securesystemslib.formats.RELPATH_SCHEMA.check_match(filepath)
-  securesystemslib.formats.RELPATHS_SCHEMA.check_match(confined_directories)
+  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+  securesystemslib.formats.PATHS_SCHEMA.check_match(confined_directories)
 
   for confined_directory in confined_directories:
     # The empty string (arbitrarily chosen) signifies the client is confined
@@ -516,7 +516,7 @@ def get_target_hash(target_filepath):
   # Ensure the arguments have the appropriate number of objects and object
   # types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
-  securesystemslib.formats.RELPATH_SCHEMA.check_match(target_filepath)
+  securesystemslib.formats.PATH_SCHEMA.check_match(target_filepath)
 
   # Calculate the hash of the filepath to determine which bin to find the
   # target.  The client currently assumes the repository uses

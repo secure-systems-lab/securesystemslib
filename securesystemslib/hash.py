@@ -358,7 +358,7 @@ def digest_filename(filename, algorithm=DEFAULT_HASH_ALGORITHM,
   """
   # Are the arguments properly formatted?  If not, raise
   # 'securesystemslib.exceptions.FormatError'.
-  securesystemslib.formats.RELPATH_SCHEMA.check_match(filename)
+  securesystemslib.formats.PATH_SCHEMA.check_match(filename)
   securesystemslib.formats.NAME_SCHEMA.check_match(algorithm)
   securesystemslib.formats.NAME_SCHEMA.check_match(hash_library)
 
