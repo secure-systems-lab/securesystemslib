@@ -1,0 +1,12 @@
+include README.rst
+include LICENSE
+
+# Add tests and test data
+recursive-include tests *.py
+recursive-include tests/data *
+
+# Add test config files to show how to run tests
+include tests/.coveragerc
+include tox.ini
+include .travis.yml
+include *requirements.txt
