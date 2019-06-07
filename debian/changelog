@@ -1,7 +1,7 @@
-python-securesystemslib (0.10.9) unstable; urgency=low
+python-securesystemslib (0.11.3) unstable; urgency=low
 
   * Initial Debian release from tag:
-   
-    https://github.com/secure-systems-lab/securesystemslib/tree/v0.10.9
 
- -- Santiago Torres-Arias <santiago@nyu.edu>  Thu, 18 Jan 2018 14:40:44 -0500
+    https://github.com/secure-systems-lab/securesystemslib/tree/sslibv0.11.3
+
+ -- Lukas Puehringer <lukas.puehringer@nyu.edu>  Fri, 07 Jun 2019 11:03:22 -0400
