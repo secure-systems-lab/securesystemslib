@@ -26,4 +26,12 @@ Architecture: all
 Depends:
   ${python3:Depends},
   ${misc:Depends},
-Description: secure cryptography and general purpose library for python (python 3 version)
+Description: crypto and schema library for TUF and in-toto
+ securesystemslib provides a high-level interface to cryptographic functions.
+ It supports public-key and other cryptographic algorithms, such as ECDSA,
+ Ed25519, RSA, SHA256, SHA512, etc. and a schema definition and validation
+ framework.
+ .
+ securesystemslib is developed at the Secure Systems Lab of NYU and is used by
+ the Python implementations of The Update Framework (TUF) and the software
+ supply chain integrity framework in-toto.
