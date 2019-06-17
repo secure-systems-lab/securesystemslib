@@ -54,11 +54,10 @@ class TestSPX_keys(unittest.TestCase):
 
 
   def test_create_signature(self):
-    global public
     global private
     data = b'The quick brown fox jumps over the lazy dog'
     scheme = 'spx'
-    signature, scheme = securesystemslib.spx_keys.create_signature(public,
+    signature, scheme = securesystemslib.spx_keys.create_signature(
         private, data, scheme)
 
     # Verify format of returned values.
@@ -70,16 +69,12 @@ class TestSPX_keys(unittest.TestCase):
 
     # Check for improperly formatted argument.
     self.assertRaises(securesystemslib.exceptions.FormatError,
-        securesystemslib.spx_keys.create_signature, 123, private, data,
-        scheme)
-
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        securesystemslib.spx_keys.create_signature, public, 123, data,
+        securesystemslib.spx_keys.create_signature, 123, data,
         scheme)
 
     # Check for invalid 'data'.
     self.assertRaises(securesystemslib.exceptions.CryptoError,
-        securesystemslib.spx_keys.create_signature, public, private, 123,
+        securesystemslib.spx_keys.create_signature, private, 123,
         scheme)
 
 
@@ -88,8 +83,8 @@ class TestSPX_keys(unittest.TestCase):
     global private
     data = b'The quick brown fox jumps over the lazy dog'
     scheme = 'spx'
-    signature, scheme = securesystemslib.spx_keys.create_signature(public,
-        private, data, scheme)
+    signature, scheme = securesystemslib.spx_keys.create_signature(private,
+        data, scheme)
 
     valid_signature = securesystemslib.spx_keys.verify_signature(public,
         scheme, signature, data)
@@ -132,7 +127,7 @@ class TestSPX_keys(unittest.TestCase):
 
     # Generated signature created with different data.
     new_signature, scheme = securesystemslib.spx_keys.create_signature(
-        public, private, b'mismatched data', scheme)
+        private, b'mismatched data', scheme)
 
     self.assertEqual(False, securesystemslib.spx_keys.verify_signature(
         public, scheme, new_signature, data))

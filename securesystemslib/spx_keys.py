@@ -114,7 +114,7 @@ def generate_public_and_private():
 
 
 
-def create_signature(public_key, private_key, data, scheme):
+def create_signature(private_key, data, scheme):
   """
   <Purpose>
     Return a (signature, scheme) tuple, where the signature scheme is 'spx'
@@ -125,22 +125,19 @@ def create_signature(public_key, private_key, data, scheme):
     >>> data = b'The quick brown fox jumps over the lazy dog'
     >>> scheme = 'spx'
     >>> signature, scheme = \
-        create_signature(public, private, data, scheme)
+        create_signature(private, data, scheme)
     >>> SPX_SIG_BYTES_SCHEMA.matches(signature)
     True
     >>> scheme == 'spx'
     True
     >>> signature, scheme = \
-        create_signature(public, private, data, scheme)
+        create_signature(private, data, scheme)
     >>> SPX_SIG_BYTES_SCHEMA.matches(signature)
     True
     >>> scheme == 'spx'
     True
 
   <Arguments>
-    public:
-      The spx public key, a simple byte string
-
     private:
       The spx private key, a simple byte string
 
@@ -163,13 +160,9 @@ def create_signature(public_key, private_key, data, scheme):
     A signature dictionary conformat to 'securesystemslib.format.SIGNATURE_SCHEMA'.  
   """
   # Validate arguments
-  SPX_PUBLIC_BYTES_SCHEMA.check_match(public_key)
   SPX_PRIVATE_BYTES_SCHEMA.check_match(private_key)
   securesystemslib.formats.SPX_SIG_SCHEMA.check_match(scheme)
 
-  # Signing the 'data' object requires a seed and public key.
-  # spx.signing.SigningKey.sign() generates the signature.
-  public = public_key
   private = private_key
 
   signature = None

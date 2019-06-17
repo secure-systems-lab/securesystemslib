@@ -798,11 +798,9 @@ def create_signature(key_dict, data):
         public, private, data, scheme)
 
   elif keytype == 'spx':
-    public = binascii.unhexlify(public.encode('utf-8'))
     private = binascii.unhexlify(private.encode('utf-8'))
-    sig, scheme = securesystemslib.spx_keys.create_signature(public,
-      private, data.encode('utf-8'), scheme)
-
+    sig, scheme = securesystemslib.spx_keys.create_signature(private,
+        data.encode('utf-8'), scheme)
 
   elif keytype == 'ecdsa-sha2-nistp256':
     sig, scheme = securesystemslib.ecdsa_keys.create_signature(
