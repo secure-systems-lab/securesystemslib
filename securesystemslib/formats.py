@@ -79,14 +79,6 @@ import datetime
 import time
 import six
 
-# Try to import pyspx to get access to lengths of SPX signatures and keys
-try:
-  import pyspx.shake256_192s as pyspx
-
-# pyspx's 'cffi' dependency may raise an 'IOError' exception when importing
-except (ImportError, IOError): # pragma: no cover
-  pass
-
 import securesystemslib.schema as SCHEMA
 import securesystemslib.exceptions
 
@@ -299,15 +291,6 @@ ED25519SEED_SCHEMA = SCHEMA.LengthBytes(32)
 
 # An ED25519 raw signature, which must be 64 bytes.
 ED25519SIGNATURE_SCHEMA = SCHEMA.LengthBytes(64)
-
-# Lengths of SPX raw keys and signatures
-try:
-    SPXPUBLIC_SCHEMA = SCHEMA.LengthBytes(pyspx.crypto_sign_PUBLICKEYBYTES)
-    SPXSEED_SCHEMA = SCHEMA.LengthBytes(pyspx.crypto_sign_SECRETKEYBYTES)
-    SPXSIGNATURE_SCHEMA = SCHEMA.LengthBytes(pyspx.crypto_sign_BYTES)
-
-except NameError:  # pragma: no cover
-    pass  # raised when pyspx was not available on import
 
 # An ECDSA signature.
 ECDSASIGNATURE_SCHEMA = SCHEMA.AnyBytes()

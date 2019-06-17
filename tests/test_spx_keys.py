@@ -48,8 +48,8 @@ class TestSPX_keys(unittest.TestCase):
     pub, priv = securesystemslib.spx_keys.generate_public_and_private()
 
     # Check format of 'pub' and 'priv'.
-    self.assertEqual(True, securesystemslib.formats.SPXPUBLIC_SCHEMA.matches(pub))
-    self.assertEqual(True, securesystemslib.formats.SPXSEED_SCHEMA.matches(priv))
+    self.assertEqual(True, securesystemslib.spx_keys.SPX_PUBLIC_BYTES_SCHEMA.matches(pub))
+    self.assertEqual(True, securesystemslib.spx_keys.SPX_PRIVATE_BYTES_SCHEMA.matches(priv))
 
 
 
@@ -63,7 +63,7 @@ class TestSPX_keys(unittest.TestCase):
 
     # Verify format of returned values.
     self.assertEqual(True,
-        securesystemslib.formats.SPXSIGNATURE_SCHEMA.matches(signature))
+        securesystemslib.spx_keys.SPX_SIG_BYTES_SCHEMA.matches(signature))
 
     self.assertEqual(True, securesystemslib.formats.SPX_SIG_SCHEMA.matches(scheme))
     self.assertEqual('spx', scheme)

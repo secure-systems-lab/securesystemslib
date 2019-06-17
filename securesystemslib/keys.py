@@ -102,7 +102,8 @@ import securesystemslib.ed25519_keys
 try:
   import securesystemslib.spx_keys
 
-except ImportError: #pragma: no cover
+# pyspx's 'cffi' dependency may raise an 'IOError' exception when importing
+except (ImportError, IOError): #pragma: no cover
   pass
 
 
