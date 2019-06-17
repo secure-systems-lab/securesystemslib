@@ -22,11 +22,15 @@ securesystemslib supports public-key and general-purpose cryptography, such as
 `ECDSA
 <https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm>`_,
 `Ed25519 <http://ed25519.cr.yp.to/>`_, `RSA
-<https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29>`_, SHA256, SHA512, etc.
-Most of the cryptographic operations are performed by the `cryptography
+<https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29>`_,
+`SPHINCS+-shake256-192s <https://sphincs.org/>`_, SHA256, SHA512, etc. Most of
+the cryptographic operations are performed by the `cryptography
 <https://cryptography.io/en/latest/>`_ and `PyNaCl
 <https://github.com/pyca/pynacl>`_ libraries, but verification of Ed25519
-signatures can be done in pure Python.
+signatures can be done in pure Python. The `PySPX
+<https://github.com/sphincs/pyspx>`_ Python bindings are used for SPHINCS+
+signatures.
+
 
 The `cryptography` library is used to generate keys and signatures with the
 ECDSA and RSA algorithms, and perform general-purpose cryptography such as
@@ -46,12 +50,14 @@ Installation
 
 The default installation only supports Ed25519 keys and signatures (in pure
 Python).  Support for RSA, ECDSA, and E25519 via the `cryptography` and
-`PyNaCl` libraries is available by installing the `crypto` and `pynacl` extras:
+`PyNaCl` libraries is available by installing the `crypto` and `pynacl` extras.
+Support for SPHINCS+ signatures is available via the `pyspx` extra.
 
 ::
 
     $ pip install securesystemslib[crypto]
     $ pip install securesystemslib[pynacl]
+    $ pip install securesystemslib[pyspx]
 
 
 Create RSA Keys
