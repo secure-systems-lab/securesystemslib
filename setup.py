@@ -98,7 +98,8 @@ setup(
   ],
   install_requires = ['six>=1.11.0'],
   extras_require = {'crypto': ['cryptography>=2.2.2', 'colorama>=0.3.9'],
-      'pynacl': ['pynacl>1.2.0']},
+      'pynacl': ['pynacl>1.2.0'],
+      'pyspx': ['pyspx>=0.4.0']},
   packages = find_packages(exclude=['tests', 'debian']),
   scripts = []
 )
