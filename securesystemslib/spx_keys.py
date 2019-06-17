@@ -12,8 +12,8 @@
   See LICENSE for licensing information.
 
 <Purpose>
-  The goal of this module is to support SPINCS+ ("SPX") signatures. SPHINCS+ is an
-  a framework for creating stateless hash-based signatures. 
+  The goal of this module is to support SPINCS+ ("SPX") signatures. SPHINCS+ is
+  a framework for creating stateless hash-based signatures.
   The concrete instantiation of this framework used here is the "shake256-192s"
   parameter set as defined in the SPHINCS+ submission to NIST; see
   http://sphincs.org/resources.html
@@ -49,9 +49,6 @@ import securesystemslib.formats
 import securesystemslib.exceptions
 import securesystemslib.schema as SCHEMA
 
-# Supported spx signing schemes: 'spx'.  
-_SUPPORTED_SPX_SIGNING_SCHEMES = ['spx']
-
 # Define lengths of SPX keys and signature bytes
 # NOTE: Define module scope schemas here to avoid conditional imports of
 # optional 'pyspx' package in 'formats' module. ImportError and IOError should
@@ -79,9 +76,6 @@ def generate_public_and_private():
     None.
 
   <Exceptions>
-    securesystemslib.exceptions.UnsupportedLibraryError, if the pyspx
-    module is unavailable.
-
     NotImplementedError, if a randomness source is not found by 'os.urandom'.
 
   <Side Effects>
@@ -98,15 +92,9 @@ def generate_public_and_private():
   # returned should be suitable for cryptographic use and is OS-specific.
   # Raise 'NotImplementedError' if a randomness source is not found.
   seed = os.urandom(pyspx.crypto_sign_SEEDBYTES)
-  public = None
 
   # Generate the public key.  pyspx performs the actual key generation.
-  try:
-    public, private = pyspx.generate_keypair(seed)
-
-  except NameError: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError('The pyspx'
-        ' library and/or its dependencies unavailable.')
+  public, private = pyspx.generate_keypair(seed)
 
   return public, private
 
@@ -157,37 +145,20 @@ def create_signature(private_key, data, scheme):
     spx.signing.SigningKey.sign() called to generate the actual signature.
 
   <Returns>
-    A signature dictionary conformat to 'securesystemslib.format.SIGNATURE_SCHEMA'.  
+    A signature dictionary conformant to
+    'securesystemslib.format.SIGNATURE_SCHEMA'.
+
   """
   # Validate arguments
   SPX_PRIVATE_BYTES_SCHEMA.check_match(private_key)
   securesystemslib.formats.SPX_SIG_SCHEMA.check_match(scheme)
 
-  private = private_key
+  try:
+    signature = pyspx.sign(data, private_key)
 
-  signature = None
-
-  # An if-clause is not strictly needed here, since 'spx' is the only
-  # currently supported scheme.  Nevertheless, include the conditional
-  # statement to accommodate schemes that might be added in the future.
-  if scheme == 'spx':
-    try:
-        signature = pyspx.sign(data, private)
-
-    # The unit tests expect required libraries to be installed.
-    except NameError: # pragma: no cover
-      raise securesystemslib.exceptions.UnsupportedLibraryError('The pyspx'
-          ' library and/or its dependencies unavailable.')
-
-    except (ValueError, TypeError) as e:
-      raise securesystemslib.exceptions.CryptoError('An "spx" signature'
-          ' could not be created with pyspx.' + str(e))
-
-  # This is a defensive check for a valid 'scheme', which should have already
-  # been validated in the check_match() above.
-  else: #pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
-      ' signature scheme is specified: ' + repr(scheme))
+  except (ValueError, TypeError) as e:
+    raise securesystemslib.exceptions.CryptoError('An "spx" signature'
+        ' could not be created with pyspx.' + str(e))
 
   return signature, scheme
 
@@ -230,10 +201,6 @@ def verify_signature(public_key, scheme, signature, data):
       generate 'signature'.  'data' is needed here to verify the signature.
 
   <Exceptions>
-    securesystemslib.exceptions.UnsupportedAlgorithmError.  Raised if the
-    signature scheme 'scheme' is not one supported by
-    securesystemslib.spx_keys.create_signature().
-
     securesystemslib.exceptions.FormatError. Raised if the arguments are
     improperly formatted.
 
@@ -248,31 +215,8 @@ def verify_signature(public_key, scheme, signature, data):
   SPX_SIG_BYTES_SCHEMA.check_match(signature)
   securesystemslib.formats.SPX_SIG_SCHEMA.check_match(scheme)
 
-
-  # Verify 'signature'.  Before returning the Boolean result, ensure 'spx'
-  # was used as the signature scheme.  Raise
-  # 'securesystemslib.exceptions.UnsupportedLibraryError' if 'pyspx' is unavailable.
-  public = public_key
-  valid_signature = False
-
-  if scheme in _SUPPORTED_SPX_SIGNING_SCHEMES:
-    try:
-      valid_signature = pyspx.verify(data, signature, public)
-
-      # The unit tests expect PyNaCl to be installed.
-    except NameError: # pragma: no cover
-      raise securesystemslib.exceptions.UnsupportedLibraryError('The pyspx'
-          ' library and/or its dependencies unavailable.')
-
-
-  # This is a defensive check for a valid 'scheme', which should have already
-  # been validated in the SPX_SIG_SCHEMA.check_match(scheme) above.
-  else: #pragma: no cover
-    message = 'Unsupported spx signature scheme: ' + repr(scheme) + '.\n' + \
-      'Supported schemes: ' + repr(_SUPPORTED_SPX_SIGNING_SCHEMES) + '.'
-    raise securesystemslib.exceptions.UnsupportedAlgorithmError(message)
-
-  return valid_signature
+  # Return boolean signature verification result
+  return pyspx.verify(data, signature, public_key)
 
 
 

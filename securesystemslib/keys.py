@@ -407,8 +407,8 @@ def generate_ed25519_key(scheme='ed25519'):
 def generate_spx_key(scheme='spx'):
   """
   <Purpose>
-    Generate public and private SPX keys, In addition, a keyid identifier generated
-    for the returned SPX object.  The object returned conforms to
+    Generate public and private SPX keys, In addition, a keyid identifier
+    generated for the returned SPX object.  The object returned conforms to
     'securesystemslib.formats.SPXKEY_SCHEMA' and has the form:
 
     {'keytype': 'spx',
@@ -443,12 +443,9 @@ def generate_spx_key(scheme='spx'):
   # Begin building the SPX key dictionary.
   spx_key = {}
   keytype = 'spx'
-  public = None
-  private = None
 
   # Generate the public and private SPX key with the 'pyspx' library.
-  public, private = \
-    securesystemslib.spx_keys.generate_public_and_private()
+  public, private = securesystemslib.spx_keys.generate_public_and_private()
 
   # Generate the keyid of the SPX key.  'key_value' corresponds to the
   # 'keyval' entry of the 'SPXKEY_SCHEMA' dictionary.  The private key
@@ -457,8 +454,8 @@ def generate_spx_key(scheme='spx'):
                'private': ''}
   keyid = _get_keyid(keytype, scheme, key_value)
 
-  # Build the 'spx_key' dictionary.  Update 'key_value' with the SPX 
-  # private key prior to adding 'key_value' to 'spx_key'.
+  # Build the 'spx_key' dictionary.  Update 'key_value' with the SPX private
+  # key prior to adding 'key_value' to 'spx_key'.
   key_value['private'] = binascii.hexlify(private).decode()
 
   spx_key['keytype'] = keytype
@@ -705,6 +702,12 @@ def create_signature(key_dict, data):
     ed25519 - high-speed high security signatures
     http://ed25519.cr.yp.to/
 
+    'spx'
+    Sphinx+-Shake256
+    https://sphincs.org/
+
+    'ecdsa-sha2-nistp256'
+
     Which signature to generate is determined by the key type of 'key_dict'
     and the available cryptography library specified in 'settings'.
 
@@ -948,7 +951,9 @@ def verify_signature(key_dict, signature, data):
   elif keytype == 'spx':
     if scheme == 'spx':
       public = binascii.unhexlify(public.encode('utf-8'))
-      valid_signature = securesystemslib.spx_keys.verify_signature(public, scheme, sig, data)
+      valid_signature = securesystemslib.spx_keys.verify_signature(public,
+          scheme, sig, data)
+
     else:
       raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
           ' signature scheme is specified: ' + repr(scheme))

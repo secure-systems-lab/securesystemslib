@@ -311,7 +311,7 @@ class TestInterfaceFunctions(unittest.TestCase):
                                                     password='pw',
                                                     prompt=True)
 
-    # Fail importing encrypted key passing an empty string for passwd 
+    # Fail importing encrypted key passing an empty string for passwd
     with self.assertRaises(ValueError):
       interface.import_ed25519_privatekey_from_file(test_keypath,
                                                     password='')
@@ -512,7 +512,7 @@ class TestInterfaceFunctions(unittest.TestCase):
                                                     password='pw',
                                                     prompt=True)
 
-    # Fail importing encrypted key passing an empty string for passwd 
+    # Fail importing encrypted key passing an empty string for passwd
     with self.assertRaises(ValueError):
       interface.import_spx_privatekey_from_file(test_keypath,
                                                     password='')

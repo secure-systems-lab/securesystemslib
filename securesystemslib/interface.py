@@ -1053,13 +1053,12 @@ def import_spx_publickey_from_file(filepath):
   # SPX key objects are saved in json and metadata format.  Return the
   # loaded key object in securesystemslib.formats.SPXKEY_SCHEMA' format that
   # also includes the keyid.
-  spx_key_metadata = securesystemslib.util.load_json_file(filepath)
-  spx_key, junk = \
-    securesystemslib.keys.format_metadata_to_key(spx_key_metadata)
+  spx_key_data = securesystemslib.util.load_json_file(filepath)
+  spx_key, junk = securesystemslib.keys.format_metadata_to_key(spx_key_data)
 
   # Raise an exception if an unexpected key type is imported.  Redundant
   # validation of 'keytype'.  'securesystemslib.keys.format_metadata_to_key()'
-  # should have fully validated 'spx_key_metadata'.
+  # should have fully validated 'spx_key_data'.
   if spx_key['keytype'] != 'spx': # pragma: no cover
     message = 'Invalid key type loaded: ' + repr(spx_key['keytype'])
     raise securesystemslib.exceptions.FormatError(message)
@@ -1149,8 +1148,8 @@ def import_spx_privatekey_from_file(filepath, password=None, prompt=False):
   # Otherwise, load it straight from the disk.
   with open(filepath, 'rb') as file_object:
     json_str = file_object.read()
-    return securesystemslib.keys.\
-           import_spxkey_from_private_json(json_str, password=password)
+    return securesystemslib.keys.import_spxkey_from_private_json(
+        json_str, password=password)
 
 
 

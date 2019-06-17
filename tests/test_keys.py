@@ -300,8 +300,6 @@ class TestKeys(unittest.TestCase):
     rsa_signature = KEYS.create_signature(self.rsakey_dict, DATA)
     ed25519_signature = KEYS.create_signature(self.ed25519key_dict, DATA)
     spx_signature = KEYS.create_signature(self.spxkey_dict, DATA)
-    ecdsa_signature = None
-
     ecdsa_signature = KEYS.create_signature(self.ecdsakey_dict, DATA)
 
     # Verifying the 'signature' of 'DATA'.
