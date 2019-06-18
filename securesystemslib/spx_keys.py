@@ -158,7 +158,7 @@ def create_signature(private_key, data, scheme):
 
   except (ValueError, TypeError) as e:
     raise securesystemslib.exceptions.CryptoError('An "spx" signature'
-        ' could not be created with pyspx.' + str(e))
+        ' could not be created with pyspx: ' + str(e))
 
   return signature, scheme
 
