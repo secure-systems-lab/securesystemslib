@@ -50,3 +50,6 @@ HASH_ALGORITHMS = ['sha256', 'sha512']
 # Used in securesystemslib.process, to raise a subprocess.TimeoutExpired if
 # a started subprocess does not terminate before the here specified seconds
 SUBPROCESS_TIMEOUT = 3
+
+# The PATH of PKCS11 library for hardware security modules
+PKCS11LIB = "/usr/lib/opensc-pkcs11.so"
