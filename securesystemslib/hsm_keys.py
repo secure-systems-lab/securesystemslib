@@ -48,7 +48,6 @@ def load_HSMs():
   # All the functions must use the same object of the HSM class,
   # to use same session for all the operations.
   global smartcard
-  smartcard = HSM(PKCS11LIB)
 
   # Get information reagarding the available HSM
   available_HSM = smartcard.get_available_HSMs()
