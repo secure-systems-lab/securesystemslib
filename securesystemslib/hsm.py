@@ -182,6 +182,111 @@ class HSM(object):
 
 
 
+
+  def get_private_key_objects(self):
+    """
+    <Purpose>
+      Get object handles of private keys stored on the HSM.
+      login required before using this method.
+
+    <Returns>
+      List of all available private key handles.
+    """
+
+    private_key_objects = self.sess.findObjects([(PyKCS11.CKA_CLASS,
+        PyKCS11.CKO_PRIVATE_KEY)])
+    return private_key_objects
+
+
+
+
+
+  def get_public_key_objects(self):
+    """
+    <Purpose>
+      Get object handles of public keys stored on the HSM.
+
+    <Returns>
+      List of all available public key handles.
+    """
+
+    try:
+      public_key_objects = self.sess.findObjects([(PyKCS11.CKA_CLASS,
+          PyKCS11.CKO_PUBLIC_KEY)])
+    except:
+      raise securesystemslib.exceptions
+    return public_key_objects
+
+
+
+
+
+  def get_public_key_value(self, public_key_handle):
+    """
+    <Purpose>
+      Get the public key value corresponding to the 'public_key_handle'
+
+    <Arguments>
+      public_key_handle:
+        element of the list returne by get_public_key_object().
+
+    <Returns>
+      'cryptography' public key object
+    """
+
+    public_key_value = self.sess.getAttributeValue(public_key_handle,
+        [PyKCS11.CKA_VALUE])[0]
+    public_key_value = bytes(public_key_value)
+
+    # Public key value exported from the HSM is der encoded
+    public_key = serialization.load_der_public_key(public_key_value,
+        default_backend())
+    return public_key
+
+
+
+
+
+  def get_X509_objects(self):
+    """
+    <Purpose>
+      Get object handle of the X509 certificates stored on the HSM.
+
+    <Returns>
+      List of all the available certificate handles.
+    """
+
+    x509_objects = self.sess.findObjects([(PyKCS11.CKA_CLASS,
+        PyKCS11.CKO_CERTIFICATE)])
+    return x509_objects
+
+
+
+
+
+  def get_X509_value(self, x509_handle):
+    """
+    <Purpose>
+      Get the certificate value corresponding to the 'x509_handle'.
+
+    <Arguments>
+      x509_handle:
+        element from the list returned by get_X509_objects().
+
+    <Returns>
+      'cryptography' public key object.
+    """
+
+    x509_value = self.sess.getAttributeValue(x509_handle,
+        [PyKCS11.CKA_VALUE])[0]
+    x509_certificate = x509.load_der_x509_certificate(bytes(x509_value))
+
+    return x509_certificate
+
+
+
+
+
   def logout(self):
     """
     <Purpose>
