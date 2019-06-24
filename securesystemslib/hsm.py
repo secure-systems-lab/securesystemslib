@@ -210,11 +210,9 @@ class HSM(object):
       List of all available public key handles.
     """
 
-    try:
-      public_key_objects = self.sess.findObjects([(PyKCS11.CKA_CLASS,
-          PyKCS11.CKO_PUBLIC_KEY)])
-    except:
-      raise securesystemslib.exceptions
+    public_key_objects = self.sess.findObjects([(PyKCS11.CKA_CLASS,
+        PyKCS11.CKO_PUBLIC_KEY)])
+
     return public_key_objects
 
 
