@@ -277,7 +277,7 @@ class HSM(object):
 
     x509_value = self.sess.getAttributeValue(x509_handle,
         [PyKCS11.CKA_VALUE])[0]
-    x509_certificate = x509.load_der_x509_certificate(bytes(x509_value))
+    x509_certificate = x509.load_der_x509_certificate(bytes(x509_value), default_backend())
 
     return x509_certificate
 
