@@ -20,7 +20,4 @@ script:
   - tox
 
 after_success:
-  - cd tests
   - coveralls
-  - cd -
-

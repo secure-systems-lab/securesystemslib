@@ -12,3 +12,5 @@ exclude_lines =
 
 omit =
   */securesystemslib/_vendor/*
+  */tests/*
+  */site-packages/*
