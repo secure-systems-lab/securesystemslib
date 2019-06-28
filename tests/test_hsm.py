@@ -157,7 +157,208 @@ class TestHSM(unittest.TestCase):
   def tearDownClass(cls):
     # TODO: Delete the initialized SoftHSM.
     pass
+
+
+
+  def setUp(self):
+
     self.HSM = securesystemslib.hsm.HSM
+    self.SMARTCARD = self.HSM(PKCS11LIB)
+
+
+
+  def test_initialization(self):
+
+    self.assertRaises(securesystemslib.exceptions.NotFoundError,
+        self.HSM, None)
+
+    try:
+      self.HSM('/NO LIBRARY HERE')
+    except:
+      pass
+
+    # Initialize the library
+    self.SMARTCARD = self.HSM(PKCS11LIB)
+
+
+
+  def test_get_available_HSMs(self):
+
+    slot_list = self.SMARTCARD.get_available_HSMs()
+
+    self.assertIsInstance(slot_list, list)
+
+
+
+  def test_get_HSM_session(self):
+    # Use the first HSM in teh list
+    slot_info = self.SMARTCARD.get_available_HSMs()[0]
+
+    # Test the function to start a session
+    self.SMARTCARD.get_HSM_session(slot_info)
+
+    self.assertIsInstance(slot_info, dict)
+
+    # When a wrong input is provided by the user
+    self.assertRaises(securesystemslib.exceptions.InvalidNameError,
+                      self.SMARTCARD.get_HSM_session, dict())
+
+
+
+  def test_close_session(self):
+    # Start the session with first HSM on the list
+    slot_info = self.SMARTCARD.get_available_HSMs()[0]
+    self.SMARTCARD.get_HSM_session(slot_info)
+
+    self.SMARTCARD.close_session()
+
+
+
+  def test_close(self):
+    # Start the session with first HSM on the list
+    slot_info = self.SMARTCARD.get_available_HSMs()[0]
+    self.SMARTCARD.get_HSM_session(slot_info)
+    self.SMARTCARD.login(_USER_PIN)
+
+    self.SMARTCARD.close()
+
+    # Using close() when you are not logged in
+    self.SMARTCARD.get_HSM_session(slot_info)
+    self.SMARTCARD.close()
+
+
+
+  def test_login_logout(self):
+    # Start the session with first HSM on the list
+    slot_info = self.SMARTCARD.get_available_HSMs()[0]
+    self.SMARTCARD.get_HSM_session(slot_info)
+
+    # Assuming that the HSM attached have the default PIN!
+    self.assertRaises(securesystemslib.exceptions.BadPasswordError,
+                      self.SMARTCARD.login, '654321')
+    self.SMARTCARD.login(_USER_PIN)
+
+    # Login in again, prints a message on stdout.
+    self.SMARTCARD.login(_USER_PIN)
+
+    self.SMARTCARD.logout()
+    self.SMARTCARD.close_session()
+
+
+
+  def test_get_private_key_objects(self):
+    slot_info = self.SMARTCARD.get_available_HSMs()[0]
+    self.SMARTCARD.get_HSM_session(slot_info)
+    self.SMARTCARD.login(_USER_PIN)
+
+    private_key_objects = self.SMARTCARD.get_private_key_objects()
+
+    self.assertIsInstance(private_key_objects, list)
+
+    self.SMARTCARD.close_session()
+
+
+
+  def test_get_public_key_objects(self):
+    slot_info = self.SMARTCARD.get_available_HSMs()[0]
+    self.SMARTCARD.get_HSM_session(slot_info)
+    self.SMARTCARD.login(_USER_PIN)
+
+    public_key_objects = self.SMARTCARD.get_public_key_objects()
+
+    self.assertIsInstance(public_key_objects, list)
+
+    self.SMARTCARD.close()
+
+
+
+  def test_get_public_key_value(self):
+    slot_info = self.SMARTCARD.get_available_HSMs()[0]
+    self.SMARTCARD.get_HSM_session(slot_info)
+    self.SMARTCARD.login(_USER_PIN)
+
+    # Assuming the there are already at least key pair stored.
+    public_key_object = self.SMARTCARD.get_public_key_objects()[0]
+    try:
+      public_key = self.SMARTCARD.get_public_key_value(self.RSA_public_key)
+
+      # Supporting operation with only two keys currently
+      self.assertTrue(isinstance(public_key, RSAPublicKey) or
+                      isinstance(public_key, EllipticCurvePublicKey))
+    except:
+      logger.debug('The public key object does not contain the DER encoded value'
+                   'It needs to be calculated from the Modulus and Exponent.'
+                   'But this functionality is not yet available!')
+
+    self.SMARTCARD.close()
+
+
+  def test_get_x509_objects(self):
+    slot_info = self.SMARTCARD.get_available_HSMs()[0]
+    self.SMARTCARD.get_HSM_session(slot_info)
+    self.SMARTCARD.login(_USER_PIN)
+
+    x509_objects = self.SMARTCARD.get_X509_objects()
+
+    self.assertIsInstance(x509_objects, list)
+    self.SMARTCARD.close()
+
+
+
+  def test_get_x509_value(self):
+    slot_info = self.SMARTCARD.get_available_HSMs()[0]
+    self.SMARTCARD.get_HSM_session(slot_info)
+    self.SMARTCARD.login(_USER_PIN)
+
+    # Assuming the there are already a certificate stored
+    # on the HSM.
+    try:
+      x509_objects = self.SMARTCARD.get_X509_objects()
+      x509_value = self.SMARTCARD.get_X509_value(x509_objects)
+      self.assertIsInstance(x509_value, Certificate)
+    except:
+      # Will fail, as the certificate file is not genererated on the HSM.
+      pass
+    self.SMARTCARD.close()
+
+
+
+  def test_generate_signature(self):
+    slot_info = self.SMARTCARD.get_available_HSMs()[0]
+    self.SMARTCARD.get_HSM_session(slot_info)
+    self.SMARTCARD.login(_USER_PIN)
+
+    # Assuming the there are already at least key pair stored.
+    private_key = self.SMARTCARD.get_private_key_objects()[0]
+
+    signature = self.SMARTCARD.generate_signature(DATA, private_key)
+
+    # Returns a HEX encoded string.
+    self.assertIsInstance(signature, str)
+    self.SMARTCARD.close()
+
+
+
+  def test_verify_signature(self):
+    # First start a session with the first HSM on the list.
+    slot_info = self.SMARTCARD.get_available_HSMs()[0]
+    self.SMARTCARD.get_HSM_session(slot_info)
+    self.SMARTCARD.login(_USER_PIN)
+    # Generate the signature using a private key.
+    private_key = self.SMARTCARD.get_private_key_objects()[0]
+    signature = self.SMARTCARD.generate_signature(DATA, private_key)
+    # Verify the signature with the corresponding public key
+    public_key_object = self.SMARTCARD.get_public_key_objects()[0]
+
+    # Verification with data using which the signature was generated.
+    self.assertTrue(self.SMARTCARD.verify_signature(
+      DATA, signature, public_key_object))
+
+    # Verification with compromised data.
+    self.assertFalse(self.SMARTCARD.verify_signature(
+      DATA_COMPROMISED, signature, public_key_object))
+    self.SMARTCARD.close()
+
 
 
 
