@@ -68,7 +68,10 @@ EC_PARAMS = b'\x06\x08*\x86H\xce=\x03\x01\x07'
 
 class TestHSM(unittest.TestCase):
 
-  def setUp(self):
+
+
+  @classmethod
+  def setUpClass(cls):
 
     # To carry out the tests even when the hardware token is not connected,
     # we would be emulating the hardware token using softHSM 2.0.
@@ -116,8 +119,8 @@ class TestHSM(unittest.TestCase):
         (PyKCS11.CKA_UNWRAP, PyKCS11.CK_TRUE),
         (PyKCS11.CKA_LABEL, KEY_LABEL),
         (PyKCS11.CKA_ID, RSA_KEY_ID),]
-    (pubKey, privKey) = session.generateKeyPair(
-        RSA_public_template, RSA_private_template, PyKCS11.MechanismRSAGENERATEKEYPAIR)
+    (cls.RSA_public_key, cls.RSA_private_key) = session.generateKeyPair(
+      RSA_public_template, RSA_private_template, PyKCS11.MechanismRSAGENERATEKEYPAIR)
 
     # Generate ECDSA key pair on the HSM
     EC_public_template = [
@@ -141,13 +144,19 @@ class TestHSM(unittest.TestCase):
         (PyKCS11.CKA_UNWRAP, PyKCS11.CK_TRUE),
         (PyKCS11.CKA_LABEL, KEY_LABEL),
         (PyKCS11.CKA_ID, EC_KEY_ID),]
-    (pubKey, privKey) = session.generateKeyPair(
-        EC_public_template, EC_private_template, PyKCS11.MechanismECGENERATEKEYPAIR)
+    (cls.EC_public_key, cls.EC_private_key) = session.generateKeyPair(
+      EC_public_template, EC_private_template, PyKCS11.MechanismECGENERATEKEYPAIR)
 
     # Logout and close all sessions
     session.logout()
     session.closeSession()
 
+
+
+  @classmethod
+  def tearDownClass(cls):
+    # TODO: Delete the initialized SoftHSM.
+    pass
     self.HSM = securesystemslib.hsm.HSM
 
 
