@@ -155,9 +155,9 @@ class HSM(object):
     try:
       self.session = self.PKCS11.openSession(slot_info['slot_id'],
           PyKCS11.CKF_SERIAL_SESSION | PyKCS11.CKF_RW_SESSION)
-    except:
+    except PyKCS11.PyKCS11Error as error:
       raise securesystemslib.exceptions.InvalidNameError(
-          "The requested token is not available.")
+          "The requested token is not available." + str(error))
 
 
 
