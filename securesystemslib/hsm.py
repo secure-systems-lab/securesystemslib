@@ -58,7 +58,7 @@ class HSM(object):
     # Initialize the PyKCS11Lib, wrapper of PKCS#11 in Python.
     self.PKCS11 = PyKCS11.PyKCS11Lib()
 
-    self.sess = None
+    self.session = None
 
     # Load the PKCS11 shared library file.
     self.refresh()
@@ -146,7 +146,7 @@ class HSM(object):
       is either not present or cannot be used.
     """
     try:
-      self.sess = self.PKCS11.openSession(slot_info['slot_id'],
+      self.session = self.PKCS11.openSession(slot_info['slot_id'],
           PyKCS11.CKF_SERIAL_SESSION | PyKCS11.CKF_RW_SESSION)
     except:
       raise securesystemslib.exceptions.InvalidNameError(
@@ -171,7 +171,7 @@ class HSM(object):
     """
 
     try:
-      self.sess.login(user_pin)
+      self.session.login(user_pin)
     except PyKCS11.PyKCS11Error as error:
       if error.__str__() == 'CKR_USER_ALREADY_LOGGED_IN (0x00000100)':
         print('Already logged in as CKU_USER.')
@@ -193,7 +193,7 @@ class HSM(object):
       List of all available private key handles.
     """
 
-    private_key_objects = self.sess.findObjects([(PyKCS11.CKA_CLASS,
+    private_key_objects = self.session.findObjects([(PyKCS11.CKA_CLASS,
         PyKCS11.CKO_PRIVATE_KEY)])
     return private_key_objects
 
@@ -210,7 +210,7 @@ class HSM(object):
       List of all available public key handles.
     """
 
-    public_key_objects = self.sess.findObjects([(PyKCS11.CKA_CLASS,
+    public_key_objects = self.session.findObjects([(PyKCS11.CKA_CLASS,
         PyKCS11.CKO_PUBLIC_KEY)])
 
     return public_key_objects
@@ -232,7 +232,7 @@ class HSM(object):
       'cryptography' public key object
     """
 
-    public_key_value = self.sess.getAttributeValue(public_key_handle,
+    public_key_value = self.session.getAttributeValue(public_key_handle,
         [PyKCS11.CKA_VALUE])[0]
     public_key_value = bytes(public_key_value)
 
@@ -254,7 +254,7 @@ class HSM(object):
       List of all the available certificate handles.
     """
 
-    x509_objects = self.sess.findObjects([(PyKCS11.CKA_CLASS,
+    x509_objects = self.session.findObjects([(PyKCS11.CKA_CLASS,
         PyKCS11.CKO_CERTIFICATE)])
     return x509_objects
 
@@ -275,7 +275,7 @@ class HSM(object):
       'cryptography' public key object.
     """
 
-    x509_value = self.sess.getAttributeValue(x509_handle,
+    x509_value = self.session.getAttributeValue(x509_handle,
         [PyKCS11.CKA_VALUE])[0]
     x509_certificate = x509.load_der_x509_certificate(bytes(x509_value), default_backend())
 
@@ -312,7 +312,7 @@ class HSM(object):
     """
 
     mechanism = None
-    key_type = self.sess.getAttributeValue(private_key_handle,
+    key_type = self.session.getAttributeValue(private_key_handle,
         [PyKCS11.CKA_KEY_TYPE])[0]
 
     if PyKCS11.CKK[key_type] == 'CKK_RSA':
@@ -336,7 +336,7 @@ class HSM(object):
         "The Key type " + repr(key_type) + " is currently not supported!")
 
 
-    signature = self.sess.sign(private_key_handle, data,
+    signature = self.session.sign(private_key_handle, data,
         mechanism)
     return bytearray(signature).hex()
 
@@ -376,7 +376,7 @@ class HSM(object):
     # Convert HEX string to bytes
     signature_bytes = binascii.unhexlify(signature)
     mechanism = None
-    key_type = self.sess.getAttributeValue(public_key_handle,
+    key_type = self.session.getAttributeValue(public_key_handle,
         [PyKCS11.CKA_KEY_TYPE])[0]
 
     if PyKCS11.CKK[key_type] == 'CKK_RSA':
@@ -399,7 +399,7 @@ class HSM(object):
       raise securesystemslib.exceptions.UnsupportedAlgorithmError(
           "The Key type " + repr(key_type) + " is currently not supported!")
 
-    result = self.sess.verify(public_key_handle, signed_bytes, signature_bytes,
+    result = self.session.verify(public_key_handle, signed_bytes, signature_bytes,
         mechanism)
 
     return result
@@ -414,7 +414,7 @@ class HSM(object):
       Logout from the CKU_USER session
     """
 
-    self.sess.logout()
+    self.session.logout()
 
 
 
@@ -426,7 +426,7 @@ class HSM(object):
       Close the communication session with the token.
     """
 
-    self.sess.closeSession()
+    self.session.closeSession()
 
 
 
