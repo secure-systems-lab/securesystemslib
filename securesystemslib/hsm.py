@@ -158,6 +158,9 @@ class HSM(object):
     except PyKCS11.PyKCS11Error as error:
       raise securesystemslib.exceptions.InvalidNameError(
           "The requested token is not available." + str(error))
+    except KeyError:
+      raise securesystemslib.exceptions.InvalidNameError(
+          "Invalid Input, not a slot_info dictionary.")
 
 
 
