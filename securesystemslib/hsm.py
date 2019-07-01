@@ -27,6 +27,7 @@ from __future__ import unicode_literals
 import PyKCS11
 
 import binascii
+import logging
 import securesystemslib.exceptions
 
 # Import cryptography routines needed to retrieve cryptographic
@@ -44,6 +45,7 @@ RSA_PSS_MGF_SHA256 = PyKCS11.CKG_MGF1_SHA256
 # Length of salt to be used for hashing.
 RSA_PSS_SALT_LENGTH = 32
 
+logger = logging.getLogger('securesystemslib_hsm')
 
 class HSM(object):
   """
@@ -183,7 +185,7 @@ class HSM(object):
       self.session.login(user_pin)
     except PyKCS11.PyKCS11Error as error:
       if error.__str__() == 'CKR_USER_ALREADY_LOGGED_IN (0x00000100)':
-        print('Already logged in as CKU_USER.')
+        logger.info('Already logged in as CKU_USER.')
       else:
         raise securesystemslib.exceptions.BadPasswordError("Wrong User Pin!")
 
