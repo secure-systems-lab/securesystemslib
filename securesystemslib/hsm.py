@@ -35,6 +35,15 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 from cryptography import x509
 
+# RSA-PSS with SHA256 hash to be used for signature generation.
+RSA_PSS_MECH = PyKCS11.CKM_SHA256_RSA_PKCS_PSS
+# SHA256 hash to be used to digest the data.
+RSA_PSS_HASH_SHA256 = PyKCS11.CKM_SHA256
+# Mask generating function for SHA256 Hash.
+RSA_PSS_MGF_SHA256 = PyKCS11.CKG_MGF1_SHA256
+# Length of salt to be used for hashing.
+RSA_PSS_SALT_LENGTH = 32
+
 
 class HSM(object):
   """
@@ -317,17 +326,8 @@ class HSM(object):
         [PyKCS11.CKA_KEY_TYPE])[0]
 
     if PyKCS11.CKK[key_type] == 'CKK_RSA':
-
-      # RSA-PSS with SHA256 hash to be used for signature generation
-      RSA_PSS = PyKCS11.CKM_SHA256_RSA_PKCS_PSS
-      # SHA256 hash to be used to digest the data
-      HASH = PyKCS11.CKM_SHA256
-      # Mask generating function
-      MGF = PyKCS11.CKG_MGF1_SHA256
-      # length of salt to be used for hashing
-      salt_length = 32
-
-      mechanism = PyKCS11.RSA_PSS_Mechanism(RSA_PSS, HASH, MGF, salt_length)
+      mechanism = PyKCS11.RSA_PSS_Mechanism(RSA_PSS_MECH,
+          RSA_PSS_HASH_SHA256, RSA_PSS_MGF_SHA256, RSA_PSS_SALT_LENGTH)
 
     elif PyKCS11.CKK[key_type] == 'CKK_EC':
       mechanism = PyKCS11.Mechanism(PyKCS11.CKM_ECDSA)
@@ -381,17 +381,8 @@ class HSM(object):
         [PyKCS11.CKA_KEY_TYPE])[0]
 
     if PyKCS11.CKK[key_type] == 'CKK_RSA':
-
-      # RSA-PSS with SHA256 hash to be used for signature generation
-      RSA_PSS = PyKCS11.CKM_SHA256_RSA_PKCS_PSS
-      # SHA256 hash to be used to digest the data
-      HASH = PyKCS11.CKM_SHA256
-      # Mask generating function
-      MGF = PyKCS11.CKG_MGF1_SHA256
-      # length of salt to be used for hashing
-      salt_length = 32
-
-      mechanism = PyKCS11.RSA_PSS_Mechanism(RSA_PSS, HASH, MGF, salt_length)
+      mechanism = PyKCS11.RSA_PSS_Mechanism(RSA_PSS_MECH,
+          RSA_PSS_HASH_SHA256, RSA_PSS_MGF_SHA256, RSA_PSS_SALT_LENGTH)
 
     elif PyKCS11.CKK[key_type] == 'CKK_EC':
       mechanism = PyKCS11.Mechanism(PyKCS11.CKM_ECDSA)
