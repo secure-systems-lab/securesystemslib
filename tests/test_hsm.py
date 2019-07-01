@@ -34,7 +34,7 @@ from cryptography.x509 import Certificate
 # To initialize SoftHSM for testing purposes!
 import PyKCS11
 # Library to interact with SoftHSM.
-PKCS11LIB = './tests/lib/libsofthsm2.so'
+PKCS11LIB = '/usr/local/lib/softhsm/libsofthsm2.so'
 
 logger = logging.getLogger('securesystemslib_test_hsm')
 
@@ -191,7 +191,7 @@ class TestHSM(unittest.TestCase):
 
 
   def test_get_HSM_session(self):
-    # Use the first HSM in teh list
+    # Use the first HSM in the list
     slot_info = self.SMARTCARD.get_available_HSMs()[0]
 
     # Test the function to start a session
