@@ -23,8 +23,18 @@ matrix:
       before_install:
         - sudo apt-get remove -y  --allow-remove-essential gnupg gnupg2
 
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install -y swig
+
 install:
   - pip install -U tox coveralls
+  - sudo wget https://dist.opendnssec.org/source/softhsm-2.3.0.tar.gz
+  - sudo tar -xzf softhsm-2.3.0.tar.gz
+  - cd softhsm-2.3.0
+  - sudo ./configure
+  - sudo make
+  - sudo make install
 
 script:
   - tox
