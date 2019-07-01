@@ -11,7 +11,7 @@
   The goal of this module is to support hardware security modules through
   the PKCS#11 standard.
 
-  This module use PyKCS11, a python wrapper (SWIG) for PKCS#11 modules
+  This module uses PyKCS11, a python wrapper (SWIG) for PKCS#11 modules
   to communicate with the cryptographic tokens
  """
 
@@ -39,7 +39,7 @@ from cryptography import x509
 class HSM(object):
   """
   <Purpose>
-    Provides a interface to use cryptographic tokens for various
+    Provides an interface to use cryptographic tokens for various
     cryptographic operations.
 
   <Arguments>
@@ -70,7 +70,7 @@ class HSM(object):
   def refresh(self):
     """
     <Purpose>
-    This method refresh the list of available cryptographic tokens.
+      This method refreshes the list of available cryptographic tokens.
 
     <Exceptions>
       securesystemslib.exceptions.NotFoundError, if the path of PKCS#11
@@ -83,7 +83,7 @@ class HSM(object):
           "Initialize it to use HSMs compatible with PKCS#11")
     # Try to load the PKCS11 library
     try:
-      # Load the PKCS#11 library and simultaneouslt update the list
+      # Load the PKCS#11 library and simultaneously update the list
       # of available HSM.
       self.PKCS11.load(self.PKCS11LIB)
     except PyKCS11.PyKCS11Error():
@@ -142,7 +142,7 @@ class HSM(object):
         element from the list returned by get_available_HSMs().
 
     <Exceptions>
-      securesystemlib.exceptions.InvaliNameError, if the requested
+      securesystemlib.exceptions.InvalidNameError, if the requested token
       is either not present or cannot be used.
     """
     try:
@@ -166,7 +166,7 @@ class HSM(object):
         PIN for the CKU_USER login.
 
     <Exceptions>
-      securesystemslib.exceptions.BasPasswordError, if the entered
+      securesystemslib.exceptions.BadPasswordError, if the entered
       user pin is invalid.
     """
 
@@ -226,7 +226,7 @@ class HSM(object):
 
     <Arguments>
       public_key_handle:
-        element of the list returne by get_public_key_object().
+        element of the list returned by get_public_key_objects().
 
     <Returns>
       'cryptography' public key object
@@ -277,7 +277,8 @@ class HSM(object):
 
     x509_value = self.session.getAttributeValue(x509_handle,
         [PyKCS11.CKA_VALUE])[0]
-    x509_certificate = x509.load_der_x509_certificate(bytes(x509_value), default_backend())
+    x509_certificate = x509.load_der_x509_certificate(
+        bytes(x509_value), default_backend())
 
     return x509_certificate
 
@@ -301,7 +302,7 @@ class HSM(object):
         'data' should be encoded/serialized before it is passed here.
 
       private_key_handle:
-        element form the list returned by the get_private_key_objects()
+        element from the list returned by the get_private_key_objects()
 
     <Exceptions>
       securesystemslib.exceptions.UnsupportedAlgorithmError, when the
