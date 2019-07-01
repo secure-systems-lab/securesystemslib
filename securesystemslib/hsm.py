@@ -431,6 +431,11 @@ class HSM(object):
     try:
       self.logout()
       self.close_session()
-    except:
-      # Exception is raised when user already logged out
-      self.close_session()
+    except PyKCS11.PyKCS11Error as error:
+      if error.__str__() == 'CKR_USER_NOT_LOGGED_IN (0x00000101)':
+        # When the user is already logged out.
+        logger.info(str(error))
+        self.close_session()
+      else:
+        # When the session does not exists.
+        logger.info(str(error))
