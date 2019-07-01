@@ -88,18 +88,14 @@ class HSM(object):
       library is not specified or the library is corrupt
     """
 
-    if self.PKCS11LIB is None:
-      raise securesystemslib.exceptions.NotFoundError(
-          "The PKCS11 Library not initialized in the settings.py file"
-          "Initialize it to use HSMs compatible with PKCS#11")
     # Try to load the PKCS11 library
     try:
       # Load the PKCS#11 library and simultaneously update the list
       # of available HSM.
       self.PKCS11.load(self.PKCS11LIB)
-    except PyKCS11.PyKCS11Error():
-      raise securesystemslib.exceptions.NotFoundError(
-          "PKS11 Library not found or is corrupt at " + repr(self.PKCS11LIB))
+    except PyKCS11.PyKCS11Error as error:
+      logger.info('PKS11 Library not found or is corrupt!')
+      raise securesystemslib.exceptions.NotFoundError(error.__str__())
 
 
 
