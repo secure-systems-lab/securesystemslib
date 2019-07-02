@@ -71,7 +71,7 @@ def load_HSMs():
 
 
 
-def load_private_keys(HSM_info):
+def load_private_keys(HSM_info, _user_pin):
   """
   <Purpose>
     Get list of handles of private keys stored in the HSM
@@ -94,9 +94,6 @@ def load_private_keys(HSM_info):
 
   # Use the HSM with the corresponding 'slot_info'
   smartcard.get_HSM_session(HSM_info['slot_id'])
-
-  _user_pin = securesystemslib.interface.get_password(
-    prompt="Enter the User Pin for the SmartCard")
 
   # Login to access the private key objects
   smartcard.login(_user_pin)
