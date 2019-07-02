@@ -93,7 +93,7 @@ def load_private_keys(HSM_info, _user_pin):
   """
 
   # Use the HSM with the corresponding 'slot_info'
-  smartcard.get_HSM_session(HSM_info['slot_id'])
+  smartcard.get_HSM_session(HSM_info)
 
   # Login to access the private key objects
   smartcard.login(_user_pin)
@@ -157,7 +157,7 @@ def load_public_keys(HSM_info):
     list of handle of all the available public keys
   """
   # Use the HSM with the corresponding 'slot_info'
-  smartcard.get_HSM_session(HSM_info['slot_id'])
+  smartcard.get_HSM_session(HSM_info)
 
   public_keys = smartcard.get_public_key_objects()
 
