@@ -100,9 +100,6 @@ def load_private_keys(HSM_info, _user_pin):
 
   private_keys = smartcard.get_private_key_objects()
 
-  # User Login only needed for retrieving 'private_keys'
-  smartcard.logout()
-
   return private_keys
 
 
