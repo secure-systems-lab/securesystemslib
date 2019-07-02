@@ -13,7 +13,7 @@
 
   This module uses PyKCS11, a python wrapper (SWIG) for PKCS#11 modules
   to communicate with the cryptographic tokens
- """
+"""
 
 # Help with Python 3 compatibility, where the print statement is a function, an
 # implicit relative import is invalid, and the '/' operator performs true
@@ -340,7 +340,7 @@ class HSM(object):
 
     signature = self.session.sign(private_key_handle, data,
         mechanism)
-    return bytearray(signature).hex()
+    return binascii.hexlify(bytes(signature)).decode('utf-8')
 
 
 
