@@ -228,6 +228,9 @@ class TestHSM(unittest.TestCase):
     self.SMARTCARD.get_HSM_session(slot_info)
     self.SMARTCARD.close()
 
+    # Using close() when session is invalid
+    self.SMARTCARD.close()
+
 
 
   def test_login_logout(self):
