@@ -172,11 +172,6 @@ class TestHSM(unittest.TestCase):
     self.assertRaises(securesystemslib.exceptions.NotFoundError,
         self.HSM, None)
 
-    try:
-      self.HSM('/NO LIBRARY HERE')
-    except:
-      pass
-
     # Initialize the library
     self.SMARTCARD = self.HSM(PKCS11LIB)
 
@@ -199,9 +194,16 @@ class TestHSM(unittest.TestCase):
 
     self.assertIsInstance(slot_info, dict)
 
-    # When a wrong input is provided by the user
+    # Modify slot_info to point to non existent token.
+    slot_info['slot_id'] = 9
+
+    # When the wrong token info is provided by the user
     self.assertRaises(securesystemslib.exceptions.InvalidNameError,
-                      self.SMARTCARD.get_HSM_session, dict())
+        self.SMARTCARD.get_HSM_session, slot_info)
+
+    # When a wrong input object is provided by the user
+    self.assertRaises(securesystemslib.exceptions.InvalidNameError,
+        self.SMARTCARD.get_HSM_session, dict())
 
 
 
