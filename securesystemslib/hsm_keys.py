@@ -32,6 +32,21 @@ from cryptography.hazmat.backends import default_backend
 smartcard = HSM(PKCS11LIB)
 
 
+def load_library(PKCS11LIB_USER):
+  """
+  <Purpose>
+    To load a custom library to interact with the hardware tokens.
+    By default, the path specified in settings.py is used.
+
+  <Exceptions>
+    securesystemslib.exceptions.NotFoundError, if the path of PKCS#11
+    library is not specified or the library is corrupt.
+  """
+
+  global smartcard
+  smartcard = HSM(PKCS11LIB_USER)
+
+
 def load_HSMs():
   """
   <Purpose>
