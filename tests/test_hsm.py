@@ -333,13 +333,18 @@ class TestHSM(unittest.TestCase):
     self.SMARTCARD.get_HSM_session(slot_info)
     self.SMARTCARD.login(_USER_PIN)
 
-    # Assuming the there are already at least key pair stored.
-    private_key = self.SMARTCARD.get_private_key_objects()[0]
+    # Two keys were stored on the SoftHSM - RSA and EC.
+    # Obtain both the key handles and generate signature
+    # using both the keys.
+    private_keys = self.SMARTCARD.get_private_key_objects()
 
-    signature = self.SMARTCARD.generate_signature(DATA, private_key)
+    signatures = []
+    signatures.append(self.SMARTCARD.generate_signature(DATA, private_keys[0]))
+    signatures.append(self.SMARTCARD.generate_signature(DATA, private_keys[1]))
 
     # Returns a HEX encoded string.
-    self.assertIsInstance(signature, str)
+    self.assertIsInstance(signatures[0], str)
+    self.assertIsInstance(signatures[1], str)
     self.SMARTCARD.close()
 
 
@@ -349,20 +354,38 @@ class TestHSM(unittest.TestCase):
     slot_info = self.SMARTCARD.get_available_HSMs()[0]
     self.SMARTCARD.get_HSM_session(slot_info)
     self.SMARTCARD.login(_USER_PIN)
-    # Generate the signature using a private key.
-    private_key = self.SMARTCARD.get_private_key_objects()[0]
-    signature = self.SMARTCARD.generate_signature(DATA, private_key)
-    # Verify the signature with the corresponding public key
-    public_key_object = self.SMARTCARD.get_public_key_objects()[0]
+    # Load public and private key objects stored on the HSM.
+    private_keys = self.SMARTCARD.get_private_key_objects()
+    public_keys = self.SMARTCARD.get_public_key_objects()
 
-    # Verification with data using which the signature was generated.
-    self.assertTrue(self.SMARTCARD.verify_signature(
-      DATA, signature, public_key_object))
+    # There are two key pairs stored on the HSM, RSA and ECDSA.
+    # Get the key types of the obtained and make the corresponding
+    # key-pairs.
+    key_type_pub = self.SMARTCARD.session.getAttributeValue(
+        public_keys[0], [PyKCS11.CKA_KEY_TYPE])[0]
+    key_type_priv = self.SMARTCARD.session.getAttributeValue(
+        private_keys[0], [PyKCS11.CKA_KEY_TYPE])[0]
 
-    # Verification with compromised data.
-    self.assertFalse(self.SMARTCARD.verify_signature(
-      DATA_COMPROMISED, signature, public_key_object))
-    self.SMARTCARD.close()
+    key_pairs = []
+    if key_type_pub == key_type_priv:
+      key_pairs.append((public_keys[0], private_keys[0]))
+      key_pairs.append((public_keys[1], private_keys[1]))
+    else:
+      key_pairs.append((public_keys[0], private_keys[1]))
+      key_pairs.append((public_keys[1], private_keys[0]))
+
+    # Create the signatures using both the key-pairs
+    for key_pair in key_pairs:
+      # Generate signature using private key.
+      signature = self.SMARTCARD.generate_signature(DATA, key_pair[1])
+
+      # Verify signature using public keys.
+      self.assertTrue(self.SMARTCARD.verify_signature(
+          DATA, signature, key_pair[0]))
+      
+      # Verification with compromised data.
+      self.assertFalse(self.SMARTCARD.verify_signature(
+          DATA_COMPROMISED, signature, key_pair[0]))
 
 
 
