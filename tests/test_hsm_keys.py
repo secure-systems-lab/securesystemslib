@@ -225,7 +225,7 @@ class TestHSM(unittest.TestCase):
     self.assertTrue(HSM.verify_signature(DATA,
         public_key, signature))
 
-    self.assertTrue(HSM.verify_signature(DATA_COMPROMISED,
+    self.assertFalse(HSM.verify_signature(DATA_COMPROMISED,
         public_key, signature))
 
 
