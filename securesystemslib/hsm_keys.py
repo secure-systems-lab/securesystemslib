@@ -17,7 +17,6 @@
 """
 
 from securesystemslib.hsm import HSM
-from securesystemslib.settings import PKCS11LIB
 import securesystemslib.interface
 import securesystemslib.exceptions
 import binascii
@@ -27,16 +26,11 @@ import binascii
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 
-# Create a global object of class HSM which would be used by
-# all the methods to perform various operations.
-smartcard = HSM(PKCS11LIB)
-
 
 def load_library(PKCS11LIB_USER):
   """
   <Purpose>
     To load a custom library to interact with the hardware tokens.
-    By default, the path specified in settings.py is used.
 
   <Exceptions>
     securesystemslib.exceptions.NotFoundError, if the path of PKCS#11
