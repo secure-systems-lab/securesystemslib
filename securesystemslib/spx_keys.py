@@ -177,12 +177,12 @@ def verify_signature(public_key, scheme, signature, data):
     >>> data = b'The quick brown fox jumps over the lazy dog'
     >>> scheme = 'spx'
     >>> signature, scheme = \
-        create_signature(public, private, data, scheme)
+        create_signature(private, data, scheme)
     >>> verify_signature(public, scheme, signature, data)
     True
     >>> bad_data = b'The sly brown fox jumps over the lazy dog'
     >>> bad_signature, scheme = \
-        create_signature(public, private, bad_data, scheme)
+        create_signature(private, bad_data, scheme)
     >>> verify_signature(public, scheme, bad_signature, data)
     False
 
