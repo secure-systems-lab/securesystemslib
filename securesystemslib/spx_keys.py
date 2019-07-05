@@ -118,12 +118,6 @@ def create_signature(private_key, data, scheme):
     True
     >>> scheme == 'spx'
     True
-    >>> signature, scheme = \
-        create_signature(private, data, scheme)
-    >>> SPX_SIG_BYTES_SCHEMA.matches(signature)
-    True
-    >>> scheme == 'spx'
-    True
 
   <Arguments>
     private:

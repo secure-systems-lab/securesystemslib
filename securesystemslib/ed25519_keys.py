@@ -201,12 +201,6 @@ def create_signature(public_key, private_key, data, scheme):
     True
     >>> scheme == 'ed25519'
     True
-    >>> signature, scheme = \
-        create_signature(public, private, data, scheme)
-    >>> securesystemslib.formats.ED25519SIGNATURE_SCHEMA.matches(signature)
-    True
-    >>> scheme == 'ed25519'
-    True
 
   <Arguments>
     public:
