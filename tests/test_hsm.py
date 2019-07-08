@@ -379,6 +379,10 @@ class TestHSM(unittest.TestCase):
       # Generate signature using private key.
       signature = self.SMARTCARD.generate_signature(DATA, key_pair[1])
 
+      # Verify signature using public keys.
+      self.assertTrue(self.SMARTCARD.verify_signature(
+          DATA, signature, key_pair[0]))
+      
       # Verification with compromised data.
       self.assertFalse(self.SMARTCARD.verify_signature(
           DATA_COMPROMISED, signature, key_pair[0]))
