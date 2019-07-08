@@ -222,9 +222,6 @@ class TestHSM(unittest.TestCase):
     private_key = HSM.load_private_keys(available_HSM, _USER_PIN)[0]
     signature = HSM.create_signature(DATA, private_key)
 
-    self.assertTrue(HSM.verify_signature(DATA,
-        public_key, signature))
-
     self.assertFalse(HSM.verify_signature(DATA_COMPROMISED,
         public_key, signature))
 
