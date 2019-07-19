@@ -16,7 +16,7 @@ Build-Depends:
  python3-cryptography,
  python3-colorama,
  python3-mock,
-Standards-Version: 4.3.0
+Standards-Version: 4.4.0
 Homepage: https://ssl.engineering.nyu.edu
 Vcs-Git: https://github.com/secure-systems-lab/securesystemslib.git
 Vcs-Browser: https://github.com/secure-systems-lab/securesystemslib/
