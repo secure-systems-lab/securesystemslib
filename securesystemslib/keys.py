@@ -121,6 +121,8 @@ _KEY_ID_HASH_ALGORITHM = 'sha256'
 # size 3072 provide security through 2031 and beyond.
 _DEFAULT_RSA_KEY_BITS = 3072
 
+_SUPPORTED_RSA_SIGNATURE_SCHEMES = ['rsassa-pss-sha256', 'rsa-pkcs1v15-sha256']
+
 logger = logging.getLogger('securesystemslib_keys')
 
 
@@ -166,7 +168,7 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-sha256'):
 
     scheme:
       The signature scheme used by the key.  It must be one of
-      ['rsassa-pss-sha256'].
+      ['rsassa-pss-sha256', 'rsa-pkcs1v15-sha256'].
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'bits' is improperly or invalid
@@ -693,10 +695,11 @@ def create_signature(key_dict, data):
   securesystemslib.formats.ANYKEY_SCHEMA.check_match(key_dict)
 
   # Signing the 'data' object requires a private key.  'rsassa-pss-sha256',
-  # 'ed25519', and 'ecdsa-sha2-nistp256' are the only signing schemes currently
-  # supported.  RSASSA-PSS keys and signatures can be generated and verified by
-  # pyca_crypto_keys.py, and Ed25519 keys by PyNaCl and PyCA's optimized, pure
-  # python implementation of Ed25519.
+  # 'rsa-pkcs1v15-sha256', 'ed25519', and 'ecdsa-sha2-nistp256' are the only
+  # signing schemes currently supported.
+  # RSASSA-PSS and RSA-PKCS1v15 keys and signatures can be generated and
+  # verified by pyca_crypto_keys.py, and Ed25519 keys by PyNaCl and PyCA's
+  # optimized, pure python implementation of Ed25519.
   signature = {}
   keytype = key_dict['keytype']
   scheme = key_dict['scheme']
@@ -706,7 +709,7 @@ def create_signature(key_dict, data):
   sig = None
 
   if keytype == 'rsa':
-    if scheme == 'rsassa-pss-sha256':
+    if scheme in _SUPPORTED_RSA_SIGNATURE_SCHEMES:
       private = private.replace('\r\n', '\n')
       sig, scheme = securesystemslib.pyca_crypto_keys.create_rsa_signature(
           private, data, scheme)
@@ -847,7 +850,7 @@ def verify_signature(key_dict, signature, data):
 
 
   if keytype == 'rsa':
-    if scheme == 'rsassa-pss-sha256':
+    if scheme in _SUPPORTED_RSA_SIGNATURE_SCHEMES:
       valid_signature = securesystemslib.pyca_crypto_keys.verify_rsa_signature(sig,
         scheme, public, data)
 
