@@ -34,13 +34,7 @@ import json
 import shutil
 import stat
 import sys
-
-# 'unittest2' required for testing under Python < 2.7.
-if sys.version_info >= (2, 7):
-  import unittest
-
-else:
-  import unittest2 as unittest
+import unittest
 
 # Use external backport 'mock' on versions under 3.3
 if sys.version_info >= (3, 3):

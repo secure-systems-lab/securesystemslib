@@ -1,6 +1,10 @@
 [run]
 branch = True
 
+omit =
+  */securesystemslib/_vendor/*
+  */tests/*
+  */site-packages/*
 
 [report]
 exclude_lines =
@@ -9,6 +13,3 @@ exclude_lines =
   def _prompt
   def __str__
   if __name__ == .__main__.:
-
-omit =
-  */securesystemslib/_vendor/*
