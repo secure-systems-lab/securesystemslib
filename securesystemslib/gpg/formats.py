@@ -18,8 +18,8 @@
   The schemas can be verified using the following methods inherited from
   securesystemslib.schema:
 
-  in_toto.gpg.formats.<SCHEMA>.check_match(<object to verify>)
-  in_toto.gpg.formats.<SCHEMA>.matches(<object to verify>)
+  securesystemslib.gpg.formats.<SCHEMA>.check_match(<object to verify>)
+  securesystemslib.gpg.formats.<SCHEMA>.matches(<object to verify>)
 
   `check_match` raises a securesystemslib.exceptions.FormatError and `matches`
   returns False if the verified object does not match the schema (True

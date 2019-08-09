@@ -22,9 +22,9 @@ import cryptography.hazmat.primitives.asymmetric.padding as padding
 import cryptography.hazmat.primitives.asymmetric.utils as utils
 import cryptography.exceptions
 
-import in_toto.gpg.util
-import in_toto.gpg.exceptions
-import in_toto.gpg.formats
+import securesystemslib.gpg.util
+import securesystemslib.gpg.exceptions
+import securesystemslib.gpg.formats
 
 
 def create_pubkey(pubkey_info):
@@ -47,7 +47,7 @@ def create_pubkey(pubkey_info):
     passed pubkey_info.
 
   """
-  in_toto.gpg.formats.RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
+  securesystemslib.gpg.formats.RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
   e = int(pubkey_info['keyval']['public']['e'], 16)
   n = int(pubkey_info['keyval']['public']['n'], 16)
@@ -67,8 +67,8 @@ def get_pubkey_params(data):
            in the fifth paragraph of section 5.5.2.
 
   <Exceptions>
-    in_toto.gpg.exceptions.PacketParsingError: if the public key parameters are
-    malformed
+    securesystemslib.gpg.exceptions.PacketParsingError:
+           if the public key parameters are malformed
 
   <Side Effects>
     None.
@@ -78,19 +78,20 @@ def get_pubkey_params(data):
   """
   ptr = 0
 
-  modulus_length = in_toto.gpg.util.get_mpi_length(data[ptr: ptr + 2])
+  modulus_length = securesystemslib.gpg.util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   modulus = data[ptr:ptr + modulus_length]
   if len(modulus) != modulus_length: # pragma: no cover
-    raise in_toto.gpg.exceptions.PacketParsingError(
+    raise securesystemslib.gpg.exceptions.PacketParsingError(
         "This modulus MPI was truncated!")
   ptr += modulus_length
 
-  exponent_e_length = in_toto.gpg.util.get_mpi_length(data[ptr: ptr + 2])
+  exponent_e_length = securesystemslib.gpg.util.get_mpi_length(
+      data[ptr: ptr + 2])
   ptr += 2
   exponent_e = data[ptr:ptr + exponent_e_length]
   if len(exponent_e) != exponent_e_length: # pragma: no cover
-    raise in_toto.gpg.exceptions.PacketParsingError(
+    raise securesystemslib.gpg.exceptions.PacketParsingError(
         "This e MPI has been truncated!")
 
   return {
@@ -110,8 +111,8 @@ def get_signature_params(data):
            in the third paragraph of section 5.2.2.
 
   <Exceptions>
-    in_toto.gpg.exceptions.PacketParsingError: if the public key parameters are
-    malformed
+    securesystemslib.gpg.exceptions.PacketParsingError:
+           if the public key parameters are malformed
 
   <Side Effects>
     None.
@@ -121,11 +122,11 @@ def get_signature_params(data):
   """
 
   ptr = 0
-  signature_length = in_toto.gpg.util.get_mpi_length(data[ptr:ptr+2])
+  signature_length = securesystemslib.gpg.util.get_mpi_length(data[ptr:ptr+2])
   ptr += 2
   signature = data[ptr:ptr + signature_length]
   if len(signature) != signature_length: # pragma: no cover
-    raise in_toto.gpg.exceptions.PacketParsingError(
+    raise securesystemslib.gpg.exceptions.PacketParsingError(
         "This signature was truncated!")
 
   return signature
@@ -151,8 +152,8 @@ def gpg_verify_signature(signature_object, pubkey_info, content,
             The signed bytes against which the signature is verified
 
     hash_algorithm_id:
-            one of SHA1, SHA256, SHA512 (see in_toto.gpg.constants) used to
-            verify the signature
+            one of SHA1, SHA256, SHA512 (see securesystemslib.gpg.constants)
+            used to verify the signature
             NOTE: Overrides any hash algorithm specification in "pubkey_info"'s
             "hashes" or "method" fields.
 
@@ -163,16 +164,16 @@ def gpg_verify_signature(signature_object, pubkey_info, content,
 
     ValueError:
       if the passed hash_algorithm_id is not supported (see
-      in_toto.gpg.util.get_hashing_class)
+      securesystemslib.gpg.util.get_hashing_class)
 
   <Returns>
     True if signature verification passes and False otherwise
 
   """
-  in_toto.gpg.formats.SIGNATURE_SCHEMA.check_match(signature_object)
-  in_toto.gpg.formats.RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
+  securesystemslib.gpg.formats.SIGNATURE_SCHEMA.check_match(signature_object)
+  securesystemslib.gpg.formats.RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
-  hasher = in_toto.gpg.util.get_hashing_class(hash_algorithm_id)
+  hasher = securesystemslib.gpg.util.get_hashing_class(hash_algorithm_id)
 
   pubkey_object = create_pubkey(pubkey_info)
 
@@ -188,7 +189,7 @@ def gpg_verify_signature(signature_object, pubkey_info, content,
     signature_object['signature'] = "{}{}".format(zero_pad,
         signature_object['signature'])
 
-  digest = in_toto.gpg.util.hash_object(
+  digest = securesystemslib.gpg.util.hash_object(
       binascii.unhexlify(signature_object['other_headers']),
       hasher(), content)
 

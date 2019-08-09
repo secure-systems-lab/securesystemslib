@@ -17,10 +17,10 @@
 """
 import logging
 
-import in_toto.gpg.rsa as rsa
-import in_toto.gpg.dsa as dsa
+import securesystemslib.gpg.rsa as rsa
+import securesystemslib.gpg.dsa as dsa
 
-import in_toto.process as process
+import securesystemslib.process as process
 
 log = logging.getLogger(__name__)
 

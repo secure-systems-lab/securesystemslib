@@ -21,9 +21,9 @@ import cryptography.hazmat.backends as backends
 import cryptography.hazmat.primitives.asymmetric.utils as dsautils
 import cryptography.exceptions
 
-import in_toto.gpg.util
-import in_toto.gpg.exceptions
-import in_toto.gpg.formats
+import securesystemslib.gpg.util
+import securesystemslib.gpg.exceptions
+import securesystemslib.gpg.formats
 
 
 def create_pubkey(pubkey_info):
@@ -46,7 +46,7 @@ def create_pubkey(pubkey_info):
     passed pubkey_info.
 
   """
-  in_toto.gpg.formats.DSA_PUBKEY_SCHEMA.check_match(pubkey_info)
+  securesystemslib.gpg.formats.DSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
   y = int(pubkey_info['keyval']['public']['y'], 16)
   g = int(pubkey_info['keyval']['public']['g'], 16)
@@ -70,8 +70,8 @@ def get_pubkey_params(data):
            in the fifth paragraph of section 5.5.2.
 
   <Exceptions>
-    in_toto.gpg.exceptions.PacketParsingError: if the public key parameters are
-    malformed
+    securesystemslib.gpg.exceptions.PacketParsingError:
+           if the public key parameters are malformed
 
   <Side Effects>
     None.
@@ -81,35 +81,37 @@ def get_pubkey_params(data):
   """
   ptr = 0
 
-  prime_p_length = in_toto.gpg.util.get_mpi_length(data[ptr: ptr + 2])
+  prime_p_length = securesystemslib.gpg.util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   prime_p = data[ptr:ptr + prime_p_length]
   if len(prime_p) != prime_p_length: # pragma: no cover
-    raise in_toto.gpg.exceptions.PacketParsingError(
+    raise securesystemslib.gpg.exceptions.PacketParsingError(
         "This MPI was truncated!")
   ptr += prime_p_length
 
-  group_order_q_length = in_toto.gpg.util.get_mpi_length(data[ptr: ptr + 2])
+  group_order_q_length = securesystemslib.gpg.util.get_mpi_length(
+      data[ptr: ptr + 2])
   ptr += 2
   group_order_q = data[ptr:ptr + group_order_q_length]
   if len(group_order_q) != group_order_q_length: # pragma: no cover
-    raise in_toto.gpg.exceptions.PacketParsingError(
+    raise securesystemslib.gpg.exceptions.PacketParsingError(
         "This MPI has been truncated!")
   ptr += group_order_q_length
 
-  generator_length = in_toto.gpg.util.get_mpi_length(data[ptr: ptr + 2])
+  generator_length = securesystemslib.gpg.util.get_mpi_length(
+      data[ptr: ptr + 2])
   ptr += 2
   generator = data[ptr:ptr + generator_length]
   if len(generator) != generator_length: # pragma: no cover
-    raise in_toto.gpg.exceptions.PacketParsingError(
+    raise securesystemslib.gpg.exceptions.PacketParsingError(
         "This MPI has been truncated!")
   ptr += generator_length
 
-  value_y_length = in_toto.gpg.util.get_mpi_length(data[ptr: ptr + 2])
+  value_y_length = securesystemslib.gpg.util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   value_y = data[ptr:ptr + value_y_length]
   if len(value_y) != value_y_length: # pragma: no cover
-    raise in_toto.gpg.exceptions.PacketParsingError(
+    raise securesystemslib.gpg.exceptions.PacketParsingError(
         "This MPI has been truncated!")
 
   return {
@@ -131,8 +133,8 @@ def get_signature_params(data):
            in the fourth paragraph of section 5.2.2.
 
   <Exceptions>
-    in_toto.gpg.exceptions.PacketParsingError: if the public key parameters are
-    malformed
+    securesystemslib.gpg.exceptions.PacketParsingError:
+           if the public key parameters are malformed
 
   <Side Effects>
     None.
@@ -141,19 +143,19 @@ def get_signature_params(data):
     The decoded signature buffer
   """
   ptr = 0
-  r_length = in_toto.gpg.util.get_mpi_length(data[ptr:ptr+2])
+  r_length = securesystemslib.gpg.util.get_mpi_length(data[ptr:ptr+2])
   ptr += 2
   r = data[ptr:ptr + r_length]
   if len(r) != r_length: # pragma: no cover
-    raise in_toto.gpg.exceptions.PacketParsingError(
+    raise securesystemslib.gpg.exceptions.PacketParsingError(
         "r-value truncated in signature")
   ptr += r_length
 
-  s_length = in_toto.gpg.util.get_mpi_length(data[ptr: ptr+2])
+  s_length = securesystemslib.gpg.util.get_mpi_length(data[ptr: ptr+2])
   ptr += 2
   s = data[ptr: ptr + s_length]
   if len(s) != s_length: # pragma: no cover
-    raise in_toto.gpg.exceptions.PacketParsingError(
+    raise securesystemslib.gpg.exceptions.PacketParsingError(
         "s-value truncated in signature")
 
   s = int(binascii.hexlify(s), 16)
@@ -181,8 +183,8 @@ def gpg_verify_signature(signature_object, pubkey_info, content,
             gpg.formats.DSA_PUBKEY_SCHEMA
 
     hash_algorithm_id:
-            one of SHA1, SHA256, SHA512 (see in_toto.gpg.constants) used to
-            verify the signature
+            one of SHA1, SHA256, SHA512 (see securesystemslib.gpg.constants)
+            used to verify the signature
             NOTE: Overrides any hash algorithm specification in "pubkey_info"'s
             "hashes" or "method" fields.
 
@@ -196,20 +198,20 @@ def gpg_verify_signature(signature_object, pubkey_info, content,
 
     ValueError:
       if the passed hash_algorithm_id is not supported (see
-      in_toto.gpg.util.get_hashing_class)
+      securesystemslib.gpg.util.get_hashing_class)
 
   <Returns>
     True if signature verification passes and False otherwise
 
   """
-  in_toto.gpg.formats.SIGNATURE_SCHEMA.check_match(signature_object)
-  in_toto.gpg.formats.DSA_PUBKEY_SCHEMA.check_match(pubkey_info)
+  securesystemslib.gpg.formats.SIGNATURE_SCHEMA.check_match(signature_object)
+  securesystemslib.gpg.formats.DSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
-  hasher = in_toto.gpg.util.get_hashing_class(hash_algorithm_id)
+  hasher = securesystemslib.gpg.util.get_hashing_class(hash_algorithm_id)
 
   pubkey_object = create_pubkey(pubkey_info)
 
-  digest = in_toto.gpg.util.hash_object(
+  digest = securesystemslib.gpg.util.hash_object(
       binascii.unhexlify(signature_object['other_headers']),
       hasher(), content)
 

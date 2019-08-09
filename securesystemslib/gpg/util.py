@@ -24,9 +24,9 @@ from distutils.version import StrictVersion # pylint: disable=no-name-in-module,
 import cryptography.hazmat.backends as backends
 import cryptography.hazmat.primitives.hashes as hashing
 
-import in_toto.gpg.exceptions
-import in_toto.process
-import in_toto.gpg.constants
+import securesystemslib.gpg.exceptions
+import securesystemslib.process
+import securesystemslib.gpg.constants
 
 log = logging.getLogger(__name__)
 
@@ -101,10 +101,11 @@ def parse_packet_header(data, expected_type=None):
 
     expected_type: (optional)
             Used to error out if the packet does not have the expected
-            type. See in_toto.gpg.constants.PACKET_TYPE_* for available types.
+            type. See securesystemslib.gpg.constants.PACKET_TYPE_* for
+            available types.
 
   <Exceptions>
-    in_toto.gpg.exceptions.PacketParsingError
+    securesystemslib.gpg.exceptions.PacketParsingError
             If the new format packet length encodes a partial body length
             If the old format packet length encodes an indeterminate length
             If header or body length could not be determined
@@ -144,8 +145,8 @@ def parse_packet_header(data, expected_type=None):
       body_len = (data[1] - 192 << 8) + data[2] + 192
 
     elif data[1] >= 224 and data[1] < 255:
-      raise in_toto.gpg.exceptions.PacketParsingError("New length format "
-          " packets of partial body lengths are not supported")
+      raise securesystemslib.gpg.exceptions.PacketParsingError("New length "
+          "format packets of partial body lengths are not supported")
 
     elif data[1] == 255:
       header_len = 6
@@ -153,7 +154,8 @@ def parse_packet_header(data, expected_type=None):
 
     else: # pragma: no cover
       # Unreachable: octet must be between 0 and 255
-      raise in_toto.gpg.exceptions.PacketParsingError("Invalid new length")
+      raise securesystemslib.gpg.exceptions.PacketParsingError("Invalid new "
+          "length")
 
   else:
     # In old format packet lengths the packet type is encoded in Bits 5-2 of
@@ -176,21 +178,22 @@ def parse_packet_header(data, expected_type=None):
       body_len = struct.unpack(">I", data[1:header_len])[0]
 
     elif length_type == 3:
-      raise in_toto.gpg.exceptions.PacketParsingError("Old length format "
-          "packets of indeterminate length are not supported")
+      raise securesystemslib.gpg.exceptions.PacketParsingError("Old length "
+          "format packets of indeterminate length are not supported")
 
     else: # pragma: no cover (unreachable)
       # Unreachable: bits 1-0 must be one of 0 to 3
-      raise in_toto.gpg.exceptions.PacketParsingError("Invalid old length")
+      raise securesystemslib.gpg.exceptions.PacketParsingError("Invalid old "
+          "length")
 
   if header_len == None or body_len == None: # pragma: no cover
     # Unreachable: One of above must have assigned lengths or raised error
-    raise in_toto.gpg.exceptions.PacketParsingError("Could not determine "
-        "packet length")
+    raise securesystemslib.gpg.exceptions.PacketParsingError("Could not "
+        "determine packet length")
 
   if expected_type != None and packet_type != expected_type:
-    raise in_toto.gpg.exceptions.PacketParsingError("Expected packet {}, "
-        "but got {} instead!".format(expected_type, packet_type))
+    raise securesystemslib.gpg.exceptions.PacketParsingError("Expected packet "
+        "{}, but got {} instead!".format(expected_type, packet_type))
 
   return packet_type, header_len, body_len, header_len + body_len
 
@@ -240,7 +243,8 @@ def parse_subpacket_header(data):
     length = struct.unpack(">I", data[1:length_len])[0]
 
   else: # pragma: no cover (unreachable)
-    raise in_toto.gpg.exceptions.PacketParsingError("Invalid subpacket header")
+    raise securesystemslib.gpg.exceptions.PacketParsingError("Invalid "
+        "subpacket header")
 
   return data[length_len], length_len + 1, length - 1, length_len + length
 
@@ -292,9 +296,10 @@ def get_version():
     Version number string, e.g. "2.1.22"
 
   """
-  command = in_toto.gpg.constants.GPG_VERSION_COMMAND
-  process = in_toto.process.run(command, stdout=in_toto.process.PIPE,
-    stderr=in_toto.process.PIPE, universal_newlines=True)
+  command = securesystemslib.gpg.constants.GPG_VERSION_COMMAND
+  process = securesystemslib.process.run(command,
+      stdout=securesystemslib.process.PIPE,
+      stderr=securesystemslib.process.PIPE, universal_newlines=True)
 
   full_version_info = process.stdout
   version_string = re.search(r'(\d\.\d\.\d+)', full_version_info).group(1)
@@ -317,7 +322,7 @@ def is_version_fully_supported():
   installed_version = get_version()
   # Excluded so that coverage does not vary in different test environments
   if (StrictVersion(installed_version) >=
-      StrictVersion(in_toto.gpg.constants.FULLY_SUPPORTED_MIN_VERSION)): # pragma: no cover
+      StrictVersion(securesystemslib.gpg.constants.FULLY_SUPPORTED_MIN_VERSION)): # pragma: no cover
     return True
 
   else: # pragma: no cover
@@ -332,7 +337,7 @@ def get_hashing_class(hash_algorithm_id):
 
   <Arguments>
     hash_algorithm_id:
-            one of SHA1, SHA256, SHA512 (see in_toto.gpg.constants)
+            one of SHA1, SHA256, SHA512 (see securesystemslib.gpg.constants)
 
   <Exceptions>
     ValueError
@@ -342,8 +347,9 @@ def get_hashing_class(hash_algorithm_id):
     A pyca/cryptography hashing class
 
   """
-  supported_hashing_algorithms = [in_toto.gpg.constants.SHA1,
-      in_toto.gpg.constants.SHA256, in_toto.gpg.constants.SHA512]
+  supported_hashing_algorithms = [securesystemslib.gpg.constants.SHA1,
+      securesystemslib.gpg.constants.SHA256,
+      securesystemslib.gpg.constants.SHA512]
   corresponding_hashing_classes = [hashing.SHA1, hashing.SHA256,
       hashing.SHA512]
 

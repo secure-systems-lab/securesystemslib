@@ -22,11 +22,11 @@ import binascii
 import logging
 import collections
 
-import in_toto.gpg.util
-from in_toto.gpg.exceptions import (PacketVersionNotSupportedError,
+import securesystemslib.gpg.util
+from securesystemslib.gpg.exceptions import (PacketVersionNotSupportedError,
     SignatureAlgorithmNotSupportedError, KeyNotFoundError, PacketParsingError)
 
-from in_toto.gpg.constants import (
+from securesystemslib.gpg.constants import (
     PACKET_TYPE_PRIMARY_KEY, PACKET_TYPE_USER_ID, PACKET_TYPE_USER_ATTR,
     PACKET_TYPE_SUB_KEY, PACKET_TYPE_SIGNATURE,
     SUPPORTED_PUBKEY_PACKET_VERSIONS, SIGNATURE_TYPE_BINARY,
@@ -36,7 +36,7 @@ from in_toto.gpg.constants import (
     SHA1,SHA256, SHA512, KEY_EXPIRATION_SUBPACKET, PRIMARY_USERID_SUBPACKET,
     SIG_CREATION_SUBPACKET)
 
-from in_toto.gpg.formats import GPG_HASH_ALGORITHM_STRING
+from securesystemslib.gpg.formats import GPG_HASH_ALGORITHM_STRING
 
 import securesystemslib.formats
 
@@ -55,7 +55,7 @@ def parse_pubkey_payload(data):
           (version 4) of the RFC.
 
           NOTE: The payload can be parsed from a full key packet (header +
-          payload) by using in_toto.gpg.util.parse_packet_header.
+          payload) by using securesystemslib.gpg.util.parse_packet_header.
 
           WARNING: this doesn't support armored pubkey packets, so use with
           care. pubkey packets are a little bit more complicated than the
@@ -65,19 +65,19 @@ def parse_pubkey_payload(data):
     ValueError
           If the passed public key data is empty.
 
-    in_toto.gpg.exceptions.PacketVersionNotSupportedError
+    securesystemslib.gpg.exceptions.PacketVersionNotSupportedError
           If the packet version does not match
-          in_toto.gpg.constants.SUPPORTED_PUBKEY_PACKET_VERSIONS
+          securesystemslib.gpg.constants.SUPPORTED_PUBKEY_PACKET_VERSIONS
 
-    in_toto.gpg.exceptions.SignatureAlgorithmNotSupportedError
+    securesystemslib.gpg.exceptions.SignatureAlgorithmNotSupportedError
           If the signature algorithm does not match one of
-          in_toto.gpg.constants.SUPPORTED_SIGNATURE_ALGORITHMS
+          securesystemslib.gpg.constants.SUPPORTED_SIGNATURE_ALGORITHMS
 
   <Side Effects>
     None.
 
   <Returns>
-    A public key in the format in_toto.gpg.formats.PUBKEY_SCHEMA
+    A public key in the format securesystemslib.gpg.formats.PUBKEY_SCHEMA
 
   """
   if not data:
@@ -119,7 +119,7 @@ def parse_pubkey_payload(data):
   keyinfo['type'] = SUPPORTED_SIGNATURE_ALGORITHMS[algorithm]['type']
   keyinfo['method'] = SUPPORTED_SIGNATURE_ALGORITHMS[algorithm]['method']
   handler = SIGNATURE_HANDLERS[keyinfo['type']]
-  keyinfo['keyid'] = in_toto.gpg.util.compute_keyid(data)
+  keyinfo['keyid'] = securesystemslib.gpg.util.compute_keyid(data)
   key_params = handler.get_pubkey_params(data[ptr:])
 
   return {
@@ -152,7 +152,7 @@ def parse_pubkey_bundle(data):
           Public key data as written to stdout by GPG_EXPORT_PUBKEY_COMMAND.
 
   <Exceptions>
-    in_toto.gpg.exceptions.PacketParsingError
+    securesystemslib.gpg.exceptions.PacketParsingError
           If data is empty.
           If data cannot be parsed.
 
@@ -184,7 +184,7 @@ def parse_pubkey_bundle(data):
   while position < len(data):
     try:
       packet_type, header_len, body_len, packet_length = \
-          in_toto.gpg.util.parse_packet_header(data[position:])
+          securesystemslib.gpg.util.parse_packet_header(data[position:])
 
       packet = data[position:position+packet_length]
       payload = packet[header_len:]
@@ -290,7 +290,7 @@ def _assign_certified_key_info(bundle):
     None.
 
   <Returns>
-    A public key in the format in_toto.gpg.formats.PUBKEY_SCHEMA.
+    A public key in the format securesystemslib.gpg.formats.PUBKEY_SCHEMA.
 
   """
   # Create handler shortcut
@@ -411,7 +411,7 @@ def _get_verified_subkeys(bundle):
 
   <Returns>
     A dictionary of public keys in the format
-    in_toto.gpg.formats.PUBKEY_SCHEMA, with keyids as dict keys.
+    securesystemslib.gpg.formats.PUBKEY_SCHEMA, with keyids as dict keys.
 
   """
   # Create handler shortcut
@@ -502,17 +502,17 @@ def get_pubkey_bundle(data, keyid):
   <Arguments>
     data:
           Public key data as written to stdout by
-          in_toto.gpg.constants.GPG_EXPORT_PUBKEY_COMMAND.
+          securesystemslib.gpg.constants.GPG_EXPORT_PUBKEY_COMMAND.
 
     keyid:
           The keyid of the master key or one of its subkeys expected to be
           contained in the passed gpg data.
 
   <Exceptions>
-    in_toto.gpg.exceptions.PacketParsingError
+    securesystemslib.gpg.exceptions.PacketParsingError
           If the key data could not be parsed
 
-    in_toto.gpg.exceptions.KeyNotFoundError
+    securesystemslib.gpg.exceptions.KeyNotFoundError
           If the passed data is empty.
           If no master key or subkeys could be found that matches the passed
           keyid.
@@ -525,8 +525,8 @@ def get_pubkey_bundle(data, keyid):
     None.
 
   <Returns>
-    A public key in the format in_toto.gpg.formats.PUBKEY_SCHEMA with optional
-    subkeys.
+    A public key in the format securesystemslib.gpg.formats.PUBKEY_SCHEMA with
+    optional subkeys.
 
   """
   securesystemslib.formats.KEYID_SCHEMA.check_match(keyid)
@@ -583,12 +583,12 @@ def parse_signature_packet(data, supported_signature_types=None,
            section 5.2 (and 5.2.3.1).
     supported_signature_types: (optional)
           a set of supported signature_types, the signature packet may be
-          (see in_toto.gpg.constants for available types). If None is specified
-          the signature packet must be of type SIGNATURE_TYPE_BINARY.
+          (see securesystemslib.gpg.constants for available types). If None is
+          specified the signature packet must be of type SIGNATURE_TYPE_BINARY.
     supported_hash_algorithms: (optional)
           a set of supported hash algorithm ids, the signature packet
           may use. Available ids are SHA1, SHA256, SHA512 (see
-          in_toto.gpg.constants). If None is specified, the signature
+          securesystemslib.gpg.constants). If None is specified, the signature
           packet must use SHA256.
     include_info: (optional)
           a boolean that indicates whether an opaque dictionary should be
@@ -604,8 +604,9 @@ def parse_signature_packet(data, supported_signature_types=None,
     None.
 
   <Returns>
-    A signature dictionary matching in_toto.gpg.formats.SIGNATURE_SCHEMA with
-    the following special characteristics:
+    A signature dictionary matching
+    securesystemslib.gpg.formats.SIGNATURE_SCHEMA with the following special
+    characteristics:
      - The "keyid" field is an empty string if it cannot be determined
      - The "short_keyid" is not added if it cannot be determined
      - At least one of non-empty "keyid" or "short_keyid" are part of the
@@ -618,7 +619,7 @@ def parse_signature_packet(data, supported_signature_types=None,
   if not supported_hash_algorithms:
     supported_hash_algorithms = {SHA256}
 
-  _, header_len, _, packet_len = in_toto.gpg.util.parse_packet_header(
+  _, header_len, _, packet_len = securesystemslib.gpg.util.parse_packet_header(
       data, PACKET_TYPE_SIGNATURE)
 
   data = bytearray(data[header_len:packet_len])
@@ -666,7 +667,8 @@ def parse_signature_packet(data, supported_signature_types=None,
   hashed_octet_count = struct.unpack(">H", data[ptr:ptr+2])[0]
   ptr += 2
   hashed_subpackets = data[ptr:ptr+hashed_octet_count]
-  hashed_subpacket_info = in_toto.gpg.util.parse_subpackets(hashed_subpackets)
+  hashed_subpacket_info = securesystemslib.gpg.util.parse_subpackets(
+      hashed_subpackets)
 
   # Check whether we were actually able to read this much hashed octets
   if len(hashed_subpackets) != hashed_octet_count: # pragma: no cover
@@ -680,7 +682,7 @@ def parse_signature_packet(data, supported_signature_types=None,
   ptr += 2
 
   unhashed_subpackets = data[ptr:ptr+unhashed_octet_count]
-  unhashed_subpacket_info = in_toto.gpg.util.parse_subpackets(
+  unhashed_subpacket_info = securesystemslib.gpg.util.parse_subpackets(
       unhashed_subpackets)
 
   ptr += unhashed_octet_count
