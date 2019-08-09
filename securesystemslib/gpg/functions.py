@@ -28,7 +28,6 @@ import in_toto.process
 
 import securesystemslib.formats
 
-# Inherits from in_toto base logger (c.f. in_toto.log)
 log = logging.getLogger(__name__)
 
 
@@ -211,7 +210,7 @@ def gpg_export_pubkey(keyid, homedir=None):
   <Purpose>
     Calls gpg2 command line utility to export the gpg public key bundle
     identified by the passed keyid from the gpg keyring at the passed homedir
-    in a format suitable for in-toto.
+    in a securesystemslib-style format.
 
     Note: The identified key is exported including the corresponding master
     key and all subkeys.

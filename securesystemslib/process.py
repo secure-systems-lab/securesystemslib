@@ -17,7 +17,7 @@
   Provide a common interface for Python's subprocess module to:
 
   - require the Py3 subprocess backport `subprocess32` on Python2,
-  - in-toto namespace subprocess constants (DEVNULL, PIPE) and
+  - namespace subprocess constants (DEVNULL, PIPE) and
   - provide a custom `subprocess.run` wrapper
   - provide a special `run_duplicate_streams` function
 
@@ -45,7 +45,6 @@ DEVNULL = subprocess.DEVNULL
 PIPE = subprocess.PIPE
 
 
-# Inherits from in_toto base logger (c.f. in_toto.log)
 log = logging.getLogger(__name__)
 
 

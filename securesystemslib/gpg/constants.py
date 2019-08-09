@@ -22,7 +22,6 @@ import in_toto.gpg.dsa as dsa
 
 import in_toto.process as process
 
-# Inherits from in_toto base logger (c.f. in_toto.log)
 log = logging.getLogger(__name__)
 
 # By default, we assume and test that gpg2 exists. Otherwise, we assume gpg

@@ -40,7 +40,6 @@ from in_toto.gpg.formats import GPG_HASH_ALGORITHM_STRING
 
 import securesystemslib.formats
 
-# Inherits from in_toto base logger (c.f. in_toto.log)
 log = logging.getLogger(__name__)
 
 

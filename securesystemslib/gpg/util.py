@@ -28,7 +28,6 @@ import in_toto.gpg.exceptions
 import in_toto.process
 import in_toto.gpg.constants
 
-# Inherits from in_toto base logger (c.f. in_toto.log)
 log = logging.getLogger(__name__)
 
 
