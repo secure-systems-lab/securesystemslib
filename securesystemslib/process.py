@@ -39,10 +39,11 @@ else: # pragma: no cover
 import in_toto.formats as formats
 
 
-# Constants.
-from in_toto.settings import SUBPROCESS_TIMEOUT
 DEVNULL = subprocess.DEVNULL
 PIPE = subprocess.PIPE
+# NOTE: If changed programatically, please do via this process module, e.g.
+# securesystemslib.process.SUBPROCESS_TIMEOUT = <seconds>
+from securesystemslib.settings import SUBPROCESS_TIMEOUT
 
 
 log = logging.getLogger(__name__)
@@ -55,7 +56,7 @@ def run(cmd, check=True, timeout=SUBPROCESS_TIMEOUT, **kwargs):
     https://github.com/python/cpython/blob/3.5/Lib/subprocess.py#L352-L399)
     where:
 
-    * `timeout` has a default (see in_toto.settings.SUBPROCESS_TIMEOUT),
+    * `timeout` has a default (securesystemslib.settings.SUBPROCESS_TIMEOUT),
     * `check` is `True` by default,
     * there is only one positional argument, i.e. `cmd` that can be either
       a str (will be split with shlex) or a list of str and
@@ -75,7 +76,7 @@ def run(cmd, check=True, timeout=SUBPROCESS_TIMEOUT, **kwargs):
             exception hold the arguments, the exit code, and stdout and stderr
             if they were captured."
 
-    timeout: (default see settings.SUBPROCESS_TIMEOUT)
+    timeout: (default see securesystemslib.settings.SUBPROCESS_TIMEOUT)
             "The timeout argument is passed to Popen.communicate(). If the
             timeout expires, the child process will be killed and waited for.
             The TimeoutExpired exception will be re-raised after the child
