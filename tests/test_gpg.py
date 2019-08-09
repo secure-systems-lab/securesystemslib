@@ -438,7 +438,12 @@ class TestCommon(unittest.TestCase):
 
 
   def test_get_pubkey_bundle_errors(self):
-    """Pass wrong keyid with valid gpg data to trigger KeyNotFoundError. """
+    """Test correct error raising in get_pubkey_bundle. """
+    # Call without key data
+    with self.assertRaises(KeyNotFoundError):
+      get_pubkey_bundle(None, "deadbeef")
+
+    # Pass wrong keyid with valid gpg data to trigger KeyNotFoundError.
     not_associated_keyid = "8465A1E2E0FB2B40ADB2478E18FB3F537E0C8A17"
     with self.assertRaises(KeyNotFoundError):
       get_pubkey_bundle(self.raw_key_data, not_associated_keyid)
@@ -496,6 +501,10 @@ class TestGPGRSA(unittest.TestCase):
     os.chdir(self.working_dir)
     shutil.rmtree(self.test_dir)
 
+  def test_gpg_export_pubkey_error(self):
+    """Test correct error is raised if function called incorrectly. """
+    with self.assertRaises(ValueError):
+      gpg_export_pubkey("not-a-key-id")
 
   def test_gpg_export_pubkey(self):
     """ export a public key and make sure the parameters are the right ones:

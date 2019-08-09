@@ -56,6 +56,7 @@ def check_usable_gpg():
 if __name__ == '__main__':
   check_usable_gpg()
   suite = unittest.TestLoader().discover("tests", top_level_dir=".")
-  all_tests_passed = unittest.TextTestRunner(verbosity=1).run(suite).wasSuccessful()
+  all_tests_passed = unittest.TextTestRunner(
+      verbosity=1, buffer=True).run(suite).wasSuccessful()
   if not all_tests_passed:
     sys.exit(1)
