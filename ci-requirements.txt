@@ -2,6 +2,7 @@ cryptography
 pynacl
 six
 colorama
+python-dateutil
 subprocess32; python_version < '3'
 mock; python_version < '3.3'
 # Pin to versions supported by `coveralls` (see .travis.yml)
