@@ -531,6 +531,8 @@ ANYROLE_SCHEMA = SCHEMA.OneOf([ROOT_SCHEMA, TARGETS_SCHEMA, SNAPSHOT_SCHEMA,
                                TIMESTAMP_SCHEMA, MIRROR_SCHEMA])
 
 
+ANY_STRING_SCHEMA = SCHEMA.AnyString()
+LIST_OF_ANY_STRING_SCHEMA = SCHEMA.ListOf(ANY_STRING_SCHEMA)
 
 def datetime_to_unix_timestamp(datetime_object):
   """
