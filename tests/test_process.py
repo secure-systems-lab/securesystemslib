@@ -99,14 +99,17 @@ class Test_Process(unittest.TestCase):
     os.remove(stderr_fn)
 
 
-  def test_run_duplicate_streams_arg_return_code(self):
-    """Test command arg as string and list and return code. """
+  def test_run_cmd_arg_return_code(self):
+    """Test command arg as string and list using return code. """
     cmd_str = ("python -c \""
         "import sys;"
         "sys.exit(100)\"")
     cmd_list = shlex.split(cmd_str)
 
     for cmd in [cmd_str, cmd_list]:
+      proc = securesystemslib.process.run(cmd, check=False)
+      self.assertEqual(proc.returncode, 100)
+
       return_code, _, _ = securesystemslib.process.run_duplicate_streams(cmd)
       self.assertEqual(return_code, 100)
 
