@@ -23,8 +23,8 @@ import cryptography.exceptions
 
 import securesystemslib.gpg.util
 import securesystemslib.gpg.exceptions
-import securesystemslib.gpg.formats
 
+import securesystemslib.formats
 
 def create_pubkey(pubkey_info):
   """
@@ -35,18 +35,18 @@ def create_pubkey(pubkey_info):
   <Arguments>
     pubkey_info:
             The DSA pubkey info dictionary as specified by
-            gpg.formats.DSA_PUBKEY_SCHEMA
+            securesystemslib.formats.GPG_DSA_PUBKEY_SCHEMA
 
   <Exceptions>
     securesystemslib.exceptions.FormatError if
-      pubkey_info does not match gpg.formats.DSA_PUBKEY_SCHEMA
+      pubkey_info does not match securesystemslib.formats.GPG_DSA_PUBKEY_SCHEMA
 
   <Returns>
     A cryptography.hazmat.primitives.asymmetric.dsa.DSAPublicKey based on the
     passed pubkey_info.
 
   """
-  securesystemslib.gpg.formats.DSA_PUBKEY_SCHEMA.check_match(pubkey_info)
+  securesystemslib.formats.GPG_DSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
   y = int(pubkey_info['keyval']['public']['y'], 16)
   g = int(pubkey_info['keyval']['public']['g'], 16)
@@ -176,11 +176,11 @@ def gpg_verify_signature(signature_object, pubkey_info, content,
   <Arguments>
     signature_object:
             A signature dictionary as specified by
-            gpg.formats.SIGNATURE_SCHEMA
+            securesystemslib.formats.GPG_SIGNATURE_SCHEMA
 
     pubkey_info:
             The DSA public key info dictionary as specified by
-            gpg.formats.DSA_PUBKEY_SCHEMA
+            securesystemslib.formats.GPG_DSA_PUBKEY_SCHEMA
 
     hash_algorithm_id:
             one of SHA1, SHA256, SHA512 (see securesystemslib.gpg.constants)
@@ -193,8 +193,8 @@ def gpg_verify_signature(signature_object, pubkey_info, content,
 
   <Exceptions>
     securesystemslib.exceptions.FormatError if:
-      signature_object does not match gpg.formats.SIGNATURE_SCHEMA
-      pubkey_info does not match gpg.formats.DSA_PUBKEY_SCHEMA
+      signature_object does not match securesystemslib.formats.GPG_SIGNATURE_SCHEMA
+      pubkey_info does not match securesystemslib.formats.GPG_DSA_PUBKEY_SCHEMA
 
     ValueError:
       if the passed hash_algorithm_id is not supported (see
@@ -204,8 +204,8 @@ def gpg_verify_signature(signature_object, pubkey_info, content,
     True if signature verification passes and False otherwise
 
   """
-  securesystemslib.gpg.formats.SIGNATURE_SCHEMA.check_match(signature_object)
-  securesystemslib.gpg.formats.DSA_PUBKEY_SCHEMA.check_match(pubkey_info)
+  securesystemslib.formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
+  securesystemslib.formats.GPG_DSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
   hasher = securesystemslib.gpg.util.get_hashing_class(hash_algorithm_id)
 

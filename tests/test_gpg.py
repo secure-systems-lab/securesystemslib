@@ -54,7 +54,7 @@ from securesystemslib.gpg.constants import (SHA1, SHA256, SHA512,
 from securesystemslib.gpg.exceptions import (PacketParsingError,
     PacketVersionNotSupportedError, SignatureAlgorithmNotSupportedError,
     KeyNotFoundError, CommandError, KeyExpirationError)
-from securesystemslib.gpg.formats import PUBKEY_SCHEMA
+from securesystemslib.formats import GPG_PUBKEY_SCHEMA
 
 
 @unittest.skipIf(os.getenv("TEST_SKIP_GPG"), "gpg not found")
@@ -252,8 +252,8 @@ class TestCommon(unittest.TestCase):
         gpg --list-packets
     ```
     """
-    # Expect parsed primary key matching PUBKEY_SCHEMA
-    self.assertTrue(PUBKEY_SCHEMA.matches(
+    # Expect parsed primary key matching GPG_PUBKEY_SCHEMA
+    self.assertTrue(GPG_PUBKEY_SCHEMA.matches(
          self.raw_key_bundle[PACKET_TYPE_PRIMARY_KEY]["key"]))
 
     # Parse corresponding raw packet for comparison

@@ -36,8 +36,6 @@ from securesystemslib.gpg.constants import (
     SHA1,SHA256, SHA512, KEY_EXPIRATION_SUBPACKET, PRIMARY_USERID_SUBPACKET,
     SIG_CREATION_SUBPACKET)
 
-from securesystemslib.gpg.formats import GPG_HASH_ALGORITHM_STRING
-
 import securesystemslib.formats
 
 log = logging.getLogger(__name__)
@@ -77,7 +75,7 @@ def parse_pubkey_payload(data):
     None.
 
   <Returns>
-    A public key in the format securesystemslib.gpg.formats.PUBKEY_SCHEMA
+    A public key in the format securesystemslib.formats.GPG_PUBKEY_SCHEMA
 
   """
   if not data:
@@ -125,7 +123,7 @@ def parse_pubkey_payload(data):
   return {
     "method": keyinfo['method'],
     "type": keyinfo['type'],
-    "hashes": [GPG_HASH_ALGORITHM_STRING],
+    "hashes": [securesystemslib.formats.GPG_HASH_ALGORITHM_STRING],
     "creation_time": time_of_creation[0],
     "keyid": keyinfo['keyid'],
     "keyval" : {
@@ -290,7 +288,7 @@ def _assign_certified_key_info(bundle):
     None.
 
   <Returns>
-    A public key in the format securesystemslib.gpg.formats.PUBKEY_SCHEMA.
+    A public key in the format securesystemslib.formats.GPG_PUBKEY_SCHEMA.
 
   """
   # Create handler shortcut
@@ -411,7 +409,7 @@ def _get_verified_subkeys(bundle):
 
   <Returns>
     A dictionary of public keys in the format
-    securesystemslib.gpg.formats.PUBKEY_SCHEMA, with keyids as dict keys.
+    securesystemslib.formats.GPG_PUBKEY_SCHEMA, with keyids as dict keys.
 
   """
   # Create handler shortcut
@@ -525,7 +523,7 @@ def get_pubkey_bundle(data, keyid):
     None.
 
   <Returns>
-    A public key in the format securesystemslib.gpg.formats.PUBKEY_SCHEMA with
+    A public key in the format securesystemslib.formats.GPG_PUBKEY_SCHEMA with
     optional subkeys.
 
   """
@@ -605,7 +603,7 @@ def parse_signature_packet(data, supported_signature_types=None,
 
   <Returns>
     A signature dictionary matching
-    securesystemslib.gpg.formats.SIGNATURE_SCHEMA with the following special
+    securesystemslib.formats.GPG_SIGNATURE_SCHEMA with the following special
     characteristics:
      - The "keyid" field is an empty string if it cannot be determined
      - The "short_keyid" is not added if it cannot be determined

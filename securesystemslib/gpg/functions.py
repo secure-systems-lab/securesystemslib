@@ -20,12 +20,10 @@ import time
 
 import securesystemslib.gpg.common
 import securesystemslib.gpg.exceptions
-import securesystemslib.gpg.formats
 from securesystemslib.gpg.constants import (GPG_EXPORT_PUBKEY_COMMAND, GPG_SIGN_COMMAND,
     SIGNATURE_HANDLERS, FULLY_SUPPORTED_MIN_VERSION, SHA256)
 
 import securesystemslib.process
-
 import securesystemslib.formats
 
 log = logging.getLogger(__name__)
@@ -78,7 +76,8 @@ def gpg_sign_object(content, keyid=None, homedir=None):
     None.
 
   <Returns>
-    The created signature in the format: gpg.formats.SIGNATURE_SCHEMA.
+    The created signature in the format:
+    securesystemslib.formats.GPG_SIGNATURE_SCHEMA.
 
   """
   keyarg = ""
@@ -163,10 +162,12 @@ def gpg_verify_signature(signature_object, pubkey_info, content):
 
   <Arguments>
     signature_object:
-            A signature object in the format: gpg.formats.SIGNATURE_SCHEMA
+            A signature object in the format:
+            securesystemslib.formats.GPG_SIGNATURE_SCHEMA
 
     pubkey_info:
-            A public key object in the format: gpg.formats.PUBKEY_SCHEMA
+            A public key object in the format:
+            securesystemslib.formats.GPG_PUBKEY_SCHEMA
 
     content:
             The content to be verified. (bytes)
@@ -182,8 +183,8 @@ def gpg_verify_signature(signature_object, pubkey_info, content):
     True if signature verification passes, False otherwise.
 
   """
-  securesystemslib.gpg.formats.PUBKEY_SCHEMA.check_match(pubkey_info)
-  securesystemslib.gpg.formats.SIGNATURE_SCHEMA.check_match(signature_object)
+  securesystemslib.formats.GPG_PUBKEY_SCHEMA.check_match(pubkey_info)
+  securesystemslib.formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
 
   handler = SIGNATURE_HANDLERS[pubkey_info['type']]
   sig_keyid = signature_object["keyid"]
@@ -239,7 +240,8 @@ def gpg_export_pubkey(keyid, homedir=None):
     None.
 
   <Returns>
-    The exported public key object in the format: gpg.formats.PUBKEY_SCHEMA
+    The exported public key object in the format:
+    securesystemslib.formats.GPG_PUBKEY_SCHEMA.
 
   """
   if not securesystemslib.formats.KEYID_SCHEMA.matches(keyid):
