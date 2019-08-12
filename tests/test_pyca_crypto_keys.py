@@ -32,6 +32,8 @@ import securesystemslib.exceptions
 import securesystemslib.formats
 import securesystemslib.pyca_crypto_keys
 
+from cryptography.hazmat.primitives import hashes
+
 logger = logging.getLogger('securesystemslib.test_pyca_crypto_keys')
 
 public_rsa, private_rsa = securesystemslib.pyca_crypto_keys.generate_rsa_public_and_private()
@@ -58,6 +60,33 @@ class TestPyca_crypto_keys(unittest.TestCase):
 
     self.assertRaises(securesystemslib.exceptions.FormatError,
         securesystemslib.pyca_crypto_keys.generate_rsa_public_and_private, '2048')
+
+
+
+  def test_get_hash_function_from_scheme(self):
+    self.assertEqual(
+      hashes.MD5, securesystemslib.pyca_crypto_keys._get_hash_function_from_scheme('rsassa-pss-md5')
+    )
+    self.assertEqual(
+      hashes.SHA1, securesystemslib.pyca_crypto_keys._get_hash_function_from_scheme('rsassa-pss-sha1')
+    )
+    self.assertEqual(
+      hashes.SHA224, securesystemslib.pyca_crypto_keys._get_hash_function_from_scheme('rsassa-pss-sha224')
+    )
+    self.assertEqual(
+      hashes.SHA256, securesystemslib.pyca_crypto_keys._get_hash_function_from_scheme('rsassa-pss-sha256')
+    )
+    self.assertEqual(
+      hashes.SHA384, securesystemslib.pyca_crypto_keys._get_hash_function_from_scheme('rsassa-pss-sha384')
+    )
+    self.assertEqual(
+      hashes.SHA512, securesystemslib.pyca_crypto_keys._get_hash_function_from_scheme('rsassa-pss-sha512')
+    )
+
+    self.assertRaises(
+      securesystemslib.exceptions.UnsupportedAlgorithmError,
+      securesystemslib.pyca_crypto_keys._get_hash_function_from_scheme, 'rsassa-pss-sha100'
+    )
 
 
 
