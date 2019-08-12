@@ -264,8 +264,8 @@ ANYKEYLIST_SCHEMA = SCHEMA.ListOf(ANYKEY_SCHEMA)
 
 # RSA signature schemes.
 RSA_SCHEME_SCHEMA = SCHEMA.OneOf([
-  SCHEMA.RegularExpression(r'rsassa-pss-(md1|sha1|sha224|sha256|sha384|sha512)'),
-  SCHEMA.RegularExpression(r'rsa-pkcs1v15-(md1|sha1|sha224|sha256|sha384|sha512)')])
+  SCHEMA.RegularExpression(r'rsassa-pss-(md5|sha1|sha224|sha256|sha384|sha512)'),
+  SCHEMA.RegularExpression(r'rsa-pkcs1v15-(md5|sha1|sha224|sha256|sha384|sha512)')])
 
 # An RSA TUF key.
 RSAKEY_SCHEMA = SCHEMA.Object(

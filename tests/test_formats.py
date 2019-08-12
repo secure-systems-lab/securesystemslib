@@ -116,7 +116,7 @@ class TestFormats(unittest.TestCase):
           {'public': 'pubkey', 'private': ''}),
 
       'RSA_SCHEME_SCHEMA_RSASSA_PSS': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
-          'rsassa-pss-md1'),
+          'rsassa-pss-md5'),
 
       'RSA_SCHEME_SCHEMA_RSASSA_PSS_2': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
           'rsassa-pss-sha1'),
@@ -131,7 +131,7 @@ class TestFormats(unittest.TestCase):
           'rsassa-pss-sha512'),
 
       'RSA_SCHEME_SCHEMA_PKCS1v15': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
-          'rsa-pkcs1v15-md1'),
+          'rsa-pkcs1v15-md5'),
 
       'RSA_SCHEME_SCHEMA_PKCS1v15_2': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
           'rsa-pkcs1v15-sha1'),

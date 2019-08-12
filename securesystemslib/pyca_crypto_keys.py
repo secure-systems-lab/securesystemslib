@@ -353,7 +353,7 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
 
       hash_func = _get_hash_function_from_scheme(scheme)
 
-      if scheme == 'rsassa-pss-sha256':
+      if scheme.startswith('rsassa-pss'):
         # Generate an RSSA-PSS signature.  Raise
         # 'securesystemslib.exceptions.CryptoError' for any of the expected
         # exceptions raised by pyca/cryptography.
@@ -361,7 +361,7 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
             data, padding.PSS(mgf=padding.MGF1(hash_func()),
                               salt_length=hash_func().digest_size), hash_func())
 
-      elif scheme == 'rsa-pkcs1v15-sha256':
+      elif scheme.startswith('rsa-pkcs1v15'):
         # Generate an RSSA-PSS signature.  Raise
         # 'securesystemslib.exceptions.CryptoError' for any of the expected
         # exceptions raised by pyca/cryptography.
