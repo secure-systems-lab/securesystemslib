@@ -6,3 +6,8 @@ export PYBUILD_NAME = securesystemslib
 
 %:
 	dh $@ --with python3 --buildsystem=pybuild
+
+# TODO: Remove testskip once upstream includes tests in the release tarball
+# See https://github.com/secure-systems-lab/securesystemslib/pull/168
+override_dh_auto_test:
+	:
