@@ -118,6 +118,7 @@ from cryptography.hazmat.primitives.ciphers import modes
 
 import securesystemslib.exceptions
 import securesystemslib.formats
+import securesystemslib.hash
 import securesystemslib.util
 
 # Extract/reference the cryptography library settings.
@@ -154,46 +155,6 @@ _SALT_SIZE = 16
 # any previous iteration setting used by the old '<keyid>.key'.
 # https://en.wikipedia.org/wiki/PBKDF2
 _PBKDF2_ITERATIONS = securesystemslib.settings.PBKDF2_ITERATIONS
-
-# Supported hash algorithms.
-_HASH_FUNCTIONS = {
-    'md5': hashes.MD5,
-    'sha1': hashes.SHA1,
-    'sha224': hashes.SHA224,
-    'sha256': hashes.SHA256,
-    'sha384': hashes.SHA384,
-    'sha512': hashes.SHA512,
-}
-
-
-
-
-
-def _get_hash_function_from_scheme(scheme):
-  """
-  <Purpose>
-    Get appropriate hash function from scheme.
-
-  <Arguments>
-    scheme:
-      A string that indicates the signature scheme used to generate
-      'signature'.  'rsassa-pss-sha256' and 'rsa-pkcs1v15-sha256' are currently
-      supported.
-
-  <Exceptions>
-    securesystemslib.exceptions.UnsupportedAlgorithmError, if the hash id from
-    scheme is not one of:
-          'md5', 'sha1', 'sha224', 'sha256', 'sha384' or 'sha512'
-
-  <Returns>
-    A hash algorithm.
-  """
-  try:
-    hash_id = scheme.split('-')[-1]
-    return _HASH_FUNCTIONS[hash_id]
-  except KeyError:
-    raise securesystemslib.exceptions.UnsupportedAlgorithmError(
-        'Unsupported hash algorithm is specified: ' + hash_id)
 
 
 
@@ -333,8 +294,8 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
   securesystemslib.formats.DATA_SCHEMA.check_match(data)
   securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
-  # Signing 'data' requires a private key. 'rsassa-pss-sha256' and
-  # 'rsa-pkcs1v15-sha256' are the only currently supported signature schemes.
+  # Signing 'data' requires a private key. Currently supported RSA signature
+  # schemes are defined in `securesystemslib.keys.RSA_SIGNATURE_SCHEMES`.
   signature = None
 
   # Verify the signature, but only if the private key has been set.  The
@@ -351,22 +312,21 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
       private_key_object = load_pem_private_key(private_key.encode('utf-8'),
                                                 password=None, backend=default_backend())
 
-      hash_func = _get_hash_function_from_scheme(scheme)
+      digest_obj = securesystemslib.hash.digest_from_rsa_scheme(scheme, 'pyca_crypto')
 
       if scheme.startswith('rsassa-pss'):
         # Generate an RSSA-PSS signature.  Raise
         # 'securesystemslib.exceptions.CryptoError' for any of the expected
         # exceptions raised by pyca/cryptography.
         signature = private_key_object.sign(
-            data, padding.PSS(mgf=padding.MGF1(hash_func()),
-                              salt_length=hash_func().digest_size), hash_func())
+            data, padding.PSS(mgf=padding.MGF1(digest_obj.algorithm),
+                              salt_length=digest_obj.algorithm.digest_size), digest_obj.algorithm)
 
       elif scheme.startswith('rsa-pkcs1v15'):
-        # Generate an RSSA-PSS signature.  Raise
+        # Generate an RSA-PKCS1v15 signature.  Raise
         # 'securesystemslib.exceptions.CryptoError' for any of the expected
         # exceptions raised by pyca/cryptography.
-        signature = private_key_object.sign(
-            data, padding.PKCS1v15(), hash_func())
+        signature = private_key_object.sign(data, padding.PKCS1v15(), digest_obj.algorithm)
 
       # The RSA_SCHEME_SCHEMA.check_match() above should have validated 'scheme'.
       # This is a defensive check check..
@@ -428,8 +388,8 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
 
     signature_scheme:
       A string that indicates the signature scheme used to generate
-      'signature'.  'rsassa-pss-sha256' and 'rsa-pkcs1v15-sha256' are currently
-      supported.
+      'signature'.  Currently supported RSA signature schemes are defined in
+      `securesystemslib.keys.RSA_SIGNATURE_SCHEMES`.
 
     public_key:
       The RSA public key, a string in PEM format.
@@ -481,7 +441,7 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
   try:
     public_key_object = serialization.load_pem_public_key(public_key.encode('utf-8'),
                                                           backend=default_backend())
-    hash_func = _get_hash_function_from_scheme(signature_scheme)
+    digest_obj = securesystemslib.hash.digest_from_rsa_scheme(signature_scheme, 'pyca_crypto')
 
     # verify() raises 'cryptography.exceptions.InvalidSignature' if the
     # signature is invalid. 'salt_length' is set to the digest size of the
@@ -489,12 +449,12 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
     try:
       if signature_scheme.startswith('rsassa-pss'):
         public_key_object.verify(signature, data,
-                                 padding.PSS(mgf=padding.MGF1(hash_func()),
-                                             salt_length=hash_func().digest_size),
-                                 hash_func())
+                                 padding.PSS(mgf=padding.MGF1(digest_obj.algorithm),
+                                             salt_length=digest_obj.algorithm.digest_size),
+                                 digest_obj.algorithm)
 
       elif signature_scheme.startswith('rsa-pkcs1v15'):
-        public_key_object.verify(signature, data, padding.PKCS1v15(), hash_func())
+        public_key_object.verify(signature, data, padding.PKCS1v15(), digest_obj.algorithm)
 
       # The RSA_SCHEME_SCHEMA.check_match() above should have validated 'scheme'.
       # This is a defensive check check..

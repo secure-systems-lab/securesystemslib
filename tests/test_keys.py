@@ -350,8 +350,7 @@ class TestKeys(unittest.TestCase):
     self.assertFalse(verified,
         'Returned \'True\' on an incorrect signature.')
 
-    # Modifying 'rsakey_dict' to pass an incorrect scheme since only
-    # 'rsassa-pss-sha256' is accepted.
+    # Modifying 'rsakey_dict' to pass an incorrect scheme.
     valid_scheme = self.rsakey_dict['scheme']
     self.rsakey_dict['scheme'] = 'Biff'
 
