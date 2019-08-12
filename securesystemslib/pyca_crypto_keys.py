@@ -190,7 +190,7 @@ def _get_hash_function_from_scheme(scheme):
   """
   try:
     hash_id = scheme.split('-')[-1]
-    return _HASH_FUNCTIONS.get(hash_id)
+    return _HASH_FUNCTIONS[hash_id]
   except KeyError:
     raise securesystemslib.exceptions.UnsupportedAlgorithmError(
         'Unsupported hash algorithm is specified: ' + hash_id)
