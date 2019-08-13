@@ -310,7 +310,7 @@ def _assign_certified_key_info(bundle):
             supported_hash_algorithms={SHA1, SHA256, SHA512},
             supported_signature_types=SIGNATURE_TYPE_CERTIFICATES,
             include_info=True)
-        # gpg_verify_signature requires a "keyid" even if it is short.
+        # verify_signature requires a "keyid" even if it is short.
         # (see parse_signature_packet for more information about keyids)
         signature["keyid"] = signature["keyid"] or signature["short_keyid"]
 
@@ -327,7 +327,7 @@ def _assign_certified_key_info(bundle):
             signature["keyid"]))
         continue
 
-      is_valid = handler.gpg_verify_signature(signature,
+      is_valid = handler.verify_signature(signature,
           bundle[PACKET_TYPE_PRIMARY_KEY]["key"], signed_content,
           signature["info"]["hash_algorithm"])
 
@@ -442,7 +442,7 @@ def _get_verified_subkeys(bundle):
             supported_hash_algorithms={SHA1, SHA256, SHA512},
             supported_signature_types={SIGNATURE_TYPE_SUB_KEY_BINDING},
             include_info=True)
-        # gpg_verify_signature requires a "keyid" even if it is short.
+        # verify_signature requires a "keyid" even if it is short.
         # (see parse_signature_packet for more information about keyids)
         signature["keyid"] = signature["keyid"] or signature["short_keyid"]
         key_binding_signatures.append(signature)
@@ -463,7 +463,7 @@ def _get_verified_subkeys(bundle):
           "signatures ({}), must be exactly 1.".format(subkey["keyid"],
           len(key_binding_signatures)))
       continue
-    is_valid = handler.gpg_verify_signature(signature,
+    is_valid = handler.verify_signature(signature,
         bundle[PACKET_TYPE_PRIMARY_KEY]["key"], signed_content,
         signature["info"]["hash_algorithm"])
 

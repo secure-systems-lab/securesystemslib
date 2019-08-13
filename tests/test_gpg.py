@@ -39,8 +39,8 @@ import cryptography.hazmat.backends as backends
 import cryptography.hazmat.primitives.hashes as hashing
 
 from securesystemslib import process
-from securesystemslib.gpg.functions import (gpg_sign_object, gpg_export_pubkey,
-    gpg_verify_signature)
+from securesystemslib.gpg.functions import (create_signature, export_pubkey,
+    verify_signature)
 from securesystemslib.gpg.util import (get_version, is_version_fully_supported,
     get_hashing_class, parse_packet_header, parse_subpacket_header)
 from securesystemslib.gpg.rsa import create_pubkey as rsa_create_pubkey
@@ -501,12 +501,12 @@ class TestGPGRSA(unittest.TestCase):
     os.chdir(self.working_dir)
     shutil.rmtree(self.test_dir)
 
-  def test_gpg_export_pubkey_error(self):
+  def test_export_pubkey_error(self):
     """Test correct error is raised if function called incorrectly. """
     with self.assertRaises(ValueError):
-      gpg_export_pubkey("not-a-key-id")
+      export_pubkey("not-a-key-id")
 
-  def test_gpg_export_pubkey(self):
+  def test_export_pubkey(self):
     """ export a public key and make sure the parameters are the right ones:
 
       since there's very little we can do to check rsa key parameters are right
@@ -514,7 +514,7 @@ class TestGPGRSA(unittest.TestCase):
       cryptography for the sake of comparison """
 
     # export our gpg key, using our functions
-    key_data = gpg_export_pubkey(self.default_keyid, homedir=self.gnupg_home)
+    key_data = export_pubkey(self.default_keyid, homedir=self.gnupg_home)
     our_exported_key = rsa_create_pubkey(key_data)
 
     # load the equivalent ssh key, and make sure that we get the same RSA key
@@ -541,7 +541,7 @@ class TestGPGRSA(unittest.TestCase):
     self.assertFalse(self.unsupported_subkey_keyid.lower() in subkey_keyids)
 
     # When passing the subkey keyid we also export the whole keybundle
-    key_data2 = gpg_export_pubkey(self.signing_subkey_keyid,
+    key_data2 = export_pubkey(self.signing_subkey_keyid,
         homedir=self.gnupg_home)
     self.assertDictEqual(key_data, key_data2)
 
@@ -552,11 +552,11 @@ class TestGPGRSA(unittest.TestCase):
     test_data = b'test_data'
     wrong_data = b'something malicious'
 
-    signature = gpg_sign_object(test_data, homedir=self.gnupg_home)
-    key_data = gpg_export_pubkey(self.default_keyid, homedir=self.gnupg_home)
+    signature = create_signature(test_data, homedir=self.gnupg_home)
+    key_data = export_pubkey(self.default_keyid, homedir=self.gnupg_home)
 
-    self.assertTrue(gpg_verify_signature(signature, key_data, test_data))
-    self.assertFalse(gpg_verify_signature(signature, key_data, wrong_data))
+    self.assertTrue(verify_signature(signature, key_data, test_data))
+    self.assertFalse(verify_signature(signature, key_data, wrong_data))
 
 
   def test_gpg_sign_and_verify_object(self):
@@ -565,11 +565,11 @@ class TestGPGRSA(unittest.TestCase):
     test_data = b'test_data'
     wrong_data = b'something malicious'
 
-    signature = gpg_sign_object(test_data, keyid=self.default_keyid,
+    signature = create_signature(test_data, keyid=self.default_keyid,
         homedir=self.gnupg_home)
-    key_data = gpg_export_pubkey(self.default_keyid, homedir=self.gnupg_home)
-    self.assertTrue(gpg_verify_signature(signature, key_data, test_data))
-    self.assertFalse(gpg_verify_signature(signature, key_data, wrong_data))
+    key_data = export_pubkey(self.default_keyid, homedir=self.gnupg_home)
+    self.assertTrue(verify_signature(signature, key_data, test_data))
+    self.assertFalse(verify_signature(signature, key_data, wrong_data))
 
 
   def test_gpg_sign_and_verify_object_default_keyring(self):
@@ -580,9 +580,9 @@ class TestGPGRSA(unittest.TestCase):
     gnupg_home_backup = os.environ.get("GNUPGHOME")
     os.environ["GNUPGHOME"] = self.gnupg_home
 
-    signature = gpg_sign_object(test_data, keyid=self.default_keyid)
-    key_data = gpg_export_pubkey(self.default_keyid)
-    self.assertTrue(gpg_verify_signature(signature, key_data, test_data))
+    signature = create_signature(test_data, keyid=self.default_keyid)
+    key_data = export_pubkey(self.default_keyid)
+    self.assertTrue(verify_signature(signature, key_data, test_data))
 
     # Reset GNUPGHOME
     if gnupg_home_backup:
@@ -591,10 +591,10 @@ class TestGPGRSA(unittest.TestCase):
       del os.environ["GNUPGHOME"]
 
 
-  def test_gpg_sign_object_with_expired_key(self):
+  def test_create_signature_with_expired_key(self):
     """Test signing with expired key raises gpg CommandError. """
     with self.assertRaises(CommandError) as ctx:
-      gpg_sign_object(b"livestock", keyid=self.expired_key_keyid,
+      create_signature(b"livestock", keyid=self.expired_key_keyid,
           homedir=self.gnupg_home)
 
     expected = "returned non-zero exit status '2'"
@@ -602,7 +602,7 @@ class TestGPGRSA(unittest.TestCase):
         expected, ctx.exception))
 
 
-  def test_gpg_verify_signature_with_expired_key(self):
+  def test_verify_signature_with_expired_key(self):
     """Test sig verification with expired key raises KeyExpirationError. """
     signature = {
       "keyid": self.expired_key_keyid,
@@ -610,11 +610,11 @@ class TestGPGRSA(unittest.TestCase):
       "signature": "deadbeef",
     }
     content = b"livestock"
-    key = gpg_export_pubkey(self.expired_key_keyid,
+    key = export_pubkey(self.expired_key_keyid,
         homedir=self.gnupg_home)
 
     with self.assertRaises(KeyExpirationError) as ctx:
-      gpg_verify_signature(signature, key, content)
+      verify_signature(signature, key, content)
 
     expected = ("GPG key 'e8ac80c924116dabb51d4b987cb07d6d2c199c7c' "
         "created on '2019-03-25 12:46 UTC' with validity period '1 day, "
@@ -651,7 +651,7 @@ class TestGPGDSA(unittest.TestCase):
     os.chdir(self.working_dir)
     shutil.rmtree(self.test_dir)
 
-  def test_gpg_export_pubkey(self):
+  def test_export_pubkey(self):
     """ export a public key and make sure the parameters are the right ones:
 
       since there's very little we can do to check rsa key parameters are right
@@ -659,7 +659,7 @@ class TestGPGDSA(unittest.TestCase):
       cryptography for the sake of comparison """
 
     # export our gpg key, using our functions
-    key_data = gpg_export_pubkey(self.default_keyid, homedir=self.gnupg_home)
+    key_data = export_pubkey(self.default_keyid, homedir=self.gnupg_home)
     our_exported_key = dsa_create_pubkey(key_data)
 
     # load the equivalent ssh key, and make sure that we get the same RSA key
@@ -687,11 +687,11 @@ class TestGPGDSA(unittest.TestCase):
     test_data = b'test_data'
     wrong_data = b'something malicious'
 
-    signature = gpg_sign_object(test_data, homedir=self.gnupg_home)
-    key_data = gpg_export_pubkey(self.default_keyid, homedir=self.gnupg_home)
+    signature = create_signature(test_data, homedir=self.gnupg_home)
+    key_data = export_pubkey(self.default_keyid, homedir=self.gnupg_home)
 
-    self.assertTrue(gpg_verify_signature(signature, key_data, test_data))
-    self.assertFalse(gpg_verify_signature(signature, key_data, wrong_data))
+    self.assertTrue(verify_signature(signature, key_data, test_data))
+    self.assertFalse(verify_signature(signature, key_data, wrong_data))
 
 
   def test_gpg_sign_and_verify_object(self):
@@ -700,12 +700,12 @@ class TestGPGDSA(unittest.TestCase):
     test_data = b'test_data'
     wrong_data = b'something malicious'
 
-    signature = gpg_sign_object(test_data, keyid=self.default_keyid,
+    signature = create_signature(test_data, keyid=self.default_keyid,
         homedir=self.gnupg_home)
-    key_data = gpg_export_pubkey(self.default_keyid, homedir=self.gnupg_home)
+    key_data = export_pubkey(self.default_keyid, homedir=self.gnupg_home)
 
-    self.assertTrue(gpg_verify_signature(signature, key_data, test_data))
-    self.assertFalse(gpg_verify_signature(signature, key_data, wrong_data))
+    self.assertTrue(verify_signature(signature, key_data, test_data))
+    self.assertFalse(verify_signature(signature, key_data, wrong_data))
 
 
 if __name__ == "__main__":

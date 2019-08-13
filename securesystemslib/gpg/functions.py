@@ -20,8 +20,8 @@ import time
 
 import securesystemslib.gpg.common
 import securesystemslib.gpg.exceptions
-from securesystemslib.gpg.constants import (GPG_EXPORT_PUBKEY_COMMAND, GPG_SIGN_COMMAND,
-    SIGNATURE_HANDLERS, FULLY_SUPPORTED_MIN_VERSION, SHA256)
+from securesystemslib.gpg.constants import (GPG_EXPORT_PUBKEY_COMMAND,
+    GPG_SIGN_COMMAND, SIGNATURE_HANDLERS, FULLY_SUPPORTED_MIN_VERSION, SHA256)
 
 import securesystemslib.process
 import securesystemslib.formats
@@ -29,13 +29,14 @@ import securesystemslib.formats
 log = logging.getLogger(__name__)
 
 
-def gpg_sign_object(content, keyid=None, homedir=None):
+def create_signature(content, keyid=None, homedir=None):
   """
   <Purpose>
-    Calls the gpg2 command line utility to sign the passed content with the key
+    Calls the gpg command line utility to sign the passed content with the key
     identified by the passed keyid from the gpg keyring at the passed homedir.
 
-    The executed base command is defined in constants.GPG_SIGN_COMMAND.
+    The executed base command is defined in
+    securesystemslib.gpgp.constants.GPG_SIGN_COMMAND.
 
     NOTE: On not fully supported versions of GPG, i.e. versions below
     securesystemslib.gpg.constants.FULLY_SUPPORTED_MIN_VERSION the returned
@@ -90,6 +91,7 @@ def gpg_sign_object(content, keyid=None, homedir=None):
     homearg = "--homedir {}".format(homedir).replace("\\", "/")
 
   command = GPG_SIGN_COMMAND.format(keyarg=keyarg, homearg=homearg)
+
   process = securesystemslib.process.run(command, input=content, check=False,
       stdout=securesystemslib.process.PIPE,
       stderr=securesystemslib.process.PIPE)
@@ -105,7 +107,6 @@ def gpg_sign_object(content, keyid=None, homedir=None):
   signature_data = process.stdout
   signature = securesystemslib.gpg.common.parse_signature_packet(
       signature_data)
-
 
   # On GPG < 2.1 we cannot derive the full keyid from the signature data.
   # Instead we try to compute the keyid from the public part of the signing
@@ -123,14 +124,14 @@ def gpg_sign_object(content, keyid=None, homedir=None):
     short_keyid = signature["short_keyid"]
 
     # Export public key bundle (master key including with optional subkeys)
-    public_key_bundle = gpg_export_pubkey(short_keyid, homedir)
+    public_key_bundle = export_pubkey(short_keyid, homedir)
 
     # Test if the short keyid matches the master key ...
     master_key_full_keyid = public_key_bundle["keyid"]
     if master_key_full_keyid.endswith(short_keyid.lower()):
       signature["keyid"] = master_key_full_keyid
 
-    # ... or one of the subkeys and add the full keyid to the signature dict.
+    # ... or one of the subkeys, and add the full keyid to the signature dict.
     else:
       for sub_key_full_keyid in list(
           public_key_bundle.get("subkeys", {}).keys()):
@@ -150,7 +151,7 @@ def gpg_sign_object(content, keyid=None, homedir=None):
   return signature
 
 
-def gpg_verify_signature(signature_object, pubkey_info, content):
+def verify_signature(signature_object, pubkey_info, content):
   """
   <Purpose>
     Verifies the passed signature against the passed content using the
@@ -204,22 +205,22 @@ def gpg_verify_signature(signature_object, pubkey_info, content):
       creation_time + validity_period < time.time():
     raise securesystemslib.gpg.exceptions.KeyExpirationError(verification_key)
 
-  return handler.gpg_verify_signature(
+  return handler.verify_signature(
       signature_object, verification_key, content, SHA256)
 
 
-def gpg_export_pubkey(keyid, homedir=None):
+def export_pubkey(keyid, homedir=None):
   """
   <Purpose>
-    Calls gpg2 command line utility to export the gpg public key bundle
+    Calls gpg command line utility to export the gpg public key bundle
     identified by the passed keyid from the gpg keyring at the passed homedir
     in a securesystemslib-style format.
 
-    Note: The identified key is exported including the corresponding master
+    NOTE: The identified key is exported including the corresponding master
     key and all subkeys.
 
-    The executed base command is defined in
-    constants.GPG_EXPORT_PUBKEY_COMMAND.
+    The executed base export command is defined in
+    securesystemslib.gpg.constants.GPG_EXPORT_PUBKEY_COMMAND.
 
   <Arguments>
     keyid:
@@ -247,19 +248,20 @@ def gpg_export_pubkey(keyid, homedir=None):
   if not securesystemslib.formats.KEYID_SCHEMA.matches(keyid):
     # FIXME: probably needs smarter parsing of what a valid keyid is so as to
     # not export more than one pubkey packet.
-    raise ValueError("we need to export an individual key."
-            " Please provide a valid keyid! Keyid was '{}'.".format(keyid))
+    raise ValueError("we need to export an individual key. Please provide a "
+        " valid keyid! Keyid was '{}'.".format(keyid))
 
   homearg = ""
   if homedir:
     homearg = "--homedir {}".format(homedir).replace("\\", "/")
 
-  # TODO: Consider adopting command error handling from `gpg_sign_object`
+  # TODO: Consider adopting command error handling from `create_signature`
   # above, e.g. in a common 'run gpg command' utility function
-  command = GPG_EXPORT_PUBKEY_COMMAND.format(keyid=keyid, homearg=homearg)
+  command = securesystemslib.gpg.constants.GPG_EXPORT_PUBKEY_COMMAND.format(
+      keyid=keyid, homearg=homearg)
   process = securesystemslib.process.run(command,
-    stdout=securesystemslib.process.PIPE,
-    stderr=securesystemslib.process.PIPE)
+      stdout=securesystemslib.process.PIPE,
+      stderr=securesystemslib.process.PIPE)
 
   key_packet = process.stdout
   key_bundle = securesystemslib.gpg.common.get_pubkey_bundle(key_packet, keyid)

@@ -132,7 +132,7 @@ def get_signature_params(data):
   return signature
 
 
-def gpg_verify_signature(signature_object, pubkey_info, content,
+def verify_signature(signature_object, pubkey_info, content,
     hash_algorithm_id):
   """
   <Purpose>
