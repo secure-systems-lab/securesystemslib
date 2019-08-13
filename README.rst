@@ -173,7 +173,7 @@ cryptographic operations.
 
     >>> from securesystemslib.keys import *
 
-    >>> data = 'The quick brown fox jumps over the lazy dog'
+    >>> data = b'The quick brown fox jumps over the lazy dog'
     >>> ed25519_key = generate_ed25519_key()
     >>> signature = create_signature(ed25519_key, data)
     >>> rsa_key = generate_rsa_key(2048)
@@ -189,7 +189,7 @@ Verify ECDSA, Ed25519, and RSA Signatures
 
     # Continuing from the previous sections . . .
 
-    >>> data = 'The quick brown fox jumps over the lazy dog'
+    >>> data = b'The quick brown fox jumps over the lazy dog'
     >>> ed25519_key = generate_ed25519_key()
     >>> signature = create_signature(ed25519_key, data)
     >>> verify_signature(ed25519_key, signature, data)
