@@ -51,21 +51,27 @@ SUPPORTED_LIBRARIES = ['hashlib']
 try:
   import cryptography.exceptions
   import cryptography.hazmat.backends
-  import cryptography.hazmat.primitives.hashes
+  import cryptography.hazmat.primitives.hashes as _pyca_hashes
   import binascii
 
   # Dictionary of `pyca/cryptography` supported hash algorithms.
-  PYCA_DIGEST_OBJECTS_CACHE = {hash_algo.name: hash_algo
-                               for hash_algo in cryptography.hazmat.primitives.hashes.HashAlgorithm._abc_registry}
+  PYCA_DIGEST_OBJECTS_CACHE = {
+    "md5":  _pyca_hashes.MD5,
+    "sha1": _pyca_hashes.SHA1,
+    "sha224": _pyca_hashes.SHA224,
+    "sha256": _pyca_hashes.SHA256,
+    "sha384": _pyca_hashes.SHA384,
+    "sha512": _pyca_hashes.SHA512
+  }
 
   SUPPORTED_LIBRARIES.append('pyca_crypto')
 
-  class Pyca_Diggest_Wrapper(object):
+  class PycaDiggestWrapper(object):
     """
     <Purpose>
       A wrapper around `cryptography.hazmat.primitives.hashes.Hash` which adds
       additional methods to meet expected interface for digest objects:
-      
+
         digest_object.digest_size
         digest_object.hexdigest()
         digest_object.update('data')
@@ -78,17 +84,17 @@ try:
 
       digest_size:
         Returns original's object digest size.
-  
+
     <Methods>
       digest(self) -> bytes:
         Calls original's object `finalize` method and returns digest as bytes.
         NOTE: `cryptography.hazmat.primitives.hashes.Hash` allows calling
         `finalize` method just once on the same instance, so everytime `digest`
         methods is called, we replace internal object (`_digest_obj`).
-  
+
       hexdigest(self) -> str:
         Returns a string hex representation of digest.
-  
+
       update(self, data) -> None:
         Updates digest object data by calling the original's object `update`
         method.
@@ -173,7 +179,7 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
 
     e.g.
       hashlib.new(algorithm) or
-      Pyca_Diggest_Wrapper object
+      PycaDiggestWrapper object
   """
 
   # Are the arguments properly formatted?  If not, raise
@@ -193,13 +199,11 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
   # Was a pyca_crypto digest object requested and is it supported?
   elif hash_library == 'pyca_crypto' and hash_library in SUPPORTED_LIBRARIES:
     try:
-      global PYCA_DIGEST_OBJECTS_CACHE
-
       hash_algorithm = PYCA_DIGEST_OBJECTS_CACHE[algorithm]()
-      return Pyca_Diggest_Wrapper(
+      return PycaDiggestWrapper(
         cryptography.hazmat.primitives.hashes.Hash(hash_algorithm,
-        cryptography.hazmat.backends.default_backend()))
-    
+            cryptography.hazmat.backends.default_backend()))
+
     except KeyError:
       raise securesystemslib.exceptions.UnsupportedAlgorithmError(algorithm)
 
@@ -258,7 +262,7 @@ def digest_fileobject(file_object, algorithm=DEFAULT_HASH_ALGORITHM,
 
     e.g.
       hashlib.new(algorithm) or
-      Pyca_Diggest_Wrapper object
+      PycaDiggestWrapper object
   """
 
   # Are the arguments properly formatted?  If not, raise
@@ -350,7 +354,7 @@ def digest_filename(filename, algorithm=DEFAULT_HASH_ALGORITHM,
 
     e.g.
       hashlib.new(algorithm) or
-      Pyca_Diggest_Wrapper object
+      PycaDiggestWrapper object
   """
   # Are the arguments properly formatted?  If not, raise
   # 'securesystemslib.exceptions.FormatError'.
@@ -383,7 +387,7 @@ def digest_from_rsa_scheme(scheme, hash_library=DEFAULT_HASH_LIBRARY):
   <Arguments>
     scheme:
       A string that indicates the signature scheme used to generate
-      'signature'. Currently supported RSA schemes are defined in 
+      'signature'. Currently supported RSA schemes are defined in
       `securesystemslib.keys.RSA_SIGNATURE_SCHEMES`
 
     hash_library:
@@ -392,14 +396,14 @@ def digest_from_rsa_scheme(scheme, hash_library=DEFAULT_HASH_LIBRARY):
   <Exceptions>
     securesystemslib.exceptions.FormatError, if the arguments are
     improperly formatted.
-    
+
     securesystemslib.exceptions.UnsupportedAlgorithmError, if an unsupported
     hashing algorithm is specified, or digest could not be generated with given
     the algorithm.
-    
+
     securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported
     library was requested via 'hash_library'.
-    
+
   <Side Effects>
     None.
 
@@ -408,7 +412,7 @@ def digest_from_rsa_scheme(scheme, hash_library=DEFAULT_HASH_LIBRARY):
 
     e.g.
       hashlib.new(algorithm) or
-      Pyca_Diggest_Wrapper object
+      PycaDiggestWrapper object
   """
   # Are the arguments properly formatted?  If not, raise
   # 'securesystemslib.exceptions.FormatError'.

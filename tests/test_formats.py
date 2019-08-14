@@ -128,6 +128,9 @@ class TestFormats(unittest.TestCase):
           'rsassa-pss-sha256'),
 
       'RSA_SCHEME_SCHEMA_RSASSA_PSS_5': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
+          'rsassa-pss-sha384'),
+
+      'RSA_SCHEME_SCHEMA_RSASSA_PSS_6': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
           'rsassa-pss-sha512'),
 
       'RSA_SCHEME_SCHEMA_PKCS1v15': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
@@ -142,7 +145,10 @@ class TestFormats(unittest.TestCase):
       'RSA_SCHEME_SCHEMA_PKCS1v15_4': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
           'rsa-pkcs1v15-sha256'),
 
-      'RSA_SCHEME_SCHEMA_PKCS1v15_4': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
+      'RSA_SCHEME_SCHEMA_PKCS1v15_5': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
+          'rsa-pkcs1v15-sha384'),
+
+      'RSA_SCHEME_SCHEMA_PKCS1v15_6': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
           'rsa-pkcs1v15-sha512'),
 
       'KEY_SCHEMA': (securesystemslib.formats.KEY_SCHEMA,
