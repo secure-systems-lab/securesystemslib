@@ -486,25 +486,34 @@ def create_rsa_encrypted_pem(private_key, passphrase):
     of the RSA key is encrypted using the best available encryption for a given
     key's backend. This is a curated (by cryptography.io) encryption choice and
     the algorithm may change over time.
+
     c.f. cryptography.io/en/latest/hazmat/primitives/asymmetric/serialization/
         #cryptography.hazmat.primitives.serialization.BestAvailableEncryption
+
     >>> public, private = generate_rsa_public_and_private(2048)
     >>> passphrase = 'secret'
     >>> encrypted_pem = create_rsa_encrypted_pem(private, passphrase)
     >>> securesystemslib.formats.PEMRSA_SCHEMA.matches(encrypted_pem)
     True
+
   <Arguments>
     private_key:
       The private key string in PEM format.
+
     passphrase:
       The passphrase, or password, to encrypt the private part of the RSA
       key.
+
   <Exceptions>
     securesystemslib.exceptions.FormatError, if the arguments are improperly
         formatted.
+
     securesystemslib.exceptions.CryptoError, if the passed RSA key cannot be
         deserialized by pyca cryptography.
+
     ValueError, if 'private_key' is unset.
+
+
   <Returns>
     A string in PEM format (TraditionalOpenSSL), where the private RSA key is
     encrypted. Conforms to 'securesystemslib.formats.PEMRSA_SCHEMA'.
@@ -549,10 +558,15 @@ def create_rsa_public_and_private_from_pem(pem, passphrase=None):
     Generate public and private RSA keys from an optionally encrypted PEM.  The
     public and private keys returned conform to
     'securesystemslib.formats.PEMRSA_SCHEMA' and have the form:
+
     '-----BEGIN RSA PUBLIC KEY----- ... -----END RSA PUBLIC KEY-----'
+
     and
+
     '-----BEGIN RSA PRIVATE KEY----- ...-----END RSA PRIVATE KEY-----'
+
     The public and private keys are returned as strings in PEM format.
+
     In case the private key part of 'pem' is encrypted  pyca/cryptography's
     load_pem_private_key() method is passed passphrase.  In the default case
     here, pyca/cryptography will decrypt with a PBKDF1+MD5
@@ -560,6 +574,7 @@ def create_rsa_public_and_private_from_pem(pem, passphrase=None):
     Alternatively, key data may be encrypted with AES-CTR-Mode and the
     passphrase strengthened with PBKDF2+SHA256, although this method is used
     only with TUF encrypted key files.
+
     >>> public, private = generate_rsa_public_and_private(2048)
     >>> passphrase = 'secret'
     >>> encrypted_pem = create_rsa_encrypted_pem(private, passphrase)
@@ -573,25 +588,32 @@ def create_rsa_public_and_private_from_pem(pem, passphrase=None):
     True
     >>> private == returned_private
     True
+
   <Arguments>
     pem:
       A byte string in PEM format, where the private key can be encrypted.
       It has the form:
+
       '-----BEGIN RSA PRIVATE KEY-----\n
       Proc-Type: 4,ENCRYPTED\nDEK-Info: DES-EDE3-CBC ...'
+
     passphrase: (optional)
       The passphrase, or password, to decrypt the private part of the RSA
       key.  'passphrase' is not directly used as the encryption key, instead
       it is used to derive a stronger symmetric key.
+
   <Exceptions>
     securesystemslib.exceptions.FormatError, if the arguments are improperly
     formatted.
+
     securesystemslib.exceptions.CryptoError, if the public and private RSA keys
     cannot be generated from 'pem', or exported in PEM format.
+
   <Side Effects>
     pyca/cryptography's 'serialization.load_pem_private_key()' called to
     perform the actual conversion from an encrypted RSA private key to
     PEM format.
+
   <Returns>
     A (public, private) tuple containing the RSA keys in PEM format.
   """
@@ -660,15 +682,18 @@ def encrypt_key(key_object, password):
     object.  'key_object' is a TUF key (e.g., RSAKEY_SCHEMA,
     ED25519KEY_SCHEMA).  This function calls the pyca/cryptography library to
     perform the encryption and derive a suitable encryption key.
+
     Whereas an encrypted PEM file uses the Triple Data Encryption Algorithm
     (3DES), the Cipher-block chaining (CBC) mode of operation, and the Password
     Based Key Derivation Function 1 (PBKF1) + MD5 to strengthen 'password',
     encrypted TUF keys use AES-256-CTR-Mode and passwords strengthened with
     PBKDF2-HMAC-SHA256 (100K iterations by default, but may be overriden in
     'settings.PBKDF2_ITERATIONS' by the user).
+
     http://en.wikipedia.org/wiki/Advanced_Encryption_Standard
     http://en.wikipedia.org/wiki/CTR_mode#Counter_.28CTR.29
     https://en.wikipedia.org/wiki/PBKDF2
+
     >>> ed25519_key = {'keytype': 'ed25519', \
                        'scheme': 'ed25519', \
                        'keyid': \
@@ -681,24 +706,30 @@ def encrypt_key(key_object, password):
     >>> encrypted_key = encrypt_key(ed25519_key, passphrase)
     >>> securesystemslib.formats.ENCRYPTEDKEY_SCHEMA.matches(encrypted_key.encode('utf-8'))
     True
+
   <Arguments>
     key_object:
       The TUF key object that should contain the private portion of the ED25519
       key.
+
     password:
       The password, or passphrase, to encrypt the private part of the RSA
       key.  'password' is not used directly as the encryption key, a stronger
       encryption key is derived from it.
+
   <Exceptions>
     securesystemslib.exceptions.FormatError, if any of the arguments are
     improperly formatted or 'key_object' does not contain the private portion
     of the key.
+
     securesystemslib.exceptions.CryptoError, if an Ed25519 key in encrypted TUF
     format cannot be created.
+
   <Side Effects>
     pyca/Cryptography cryptographic operations called to perform the actual
     encryption of 'key_object'.  'password' used to derive a suitable
     encryption key.
+
   <Returns>
     An encrypted string in 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA' format.
   """
@@ -746,12 +777,15 @@ def decrypt_key(encrypted_key, password):
     the original key object, a TUF key (e.g., RSAKEY_SCHEMA, ED25519KEY_SCHEMA).
     This function calls the appropriate cryptography module (i.e.,
     pyca_crypto_keys.py) to perform the decryption.
+
     Encrypted TUF keys use AES-256-CTR-Mode and passwords strengthened with
     PBKDF2-HMAC-SHA256 (100K iterations be default, but may be overriden in
     'settings.py' by the user).
+
     http://en.wikipedia.org/wiki/Advanced_Encryption_Standard
     http://en.wikipedia.org/wiki/CTR_mode#Counter_.28CTR.29
     https://en.wikipedia.org/wiki/PBKDF2
+
     >>> ed25519_key = {'keytype': 'ed25519', \
                        'scheme': 'ed25519', \
                        'keyid': \
@@ -767,27 +801,34 @@ def decrypt_key(encrypted_key, password):
     True
     >>> decrypted_key == ed25519_key
     True
+
   <Arguments>
     encrypted_key:
       An encrypted TUF key (additional data is also included, such as salt,
       number of password iterations used for the derived encryption key, etc)
       of the form 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA'.
       'encrypted_key' should have been generated with encrypted_key().
+
     password:
       The password, or passphrase, to encrypt the private part of the RSA
       key.  'password' is not used directly as the encryption key, a stronger
       encryption key is derived from it.
+
   <Exceptions>
     securesystemslib.exceptions.FormatError, if the arguments are improperly
     formatted.
+
     securesystemslib.exceptions.CryptoError, if a TUF key cannot be decrypted
     from 'encrypted_key'.
+
     securesystemslib.exceptions.Error, if a valid TUF key object is not found in
     'encrypted_key'.
+
   <Side Effects>
     The pyca/cryptography is library called to perform the actual decryption
     of 'encrypted_key'.  The key derivation data stored in 'encrypted_key' is
     used to re-derive the encryption/decryption key.
+
   <Returns>
     The decrypted key object in 'securesystemslib.formats.ANYKEY_SCHEMA' format.
   """
@@ -860,15 +901,19 @@ def _encrypt(key_data, derived_key_information):
   key size is 256 bits and AES's mode of operation is set to CTR (CounTeR Mode).
   The HMAC of the ciphertext is generated to ensure the ciphertext has not been
   modified.
+
   'key_data' is the JSON string representation of the key.  In the case
   of RSA keys, this format would be 'securesystemslib.formats.RSAKEY_SCHEMA':
+
   {'keytype': 'rsa',
    'keyval': {'public': '-----BEGIN RSA PUBLIC KEY----- ...',
               'private': '-----BEGIN RSA PRIVATE KEY----- ...'}}
+
   'derived_key_information' is a dictionary of the form:
     {'salt': '...',
      'derived_key': '...',
      'iterations': '...'}
+
   'securesystemslib.exceptions.CryptoError' raised if the encryption fails.
   """
 
@@ -927,6 +972,7 @@ def _encrypt(key_data, derived_key_information):
 def _decrypt(file_contents, password):
   """
   The corresponding decryption routine for _encrypt().
+
   'securesystemslib.exceptions.CryptoError' raised if the decryption fails.
   """
 
