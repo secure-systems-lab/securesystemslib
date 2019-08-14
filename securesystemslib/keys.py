@@ -121,6 +121,22 @@ _KEY_ID_HASH_ALGORITHM = 'sha256'
 # size 3072 provide security through 2031 and beyond.
 _DEFAULT_RSA_KEY_BITS = 3072
 
+
+RSA_SIGNATURE_SCHEMES = [
+  'rsassa-pss-md5',
+  'rsassa-pss-sha1',
+  'rsassa-pss-sha224',
+  'rsassa-pss-sha256',
+  'rsassa-pss-sha384',
+  'rsassa-pss-sha512',
+  'rsa-pkcs1v15-md5',
+  'rsa-pkcs1v15-sha1',
+  'rsa-pkcs1v15-sha224',
+  'rsa-pkcs1v15-sha256',
+  'rsa-pkcs1v15-sha384',
+  'rsa-pkcs1v15-sha512',
+]
+
 logger = logging.getLogger('securesystemslib_keys')
 
 
@@ -165,8 +181,8 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-sha256'):
       greater, and a multiple of 256.
 
     scheme:
-      The signature scheme used by the key.  It must be one of
-      ['rsassa-pss-sha256'].
+      The signature scheme used by the key.  It must be one from the list
+      `securesystemslib.keys.RSA_SIGNATURE_SCHEMES`.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'bits' is improperly or invalid
@@ -692,11 +708,12 @@ def create_signature(key_dict, data):
   # The key type of 'key_dict' must be either 'rsa' or 'ed25519'.
   securesystemslib.formats.ANYKEY_SCHEMA.check_match(key_dict)
 
-  # Signing the 'data' object requires a private key.  'rsassa-pss-sha256',
-  # 'ed25519', and 'ecdsa-sha2-nistp256' are the only signing schemes currently
-  # supported.  RSASSA-PSS keys and signatures can be generated and verified by
-  # pyca_crypto_keys.py, and Ed25519 keys by PyNaCl and PyCA's optimized, pure
-  # python implementation of Ed25519.
+  # Signing the 'data' object requires a private key. Signing schemes that are
+  # currently supported are: 'ed25519', 'ecdsa-sha2-nistp256', and rsa schemes
+  # defined in `securesystemslib.keys.RSA_SIGNATURE_SCHEMES`.
+  # RSASSA-PSS and RSA-PKCS1v15 keys and signatures can be generated and
+  # verified by pyca_crypto_keys.py, and Ed25519 keys by PyNaCl and PyCA's
+  # optimized, pure python implementation of Ed25519.
   signature = {}
   keytype = key_dict['keytype']
   scheme = key_dict['scheme']
@@ -706,7 +723,7 @@ def create_signature(key_dict, data):
   sig = None
 
   if keytype == 'rsa':
-    if scheme == 'rsassa-pss-sha256':
+    if scheme in RSA_SIGNATURE_SCHEMES:
       private = private.replace('\r\n', '\n')
       sig, scheme = securesystemslib.pyca_crypto_keys.create_rsa_signature(
           private, data, scheme)
@@ -847,7 +864,7 @@ def verify_signature(key_dict, signature, data):
 
 
   if keytype == 'rsa':
-    if scheme == 'rsassa-pss-sha256':
+    if scheme in RSA_SIGNATURE_SCHEMES:
       valid_signature = securesystemslib.pyca_crypto_keys.verify_rsa_signature(sig,
         scheme, public, data)
 

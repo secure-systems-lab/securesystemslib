@@ -30,8 +30,10 @@ import logging
 
 import securesystemslib.exceptions
 import securesystemslib.formats
+import securesystemslib.keys
 import securesystemslib.pyca_crypto_keys
 
+from cryptography.hazmat.primitives import hashes
 logger = logging.getLogger('securesystemslib.test_pyca_crypto_keys')
 
 public_rsa, private_rsa = securesystemslib.pyca_crypto_keys.generate_rsa_public_and_private()
@@ -60,102 +62,106 @@ class TestPyca_crypto_keys(unittest.TestCase):
         securesystemslib.pyca_crypto_keys.generate_rsa_public_and_private, '2048')
 
 
-
   def test_create_rsa_signature(self):
     global private_rsa
     global public_rsa
     data = 'The quick brown fox jumps over the lazy dog'.encode('utf-8')
-    signature, scheme = securesystemslib.pyca_crypto_keys.create_rsa_signature(private_rsa, data)
 
-    # Verify format of returned values.
-    self.assertNotEqual(None, signature)
-    self.assertEqual(None,
-        securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme),
-        FORMAT_ERROR_MSG)
-    self.assertEqual('rsassa-pss-sha256', scheme)
+    for rsa_scheme in securesystemslib.keys.RSA_SIGNATURE_SCHEMES:
+      signature, scheme = \
+        securesystemslib.pyca_crypto_keys.create_rsa_signature(private_rsa, data, rsa_scheme)
 
-    # Check for improperly formatted arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        securesystemslib.pyca_crypto_keys.create_rsa_signature, 123, data)
+      # Verify format of returned values.
+      self.assertNotEqual(None, signature)
+      self.assertEqual(None,
+          securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme),
+          FORMAT_ERROR_MSG)
+      self.assertEqual(rsa_scheme, scheme)
 
-    # Check for an unset private key.
-    self.assertRaises(ValueError,
-        securesystemslib.pyca_crypto_keys.create_rsa_signature, '', data)
+      # Check for improperly formatted arguments.
+      self.assertRaises(securesystemslib.exceptions.FormatError,
+          securesystemslib.pyca_crypto_keys.create_rsa_signature, 123, data)
 
-    # Check for an invalid PEM.
-    self.assertRaises(securesystemslib.exceptions.CryptoError,
-        securesystemslib.pyca_crypto_keys.create_rsa_signature, '123', data)
+      # Check for an unset private key.
+      self.assertRaises(ValueError,
+          securesystemslib.pyca_crypto_keys.create_rsa_signature, '', data)
 
-    # Check for invalid 'data'.
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        securesystemslib.pyca_crypto_keys.create_rsa_signature, private_rsa, '')
+      # Check for an invalid PEM.
+      self.assertRaises(securesystemslib.exceptions.CryptoError,
+          securesystemslib.pyca_crypto_keys.create_rsa_signature, '123', data)
 
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        securesystemslib.pyca_crypto_keys.create_rsa_signature, private_rsa, 123)
+      # Check for invalid 'data'.
+      self.assertRaises(securesystemslib.exceptions.FormatError,
+          securesystemslib.pyca_crypto_keys.create_rsa_signature, private_rsa, '')
 
-    # Check for a missing private key.
-    self.assertRaises(securesystemslib.exceptions.CryptoError,
-        securesystemslib.pyca_crypto_keys.create_rsa_signature, public_rsa, data)
+      self.assertRaises(securesystemslib.exceptions.FormatError,
+          securesystemslib.pyca_crypto_keys.create_rsa_signature, private_rsa, 123)
 
-    # Check for a TypeError by attempting to create a signature with an
-    # encrypted key.
-    encrypted_pem = securesystemslib.pyca_crypto_keys.create_rsa_encrypted_pem(
-        private_rsa, 'pw')
-    self.assertRaises(securesystemslib.exceptions.CryptoError,
-        securesystemslib.pyca_crypto_keys.create_rsa_signature, encrypted_pem,
-        data)
+      # Check for a missing private key.
+      self.assertRaises(securesystemslib.exceptions.CryptoError,
+          securesystemslib.pyca_crypto_keys.create_rsa_signature, public_rsa, data)
+
+      # Check for a TypeError by attempting to create a signature with an
+      # encrypted key.
+      encrypted_pem = securesystemslib.pyca_crypto_keys.create_rsa_encrypted_pem(
+          private_rsa, 'pw')
+      self.assertRaises(securesystemslib.exceptions.CryptoError,
+          securesystemslib.pyca_crypto_keys.create_rsa_signature, encrypted_pem,
+          data)
 
 
   def test_verify_rsa_signature(self):
     global public_rsa
     global private_rsa
     data = 'The quick brown fox jumps over the lazy dog'.encode('utf-8')
-    signature, scheme = \
-      securesystemslib.pyca_crypto_keys.create_rsa_signature(private_rsa, data)
 
-    valid_signature = \
-      securesystemslib.pyca_crypto_keys.verify_rsa_signature(signature,
-        scheme, public_rsa, data)
-    self.assertEqual(True, valid_signature)
+    for rsa_scheme in securesystemslib.keys.RSA_SIGNATURE_SCHEMES:
+      signature, scheme = \
+        securesystemslib.pyca_crypto_keys.create_rsa_signature(private_rsa, data, rsa_scheme)
 
-    # Check for an invalid public key.
-    self.assertRaises(securesystemslib.exceptions.CryptoError,
-      securesystemslib.pyca_crypto_keys.verify_rsa_signature, signature, scheme,
-      private_rsa, data)
-
-    # Check for improperly formatted arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        securesystemslib.pyca_crypto_keys.verify_rsa_signature, signature,
-        123, public_rsa, data)
-
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        securesystemslib.pyca_crypto_keys.verify_rsa_signature, signature,
-        scheme, 123, data)
-
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        securesystemslib.pyca_crypto_keys.verify_rsa_signature, 123, scheme,
-        public_rsa, data)
-
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        securesystemslib.pyca_crypto_keys.verify_rsa_signature,
-        signature, 'invalid_scheme', public_rsa, data)
-
-    # Check for invalid 'signature' and 'data' arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        securesystemslib.pyca_crypto_keys.verify_rsa_signature,
-        signature, scheme, public_rsa, 123)
-
-    self.assertEqual(False,
+      valid_signature = \
         securesystemslib.pyca_crypto_keys.verify_rsa_signature(signature,
-        scheme, public_rsa, b'mismatched data'))
+          scheme, public_rsa, data)
+      self.assertEqual(True, valid_signature)
 
-    mismatched_signature, scheme = \
-      securesystemslib.pyca_crypto_keys.create_rsa_signature(private_rsa,
-      b'mismatched data')
+      # Check for an invalid public key.
+      self.assertRaises(securesystemslib.exceptions.CryptoError,
+        securesystemslib.pyca_crypto_keys.verify_rsa_signature, signature, scheme,
+        private_rsa, data)
 
-    self.assertEqual(False,
-        securesystemslib.pyca_crypto_keys.verify_rsa_signature(mismatched_signature,
-        scheme, public_rsa, data))
+      # Check for improperly formatted arguments.
+      self.assertRaises(securesystemslib.exceptions.FormatError,
+          securesystemslib.pyca_crypto_keys.verify_rsa_signature, signature,
+          123, public_rsa, data)
+
+      self.assertRaises(securesystemslib.exceptions.FormatError,
+          securesystemslib.pyca_crypto_keys.verify_rsa_signature, signature,
+          scheme, 123, data)
+
+      self.assertRaises(securesystemslib.exceptions.FormatError,
+          securesystemslib.pyca_crypto_keys.verify_rsa_signature, 123, scheme,
+          public_rsa, data)
+
+      self.assertRaises(securesystemslib.exceptions.FormatError,
+          securesystemslib.pyca_crypto_keys.verify_rsa_signature,
+          signature, 'invalid_scheme', public_rsa, data)
+
+      # Check for invalid 'signature' and 'data' arguments.
+      self.assertRaises(securesystemslib.exceptions.FormatError,
+          securesystemslib.pyca_crypto_keys.verify_rsa_signature,
+          signature, scheme, public_rsa, 123)
+
+      self.assertEqual(False,
+          securesystemslib.pyca_crypto_keys.verify_rsa_signature(signature,
+          scheme, public_rsa, b'mismatched data'))
+
+      mismatched_signature, scheme = \
+        securesystemslib.pyca_crypto_keys.create_rsa_signature(private_rsa,
+        b'mismatched data')
+
+      self.assertEqual(False,
+          securesystemslib.pyca_crypto_keys.verify_rsa_signature(mismatched_signature,
+          scheme, public_rsa, data))
 
 
   def test_create_rsa_encrypted_pem(self):

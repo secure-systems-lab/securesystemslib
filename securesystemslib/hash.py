@@ -47,6 +47,88 @@ DEFAULT_HASH_LIBRARY = 'hashlib'
 SUPPORTED_LIBRARIES = ['hashlib']
 
 
+# If `pyca_crypto` is installed, add it to supported libraries
+try:
+  import cryptography.exceptions
+  import cryptography.hazmat.backends
+  import cryptography.hazmat.primitives.hashes as _pyca_hashes
+  import binascii
+
+  # Dictionary of `pyca/cryptography` supported hash algorithms.
+  PYCA_DIGEST_OBJECTS_CACHE = {
+    "md5":  _pyca_hashes.MD5,
+    "sha1": _pyca_hashes.SHA1,
+    "sha224": _pyca_hashes.SHA224,
+    "sha256": _pyca_hashes.SHA256,
+    "sha384": _pyca_hashes.SHA384,
+    "sha512": _pyca_hashes.SHA512
+  }
+
+  SUPPORTED_LIBRARIES.append('pyca_crypto')
+
+  class PycaDiggestWrapper(object):
+    """
+    <Purpose>
+      A wrapper around `cryptography.hazmat.primitives.hashes.Hash` which adds
+      additional methods to meet expected interface for digest objects:
+
+        digest_object.digest_size
+        digest_object.hexdigest()
+        digest_object.update('data')
+        digest_object.digest()
+
+    <Properties>
+      algorithm:
+        Specific for `cryptography.hazmat.primitives.hashes.Hash` object, but
+        needed for `pyca_crypto_keys.py`
+
+      digest_size:
+        Returns original's object digest size.
+
+    <Methods>
+      digest(self) -> bytes:
+        Calls original's object `finalize` method and returns digest as bytes.
+        NOTE: `cryptography.hazmat.primitives.hashes.Hash` allows calling
+        `finalize` method just once on the same instance, so everytime `digest`
+        methods is called, we replace internal object (`_digest_obj`).
+
+      hexdigest(self) -> str:
+        Returns a string hex representation of digest.
+
+      update(self, data) -> None:
+        Updates digest object data by calling the original's object `update`
+        method.
+    """
+
+    def __init__(self, digest_obj):
+      self._digest_obj = digest_obj
+
+    @property
+    def algorithm(self):
+      return self._digest_obj.algorithm
+
+    @property
+    def digest_size(self):
+      return self._digest_obj.algorithm.digest_size
+
+    def digest(self):
+      digest_obj_copy = self._digest_obj.copy()
+      digest = self._digest_obj.finalize()
+      self._digest_obj = digest_obj_copy
+      return digest
+
+    def hexdigest(self):
+      return binascii.hexlify(self.digest()).decode('utf-8')
+
+    def update(self, data):
+      self._digest_obj.update(data)
+
+except ImportError: #pragma: no cover
+  pass
+
+
+
+
 def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
   """
   <Purpose>
@@ -93,7 +175,11 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
     None.
 
   <Returns>
-    Digest object (e.g., hashlib.new(algorithm)).
+    Digest object
+
+    e.g.
+      hashlib.new(algorithm) or
+      PycaDiggestWrapper object
   """
 
   # Are the arguments properly formatted?  If not, raise
@@ -111,9 +197,15 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
       raise securesystemslib.exceptions.UnsupportedAlgorithmError(algorithm)
 
   # Was a pyca_crypto digest object requested and is it supported?
-  elif hash_library == 'pyca_crypto' and hash_library in SUPPORTED_LIBRARIES: #pragma: no cover
-    # TODO: Add support for pyca/cryptography's hashing routines.
-    pass
+  elif hash_library == 'pyca_crypto' and hash_library in SUPPORTED_LIBRARIES:
+    try:
+      hash_algorithm = PYCA_DIGEST_OBJECTS_CACHE[algorithm]()
+      return PycaDiggestWrapper(
+        cryptography.hazmat.primitives.hashes.Hash(hash_algorithm,
+            cryptography.hazmat.backends.default_backend()))
+
+    except KeyError:
+      raise securesystemslib.exceptions.UnsupportedAlgorithmError(algorithm)
 
   # The requested hash library is not supported.
   else:
@@ -166,7 +258,11 @@ def digest_fileobject(file_object, algorithm=DEFAULT_HASH_ALGORITHM,
     None.
 
   <Returns>
-    Digest object (e.g., hashlib.new(algorithm)).
+    Digest object
+
+    e.g.
+      hashlib.new(algorithm) or
+      PycaDiggestWrapper object
   """
 
   # Are the arguments properly formatted?  If not, raise
@@ -254,7 +350,11 @@ def digest_filename(filename, algorithm=DEFAULT_HASH_ALGORITHM,
     None.
 
   <Returns>
-    Digest object (e.g., hashlib.new(algorithm)).
+    Digest object
+
+    e.g.
+      hashlib.new(algorithm) or
+      PycaDiggestWrapper object
   """
   # Are the arguments properly formatted?  If not, raise
   # 'securesystemslib.exceptions.FormatError'.
@@ -274,3 +374,51 @@ def digest_filename(filename, algorithm=DEFAULT_HASH_ALGORITHM,
         file_object, algorithm, hash_library, normalize_line_endings)
 
   return digest_object
+
+
+
+
+
+def digest_from_rsa_scheme(scheme, hash_library=DEFAULT_HASH_LIBRARY):
+  """
+  <Purpose>
+    Get digest object from RSA scheme.
+
+  <Arguments>
+    scheme:
+      A string that indicates the signature scheme used to generate
+      'signature'. Currently supported RSA schemes are defined in
+      `securesystemslib.keys.RSA_SIGNATURE_SCHEMES`
+
+    hash_library:
+      The crypto library to use for the given hash algorithm (e.g., 'hashlib').
+
+  <Exceptions>
+    securesystemslib.exceptions.FormatError, if the arguments are
+    improperly formatted.
+
+    securesystemslib.exceptions.UnsupportedAlgorithmError, if an unsupported
+    hashing algorithm is specified, or digest could not be generated with given
+    the algorithm.
+
+    securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported
+    library was requested via 'hash_library'.
+
+  <Side Effects>
+    None.
+
+  <Returns>
+    Digest object
+
+    e.g.
+      hashlib.new(algorithm) or
+      PycaDiggestWrapper object
+  """
+  # Are the arguments properly formatted?  If not, raise
+  # 'securesystemslib.exceptions.FormatError'.
+  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
+
+  # Get hash algorithm from rsa scheme (hash algorithm id is specified after
+  # the last dash; e.g. rsassa-pss-sha256 -> sha256)
+  hash_algorithm = scheme.split('-')[-1]
+  return digest(hash_algorithm, hash_library)

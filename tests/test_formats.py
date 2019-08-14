@@ -115,6 +115,42 @@ class TestFormats(unittest.TestCase):
       'PUBLIC_KEYVAL_SCHEMA2': (securesystemslib.formats.PUBLIC_KEYVAL_SCHEMA,
           {'public': 'pubkey', 'private': ''}),
 
+      'RSA_SCHEME_SCHEMA_RSASSA_PSS': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
+          'rsassa-pss-md5'),
+
+      'RSA_SCHEME_SCHEMA_RSASSA_PSS_2': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
+          'rsassa-pss-sha1'),
+
+      'RSA_SCHEME_SCHEMA_RSASSA_PSS_3': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
+          'rsassa-pss-sha224'),
+
+      'RSA_SCHEME_SCHEMA_RSASSA_PSS_4': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
+          'rsassa-pss-sha256'),
+
+      'RSA_SCHEME_SCHEMA_RSASSA_PSS_5': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
+          'rsassa-pss-sha384'),
+
+      'RSA_SCHEME_SCHEMA_RSASSA_PSS_6': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
+          'rsassa-pss-sha512'),
+
+      'RSA_SCHEME_SCHEMA_PKCS1v15': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
+          'rsa-pkcs1v15-md5'),
+
+      'RSA_SCHEME_SCHEMA_PKCS1v15_2': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
+          'rsa-pkcs1v15-sha1'),
+
+      'RSA_SCHEME_SCHEMA_PKCS1v15_3': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
+          'rsa-pkcs1v15-sha224'),
+
+      'RSA_SCHEME_SCHEMA_PKCS1v15_4': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
+          'rsa-pkcs1v15-sha256'),
+
+      'RSA_SCHEME_SCHEMA_PKCS1v15_5': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
+          'rsa-pkcs1v15-sha384'),
+
+      'RSA_SCHEME_SCHEMA_PKCS1v15_6': (securesystemslib.formats.RSA_SCHEME_SCHEMA,
+          'rsa-pkcs1v15-sha512'),
+
       'KEY_SCHEMA': (securesystemslib.formats.KEY_SCHEMA,
           {'keytype': 'rsa',
            'scheme': 'rsassa-pss-sha256',

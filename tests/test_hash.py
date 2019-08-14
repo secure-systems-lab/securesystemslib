@@ -46,8 +46,8 @@ if not 'hashlib' in securesystemslib.hash.SUPPORTED_LIBRARIES:
 class TestHash(unittest.TestCase):
 
   def _run_with_all_hash_libraries(self, test_func):
-    if 'hashlib' in securesystemslib.hash.SUPPORTED_LIBRARIES:
-      test_func('hashlib')
+    for lib in securesystemslib.hash.SUPPORTED_LIBRARIES:
+      test_func(lib)
 
 
   def test_md5_update(self):
@@ -181,7 +181,7 @@ class TestHash(unittest.TestCase):
 
   def _do_unsupported_algorithm(self, library):
     self.assertRaises(securesystemslib.exceptions.UnsupportedAlgorithmError,
-        securesystemslib.hash.digest, 'bogus')
+        securesystemslib.hash.digest, 'bogus', library)
 
 
   def test_digest_size(self):
@@ -263,6 +263,25 @@ class TestHash(unittest.TestCase):
       # Note: we don't seek because the update_file_obj call is supposed
       # to always seek to the beginning.
       self.assertEqual(digest_object_truth.digest(), digest_object.digest())
+
+
+  def test_digest_from_rsa_scheme(self):
+    self._run_with_all_hash_libraries(self._do_get_digest_from_rsa_valid_schemes)
+    self._run_with_all_hash_libraries(self._do_get_digest_from_rsa_non_valid_schemes)
+
+
+  def _do_get_digest_from_rsa_valid_schemes(self, library):
+    algorithm = 'sha256'
+    scheme = 'rsassa-pss-sha256'
+    expected_digest_cls = type(securesystemslib.hash.digest(algorithm, library))
+
+    self.assertIsInstance(securesystemslib.hash.digest_from_rsa_scheme(scheme, library),
+      expected_digest_cls)
+
+  def _do_get_digest_from_rsa_non_valid_schemes(self, library):
+    self.assertRaises(securesystemslib.exceptions.FormatError,
+      securesystemslib.hash.digest_from_rsa_scheme, 'rsassa-pss-sha123', library)
+
 
 
   def test_unsupported_digest_algorithm_and_library(self):

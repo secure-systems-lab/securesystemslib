@@ -118,6 +118,7 @@ from cryptography.hazmat.primitives.ciphers import modes
 
 import securesystemslib.exceptions
 import securesystemslib.formats
+import securesystemslib.hash
 import securesystemslib.util
 
 # Extract/reference the cryptography library settings.
@@ -154,6 +155,8 @@ _SALT_SIZE = 16
 # any previous iteration setting used by the old '<keyid>.key'.
 # https://en.wikipedia.org/wiki/PBKDF2
 _PBKDF2_ITERATIONS = securesystemslib.settings.PBKDF2_ITERATIONS
+
+
 
 
 
@@ -291,8 +294,8 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
   securesystemslib.formats.DATA_SCHEMA.check_match(data)
   securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
-  # Signing 'data' requires a private key.  'rsassa-pss-sha256' is the only
-  # currently supported signature scheme.
+  # Signing 'data' requires a private key. Currently supported RSA signature
+  # schemes are defined in `securesystemslib.keys.RSA_SIGNATURE_SCHEMES`.
   signature = None
 
   # Verify the signature, but only if the private key has been set.  The
@@ -300,56 +303,61 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
   # explicitly check that 'private_key' is not '', we can/should check for a
   # value and not compare identities with the 'is' keyword.  Up to this point
   # 'private_key' has variable size and can be an empty string.
-  if len(private_key):
+  if not len(private_key):
+    raise ValueError('The required private key is unset.')
 
-    # An if-clause isn't strictly needed here, since 'rsasssa-pss-sha256' is
-    # the only currently supported RSA scheme.  Nevertheless, include the
-    # conditional statement to accomodate future schemes that might be added.
-    if scheme == 'rsassa-pss-sha256':
+  try:
+    # 'private_key' (in PEM format) must first be converted to a
+    # pyca/cryptography private key object before a signature can be
+    # generated.
+    private_key_object = load_pem_private_key(private_key.encode('utf-8'),
+        password=None, backend=default_backend())
+
+    digest_obj = securesystemslib.hash.digest_from_rsa_scheme(scheme,
+        'pyca_crypto')
+
+    if scheme.startswith('rsassa-pss'):
       # Generate an RSSA-PSS signature.  Raise
       # 'securesystemslib.exceptions.CryptoError' for any of the expected
       # exceptions raised by pyca/cryptography.
-      try:
-        # 'private_key' (in PEM format) must first be converted to a
-        # pyca/cryptography private key object before a signature can be
-        # generated.
-        private_key_object = load_pem_private_key(private_key.encode('utf-8'),
-            password=None, backend=default_backend())
+      signature = private_key_object.sign(
+          data, padding.PSS(mgf=padding.MGF1(digest_obj.algorithm),
+          salt_length=digest_obj.algorithm.digest_size), digest_obj.algorithm)
 
-        signature = private_key_object.sign(
-            data, padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
-            salt_length=hashes.SHA256().digest_size), hashes.SHA256())
-
-      # If the PEM data could not be decrypted, or if its structure could not
-      # be decoded successfully.
-      except ValueError:
-        raise securesystemslib.exceptions.CryptoError('The private key'
-          ' (in PEM format) could not be deserialized.')
-
-      # 'TypeError' is raised if a password was given and the private key was
-      # not encrypted, or if the key was encrypted but no password was
-      # supplied.  Note: A passphrase or password is not used when generating
-      # 'private_key', since it should not be encrypted.
-      except TypeError:
-        raise securesystemslib.exceptions.CryptoError('The private key was'
-          ' unexpectedly encrypted.')
-
-      # 'cryptography.exceptions.UnsupportedAlgorithm' is raised if the
-      # serialized key is of a type that is not supported by the backend, or if
-      # the key is encrypted with a symmetric cipher that is not supported by
-      # the backend.
-      except cryptography.exceptions.UnsupportedAlgorithm: #pragma: no cover
-        raise securesystemslib.exceptions.CryptoError('The private key is'
-          ' encrypted with an unsupported algorithm.')
+    elif scheme.startswith('rsa-pkcs1v15'):
+      # Generate an RSA-PKCS1v15 signature.  Raise
+      # 'securesystemslib.exceptions.CryptoError' for any of the expected
+      # exceptions raised by pyca/cryptography.
+      signature = private_key_object.sign(data, padding.PKCS1v15(),
+          digest_obj.algorithm)
 
     # The RSA_SCHEME_SCHEMA.check_match() above should have validated 'scheme'.
     # This is a defensive check check..
-    else: #pragma: no cover
+    else:  # pragma: no cover
       raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
-        ' signature scheme is specified: ' + repr(scheme))
+          ' signature scheme is specified: ' + repr(scheme))
 
-  else:
-    raise ValueError('The required private key is unset.')
+  # If the PEM data could not be decrypted, or if its structure could not
+  # be decoded successfully.
+  except ValueError:
+    raise securesystemslib.exceptions.CryptoError('The private key'
+        ' (in PEM format) could not be deserialized.')
+
+  # 'TypeError' is raised if a password was given and the private key was
+  # not encrypted, or if the key was encrypted but no password was
+  # supplied.  Note: A passphrase or password is not used when generating
+  # 'private_key', since it should not be encrypted.
+  except TypeError:
+    raise securesystemslib.exceptions.CryptoError('The private key was'
+        ' unexpectedly encrypted.')
+
+  # 'cryptography.exceptions.UnsupportedAlgorithm' is raised if the
+  # serialized key is of a type that is not supported by the backend, or if
+  # the key is encrypted with a symmetric cipher that is not supported by
+  # the backend.
+  except cryptography.exceptions.UnsupportedAlgorithm:  # pragma: no cover
+    raise securesystemslib.exceptions.CryptoError('The private key is'
+        ' encrypted with an unsupported algorithm.')
 
   return signature, scheme
 
@@ -380,7 +388,8 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
 
     signature_scheme:
       A string that indicates the signature scheme used to generate
-      'signature'.  'rsassa-pss-sha256' is currently supported.
+      'signature'.  Currently supported RSA signature schemes are defined in
+      `securesystemslib.keys.RSA_SIGNATURE_SCHEMES`.
 
     public_key:
       The RSA public key, a string in PEM format.
@@ -430,17 +439,32 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
 
   # Verify the RSASSA-PSS signature with pyca/cryptography.
   try:
-    public_key_object = serialization.load_pem_public_key(public_key.encode('utf-8'),
-        backend=default_backend())
+    public_key_object = serialization.load_pem_public_key(
+        public_key.encode('utf-8'), backend=default_backend())
+
+    digest_obj = securesystemslib.hash.digest_from_rsa_scheme(signature_scheme,
+        'pyca_crypto')
 
     # verify() raises 'cryptography.exceptions.InvalidSignature' if the
     # signature is invalid. 'salt_length' is set to the digest size of the
     # hashing algorithm.
     try:
-      public_key_object.verify(signature, data,
-          padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
-          salt_length=hashes.SHA256().digest_size),
-          hashes.SHA256())
+      if signature_scheme.startswith('rsassa-pss'):
+        public_key_object.verify(signature, data,
+            padding.PSS(mgf=padding.MGF1(digest_obj.algorithm),
+            salt_length=digest_obj.algorithm.digest_size),
+            digest_obj.algorithm)
+
+      elif signature_scheme.startswith('rsa-pkcs1v15'):
+        public_key_object.verify(signature, data, padding.PKCS1v15(),
+            digest_obj.algorithm)
+
+      # The RSA_SCHEME_SCHEMA.check_match() above should have validated 'scheme'.
+      # This is a defensive check check..
+      else:  # pragma: no cover
+        raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
+            ' signature scheme is specified: ' + repr(scheme))
+
       return True
 
     except cryptography.exceptions.InvalidSignature:
@@ -449,7 +473,10 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
   # Raised by load_pem_public_key().
   except (ValueError, cryptography.exceptions.UnsupportedAlgorithm) as e:
     raise securesystemslib.exceptions.CryptoError('The PEM could not be'
-      ' decoded successfully, or contained an unsupported key type: ' + str(e))
+        ' decoded successfully, or contained an unsupported key type: ' + str(e))
+
+
+
 
 
 def create_rsa_encrypted_pem(private_key, passphrase):
