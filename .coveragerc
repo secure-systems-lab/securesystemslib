@@ -4,8 +4,6 @@ branch = True
 omit =
   */python?.?/*
   */securesystemslib/_vendor/*
-  */securesystemslib/hsm.py
-  */securesystemslib/hsm_keys.py
   */tests/*
   */site-packages/*
 

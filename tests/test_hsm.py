@@ -23,6 +23,9 @@ from __future__ import unicode_literals
 import unittest
 import logging
 
+import os
+import shutil
+
 import securesystemslib.exceptions
 import securesystemslib.formats
 import securesystemslib.hsm
@@ -35,6 +38,9 @@ from cryptography.x509 import Certificate
 import PyKCS11
 # Library to interact with SoftHSM.
 PKCS11LIB = '/usr/local/lib/softhsm/libsofthsm2.so'
+
+# Path where SoftHSM is created and stored
+TOKENS_PATH = '/var/lib/softhsm/tokens'
 
 logger = logging.getLogger('securesystemslib_test_hsm')
 
@@ -77,6 +83,22 @@ class TestHSM(unittest.TestCase):
     # we would be emulating the hardware token using softHSM 2.0.
     # To carry out all the tests, SoftHSM needs to be initialized and
     # RSD, ECDSA key pairs must be generated on the SoftHSM.
+
+    # Since we are using the default path for the SoftHSM creation
+    # and storage, there might be tokens present already which were
+    # create by the user.
+    # So, before carrying out the test we must save all the existing
+    # token to a new directory
+
+    tokens_list = os.listdir(TOKENS_PATH)
+
+    # Make a new directory to store the already existing tokens
+    tokens_save_dir = os.path.join(TOKENS_PATH, 'tokens.save')
+    os.mkdir(tokens_save_dir)
+    # Move the tokens to the new directory
+    for token in tokens_list:
+      token_dir = os.path.join(TOKENS_PATH,token)
+      shutil.move(token_dir, tokens_save_dir)
 
     # Initializing the HSM
     soft_pkcs11 = PyKCS11.PyKCS11Lib()
@@ -155,8 +177,23 @@ class TestHSM(unittest.TestCase):
 
   @classmethod
   def tearDownClass(cls):
-    # TODO: Delete the initialized SoftHSM.
-    pass
+
+    # Remove any new tokens which were initialized to perform tests
+    tokens_list = os.listdir(TOKENS_PATH)
+    tokens_list.remove('tokens.save')
+    for token in tokens_list:
+      token_dir = os.path.join(TOKENS_PATH, token)
+      shutil.rmtree(token_dir)
+
+    # Move the saved tokens to their original directory
+    tokens_save_dir = os.path.join(TOKENS_PATH, 'tokens.save')
+    tokens_save_list = os.listdir(tokens_save_dir)
+    for token in tokens_save_list:
+      token_dir = os.path.join(tokens_save_dir, token)
+      shutil.move(token_dir, TOKENS_PATH)
+
+    # Delete the new directory, used to store existing tokens
+    shutil.rmtree(tokens_save_dir)
 
 
 
