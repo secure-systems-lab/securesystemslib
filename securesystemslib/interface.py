@@ -355,7 +355,7 @@ def import_rsa_privatekey_from_file(filepath, password=None,
 
 
 
-def import_rsa_publickey_from_file(filepath):
+def import_rsa_publickey_from_file(filepath, scheme='rsassa-pss-sha256'):
   """
   <Purpose>
     Import the RSA key stored in 'filepath'.  The key object returned is in the
@@ -365,6 +365,9 @@ def import_rsa_publickey_from_file(filepath):
   <Arguments>
     filepath:
       <filepath>.pub file, an RSA PEM file.
+
+    scheme:
+      The signature scheme used by the imported key.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'filepath' is improperly
@@ -386,6 +389,9 @@ def import_rsa_publickey_from_file(filepath):
   # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
+  # Is 'scheme' properly formatted?
+  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
+
   # Read the contents of the key file that should be in PEM format and contains
   # the public portion of the RSA key.
   with open(filepath, 'rb') as file_object:
@@ -393,7 +399,8 @@ def import_rsa_publickey_from_file(filepath):
 
   # Convert 'rsa_pubkey_pem' to 'securesystemslib.formats.RSAKEY_SCHEMA' format.
   try:
-    rsakey_dict = securesystemslib.keys.import_rsakey_from_public_pem(rsa_pubkey_pem)
+    rsakey_dict = securesystemslib.keys.import_rsakey_from_public_pem(
+        rsa_pubkey_pem, scheme)
 
   except securesystemslib.exceptions.FormatError as e:
     raise securesystemslib.exceptions.Error('Cannot import improperly formatted'
