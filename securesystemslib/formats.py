@@ -15,14 +15,14 @@
   See LICENSE for licensing information.
 
 <Purpose>
-  A central location for all format-related checking of TUF objects.
-  Note: 'formats.py' depends heavily on 'schema.py', so the 'schema.py'
-  module should be read and understood before tackling this module.
+  A central location for all format-related checking of securesystemslib
+  objects. Note: 'formats.py' depends heavily on 'schema.py', so the
+  'schema.py' module should be read and understood before tackling this module.
 
   'formats.py' can be broken down into three sections.  (1) Schemas and object
   matching.  (2) Classes that represent Role Metadata and help produce
-  correctly formatted files.  (3) Functions that help produce or verify TUF
-  objects.
+  correctly formatted files.  (3) Functions that help produce or verify
+  securesystemslib objects.
 
   The first section deals with schemas and object matching based on format.
   There are two ways of checking the format of objects.  The first method
@@ -57,7 +57,7 @@
   schema to ensure correctly formatted metadata.
 
   The last section contains miscellaneous functions related to the format of
-  TUF objects.
+  securesystemslib objects.
   Example:
 
   signable_object = make_signable(unsigned_object)
@@ -148,7 +148,7 @@ HASHALGORITHMS_SCHEMA = SCHEMA.ListOf(SCHEMA.OneOf(
    SCHEMA.String('sha224'), SCHEMA.String('sha256'),
    SCHEMA.String('sha384'), SCHEMA.String('sha512')]))
 
-# The contents of an encrypted TUF key.  Encrypted TUF keys are saved to files
+# The contents of an encrypted key.  Encrypted keys are saved to files
 # in this format.
 ENCRYPTEDKEY_SCHEMA = SCHEMA.AnyString()
 
@@ -194,13 +194,13 @@ PUBLIC_KEYVAL_SCHEMA = SCHEMA.Object(
   public = SCHEMA.AnyString(),
   private = SCHEMA.Optional(SCHEMA.String("")))
 
-# Supported TUF key types.
+# Supported securesystemslib key types.
 KEYTYPE_SCHEMA = SCHEMA.OneOf(
   [SCHEMA.String('rsa'), SCHEMA.String('ed25519'),
    SCHEMA.String('ecdsa-sha2-nistp256')])
 
-# A generic TUF key.  All TUF keys should be saved to metadata files in this
-# format.
+# A generic securesystemslib key.  All securesystemslib keys should be saved to
+# metadata files in this format.
 KEY_SCHEMA = SCHEMA.Object(
   object_name = 'KEY_SCHEMA',
   keytype = SCHEMA.AnyString(),
@@ -218,8 +218,9 @@ PUBLIC_KEY_SCHEMA = SCHEMA.Object(
   keyval = PUBLIC_KEYVAL_SCHEMA,
   expires = SCHEMA.Optional(ISO8601_DATETIME_SCHEMA))
 
-# A TUF key object.  This schema simplifies validation of keys that may be one
-# of the supported key types.  Supported key types: 'rsa', 'ed25519'.
+# A securesystemslib key object.  This schema simplifies validation of keys
+# that may be one of the supported key types.  Supported key types: 'rsa',
+# 'ed25519'.
 ANYKEY_SCHEMA = SCHEMA.Object(
   object_name = 'ANYKEY_SCHEMA',
   keytype = KEYTYPE_SCHEMA,
@@ -229,7 +230,7 @@ ANYKEY_SCHEMA = SCHEMA.Object(
   keyval = KEYVAL_SCHEMA,
   expires = SCHEMA.Optional(ISO8601_DATETIME_SCHEMA))
 
-# A list of TUF key objects.
+# A list of securesystemslib key objects.
 ANYKEYLIST_SCHEMA = SCHEMA.ListOf(ANYKEY_SCHEMA)
 
 # RSA signature schemes.
@@ -237,7 +238,7 @@ RSA_SCHEME_SCHEMA = SCHEMA.OneOf([
   SCHEMA.RegularExpression(r'rsassa-pss-(md5|sha1|sha224|sha256|sha384|sha512)'),
   SCHEMA.RegularExpression(r'rsa-pkcs1v15-(md5|sha1|sha224|sha256|sha384|sha512)')])
 
-# An RSA TUF key.
+# An RSA securesystemslib key.
 RSAKEY_SCHEMA = SCHEMA.Object(
   object_name = 'RSAKEY_SCHEMA',
   keytype = SCHEMA.String('rsa'),
@@ -246,7 +247,7 @@ RSAKEY_SCHEMA = SCHEMA.Object(
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
   keyval = KEYVAL_SCHEMA)
 
-# An ECDSA TUF key.
+# An ECDSA securesystemslib key.
 ECDSAKEY_SCHEMA = SCHEMA.Object(
   object_name = 'ECDSAKEY_SCHEMA',
   keytype = SCHEMA.String('ecdsa-sha2-nistp256'),
@@ -277,7 +278,7 @@ REQUIRED_LIBRARIES_SCHEMA = SCHEMA.ListOf(SCHEMA.OneOf(
 # supported.
 ED25519_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String('ed25519')])
 
-# An ed25519 TUF key.
+# An ed25519 key.
 ED25519KEY_SCHEMA = SCHEMA.Object(
   object_name = 'ED25519KEY_SCHEMA',
   keytype = SCHEMA.String('ed25519'),
@@ -543,13 +544,13 @@ def encode_canonical(object, output_function=None):
     or joined into a string and returned.
 
     Note: This function should be called prior to computing the hash or
-    signature of a JSON object in TUF.  For example, generating a signature
-    of a signing role object such as 'ROOT_SCHEMA' is required to ensure
-    repeatable hashes are generated across different json module versions
-    and platforms.  Code elsewhere is free to dump JSON objects in any format
-    they wish (e.g., utilizing indentation and single quotes around object
-    keys).  These objects are only required to be in "canonical JSON" format
-    when their hashes or signatures are needed.
+    signature of a JSON object in securesystemslib.  For example, generating a
+    signature of a signing role object such as 'ROOT_SCHEMA' is required to
+    ensure repeatable hashes are generated across different json module
+    versions and platforms.  Code elsewhere is free to dump JSON objects in any
+    format they wish (e.g., utilizing indentation and single quotes around
+    object keys).  These objects are only required to be in "canonical JSON"
+    format when their hashes or signatures are needed.
 
     >>> encode_canonical("")
     '""'

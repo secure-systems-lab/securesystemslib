@@ -40,8 +40,8 @@
   https://en.wikipedia.org/wiki/PBKDF
   http://en.wikipedia.org/wiki/Scrypt
 
-  TUF key files are encrypted with the AES-256-CTR-Mode symmetric key
-  algorithm.  User passwords are strengthened with PBKDF2, currently set to
+  securesystemslib key files are encrypted with the AES-256-CTR-Mode symmetric
+  key algorithm.  User passwords are strengthened with PBKDF2, currently set to
   100,000 passphrase iterations.  The previous evpy implementation used 1,000
   iterations.
 
@@ -98,7 +98,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 # Import pyca/cryptography's Key Derivation Function (KDF) module.
 # 'securesystemslib.keys.py' needs this module to derive a secret key according
 # to the Password-Based Key Derivation Function 2 specification.  The derived
-# key is used as the symmetric key to encrypt TUF key information.
+# key is used as the symmetric key to encrypt securesystemslib key information.
 # PKCS#5 v2.0 PBKDF2 specification: http://tools.ietf.org/html/rfc2898#section-5.2
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
@@ -573,7 +573,7 @@ def create_rsa_public_and_private_from_pem(pem, passphrase=None):
     strengthened'passphrase', and 3DES with CBC mode for encryption/decryption.
     Alternatively, key data may be encrypted with AES-CTR-Mode and the
     passphrase strengthened with PBKDF2+SHA256, although this method is used
-    only with TUF encrypted key files.
+    only with securesystemslib encrypted key files.
 
     >>> public, private = generate_rsa_public_and_private(2048)
     >>> passphrase = 'secret'
@@ -679,16 +679,16 @@ def encrypt_key(key_object, password):
     Return a string containing 'key_object' in encrypted form. Encrypted
     strings may be safely saved to a file.  The corresponding decrypt_key()
     function can be applied to the encrypted string to restore the original key
-    object.  'key_object' is a TUF key (e.g., RSAKEY_SCHEMA,
+    object.  'key_object' is a securesystemslib key (e.g., RSAKEY_SCHEMA,
     ED25519KEY_SCHEMA).  This function calls the pyca/cryptography library to
     perform the encryption and derive a suitable encryption key.
 
     Whereas an encrypted PEM file uses the Triple Data Encryption Algorithm
     (3DES), the Cipher-block chaining (CBC) mode of operation, and the Password
     Based Key Derivation Function 1 (PBKF1) + MD5 to strengthen 'password',
-    encrypted TUF keys use AES-256-CTR-Mode and passwords strengthened with
-    PBKDF2-HMAC-SHA256 (100K iterations by default, but may be overriden in
-    'settings.PBKDF2_ITERATIONS' by the user).
+    encrypted securesystemslib keys use AES-256-CTR-Mode and passwords
+    strengthened with PBKDF2-HMAC-SHA256 (100K iterations by default, but may
+    be overriden in 'settings.PBKDF2_ITERATIONS' by the user).
 
     http://en.wikipedia.org/wiki/Advanced_Encryption_Standard
     http://en.wikipedia.org/wiki/CTR_mode#Counter_.28CTR.29
@@ -709,8 +709,8 @@ def encrypt_key(key_object, password):
 
   <Arguments>
     key_object:
-      The TUF key object that should contain the private portion of the ED25519
-      key.
+      The securesystemslib key object that should contain the private portion
+      of the ED25519 key.
 
     password:
       The password, or passphrase, to encrypt the private part of the RSA
@@ -722,8 +722,8 @@ def encrypt_key(key_object, password):
     improperly formatted or 'key_object' does not contain the private portion
     of the key.
 
-    securesystemslib.exceptions.CryptoError, if an Ed25519 key in encrypted TUF
-    format cannot be created.
+    securesystemslib.exceptions.CryptoError, if an Ed25519 key in encrypted
+    securesystemslib format cannot be created.
 
   <Side Effects>
     pyca/Cryptography cryptographic operations called to perform the actual
@@ -774,13 +774,13 @@ def decrypt_key(encrypted_key, password):
   <Purpose>
     Return a string containing 'encrypted_key' in non-encrypted form.
     The decrypt_key() function can be applied to the encrypted string to restore
-    the original key object, a TUF key (e.g., RSAKEY_SCHEMA, ED25519KEY_SCHEMA).
-    This function calls the appropriate cryptography module (i.e.,
-    pyca_crypto_keys.py) to perform the decryption.
+    the original key object, a securesystemslib key (e.g., RSAKEY_SCHEMA,
+    ED25519KEY_SCHEMA). This function calls the appropriate cryptography module
+    (i.e., pyca_crypto_keys.py) to perform the decryption.
 
-    Encrypted TUF keys use AES-256-CTR-Mode and passwords strengthened with
-    PBKDF2-HMAC-SHA256 (100K iterations be default, but may be overriden in
-    'settings.py' by the user).
+    Encrypted securesystemslib keys use AES-256-CTR-Mode and passwords
+    strengthened with PBKDF2-HMAC-SHA256 (100K iterations be default, but may
+    be overriden in 'settings.py' by the user).
 
     http://en.wikipedia.org/wiki/Advanced_Encryption_Standard
     http://en.wikipedia.org/wiki/CTR_mode#Counter_.28CTR.29
@@ -804,9 +804,9 @@ def decrypt_key(encrypted_key, password):
 
   <Arguments>
     encrypted_key:
-      An encrypted TUF key (additional data is also included, such as salt,
-      number of password iterations used for the derived encryption key, etc)
-      of the form 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA'.
+      An encrypted securesystemslib key (additional data is also included, such
+      as salt, number of password iterations used for the derived encryption
+      key, etc) of the form 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA'.
       'encrypted_key' should have been generated with encrypted_key().
 
     password:
@@ -818,11 +818,11 @@ def decrypt_key(encrypted_key, password):
     securesystemslib.exceptions.FormatError, if the arguments are improperly
     formatted.
 
-    securesystemslib.exceptions.CryptoError, if a TUF key cannot be decrypted
-    from 'encrypted_key'.
+    securesystemslib.exceptions.CryptoError, if a securesystemslib key cannot
+    be decrypted from 'encrypted_key'.
 
-    securesystemslib.exceptions.Error, if a valid TUF key object is not found in
-    'encrypted_key'.
+    securesystemslib.exceptions.Error, if a valid securesystemslib key object
+    is not found in 'encrypted_key'.
 
   <Side Effects>
     The pyca/cryptography is library called to perform the actual decryption

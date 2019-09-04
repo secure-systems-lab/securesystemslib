@@ -44,7 +44,6 @@ import six
 # to the filenames of consistent snapshots.
 HASH_FUNCTION = 'sha256'
 
-# See 'log.py' to learn how logging is handled in TUF.
 logger = logging.getLogger('securesystemslib_util')
 
 
@@ -470,12 +469,12 @@ def file_in_confined_directories(filepath, confined_directories):
       return True
 
     # Normalized paths needed, to account for up-level references, etc.
-    # TUF clients have the option of setting the list of directories in
+    # callers have the option of setting the list of directories in
     # 'confined_directories'.
     filepath = os.path.normpath(filepath)
     confined_directory = os.path.normpath(confined_directory)
 
-    # A TUF client may restrict himself to specific directories on the
+    # A caller may restrict himself to specific directories on the
     # remote repository.  The list of paths in 'confined_path', not including
     # each path's subdirectories, are the only directories the client will
     # download targets from.
@@ -557,11 +556,11 @@ def import_json():
     return _json_module
 
   else:
+    # TODO: Drop Python < 2.6 case handling
     try:
       module = __import__('json')
-
     # The 'json' module is available in Python > 2.6, and thus this exception
-    # should not occur in all supported Python installations (> 2.6) of TUF.
+    # should not occur in all supported Python installations (> 2.6).
     except ImportError: #pragma: no cover
       raise ImportError('Could not import the json module')
 

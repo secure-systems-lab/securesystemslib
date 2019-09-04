@@ -16,9 +16,9 @@
 <Purpose>
   BUILD SOURCE DISTRIBUTION
 
-  The following shell command generates a TUF source archive that can be
-  distributed to other users.  The packaged source is saved to the 'dist'
-  folder in the current directory.
+  The following shell command generates a securesystemslib source archive that
+  can be distributed to other users.  The packaged source is saved to the
+  'dist' folder in the current directory.
 
   $ python setup.py sdist
 
@@ -54,7 +54,7 @@
   Note: The last two installation options may require modification of
   Python's search path (i.e., 'sys.path') or updating an OS environment
   variable.  For example, installing to the user site-packages directory might
-  result in the installation of TUF scripts to '~/.local/bin'.  The user may
+  result in the installation of scripts to '~/.local/bin'.  The user may
   then be required to update his $PATH variable:
   $ export PATH=$PATH:~/.local/bin
 """

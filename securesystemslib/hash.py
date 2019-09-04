@@ -14,12 +14,12 @@
 
 <Purpose>
   Support secure hashing and message digests. Any hash-related routines that
-  TUF requires should be located in this module.  Simplifying the creation of
-  digest objects, and providing a central location for hash routines are the
-  main goals of this module.  Support routines implemented include functions to
-  create digest objects given a filename or file object.  Only the standard
-  hashlib library is currently supported, but pyca/cryptography support will be
-  added in the future.
+  securesystemslib requires should be located in this module.  Simplifying the
+  creation of digest objects, and providing a central location for hash
+  routines are the main goals of this module.  Support routines implemented
+  include functions to create digest objects given a filename or file object.
+  Only the standard hashlib library is currently supported, but
+  pyca/cryptography support will be added in the future.
 """
 
 # Help with Python 3 compatibility, where the print statement is a function, an
