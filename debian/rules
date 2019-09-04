@@ -1,10 +1,13 @@
 #!/usr/bin/make -f
 
-export PATH := $(CURDIR)/bin:$(PATH)
-export PYBUILD_DESTDIR = debian/python-securesystemslib
-export PYBUILD_SYSTEM=distutils
+#export DH_VERBOSE = 1
 export PYBUILD_TEST_ARGS = tests
 export PYBUILD_NAME = securesystemslib
 
 %:
-	dh $@ --with python2,python3 --buildsystem=pybuild
+	dh $@ --with python3 --buildsystem=pybuild
+
+# TODO: Remove testskip once upstream includes tests in the release tarball
+# See https://github.com/secure-systems-lab/securesystemslib/pull/168
+override_dh_auto_test:
+	:
