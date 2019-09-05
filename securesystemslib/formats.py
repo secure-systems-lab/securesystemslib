@@ -298,6 +298,8 @@ SIGNATURE_SCHEMA = SCHEMA.Object(
   keyid = KEYID_SCHEMA,
   sig = HEX_SCHEMA)
 
+SIGNATURES_SCHEMA = SCHEMA.ListOf(SIGNATURE_SCHEMA)
+
 # A signable object.  Holds the signing role and its associated signatures.
 SIGNABLE_SCHEMA = SCHEMA.Object(
   object_name = 'SIGNABLE_SCHEMA',
