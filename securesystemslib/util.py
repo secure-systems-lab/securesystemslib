@@ -68,6 +68,8 @@ class TempFile(object):
       raise securesystemslib.exceptions.Error(err)
 
 
+  # TODO: Is it safe to de-TUF the prefix? TUF heavily uses `TempFile` without
+  # ever overriding `prefix`, thus people might expect the default prefix.
   def __init__(self, prefix='tuf_temp_'):
     """
     <Purpose>
