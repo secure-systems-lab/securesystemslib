@@ -698,22 +698,25 @@ def parse_signature_packet(data, supported_signature_types=None,
   keyid = ""
   short_keyid = ""
 
-  # Parse Issuer (short keyid) and Issuer Fingerprint (full keyid) from hashed
-  # and unhashed signature subpackets. Full keyids are only available in newer
-  # signatures. (see RFC4880 and rfc4880bis-06 5.2.3.1.)
+
+  # Parse "Issuer" (short keyid) and "Issuer Fingerprint" (full keyid) type
+  # subpackets
+  # Strategy: Loop over all unhashed and hashed subpackets (in that order!) and
+  # store only the last of a type. Due to the order in the loop, hashed
+  # subpackets are prioritized over unhashed subpackets (see NOTEs below).
+
   # NOTE: A subpacket may be found either in the hashed or unhashed subpacket
   # sections of a signature. If a subpacket is not hashed, then the information
   # in it cannot be considered definitive because it is not part of the
-  # signature proper.
-  # (see RFC4880 5.2.3.2.)
+  # signature proper. (see RFC4880 5.2.3.2.)
   # NOTE: Signatures may contain conflicting information in subpackets. In most
   # cases, an implementation SHOULD use the last subpacket, but MAY use any
-  # conflict resolution scheme that makes more sense.
-  # (see RFC4880 5.2.4.1.)
-  # Below we only consider the last and favor hashed over unhashed subpackets
+  # conflict resolution scheme that makes more sense. (see RFC4880 5.2.4.1.)
   for idx, subpacket_tuple in \
       enumerate(unhashed_subpacket_info + hashed_subpacket_info):
 
+    # The idx indicates if the info is from the unhashed (first) or
+    # hashed (second) of the above concatenated lists
     is_hashed = (idx >= len(unhashed_subpacket_info))
     subpacket_type, subpacket_data = subpacket_tuple
 
@@ -723,6 +726,8 @@ def parse_signature_packet(data, supported_signature_types=None,
         log.warning("Expiration subpacket not hashed, gpg client possibly "
             "exporting a weakly configured key.")
 
+    # Full keyids are only available in newer signatures
+    # (see RFC4880 and rfc4880bis-06 5.2.3.1.)
     if subpacket_type == FULL_KEYID_SUBPACKET: # pragma: no cover
       # Exclude from coverage for consistent results across test envs
       # NOTE: The first byte of the subpacket payload is a version number
@@ -737,6 +742,7 @@ def parse_signature_packet(data, supported_signature_types=None,
       info["creation_time"] = struct.unpack(">I", subpacket_data)[0]
 
     info["subpackets"][subpacket_type] = subpacket_data
+
 
   # Fail if there is no keyid at all (this should not happen)
   if not (keyid or short_keyid): # pragma: no cover
