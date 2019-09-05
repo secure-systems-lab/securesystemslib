@@ -385,24 +385,6 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
 
 
-  def test_C1_get_target_hash(self):
-    # Test normal case.
-    expected_target_hashes = {
-      '/file1.txt': 'e3a3d89eb3b70ce3fbce6017d7b8c12d4abd5635427a0e8a238f53157df85b3d',
-      '/README.txt': '8faee106f1bb69f34aaf1df1e3c2e87d763c4d878cb96b91db13495e32ceb0b0',
-      '/warehouse/file2.txt': 'd543a573a2cec67026eff06e75702303559e64e705eba06f65799baaf0424417'
-    }
-    for filepath, target_hash in six.iteritems(expected_target_hashes):
-      self.assertTrue(securesystemslib.formats.PATH_SCHEMA.matches(filepath))
-      self.assertTrue(securesystemslib.formats.HASH_SCHEMA.matches(target_hash))
-      self.assertEqual(securesystemslib.util.get_target_hash(filepath), target_hash)
-
-    # Test for improperly formatted argument.
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        securesystemslib.util.get_target_hash, 8)
-
-
-
   def test_C5_unittest_toolbox_make_temp_directory(self):
     # Verify that the tearDown function does not fail when
     # unittest_toolbox.make_temp_directory deletes the generated temp directory
