@@ -94,7 +94,14 @@ class TestHSM(unittest.TestCase):
 
     # Make a new directory to store the already existing tokens
     tokens_save_dir = os.path.join(TOKENS_PATH, 'tokens.save')
-    os.mkdir(tokens_save_dir)
+
+    # If the directory already exists, do nothing and use the
+    # pre-existing directory to save the tokens
+    try:
+      os.mkdir(tokens_save_dir)
+    except:
+      logger.info("Directory 'tokens.save' already exists!")
+      
     # Move the tokens to the new directory
     for token in tokens_list:
       token_dir = os.path.join(TOKENS_PATH,token)
