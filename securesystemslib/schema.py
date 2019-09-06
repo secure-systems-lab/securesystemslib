@@ -38,8 +38,8 @@
 
   'schema.py' provides additional schemas for testing objects based on other
   criteria.  See 'securesystemslib.formats.py' and the rest of this module for
-  extensive examples.  Anything related to the checking of TUF objects and
-  their formats can be found in 'formats.py'.
+  extensive examples.  Anything related to the checking of securesystemslib
+  objects and their formats can be found in 'formats.py'.
 """
 
 # Help with Python 3 compatibility, where the print statement is a function, an

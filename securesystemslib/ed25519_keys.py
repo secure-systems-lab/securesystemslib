@@ -100,7 +100,7 @@ with warnings.catch_warnings():
   except (ImportError, IOError): # pragma: no cover
     pass
 
-# The optimized pure Python implementation of Ed25519 provided by TUF.  If
+# The optimized pure Python implementation of Ed25519.  If
 # PyNaCl cannot be imported and an attempt to use is made in this module, a
 # 'securesystemslib.exceptions.UnsupportedLibraryError' exception is raised.
 import securesystemslib._vendor.ed25519.ed25519

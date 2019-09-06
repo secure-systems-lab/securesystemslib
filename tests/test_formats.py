@@ -69,12 +69,6 @@ class TestFormats(unittest.TestCase):
       'SCHEME_SCHEMA': (securesystemslib.formats.SCHEME_SCHEMA,
           'ecdsa-sha2-nistp256'),
 
-      'RELPATH_SCHEMA': (securesystemslib.formats.RELPATH_SCHEMA,
-          'metadata/root/'),
-
-      'RELPATHS_SCHEMA': (securesystemslib.formats.RELPATHS_SCHEMA,
-          ['targets/role1/', 'targets/role2/']),
-
       'PATH_SCHEMA': (securesystemslib.formats.PATH_SCHEMA,
           '/home/someuser/'),
 
@@ -84,20 +78,11 @@ class TestFormats(unittest.TestCase):
       'URL_SCHEMA': (securesystemslib.formats.URL_SCHEMA,
           'https://www.updateframework.com/'),
 
-      'VERSION_SCHEMA': (securesystemslib.formats.VERSION_SCHEMA,
-          {'major': 1, 'minor': 0, 'fix': 8}),
-
-      'LENGTH_SCHEMA': (securesystemslib.formats.LENGTH_SCHEMA, 8),
-
       'NAME_SCHEMA': (securesystemslib.formats.NAME_SCHEMA, 'Marty McFly'),
 
       'TEXT_SCHEMA': (securesystemslib.formats.TEXT_SCHEMA, 'Password: '),
 
       'BOOLEAN_SCHEMA': (securesystemslib.formats.BOOLEAN_SCHEMA, True),
-
-      'THRESHOLD_SCHEMA': (securesystemslib.formats.THRESHOLD_SCHEMA, 1),
-
-      'ROLENAME_SCHEMA': (securesystemslib.formats.ROLENAME_SCHEMA, 'Root'),
 
       'RSAKEYBITS_SCHEMA': (securesystemslib.formats.RSAKEYBITS_SCHEMA, 4096),
 
@@ -175,28 +160,10 @@ class TestFormats(unittest.TestCase):
            'keyval': {'public': 'pubkey',
                       'private': 'privkey'}}),
 
-      'FILEINFO_SCHEMA': (securesystemslib.formats.FILEINFO_SCHEMA,
-          {'length': 1024,
-           'hashes': {'sha256': 'A4582BCF323BCEF'},
-           'custom': {'type': 'paintjob'}}),
-
-      'FILEDICT_SCHEMA': (securesystemslib.formats.FILEDICT_SCHEMA,
-          {'metadata/root.json': {'length': 1024,
-           'hashes': {'sha256': 'ABCD123'},
-           'custom': {'type': 'metadata'}}}),
-
       'SIGNATURE_SCHEMA': (securesystemslib.formats.SIGNATURE_SCHEMA,
           {'keyid': '123abc',
            'method': 'evp',
            'sig': 'A4582BCF323BCEF'}),
-
-      'SIGNATURESTATUS_SCHEMA': (securesystemslib.formats.SIGNATURESTATUS_SCHEMA,
-          {'threshold': 1,
-           'good_sigs': ['123abc'],
-           'bad_sigs': ['123abc'],
-           'unknown_sigs': ['123abc'],
-           'untrusted_sigs': ['123abc'],
-           'unknown_method_sigs': ['123abc']}),
 
       'SIGNABLE_SCHEMA': (securesystemslib.formats.SIGNABLE_SCHEMA,
           {'signed': 'signer',
@@ -207,87 +174,7 @@ class TestFormats(unittest.TestCase):
       'KEYDICT_SCHEMA': (securesystemslib.formats.KEYDICT_SCHEMA,
           {'123abc': {'keytype': 'rsa',
            'scheme': 'rsassa-pss-sha256',
-           'keyval': {'public': 'pubkey', 'private': 'privkey'}}}),
-
-      'KEYDB_SCHEMA': (securesystemslib.formats.KEYDB_SCHEMA,
-          {'123abc': {'keytype': 'rsa',
-           'keyid': '123456789abcdef',
-           'keyval': {'public': 'pubkey', 'private': 'privkey'}}}),
-
-      'ROLE_SCHEMA': (securesystemslib.formats.ROLE_SCHEMA,
-          {'keyids': ['123abc'],
-           'threshold': 1,
-           'paths': ['path1/', 'path2']}),
-
-      'ROLEDICT_SCHEMA': (securesystemslib.formats.ROLEDICT_SCHEMA,
-          {'root': {'keyids': ['123abc'],
-           'threshold': 1,
-           'paths': ['path1/', 'path2']}}),
-
-      'ROOT_SCHEMA': (securesystemslib.formats.ROOT_SCHEMA,
-          {'_type': 'root',
-           'version': 8,
-           'consistent_snapshot': False,
-           'expires': '1985-10-21T13:20:00Z',
-           'keys': {'123abc': {'keytype': 'rsa',
-           'scheme': 'rsassa-pss-sha256',
-           'keyval': {'public': 'pubkey',
-           'private': 'privkey'}}},
-           'roles': {'root': {'keyids': ['123abc'],
-           'threshold': 1,
-           'paths': ['path1/', 'path2']}}}),
-
-      'TARGETS_SCHEMA': (securesystemslib.formats.TARGETS_SCHEMA,
-        {'_type': 'targets',
-         'version': 8,
-         'expires': '1985-10-21T13:20:00Z',
-         'targets': {'metadata/targets.json': {'length': 1024,
-         'hashes': {'sha256': 'ABCD123'},
-         'custom': {'type': 'metadata'}}},
-         'delegations': {'keys': {'123abc': {'keytype':'rsa',
-         'scheme': 'rsassa-pss-sha256',
-         'keyval': {'public': 'pubkey',
-         'private': 'privkey'}}},
-         'roles': [{'name': 'root', 'keyids': ['123abc'],
-         'threshold': 1,
-         'paths': ['path1/', 'path2']}]}}),
-
-      'SNAPSHOT_SCHEMA': (securesystemslib.formats.SNAPSHOT_SCHEMA,
-        {'_type': 'snapshot',
-         'version': 8,
-         'expires': '1985-10-21T13:20:00Z',
-         'meta': {'snapshot.json': {'version': 1024}}}),
-
-      'TIMESTAMP_SCHEMA': (securesystemslib.formats.TIMESTAMP_SCHEMA,
-        {'_type': 'timestamp',
-         'version': 8,
-         'expires': '1985-10-21T13:20:00Z',
-         'meta': {'metadattimestamp.json': {'length': 1024,
-         'hashes': {'sha256': 'AB1245'}}}}),
-
-      'MIRROR_SCHEMA': (securesystemslib.formats.MIRROR_SCHEMA,
-        {'url_prefix': 'http://localhost:8001',
-         'metadata_path': 'metadata/',
-         'targets_path': 'targets/',
-         'confined_target_dirs': ['path1/', 'path2/'],
-         'custom': {'type': 'mirror'}}),
-
-      'MIRRORDICT_SCHEMA': (securesystemslib.formats.MIRRORDICT_SCHEMA,
-        {'mirror1': {'url_prefix': 'http://localhost:8001',
-         'metadata_path': 'metadata/',
-         'targets_path': 'targets/',
-         'confined_target_dirs': ['path1/', 'path2/'],
-         'custom': {'type': 'mirror'}}}),
-
-      'MIRRORLIST_SCHEMA': (securesystemslib.formats.MIRRORLIST_SCHEMA,
-        {'_type': 'mirrors',
-         'version': 8,
-         'expires': '1985-10-21T13:20:00Z',
-         'mirrors': [{'url_prefix': 'http://localhost:8001',
-         'metadata_path': 'metadata/',
-         'targets_path': 'targets/',
-         'confined_target_dirs': ['path1/', 'path2/'],
-         'custom': {'type': 'mirror'}}]})}
+           'keyval': {'public': 'pubkey', 'private': 'privkey'}}})}
 
     # Iterate 'valid_schemas', ensuring each 'valid_schema' correctly matches
     # its respective 'schema_type'.
