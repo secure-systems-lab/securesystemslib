@@ -431,14 +431,16 @@ class HSM(object):
       To logout and terminate sessions with the HSM completely.
     """
 
+    # Logout form the admin session
     try:
       self.logout()
+    except PyKCS11.PyKCS11Error as error:
+      # Error is raised when user does not have an active admin session
+      logger.info(error)
+
+    # After logout, completely terminate the session with the HSM.
+    try:
       self.close_session()
     except PyKCS11.PyKCS11Error as error:
-      if error.__str__() == 'CKR_USER_NOT_LOGGED_IN (0x00000101)':
-        # When the user is already logged out.
-        logger.info(str(error))
-        self.close_session()
-      else:
-        # When the session does not exists.
-        logger.info(str(error))
+      # Error is raised when there is no active session with the HSM.
+      logger.info(str(error))
