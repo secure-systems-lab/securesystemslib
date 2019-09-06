@@ -36,6 +36,13 @@ Library.  For key storage, RSA keys may be stored in PEM or JSON format, and
 Ed25519 keys in JSON format.  Generating, importing, and loading cryptographic
 key files can be done with functions available in securesystemslib.
 
+securesystemslib also provides an interface to the `GNU Privacy Guard (GPG)
+<https://gnupg.org/>`_ command line tool, with functions to create RSA and DSA
+signatures using private keys in a local gpg keychain; to export the
+corresponding public keys in a *pythonic* format; and to verify the created
+signatures using the exported keys. The latter does not require the gpg command
+line tool to be installed, instead the `cryptography` library is used.
+
 Installation
 ++++++++++++
 
@@ -166,7 +173,7 @@ cryptographic operations.
 
     >>> from securesystemslib.keys import *
 
-    >>> data = 'The quick brown fox jumps over the lazy dog'
+    >>> data = b'The quick brown fox jumps over the lazy dog'
     >>> ed25519_key = generate_ed25519_key()
     >>> signature = create_signature(ed25519_key, data)
     >>> rsa_key = generate_rsa_key(2048)
@@ -182,7 +189,7 @@ Verify ECDSA, Ed25519, and RSA Signatures
 
     # Continuing from the previous sections . . .
 
-    >>> data = 'The quick brown fox jumps over the lazy dog'
+    >>> data = b'The quick brown fox jumps over the lazy dog'
     >>> ed25519_key = generate_ed25519_key()
     >>> signature = create_signature(ed25519_key, data)
     >>> verify_signature(ed25519_key, signature, data)
@@ -327,3 +334,32 @@ Miscellaneous functions
     >>> public_pem = ecdsa_key['keyval']['public']
     >>> ecdsa_key2 = import_ecdsakey_from_pem(public_pem)
 
+
+
+
+GnuPG interface
+~~~~~~~~~~~~~~~
+
+Signature creation and public key export requires installation of the `gpg` or
+`gpg2` command line tool, which may be downloaded from
+`https://gnupg.org/download <https://gnupg.org/>`_. It is
+is also needed to generate the supported RSA or DSA signing keys (see `gpg` man
+pages for detailed instructions). Sample keys are available in a test keyring
+at `tests/gpg_keyrings/rsa`, which may be passed to the signing and export
+functions using the `homedir` argument (if not passed the default keyring is
+used).
+
+::
+
+    >>> import securesystemslib.gpg.functions as gpg
+
+    >>> data = b"The quick brown fox jumps over the lazy dog"
+
+    >>> signing_key_id = "8465A1E2E0FB2B40ADB2478E18FB3F537E0C8A17"
+    >>> keyring = "tests/gpg_keyrings/rsa"
+
+    >>> signature = gpg.create_signature(data, signing_key_id, homedir=keyring)
+    >>> public_key = gpg.export_pubkey(non_default_signing_key, homedir=keyring)
+
+    >>> gpg.verify_signature(signature, public_key, data)
+    True

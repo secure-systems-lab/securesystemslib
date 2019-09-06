@@ -314,6 +314,101 @@ KEYDICT_SCHEMA = SCHEMA.DictOf(
 
 
 
+ANY_STRING_SCHEMA = SCHEMA.AnyString()
+LIST_OF_ANY_STRING_SCHEMA = SCHEMA.ListOf(ANY_STRING_SCHEMA)
+
+def _create_gpg_pubkey_with_subkey_schema(pubkey_schema):
+  """Helper method to extend the passed public key schema with an optional
+  dictionary of sub public keys "subkeys" with the same schema."""
+  schema = pubkey_schema
+  subkey_schema_tuple =  ("subkeys", SCHEMA.Optional(
+        SCHEMA.DictOf(
+          key_schema=KEYID_SCHEMA,
+          value_schema=pubkey_schema
+          )
+        )
+      )
+  # Any subclass of `securesystemslib.schema.Object` stores the schemas that
+  # define the attributes of the object in its `_required` property, even if
+  # such a schema is of type `Optional`.
+  # TODO: Find a way that does not require to access a protected member
+  schema._required.append(subkey_schema_tuple) # pylint: disable=protected-access
+  return schema
+
+GPG_HASH_ALGORITHM_STRING = "pgp+SHA2"
+GPG_RSA_PUBKEY_METHOD_STRING = "pgp+rsa-pkcsv1.5"
+GPG_DSA_PUBKEY_METHOD_STRING = "pgp+dsa-fips-180-2"
+
+GPG_RSA_PUBKEYVAL_SCHEMA = SCHEMA.Object(
+  object_name = "GPG_RSA_PUBKEYVAL_SCHEMA",
+  e = SCHEMA.AnyString(),
+  n = HEX_SCHEMA
+)
+
+
+# We have to define GPG_RSA_PUBKEY_SCHEMA in two steps, because it is
+# self-referential. Here we define a shallow _GPG_RSA_PUBKEY_SCHEMA, which we
+# use below to create the self-referential GPG_RSA_PUBKEY_SCHEMA.
+_GPG_RSA_PUBKEY_SCHEMA = SCHEMA.Object(
+  object_name = "GPG_RSA_PUBKEY_SCHEMA",
+  type = SCHEMA.String("rsa"),
+  method = SCHEMA.String(GPG_RSA_PUBKEY_METHOD_STRING),
+  hashes = SCHEMA.ListOf(SCHEMA.String(GPG_HASH_ALGORITHM_STRING)),
+  creation_time = SCHEMA.Optional(UNIX_TIMESTAMP_SCHEMA),
+  validity_period = SCHEMA.Optional(SCHEMA.Integer(lo=0)),
+  keyid = KEYID_SCHEMA,
+  keyval = SCHEMA.Object(
+      public = GPG_RSA_PUBKEYVAL_SCHEMA,
+      private = SCHEMA.String("")
+    )
+)
+GPG_RSA_PUBKEY_SCHEMA = _create_gpg_pubkey_with_subkey_schema(
+    _GPG_RSA_PUBKEY_SCHEMA)
+
+
+GPG_DSA_PUBKEYVAL_SCHEMA = SCHEMA.Object(
+  object_name = "GPG_DSA_PUBKEYVAL_SCHEMA",
+  y = HEX_SCHEMA,
+  p = HEX_SCHEMA,
+  q = HEX_SCHEMA,
+  g = HEX_SCHEMA
+)
+
+
+# We have to define GPG_DSA_PUBKEY_SCHEMA in two steps, because it is
+# self-referential. Here we define a shallow _GPG_DSA_PUBKEY_SCHEMA, which we
+# use below to create the self-referential GPG_DSA_PUBKEY_SCHEMA.
+_GPG_DSA_PUBKEY_SCHEMA = SCHEMA.Object(
+  object_name = "GPG_DSA_PUBKEY_SCHEMA",
+  type = SCHEMA.String("dsa"),
+  method = SCHEMA.String(GPG_DSA_PUBKEY_METHOD_STRING),
+  hashes = SCHEMA.ListOf(SCHEMA.String(GPG_HASH_ALGORITHM_STRING)),
+  creation_time = SCHEMA.Optional(UNIX_TIMESTAMP_SCHEMA),
+  validity_period = SCHEMA.Optional(SCHEMA.Integer(lo=0)),
+  keyid = KEYID_SCHEMA,
+  keyval = SCHEMA.Object(
+      public = GPG_DSA_PUBKEYVAL_SCHEMA,
+      private = SCHEMA.String("")
+    )
+)
+GPG_DSA_PUBKEY_SCHEMA = _create_gpg_pubkey_with_subkey_schema(
+    _GPG_DSA_PUBKEY_SCHEMA)
+
+
+GPG_PUBKEY_SCHEMA = SCHEMA.OneOf([GPG_RSA_PUBKEY_SCHEMA,
+    GPG_DSA_PUBKEY_SCHEMA])
+
+
+GPG_SIGNATURE_SCHEMA = SCHEMA.Object(
+    object_name = "SIGNATURE_SCHEMA",
+    keyid = KEYID_SCHEMA,
+    short_keyid = SCHEMA.Optional(KEYID_SCHEMA),
+    other_headers = HEX_SCHEMA,
+    signature = HEX_SCHEMA,
+    info = SCHEMA.Optional(SCHEMA.Any()),
+  )
+
+
 
 def datetime_to_unix_timestamp(datetime_object):
   """

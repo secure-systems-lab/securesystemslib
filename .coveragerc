@@ -2,6 +2,7 @@
 branch = True
 
 omit =
+  */python?.?/*
   */securesystemslib/_vendor/*
   */tests/*
   */site-packages/*
