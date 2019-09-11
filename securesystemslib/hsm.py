@@ -436,11 +436,11 @@ class HSM(object):
       self.logout()
     except PyKCS11.PyKCS11Error as error:
       # Error is raised when user does not have an active admin session
-      logger.info(error)
+      logger.warning(error)
 
     # After logout, completely terminate the session with the HSM.
     try:
       self.close_session()
     except PyKCS11.PyKCS11Error as error:
       # Error is raised when there is no active session with the HSM.
-      logger.info(str(error))
+      logger.warning(str(error))
