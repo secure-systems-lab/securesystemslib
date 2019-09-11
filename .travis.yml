@@ -32,8 +32,8 @@ install:
   - wget https://dist.opendnssec.org/source/softhsm-2.3.0.tar.gz
   - tar -xzf softhsm-2.3.0.tar.gz
   - cd softhsm-2.3.0
-  - sudo ./configure
-  - sudo make
+  - ./configure
+  - make
   - sudo make install
 
 script:
