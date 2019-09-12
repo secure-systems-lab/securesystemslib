@@ -330,7 +330,7 @@ class HSM(object):
       mechanism = PyKCS11.RSA_PSS_Mechanism(RSA_PSS_MECH,
           RSA_PSS_HASH_SHA256, RSA_PSS_MGF_SHA256, RSA_PSS_SALT_LENGTH)
 
-    elif PyKCS11.CKK[key_type] == 'CKK_EC':
+    elif PyKCS11.CKK[key_type] == 'CKK_EC' or PyKCS11.CKK[key_type] == 'CKK_ECDSA':
       mechanism = PyKCS11.Mechanism(PyKCS11.CKM_ECDSA)
 
     if mechanism is None:
@@ -385,7 +385,7 @@ class HSM(object):
       mechanism = PyKCS11.RSA_PSS_Mechanism(RSA_PSS_MECH,
           RSA_PSS_HASH_SHA256, RSA_PSS_MGF_SHA256, RSA_PSS_SALT_LENGTH)
 
-    elif PyKCS11.CKK[key_type] == 'CKK_EC':
+    elif PyKCS11.CKK[key_type] == 'CKK_EC' or PyKCS11.CKK[key_type] == 'CKK_ECDSA':
       mechanism = PyKCS11.Mechanism(PyKCS11.CKM_ECDSA)
 
     if mechanism is None:
