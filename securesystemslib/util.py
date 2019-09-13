@@ -395,6 +395,39 @@ def get_file_details(filepath, hash_algorithms=['sha256']):
   return file_length, file_hashes
 
 
+def persist_temp_file(temp_file, persist_path):
+  """
+  <Purpose>
+    Copies 'temp_file' (a file like object) to a newly created non-temp file at
+    'persist_path' and closes 'temp_file' so that it is removed.
+
+  <Arguments>
+    temp_file:
+      File object to persist, typically a file object returned by one of the
+      interfaces in the tempfile module of the standard library.
+
+    persist_path:
+      File path to create the persistent file in.
+
+  <Exceptions>
+    None.
+
+  <Return>
+    None.
+  """
+
+  temp_file.flush()
+  temp_file.seek(0)
+
+  with open(persist_path, 'wb') as destination_file:
+    shutil.copyfileobj(temp_file, destination_file)
+    # Force the destination file to be written to disk from Python's internal
+    # and the operation system's buffers.  os.fsync() should follow flush().
+    destination_file.flush()
+    os.fsync(destination_file.fileno())
+
+  temp_file.close()
+
 def ensure_parent_dir(filename):
   """
   <Purpose>

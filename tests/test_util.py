@@ -385,6 +385,17 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
 
 
+  def test_B7_persist_temp_file(self):
+    # Destination directory to save the temporary file in.
+    dest_temp_dir = self.make_temp_directory()
+    dest_path = os.path.join(dest_temp_dir, self.random_string())
+    tmpfile = tempfile.TemporaryFile()
+    tmpfile.write(self.random_string().encode('utf-8'))
+    securesystemslib.util.persist_temp_file(tmpfile, dest_path)
+    self.assertTrue(dest_path)
+
+
+
   def test_C5_unittest_toolbox_make_temp_directory(self):
     # Verify that the tearDown function does not fail when
     # unittest_toolbox.make_temp_directory deletes the generated temp directory
