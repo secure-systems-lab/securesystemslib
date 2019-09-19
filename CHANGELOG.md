@@ -1,5 +1,20 @@
 # Changelog
 
+## securesystemslib v0.12.0
+
+* *backwards incompatible*
+  * Remove data serialization in `create_signature` and `verify_signature` (#162)
+  * Replace mostly obsolete `TempFile` utility with single helper function (#181)
+  * Remove *TUF*-specific code and comments (#165)
+* *new features*
+  * Add support for *pkcs1v15* RSA signature scheme and additional hash algorithms (#173, #175)
+  * Add basic *OpenPGP* support, transferred from [in-toto](https://github.com/in-toto/in-toto) (#174, #176, #185)
+* *miscellaneous*
+  * Fix publishing of code coverage  and enhance test configuration (#171)
+  * Make colorama a strict dependency (#178)
+  * Enhance source distribution metadata (#168)
+  * Update downstream Debian metadata (#177)
+
 ## securesystemslib v0.11.3
 
 * Provide option to normalize line endings (`\r\n` -> `\n`, `\r` -> `\n`) when
