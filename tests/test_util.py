@@ -48,122 +48,12 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
   def setUp(self):
     unittest_toolbox.Modified_TestCase.setUp(self)
-    self.temp_fileobj = securesystemslib.util.TempFile()
+    self.temp_fileobj = tempfile.TemporaryFile()
 
-		
 
   def tearDown(self):
     unittest_toolbox.Modified_TestCase.tearDown(self)
-    self.temp_fileobj.close_temp_file()
-
-
-
-  def test_A1_tempfile_close_temp_file(self):
-    # Was the temporary file closed?
-    self.temp_fileobj.close_temp_file()
-    self.assertTrue(self.temp_fileobj.temporary_file.closed)
-
-
-
-  def _extract_tempfile_directory(self, config_temp_dir=None):
-    """
-      Takes a directory (essentially specified in the settings.py as
-      'temporary_directory') and substitutes tempfile.TemporaryFile() with
-      tempfile.mkstemp() in order to extract actual directory of the stored
-      tempfile.  Returns the config's temporary directory (or default temp
-      directory) and actual directory.
-    """
-
-    # Patching 'settings.temporary_directory'.
-    securesystemslib.settings.temporary_directory = config_temp_dir
-
-    if config_temp_dir is None:
-      # 'config_temp_dir' needs to be set to default.
-      config_temp_dir = tempfile.gettempdir()
-
-    # Patching 'tempfile.TemporaryFile()' (by substituting
-    # temfile.TemporaryFile() with tempfile.mkstemp()) in order to get the
-    # directory of the stored tempfile object.
-    saved_tempfile_TemporaryFile = securesystemslib.util.tempfile.NamedTemporaryFile
-    securesystemslib.util.tempfile.NamedTemporaryFile = tempfile.mkstemp
-    _temp_fileobj = securesystemslib.util.TempFile()
-    securesystemslib.util.tempfile.NamedTemporaryFile = saved_tempfile_TemporaryFile
-    junk, _tempfilepath = _temp_fileobj.temporary_file
-    _tempfile_dir = os.path.dirname(_tempfilepath)
-
-    # In the case when 'config_temp_dir' is None or some other discrepancy,
-    # '_temp_fileobj' needs to be closed manually since tempfile.mkstemp()
-    # was used.
-    if os.path.exists(_tempfilepath):
-      os.remove(_tempfilepath)
-
-    return config_temp_dir, _tempfile_dir
-
-
-
-  def test_A2_tempfile_init(self):
-    # Goal: Verify that temporary files are stored in the appropriate temp
-    # directory.  The location of the temporary files is set in 'settings.py'.
-
-    # Test: Expected input verification.
-    # Assumed 'settings.temporary_directory' is 'None' initially.
-    temp_file = securesystemslib.util.TempFile()
-    temp_file_directory = os.path.dirname(temp_file.temporary_file.name)
-    self.assertEqual(tempfile.gettempdir(), temp_file_directory)
-
-    saved_temporary_directory = securesystemslib.settings.temporary_directory
-    temp_directory = self.make_temp_directory()
-    securesystemslib.settings.temporary_directory = temp_directory
-    temp_file = securesystemslib.util.TempFile()
-    temp_file_directory = os.path.dirname(temp_file.temporary_file.name)
-    self.assertEqual(temp_directory, temp_file_directory)
-
-    securesystemslib.settings.temporary_directory = saved_temporary_directory
-
-    # Test: Unexpected input handling.
-    config_temp_dirs = [self.random_string(), 123, ['a'], {'a':1}]
-    for config_temp_dir in config_temp_dirs:
-      config_temp_dir, actual_dir = \
-      self._extract_tempfile_directory(config_temp_dir)
-      self.assertEqual(tempfile.gettempdir(), actual_dir)
-
-
-
-  def test_A3_tempfile_read(self):
-    filepath = self.make_temp_data_file(data = '1234567890')
-    fileobj = open(filepath, 'rb')
-
-    # Patching 'temp_fileobj.temporary_file'.
-    self.temp_fileobj.temporary_file = fileobj
-
-    # Test: Expected input.
-    self.assertEqual(self.temp_fileobj.read().decode('utf-8'), '1234567890')
-    self.assertEqual(self.temp_fileobj.read(4).decode('utf-8'), '1234')
-
-    # Test: Unexpected input.
-    for bogus_arg in ['abcd', ['abcd'], {'a':'a'}, -100]:
-      self.assertRaises(securesystemslib.exceptions.FormatError,
-          self.temp_fileobj.read, bogus_arg)
-
-
-
-  def test_A4_tempfile_write(self):
-    data = self.random_string()
-    self.temp_fileobj.write(data.encode('utf-8'))
-    self.assertEqual(data, self.temp_fileobj.read().decode('utf-8'))
-
-    self.temp_fileobj.write(data.encode('utf-8'), auto_flush=False)
-    self.assertEqual(data, self.temp_fileobj.read().decode('utf-8'))
-
-
-
-  def test_A5_tempfile_move(self):
-    # Destination directory to save the temporary file in.
-    dest_temp_dir = self.make_temp_directory()
-    dest_path = os.path.join(dest_temp_dir, self.random_string())
-    self.temp_fileobj.write(self.random_string().encode('utf-8'))
-    self.temp_fileobj.move(dest_path)
-    self.assertTrue(dest_path)
+    self.temp_fileobj.close()
 
 
 
@@ -188,66 +78,6 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
       logger.error('Compression of ' + repr(filepath)  +' failed.'
           '  Path does not exist.')
       sys.exit(1)
-
-
-
-  def _decompress_file(self, compressed_filepath):
-    """[Helper]"""
-    if os.path.exists(compressed_filepath):
-      f = gzip.open(compressed_filepath, 'rb')
-      file_content = f.read()
-      f.close()
-      return file_content
-
-    else:
-      logger.error('Decompression of ' + repr(compressed_filepath) + ' failed.'
-          '  Path does not exist.')
-      sys.exit(1)
-
-
-
-  def test_A6_tempfile_decompress_temp_file_object(self):
-    # Setup: generate a temp file (self.make_temp_data_file()),
-    # compress it.  Write it to self.temp_fileobj().
-    filepath = self.make_temp_data_file()
-    fileobj = open(filepath, 'rb')
-    compressed_filepath = self._compress_existing_file(filepath)
-    compressed_fileobj = open(compressed_filepath, 'rb')
-    self.temp_fileobj.write(compressed_fileobj.read())
-    os.remove(compressed_filepath)
-
-    # Try decompression using incorrect compression type i.e. compressions
-    # other than 'gzip'.  In short feeding incorrect input.
-    bogus_args = ['zip', 1234, self.random_string()]
-    for arg in bogus_args:
-      self.assertRaises(securesystemslib.exceptions.Error,
-          self.temp_fileobj.decompress_temp_file_object, arg)
-
-    # Test for a valid util.decompress_temp_file_object() call.
-    self.temp_fileobj.decompress_temp_file_object('gzip')
-    self.assertEqual(self.temp_fileobj.read(), fileobj.read())
-
-    # Checking the content of the TempFile's '_orig_file' instance.
-    check_compressed_original = self.make_temp_file()
-    with open(check_compressed_original, 'wb') as file_object:
-      self.temp_fileobj._orig_file.seek(0)
-      original_content = self.temp_fileobj._orig_file.read()
-      file_object.write(original_content)
-
-    data_in_orig_file = self._decompress_file(check_compressed_original)
-    fileobj.seek(0)
-    self.assertEqual(data_in_orig_file, fileobj.read())
-
-    # Try decompressing once more.
-    self.assertRaises(securesystemslib.exceptions.Error,
-        self.temp_fileobj.decompress_temp_file_object, 'gzip')
-
-    # Test decompression of invalid gzip file.
-    temp_file = securesystemslib.util.TempFile()
-    temp_file.write(b'bad zip')
-    contents = temp_file.read()
-    self.assertRaises(securesystemslib.exceptions.DecompressionError,
-        temp_file.decompress_temp_file_object, 'gzip')
 
 
 
@@ -385,6 +215,17 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
 
 
+  def test_B7_persist_temp_file(self):
+    # Destination directory to save the temporary file in.
+    dest_temp_dir = self.make_temp_directory()
+    dest_path = os.path.join(dest_temp_dir, self.random_string())
+    tmpfile = tempfile.TemporaryFile()
+    tmpfile.write(self.random_string().encode('utf-8'))
+    securesystemslib.util.persist_temp_file(tmpfile, dest_path)
+    self.assertTrue(dest_path)
+
+
+
   def test_C5_unittest_toolbox_make_temp_directory(self):
     # Verify that the tearDown function does not fail when
     # unittest_toolbox.make_temp_directory deletes the generated temp directory
@@ -399,13 +240,6 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     random_path = self.random_path(length=10)
     self.assertTrue(securesystemslib.formats.PATH_SCHEMA.matches(random_path))
     self.assertTrue(10, len(random_path))
-
-
-  def test_c6_get_compressed_length(self):
-   self.temp_fileobj.write(b'hello world')
-   self.assertTrue(self.temp_fileobj.get_compressed_length() == 11)
-
-   temp_file = securesystemslib.util.TempFile()
 
 
 

@@ -219,17 +219,17 @@ def generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
   # Write the public key (i.e., 'public', which is in PEM format) to
   # '<filepath>.pub'.  (1) Create a temporary file, (2) write the contents of
   # the public key, and (3) move to final destination.
-  file_object = securesystemslib.util.TempFile()
+  file_object = tempfile.TemporaryFile()
   file_object.write(public.encode('utf-8'))
   # The temporary file is closed after the final move.
-  file_object.move(filepath + '.pub')
+  securesystemslib.util.persist_temp_file(file_object, filepath + '.pub')
 
   # Write the private key in encrypted PEM format to '<filepath>'.
   # Unlike the public key file, the private key does not have a file
   # extension.
-  file_object = securesystemslib.util.TempFile()
+  file_object = tempfile.TemporaryFile()
   file_object.write(private.encode('utf-8'))
-  file_object.move(filepath)
+  securesystemslib.util.persist_temp_file(file_object, filepath)
 
   return filepath
 
@@ -490,7 +490,7 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None):
 
   # Create a temporary file, write the contents of the public key, and move
   # to final destination.
-  file_object = securesystemslib.util.TempFile()
+  file_object = tempfile.TemporaryFile()
 
   # Generate the ed25519 public key file contents in metadata format (i.e.,
   # does not include the keyid portion).
@@ -506,11 +506,11 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None):
   # '<filepath>.pub'.  (1) Create a temporary file, (2) write the contents of
   # the public key, and (3) move to final destination.
   # The temporary file is closed after the final move.
-  file_object.move(filepath + '.pub')
+  securesystemslib.util.persist_temp_file(file_object, filepath + '.pub')
 
   # Write the encrypted key string, conformant to
   # 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA', to '<filepath>'.
-  file_object = securesystemslib.util.TempFile()
+  file_object = tempfile.TemporaryFile()
 
   # Encrypt the private key if 'password' is set.
   if len(password):
@@ -524,7 +524,7 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None):
   # Raise 'securesystemslib.exceptions.CryptoError' if 'ed25519_key' cannot be
   # encrypted.
   file_object.write(ed25519_key.encode('utf-8'))
-  file_object.move(filepath)
+  securesystemslib.util.persist_temp_file(file_object, filepath)
 
   return filepath
 
@@ -745,7 +745,7 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None):
 
   # Create a temporary file, write the contents of the public key, and move
   # to final destination.
-  file_object = securesystemslib.util.TempFile()
+  file_object = tempfile.TemporaryFile()
 
   # Generate the ECDSA public key file contents in metadata format (i.e., does
   # not include the keyid portion).
@@ -760,16 +760,16 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None):
   # Write the public key (i.e., 'public', which is in PEM format) to
   # '<filepath>.pub'.  (1) Create a temporary file, (2) write the contents of
   # the public key, and (3) move to final destination.
-  file_object.move(filepath + '.pub')
+  securesystemslib.util.persist_temp_file(file_object, filepath + '.pub')
 
   # Write the encrypted key string, conformant to
   # 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA', to '<filepath>'.
-  file_object = securesystemslib.util.TempFile()
+  file_object = tempfile.TemporaryFile()
   # Raise 'securesystemslib.exceptions.CryptoError' if 'ecdsa_key' cannot be
   # encrypted.
   encrypted_key = securesystemslib.keys.encrypt_key(ecdsa_key, password)
   file_object.write(encrypted_key.encode('utf-8'))
-  file_object.move(filepath)
+  securesystemslib.util.persist_temp_file(file_object, filepath)
 
   return filepath
 
