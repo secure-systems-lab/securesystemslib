@@ -836,10 +836,10 @@ def verify_signature(key_dict, signature, data):
   # This check will ensure 'key_dict' has the appropriate number
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.ANY_VERIFICATION_KEY_SCHEMA.check_match(key_dict)
+  securesystemslib.formats.ANYKEY_SCHEMA.check_match(key_dict)
 
   # Does 'signature' have the correct format?
-  securesystemslib.formats.ANY_SIGNATURE_SCHEMA.check_match(signature)
+  securesystemslib.formats.SIGNATURE_SCHEMA.check_match(signature)
 
   # Verify that the KEYID in 'key_dict' matches the KEYID listed in the
   # 'signature'.

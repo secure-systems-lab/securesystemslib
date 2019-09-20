@@ -86,6 +86,9 @@ import securesystemslib.exceptions
 # additional keys which are not defined. Thus, any additions to them will be
 # easily backwards compatible with clients that are already deployed.
 
+ANY_STRING_SCHEMA = SCHEMA.AnyString()
+LIST_OF_ANY_STRING_SCHEMA = SCHEMA.ListOf(ANY_STRING_SCHEMA)
+
 # A datetime in 'YYYY-MM-DDTHH:MM:SSZ' ISO 8601 format.  The "Z" zone designator
 # for the zero UTC offset is always used (i.e., a numerical offset is not
 # supported.)  Example: '2015-10-21T13:20:00Z'.  Note:  This is a simple format
@@ -287,6 +290,7 @@ ED25519KEY_SCHEMA = SCHEMA.Object(
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
   keyval = KEYVAL_SCHEMA)
 
+# GPG key scheme definitions
 GPG_HASH_ALGORITHM_STRING = "pgp+SHA2"
 GPG_RSA_PUBKEY_METHOD_STRING = "pgp+rsa-pkcsv1.5"
 GPG_DSA_PUBKEY_METHOD_STRING = "pgp+dsa-fips-180-2"
@@ -385,19 +389,6 @@ SIGNATURE_SCHEMA = SCHEMA.Object(
   keyid = KEYID_SCHEMA,
   sig = HEX_SCHEMA)
 
-# A schema holding the result of checking the signatures of a particular
-# 'SIGNABLE_SCHEMA' role.
-# For example, how many of the signatures for the 'Target' role are
-# valid?  This SCHEMA holds this information.  See 'sig.py' for
-# more information.
-SIGNATURESTATUS_SCHEMA = SCHEMA.Object(
-  object_name = 'SIGNATURESTATUS_SCHEMA',
-  threshold = SCHEMA.Integer(),
-  good_sigs = KEYIDS_SCHEMA,
-  bad_sigs = KEYIDS_SCHEMA,
-  unknown_sigs = KEYIDS_SCHEMA,
-  untrusted_sigs = KEYIDS_SCHEMA)
-
 # A dict where the dict keys hold a keyid and the dict values a key object.
 KEYDICT_SCHEMA = SCHEMA.DictOf(
   key_schema = KEYID_SCHEMA,
@@ -433,9 +424,6 @@ ANY_PUBKEY_SCHEMA = SCHEMA.OneOf([PUBLIC_KEY_SCHEMA, GPG_PUBKEY_SCHEMA])
 ANY_PUBKEY_DICT_SCHEMA = SCHEMA.DictOf(
   key_schema = KEYID_SCHEMA,
   value_schema = ANY_PUBKEY_SCHEMA)
-
-ANY_STRING_SCHEMA = SCHEMA.AnyString()
-LIST_OF_ANY_STRING_SCHEMA = SCHEMA.ListOf(ANY_STRING_SCHEMA)
 
 
 
