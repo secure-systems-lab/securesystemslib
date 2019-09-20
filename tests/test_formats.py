@@ -171,7 +171,7 @@ class TestFormats(unittest.TestCase):
            'method': 'evp',
            'sig': 'A4582BCF323BCEF'}]}),
 
-      'KEYDICT_SCHEMA': (securesystemslib.formats.KEYDICT_SCHEMA,
+      'ANY_KEYDICT_SCHEMA': (securesystemslib.formats.ANY_KEYDICT_SCHEMA,
           {'123abc': {'keytype': 'rsa',
            'scheme': 'rsassa-pss-sha256',
            'keyval': {'public': 'pubkey', 'private': 'privkey'}}})}

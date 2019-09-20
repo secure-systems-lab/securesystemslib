@@ -86,6 +86,9 @@ import securesystemslib.exceptions
 # additional keys which are not defined. Thus, any additions to them will be
 # easily backwards compatible with clients that are already deployed.
 
+ANY_STRING_SCHEMA = SCHEMA.AnyString()
+LIST_OF_ANY_STRING_SCHEMA = SCHEMA.ListOf(ANY_STRING_SCHEMA)
+
 # A datetime in 'YYYY-MM-DDTHH:MM:SSZ' ISO 8601 format.  The "Z" zone designator
 # for the zero UTC offset is always used (i.e., a numerical offset is not
 # supported.)  Example: '2015-10-21T13:20:00Z'.  Note:  This is a simple format
@@ -287,35 +290,10 @@ ED25519KEY_SCHEMA = SCHEMA.Object(
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
   keyval = KEYVAL_SCHEMA)
 
-# A single signature of an object.  Indicates the signature, and the KEYID of
-# the signing key.  I debated making the signature schema not contain the key
-# ID and instead have the signatures of a file be a dictionary with the key
-# being the keyid and the value being the signature schema without the keyid.
-# That would be under the argument that a key should only be able to sign a
-# file once.
-SIGNATURE_SCHEMA = SCHEMA.Object(
-  object_name = 'SIGNATURE_SCHEMA',
-  keyid = KEYID_SCHEMA,
-  sig = HEX_SCHEMA)
-
-SIGNATURES_SCHEMA = SCHEMA.ListOf(SIGNATURE_SCHEMA)
-
-# A signable object.  Holds the signing role and its associated signatures.
-SIGNABLE_SCHEMA = SCHEMA.Object(
-  object_name = 'SIGNABLE_SCHEMA',
-  signed = SCHEMA.Any(),
-  signatures = SCHEMA.ListOf(SIGNATURE_SCHEMA))
-
-# A dict where the dict keys hold a keyid and the dict values a key object.
-KEYDICT_SCHEMA = SCHEMA.DictOf(
-  key_schema = KEYID_SCHEMA,
-  value_schema = KEY_SCHEMA)
-
-
-
-
-ANY_STRING_SCHEMA = SCHEMA.AnyString()
-LIST_OF_ANY_STRING_SCHEMA = SCHEMA.ListOf(ANY_STRING_SCHEMA)
+# GPG key scheme definitions
+GPG_HASH_ALGORITHM_STRING = "pgp+SHA2"
+GPG_RSA_PUBKEY_METHOD_STRING = "pgp+rsa-pkcsv1.5"
+GPG_DSA_PUBKEY_METHOD_STRING = "pgp+dsa-fips-180-2"
 
 def _create_gpg_pubkey_with_subkey_schema(pubkey_schema):
   """Helper method to extend the passed public key schema with an optional
@@ -335,16 +313,11 @@ def _create_gpg_pubkey_with_subkey_schema(pubkey_schema):
   schema._required.append(subkey_schema_tuple) # pylint: disable=protected-access
   return schema
 
-GPG_HASH_ALGORITHM_STRING = "pgp+SHA2"
-GPG_RSA_PUBKEY_METHOD_STRING = "pgp+rsa-pkcsv1.5"
-GPG_DSA_PUBKEY_METHOD_STRING = "pgp+dsa-fips-180-2"
-
 GPG_RSA_PUBKEYVAL_SCHEMA = SCHEMA.Object(
   object_name = "GPG_RSA_PUBKEYVAL_SCHEMA",
   e = SCHEMA.AnyString(),
   n = HEX_SCHEMA
 )
-
 
 # We have to define GPG_RSA_PUBKEY_SCHEMA in two steps, because it is
 # self-referential. Here we define a shallow _GPG_RSA_PUBKEY_SCHEMA, which we
@@ -365,7 +338,6 @@ _GPG_RSA_PUBKEY_SCHEMA = SCHEMA.Object(
 GPG_RSA_PUBKEY_SCHEMA = _create_gpg_pubkey_with_subkey_schema(
     _GPG_RSA_PUBKEY_SCHEMA)
 
-
 GPG_DSA_PUBKEYVAL_SCHEMA = SCHEMA.Object(
   object_name = "GPG_DSA_PUBKEYVAL_SCHEMA",
   y = HEX_SCHEMA,
@@ -373,7 +345,6 @@ GPG_DSA_PUBKEYVAL_SCHEMA = SCHEMA.Object(
   q = HEX_SCHEMA,
   g = HEX_SCHEMA
 )
-
 
 # We have to define GPG_DSA_PUBKEY_SCHEMA in two steps, because it is
 # self-referential. Here we define a shallow _GPG_DSA_PUBKEY_SCHEMA, which we
@@ -391,13 +362,12 @@ _GPG_DSA_PUBKEY_SCHEMA = SCHEMA.Object(
       private = SCHEMA.String("")
     )
 )
+
 GPG_DSA_PUBKEY_SCHEMA = _create_gpg_pubkey_with_subkey_schema(
     _GPG_DSA_PUBKEY_SCHEMA)
 
-
 GPG_PUBKEY_SCHEMA = SCHEMA.OneOf([GPG_RSA_PUBKEY_SCHEMA,
     GPG_DSA_PUBKEY_SCHEMA])
-
 
 GPG_SIGNATURE_SCHEMA = SCHEMA.Object(
     object_name = "SIGNATURE_SCHEMA",
@@ -407,6 +377,55 @@ GPG_SIGNATURE_SCHEMA = SCHEMA.Object(
     signature = HEX_SCHEMA,
     info = SCHEMA.Optional(SCHEMA.Any()),
   )
+
+# A single signature of an object.  Indicates the signature, and the KEYID of
+# the signing key.  I debated making the signature schema not contain the key
+# ID and instead have the signatures of a file be a dictionary with the key
+# being the keyid and the value being the signature schema without the keyid.
+# That would be under the argument that a key should only be able to sign a
+# file once.
+SIGNATURE_SCHEMA = SCHEMA.Object(
+  object_name = 'SIGNATURE_SCHEMA',
+  keyid = KEYID_SCHEMA,
+  sig = HEX_SCHEMA)
+
+# A dict where the dict keys hold a keyid and the dict values a key object.
+KEYDICT_SCHEMA = SCHEMA.DictOf(
+  key_schema = KEYID_SCHEMA,
+  value_schema = KEY_SCHEMA)
+
+ANY_SIGNATURE_SCHEMA = securesystemslib.schema.OneOf([SIGNATURE_SCHEMA,
+    GPG_SIGNATURE_SCHEMA])
+
+# List of ANY_SIGNATURE_SCHEMA.
+SIGNATURES_SCHEMA = SCHEMA.ListOf(ANY_SIGNATURE_SCHEMA)
+
+# A signable object.  Holds the signing role and its associated signatures.
+SIGNABLE_SCHEMA = SCHEMA.Object(
+  object_name = 'SIGNABLE_SCHEMA',
+  signed = SCHEMA.Any(),
+  signatures = SIGNATURES_SCHEMA)
+
+# Note: Verification keys can have private portions but in case of GPG we
+# only have a PUBKEY_SCHEMA (because we never export private gpg keys from
+# the gpg keyring)
+ANY_VERIFICATION_KEY_SCHEMA = SCHEMA.OneOf([ANYKEY_SCHEMA,
+    GPG_PUBKEY_SCHEMA])
+
+VERIFICATION_KEY_DICT_SCHEMA = SCHEMA.DictOf(
+  key_schema = KEYID_SCHEMA,
+  value_schema = ANY_VERIFICATION_KEY_SCHEMA)
+
+ANY_KEYDICT_SCHEMA = SCHEMA.OneOf([KEYDICT_SCHEMA,
+    VERIFICATION_KEY_DICT_SCHEMA])
+
+ANY_PUBKEY_SCHEMA = SCHEMA.OneOf([PUBLIC_KEY_SCHEMA, GPG_PUBKEY_SCHEMA])
+
+ANY_PUBKEY_DICT_SCHEMA = SCHEMA.DictOf(
+  key_schema = KEYID_SCHEMA,
+  value_schema = ANY_PUBKEY_SCHEMA)
+
+
 
 
 
