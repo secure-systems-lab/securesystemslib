@@ -1148,7 +1148,7 @@ def import_rsakey_from_pem(pem, scheme='rsassa-pss-sha256'):
 
   elif is_pem_private(pem):
     # Return an rsakey object (RSAKEY_SCHEMA) with the private key included.
-    return import_rsakey_from_private_pem(pem, password=None)
+    return import_rsakey_from_private_pem(pem, scheme, password=None)
 
   else:
     raise securesystemslib.exceptions.FormatError('PEM contains neither a'
