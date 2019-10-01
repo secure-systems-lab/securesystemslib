@@ -190,8 +190,11 @@ def run_duplicate_streams(cmd, timeout=SUBPROCESS_TIMEOUT):
         contents to parent process standard streams, and build up return values
         for outer function.
         """
-        stdout_part = stdout_reader.read()
-        stderr_part = stderr_reader.read()
+        # Read until EOF but at most `io.DEFAULT_BUFFER_SIZE` bytes per call.
+        # Reading and writing in reasonably sized chunks prevents us from
+        # subverting a timeout, due to being busy for too long or indefinitely.
+        stdout_part = stdout_reader.read(io.DEFAULT_BUFFER_SIZE)
+        stderr_part = stderr_reader.read(io.DEFAULT_BUFFER_SIZE)
         sys.stdout.write(stdout_part)
         sys.stderr.write(stderr_part)
         sys.stdout.flush()
