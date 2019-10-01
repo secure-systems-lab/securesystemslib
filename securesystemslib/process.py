@@ -129,12 +129,13 @@ def run(cmd, check=True, timeout=SUBPROCESS_TIMEOUT, **kwargs):
 def run_duplicate_streams(cmd, timeout=SUBPROCESS_TIMEOUT):
   """
   <Purpose>
-    Provide a function that executes a command in a subprocess and returns its
-    exit code and the contents of what it printed to its standard streams upon
-    termination.
+    Provide a function that executes a command in a subprocess and, upon
+    termination, returns its exit code and the contents of what was printed to
+    its standard streams.
 
-    NOTE: The function might behave unexpectedly with interactive commands.
-
+    * Might behave unexpectedly with interactive commands.
+    * Might not duplicate output in real time, if the command buffers it (see
+      e.g. `print("foo")` vs. `print("foo", flush=True)` in Python 3).
 
   <Arguments>
     cmd:
@@ -144,7 +145,7 @@ def run_duplicate_streams(cmd, timeout=SUBPROCESS_TIMEOUT):
 
     timeout: (default see settings.SUBPROCESS_TIMEOUT)
             If the timeout expires, the child process will be killed and waited
-            for and then subprocess.TimeoutExpired  will be raised.
+            for and then subprocess.TimeoutExpired will be raised.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError:
