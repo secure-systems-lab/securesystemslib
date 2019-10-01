@@ -182,39 +182,46 @@ def run_duplicate_streams(cmd, timeout=SUBPROCESS_TIMEOUT):
         io.open(stderr_name, "r") as stderr_reader, \
         os.fdopen(stderr_fd, "w") as stderr_writer:
 
-      # Start child , writing standard streams to temporary files
-      proc = subprocess.Popen(cmd, stdout=stdout_writer,
-          stderr=stderr_writer, universal_newlines=True)
-      proc_start_time = time.time()
-
-      stdout_str = stderr_str = ""
-      stdout_part = stderr_part = ""
-
-      # Read as long as the process runs or there is data on one of the streams
-      while proc.poll() is None or stdout_part or stderr_part:
-
-        # Raise timeout error in they same manner as `subprocess` would do it
-        if (timeout is not None and
-            time.time() > proc_start_time + timeout):
-          proc.kill()
-          proc.wait()
-          raise subprocess.TimeoutExpired(cmd, timeout)
-
-        # Read from child process's redirected streams, write to parent
-        # process's standard streams and construct retuirn values
+      # Store stream results in mutable dict to update it inside nested helper
+      _std = {"out": "", "err": ""}
+      def _duplicate_streams():
+        """Helper to read from child process standard streams, write their
+        contents to parent process standard streams, and build up return values
+        for outer function.
+        """
         stdout_part = stdout_reader.read()
         stderr_part = stderr_reader.read()
         sys.stdout.write(stdout_part)
         sys.stderr.write(stderr_part)
         sys.stdout.flush()
         sys.stderr.flush()
-        stdout_str += stdout_part
-        stderr_str += stderr_part
+        _std["out"] += stdout_part
+        _std["err"] += stderr_part
+
+      # Start child process, writing its standard streams to temporary files
+      proc = subprocess.Popen(cmd, stdout=stdout_writer,
+          stderr=stderr_writer, universal_newlines=True)
+      proc_start_time = time.time()
+
+      # Duplicate streams until the process exits (or times out)
+      while proc.poll() is None:
+        # Time out as Python's `subprocess` would do it
+        if (timeout is not None and
+            time.time() > proc_start_time + timeout):
+          proc.kill()
+          proc.wait()
+          raise subprocess.TimeoutExpired(cmd, timeout)
+
+        _duplicate_streams()
+
+      # Read/write once more to grab everything that the process wrote between
+      # our last read in the loop and exiting, i.e. breaking the loop.
+      _duplicate_streams()
 
   finally:
     # The work is done or was interrupted, the temp files can be removed
     os.remove(stdout_name)
     os.remove(stderr_name)
 
-  # Return process exit code and captured stream
-  return proc.poll(), stdout_str, stderr_str
+  # Return process exit code and captured streams
+  return proc.poll(), _std["out"], _std["err"]
