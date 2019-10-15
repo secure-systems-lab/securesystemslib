@@ -96,8 +96,9 @@ setup(
     'Topic :: Software Development'
   ],
   install_requires = ['six>=1.11.0', 'subprocess32; python_version < "3"',
-      'python-dateutil>=2.8.0', 'colorama>=0.3.9'],
+      'python-dateutil>=2.8.0'],
   extras_require = {
+      'colors': ['colorama>=0.3.9'],
       'crypto': ['cryptography>=2.6'],
       'pynacl': ['pynacl>1.2.0']},
   packages = find_packages(exclude=['tests', 'debian']),
