@@ -105,19 +105,6 @@ class UnsupportedLibraryError(Error):
   pass
 
 
-# TODO: Consider removal alongside the compression functions.
-class DecompressionError(Error):
-  """Indicate that some error happened while decompressing a file."""
-
-  def __init__(self, exception):
-    # Store the original exception.
-    self.exception = exception
-
-  def __str__(self):
-    # Show the original exception.
-    return repr(self.exception)
-
-
 class InvalidNameError(Error):
   """Indicate an error while trying to validate any type of named object."""
   pass
