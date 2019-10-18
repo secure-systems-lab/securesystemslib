@@ -1,3 +1,9 @@
+python-securesystemslib (0.11.3-2) unstable; urgency=medium
+
+  * No change source upload to allow migration to bullseye.
+
+ -- Holger Levsen <holger@debian.org>  Sat, 19 Oct 2019 01:30:45 +0200
+
 python-securesystemslib (0.11.3-1) unstable; urgency=low
 
   * Initial Debian release. (Closes: #934137)
