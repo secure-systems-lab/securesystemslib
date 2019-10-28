@@ -37,6 +37,8 @@ def get_mpi_length(data):
     parses an MPI (Multi-Precision Integer) buffer and returns the appropriate
     length. This is mostly done to perform bitwise to byte-wise conversion.
 
+    See RFC4880 section 3.2. Multiprecision Integers for details.
+
   <Arguments>
     data: The MPI data
 
