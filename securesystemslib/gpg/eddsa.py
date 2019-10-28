@@ -1,6 +1,6 @@
 """
 <Module Name>
-  dsa.py
+  eddsa.py
 
 <Author>
   Lukas Puehringer <lukas.puehringer@nyu.edu>
