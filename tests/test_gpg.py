@@ -45,6 +45,7 @@ from securesystemslib.gpg.util import (get_version, is_version_fully_supported,
     get_hashing_class, parse_packet_header, parse_subpacket_header)
 from securesystemslib.gpg.rsa import create_pubkey as rsa_create_pubkey
 from securesystemslib.gpg.dsa import create_pubkey as dsa_create_pubkey
+from securesystemslib.gpg.eddsa import create_pubkey as eddsa_create_pubkey
 from securesystemslib.gpg.common import (parse_pubkey_payload,
     parse_pubkey_bundle, get_pubkey_bundle, _assign_certified_key_info,
     _get_verified_subkeys, parse_signature_packet)
@@ -695,6 +696,61 @@ class TestGPGDSA(unittest.TestCase):
 
 
   def test_gpg_sign_and_verify_object(self):
+    """Create a signature using a specific key on the keyring """
+
+    test_data = b'test_data'
+    wrong_data = b'something malicious'
+
+    signature = create_signature(test_data, keyid=self.default_keyid,
+        homedir=self.gnupg_home)
+    key_data = export_pubkey(self.default_keyid, homedir=self.gnupg_home)
+
+    self.assertTrue(verify_signature(signature, key_data, test_data))
+    self.assertFalse(verify_signature(signature, key_data, wrong_data))
+
+
+
+@unittest.skipIf(os.getenv("TEST_SKIP_GPG"), "gpg not found")
+class TestGPGEdDSA(unittest.TestCase):
+  """ Test signature creation, verification and key export from the gpg
+  module """
+
+  default_keyid = "4E630F84838BF6F7447B830B22692F5FEA9E2DD2"
+
+  @classmethod
+  def setUpClass(self):
+    # Create directory to run the tests without having everything blow up
+    self.working_dir = os.getcwd()
+    self.test_dir = os.path.realpath(tempfile.mkdtemp())
+    self.gnupg_home = os.path.join(self.test_dir, "dsa")
+
+    # Find keyrings
+    keyrings = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "gpg_keyrings", "eddsa")
+
+    shutil.copytree(keyrings, self.gnupg_home)
+    os.chdir(self.test_dir)
+
+  @classmethod
+  def tearDownClass(self):
+    """Change back to initial working dir and remove temp test directory. """
+    os.chdir(self.working_dir)
+    shutil.rmtree(self.test_dir)
+
+  def test_gpg_sign_and_verify_object_with_default_key(self):
+    """Create a signature using the default key on the keyring """
+
+    test_data = b'test_data'
+    wrong_data = b'something malicious'
+
+    signature = create_signature(test_data, homedir=self.gnupg_home)
+    key_data = export_pubkey(self.default_keyid, homedir=self.gnupg_home)
+
+    self.assertTrue(verify_signature(signature, key_data, test_data))
+    self.assertFalse(verify_signature(signature, key_data, wrong_data))
+
+
+  def test_gpg_sign_and_verify_object_with_specific_key(self):
     """Create a signature using a specific key on the keyring """
 
     test_data = b'test_data'
