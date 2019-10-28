@@ -19,6 +19,7 @@ import logging
 
 import securesystemslib.gpg.rsa as rsa
 import securesystemslib.gpg.dsa as dsa
+import securesystemslib.gpg.eddsa as eddsa
 
 import securesystemslib.process as process
 
@@ -57,7 +58,7 @@ PACKET_TYPE_SUB_KEY = 0x0E
 SUPPORTED_SIGNATURE_PACKET_VERSIONS = {0x04}
 SUPPORTED_PUBKEY_PACKET_VERSIONS = {0x04}
 
-# See section 5.2.3.1 (signature algorithms) of RFC4880
+# See section 9.1. (public-key algorithms) of RFC4880 (-bis8)
 SUPPORTED_SIGNATURE_ALGORITHMS = {
     0x01: {
       "type":"rsa",
@@ -68,12 +69,18 @@ SUPPORTED_SIGNATURE_ALGORITHMS = {
       "type": "dsa",
       "method": "pgp+dsa-fips-180-2",
       "handler": dsa
-  }
+    },
+    0x16: {
+      "type": "eddsa",
+      "method": "pgp+eddsa-ed25519",
+      "handler": eddsa
+    }
 }
 
 SIGNATURE_HANDLERS = {
     "rsa": rsa,
-    "dsa": dsa
+    "dsa": dsa,
+    "eddsa": eddsa
 }
 
 # The constants for hash algorithms are taken from section 9.4 of RFC4880.
