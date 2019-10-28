@@ -294,6 +294,7 @@ ED25519KEY_SCHEMA = SCHEMA.Object(
 GPG_HASH_ALGORITHM_STRING = "pgp+SHA2"
 GPG_RSA_PUBKEY_METHOD_STRING = "pgp+rsa-pkcsv1.5"
 GPG_DSA_PUBKEY_METHOD_STRING = "pgp+dsa-fips-180-2"
+GPG_ED25519_PUBKEY_METHOD_STRING = "pgp+eddsa-ed25519"
 
 def _create_gpg_pubkey_with_subkey_schema(pubkey_schema):
   """Helper method to extend the passed public key schema with an optional
@@ -346,9 +347,7 @@ GPG_DSA_PUBKEYVAL_SCHEMA = SCHEMA.Object(
   g = HEX_SCHEMA
 )
 
-# We have to define GPG_DSA_PUBKEY_SCHEMA in two steps, because it is
-# self-referential. Here we define a shallow _GPG_DSA_PUBKEY_SCHEMA, which we
-# use below to create the self-referential GPG_DSA_PUBKEY_SCHEMA.
+# C.f. comment above _GPG_RSA_PUBKEY_SCHEMA definition
 _GPG_DSA_PUBKEY_SCHEMA = SCHEMA.Object(
   object_name = "GPG_DSA_PUBKEY_SCHEMA",
   type = SCHEMA.String("dsa"),
@@ -366,8 +365,30 @@ _GPG_DSA_PUBKEY_SCHEMA = SCHEMA.Object(
 GPG_DSA_PUBKEY_SCHEMA = _create_gpg_pubkey_with_subkey_schema(
     _GPG_DSA_PUBKEY_SCHEMA)
 
+GPG_ED25519_PUBKEYVAL_SCHEMA = SCHEMA.Object(
+  object_name = "GPG_ED25519_PUBKEYVAL_SCHEMA",
+  q = HEX_SCHEMA,
+)
+
+# C.f. comment above _GPG_RSA_PUBKEY_SCHEMA definition
+_GPG_ED25519_PUBKEY_SCHEMA = SCHEMA.Object(
+  object_name = "GPG_ED25519_PUBKEY_SCHEMA",
+  type = SCHEMA.String("eddsa"),
+  method = SCHEMA.String(GPG_ED25519_PUBKEY_METHOD_STRING),
+  hashes = SCHEMA.ListOf(SCHEMA.String(GPG_HASH_ALGORITHM_STRING)),
+  creation_time = SCHEMA.Optional(UNIX_TIMESTAMP_SCHEMA),
+  validity_period = SCHEMA.Optional(SCHEMA.Integer(lo=0)),
+  keyid = KEYID_SCHEMA,
+  keyval = SCHEMA.Object(
+      public = GPG_ED25519_PUBKEYVAL_SCHEMA,
+      private = SCHEMA.String("")
+    )
+)
+GPG_ED25519_PUBKEY_SCHEMA = _create_gpg_pubkey_with_subkey_schema(
+    _GPG_ED25519_PUBKEY_SCHEMA)
+
 GPG_PUBKEY_SCHEMA = SCHEMA.OneOf([GPG_RSA_PUBKEY_SCHEMA,
-    GPG_DSA_PUBKEY_SCHEMA])
+    GPG_DSA_PUBKEY_SCHEMA, GPG_ED25519_PUBKEY_SCHEMA])
 
 GPG_SIGNATURE_SCHEMA = SCHEMA.Object(
     object_name = "SIGNATURE_SCHEMA",
