@@ -111,7 +111,7 @@ def parse_pubkey_payload(data):
   if algorithm not in SUPPORTED_SIGNATURE_ALGORITHMS:
     raise SignatureAlgorithmNotSupportedError("Signature algorithm '{}' not "
         "supported, please verify that your gpg configuration is creating "
-        "either DSA or RSA signatures (see RFC4880 9.1. Public-Key "
+        "either DSA, RSA, or EdDSA signatures (see RFC4880 9.1. Public-Key "
         "Algorithms).".format(algorithm))
 
   keyinfo['type'] = SUPPORTED_SIGNATURE_ALGORITHMS[algorithm]['type']
@@ -632,7 +632,10 @@ def parse_signature_packet(data, supported_signature_types=None,
     raise ValueError("Signature version '{}' not supported, must be one of "
         "{}.".format(version_number, SUPPORTED_SIGNATURE_PACKET_VERSIONS))
 
-  # here, we want to make sure the signature type is indeed PKCSV1.5 with RSA
+  # Per default we only parse "signatures of a binary document". Other types
+  # may be allowed by passing type constants via `supported_signature_types`.
+  # Types include revocation signatures, key binding signatures, persona
+  # certifications, etc. (see RFC 4880 section 5.2.1.).
   signature_type = data[ptr]
   ptr += 1
 
@@ -647,7 +650,7 @@ def parse_signature_packet(data, supported_signature_types=None,
   if signature_algorithm not in SUPPORTED_SIGNATURE_ALGORITHMS:
     raise ValueError("Signature algorithm '{}' not "
         "supported, please verify that your gpg configuration is creating "
-        "either DSA or RSA signatures (see RFC4880 9.1. Public-Key "
+        "either DSA, RSA, or EdDSA signatures (see RFC4880 9.1. Public-Key "
         "Algorithms).".format(signature_algorithm))
 
   key_type = SUPPORTED_SIGNATURE_ALGORITHMS[signature_algorithm]['type']
@@ -768,6 +771,7 @@ def parse_signature_packet(data, supported_signature_types=None,
   #left_hash_bits = struct.unpack(">H", data[ptr:ptr+2])[0]
   ptr += 2
 
+  # Finally, fetch the actual signature (as opposed to signature metadata).
   signature = handler.get_signature_params(data[ptr:])
 
   signature_data = {
