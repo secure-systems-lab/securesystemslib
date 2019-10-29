@@ -1,5 +1,9 @@
 # Changelog
 
+## securesystemslib v0.12.1
+
+* Fix stream duplication race conditions in subprocess interface (#186)
+
 ## securesystemslib v0.12.0
 
 * *backwards incompatible*
