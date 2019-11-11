@@ -1,5 +1,10 @@
 # Changelog
 
+## securesystemslib v0.12.2
+
+* Remove unnecessary `python-dateutil==2.8.0` version pinning to not cause
+  downstream dependency conflicts (#192)
+
 ## securesystemslib v0.12.1
 
 * Fix stream duplication race conditions in subprocess interface (#186)
