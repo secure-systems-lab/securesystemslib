@@ -7,6 +7,6 @@ coverage==4.5.1
 colorama==0.3.9
 mock==2.0.0; python_version < '3.3'
 subprocess32==3.5.4; python_version < '3'
-python-dateutil==2.8.0
+python-dateutil
 
 --editable .
