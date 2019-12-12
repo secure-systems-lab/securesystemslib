@@ -77,7 +77,9 @@ def get_pubkey_params(data):
     None.
 
   <Returns>
-    The decoded signature buffer
+    The parsed DSA public key in the format
+    securesystemslib.formats.GPG_DSA_PUBKEY_SCHEMA.
+
   """
   ptr = 0
 
@@ -129,8 +131,8 @@ def get_signature_params(data):
 
   <Arguments>
     data:
-           the RFC4880-encoded public key parameters data buffer as described
-           in the fourth paragraph of section 5.2.2.
+           the RFC4880-encoded signature data buffer as described
+           in the fourth paragraph of section 5.2.2
 
   <Exceptions>
     securesystemslib.gpg.exceptions.PacketParsingError:

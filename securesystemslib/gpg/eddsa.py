@@ -1,0 +1,228 @@
+"""
+<Module Name>
+  eddsa.py
+
+<Author>
+  Lukas Puehringer <lukas.puehringer@nyu.edu>
+
+<Started>
+  Oct 22, 2019
+
+<Copyright>
+  See LICENSE for licensing information.
+
+<Purpose>
+  EdDSA/ed25519 algorithm-specific handling routines for pubkey and signature
+  parsing and verification.
+
+"""
+import binascii
+import struct
+import securesystemslib.gpg.util
+import cryptography.hazmat.primitives.asymmetric.utils as pyca_utils
+import cryptography.hazmat.primitives.asymmetric.ed25519 as pyca_ed25519
+import cryptography.hazmat.backends as pyca_backends
+import cryptography.hazmat.primitives.hashes as pyca_hashing
+import cryptography.exceptions
+
+# ECC Curve OID (see RFC4880-bis8 9.2.)
+ED25519_PUBLIC_KEY_OID = bytearray.fromhex("2B 06 01 04 01 DA 47 0F 01")
+
+# EdDSA Point Format (see RFC4880-bis8 13.3.)
+ED25519_PUBLIC_KEY_LENGTH = 33
+ED25519_PUBLIC_KEY_PREFIX = 0x40
+
+
+
+def get_pubkey_params(data):
+  """
+  <Purpose>
+    Parse algorithm-specific part for EdDSA public keys
+
+    See RFC4880-bis8 sections 5.6.5. Algorithm-Specific Part for EdDSA Keys,
+    9.2. ECC Curve OID and 13.3. EdDSA Point Format for more details.
+
+  <Arguments>
+    data:
+          The EdDSA public key data AFTER the one-octet number denoting the
+          public-key algorithm of this key.
+
+  <Exceptions>
+    securesystemslib.gpg.exceptions.PacketParsingError or IndexError:
+          if the public key data is malformed.
+
+  <Side Effects>
+    None.
+
+  <Returns>
+    A dictionary with an element "q" that holds the ascii hex representation
+    of the MPI of an EC point representing an EdDSA public key that conforms
+    with securesystemslib.formats.GPG_ED25519_PUBKEY_SCHEMA.
+
+  """
+  ptr = 0
+
+  curve_oid_len = data[ptr]
+  ptr += 1
+
+  curve_oid = data[ptr:ptr + curve_oid_len]
+  ptr += curve_oid_len
+
+  # See 9.2. ECC Curve OID
+  if curve_oid != ED25519_PUBLIC_KEY_OID:
+    raise securesystemslib.gpg.exceptions.PacketParsingError(
+        "bad ed25519 curve OID '{}', expected {}'".format(
+        curve_oid, ED25519_PUBLIC_KEY_OID))
+
+  # See 13.3. EdDSA Point Format
+  public_key_len = securesystemslib.gpg.util.get_mpi_length(data[ptr:ptr + 2])
+  ptr += 2
+
+  if public_key_len != ED25519_PUBLIC_KEY_LENGTH:
+    raise securesystemslib.gpg.exceptions.PacketParsingError(
+        "bad ed25519 MPI length '{}', expected {}'".format(
+        public_key_len, ED25519_PUBLIC_KEY_LENGTH))
+
+  public_key_prefix = data[ptr]
+  ptr += 1
+
+  if public_key_prefix != ED25519_PUBLIC_KEY_PREFIX:
+    raise securesystemslib.gpg.exceptions.PacketParsingError(
+        "bad ed25519 MPI prefix '{}', expected '{}'".format(
+        public_key_prefix, ED25519_PUBLIC_KEY_PREFIX))
+
+  public_key = data[ptr:ptr + public_key_len - 1]
+
+  return {
+    "q": binascii.hexlify(public_key).decode("ascii")
+  }
+
+
+
+def get_signature_params(data):
+  """
+  <Purpose>
+    Parse algorithm-specific fields for EdDSA signatures.
+
+    See RFC4880-bis8 section 5.2.3. Version 4 and 5 Signature Packet Formats
+    for more details.
+
+  <Arguments>
+    data:
+          The EdDSA signature data AFTER the two-octet field holding the
+          left 16 bits of the signed hash value.
+
+  <Exceptions>
+    IndexError if the signature data is malformed.
+
+  <Side Effects>
+    None.
+
+  <Returns>
+    The concatenation of the parsed MPI R and S values of the EdDSA signature,
+    i.e. ENC(R) || ENC(S) (see RFC8032 3.4 Verify).
+
+  """
+  ptr = 0
+  r_length = securesystemslib.gpg.util.get_mpi_length(data[ptr:ptr + 2])
+
+  ptr += 2
+  r = data[ptr:ptr + r_length]
+  ptr += r_length
+
+  s_length = securesystemslib.gpg.util.get_mpi_length(data[ptr:ptr + 2])
+  ptr += 2
+  s = data[ptr:ptr + s_length]
+
+  return r + s
+
+
+
+def create_pubkey(pubkey_info):
+  """
+  <Purpose>
+    Create and return an Ed25519PublicKey object from the passed pubkey_info
+    using pyca/cryptography.
+
+  <Arguments>
+    pubkey_info:
+          The ED25519 public key dictionary as specified by
+          securesystemslib.formats.GPG_ED25519_PUBKEY_SCHEMA
+
+  <Exceptions>
+    securesystemslib.exceptions.FormatError if
+      pubkey_info does not match securesystemslib.formats.GPG_DSA_PUBKEY_SCHEMA
+
+  <Returns>
+    A cryptography.hazmat.primitives.asymmetric.ed25519.Ed25519PublicKey based
+    on the passed pubkey_info.
+
+  """
+  securesystemslib.formats.GPG_ED25519_PUBKEY_SCHEMA.check_match(pubkey_info)
+
+  public_bytes = binascii.unhexlify(pubkey_info["keyval"]["public"]["q"])
+  public_key = pyca_ed25519.Ed25519PublicKey.from_public_bytes(public_bytes)
+
+  return public_key
+
+
+
+def verify_signature(signature_object, pubkey_info, content,
+    hash_algorithm_id):
+  """
+  <Purpose>
+    Verify the passed signature against the passed content with the passed
+    ED25519 public key using pyca/cryptography.
+
+  <Arguments>
+    signature_object:
+            A signature dictionary as specified by
+            securesystemslib.formats.GPG_SIGNATURE_SCHEMA
+
+    pubkey_info:
+            The DSA public key info dictionary as specified by
+            securesystemslib.formats.GPG_ED25519_PUBKEY_SCHEMA
+
+    hash_algorithm_id:
+            one of SHA1, SHA256, SHA512 (see securesystemslib.gpg.constants)
+            used to verify the signature
+            NOTE: Overrides any hash algorithm specification in "pubkey_info"'s
+            "hashes" or "method" fields.
+
+    content:
+            The signed bytes against which the signature is verified
+
+  <Exceptions>
+    securesystemslib.exceptions.FormatError if:
+      signature_object does not match securesystemslib.formats.GPG_SIGNATURE_SCHEMA
+      pubkey_info does not match securesystemslib.formats.GPG_ED25519_PUBKEY_SCHEMA
+
+    ValueError:
+      if the passed hash_algorithm_id is not supported (see
+      securesystemslib.gpg.util.get_hashing_class)
+
+  <Returns>
+    True if signature verification passes and False otherwise.
+
+  """
+  securesystemslib.formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
+  securesystemslib.formats.GPG_ED25519_PUBKEY_SCHEMA.check_match(pubkey_info)
+
+  hasher = securesystemslib.gpg.util.get_hashing_class(hash_algorithm_id)
+
+  pubkey_object = create_pubkey(pubkey_info)
+
+  # See RFC4880-bis8 14.8. EdDSA and 5.2.4 "Computing Signatures"
+  digest = securesystemslib.gpg.util.hash_object(
+      binascii.unhexlify(signature_object["other_headers"]),
+      hasher(), content)
+
+  try:
+    pubkey_object.verify(
+      binascii.unhexlify(signature_object["signature"]),
+      digest
+    )
+    return True
+
+  except cryptography.exceptions.InvalidSignature:
+    return False
