@@ -1,5 +1,9 @@
 # Changelog
 
+## securesystemslib v0.13.0
+
+* Add support for *OpenPGP* EdDSA/ed25519 keys and signatures (#188)
+
 ## securesystemslib v0.12.2
 
 * Remove unnecessary `python-dateutil==2.8.0` version pinning to not cause
