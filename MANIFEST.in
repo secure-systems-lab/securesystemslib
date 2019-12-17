@@ -1,12 +1,13 @@
 include README.rst
 include LICENSE
 
-# Add tests and test data
-recursive-include tests *.py
-recursive-include tests/data *
-
 # Add test config files to show how to run tests
-include tests/.coveragerc
 include tox.ini
 include .travis.yml
 include *requirements.txt
+
+# Include all files under the tests directory (including test data)
+graft tests
+
+# Exclude all files anywhere in the source tree matching any of these patterns
+global-exclude *.py[cod] .DS_Store .coverage */htmlcov/* */__pycache__/*
