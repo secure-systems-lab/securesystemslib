@@ -1,5 +1,9 @@
 # Changelog
 
+## securesystemslib v0.13.1
+
+* Fix MANIFEST.in to include all test data in source release (#196)
+
 ## securesystemslib v0.13.0
 
 * Add support for *OpenPGP* EdDSA/ed25519 keys and signatures (#188)
