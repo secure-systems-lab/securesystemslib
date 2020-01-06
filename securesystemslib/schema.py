@@ -523,7 +523,8 @@ class ListOf(Schema):
   def check_match(self, object):
     if not isinstance(object, (list, tuple)):
       raise securesystemslib.exceptions.FormatError(
-          'Expected ' + repr(self._list_name) + ' but got ' + repr(object))
+          'Expected object of type {} but got type {}'.format(
+            self._list_name, type(object).__name__))
 
 
     # Check if all the items in the 'object' list
