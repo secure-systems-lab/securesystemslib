@@ -44,7 +44,6 @@ else:
   import mock
 
 import securesystemslib.formats
-import securesystemslib.formats
 import securesystemslib.hash
 import securesystemslib.interface as interface
 
