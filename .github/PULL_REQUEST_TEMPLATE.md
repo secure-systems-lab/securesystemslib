@@ -5,7 +5,7 @@ that is provided, the better.
 
 **Description of the changes being introduced by the pull request**:
 
-**Please verify and check that the pull request fulfills the following
+**Please verify and check that the pull request fulfils the following
 requirements**:
 
 - [ ] The code follows the [Code Style Guidelines](https://github.com/secure-systems-lab/code-style-guidelines#code-style-guidelines)
