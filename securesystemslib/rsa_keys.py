@@ -2,7 +2,7 @@
 
 """
 <Program Name>
-  pyca_crypto_keys.py
+  rsa_keys.py
 
 <Author>
   Vladimir Diaz <vladimir.v.diaz@gmail.com>
@@ -776,7 +776,7 @@ def decrypt_key(encrypted_key, password):
     The decrypt_key() function can be applied to the encrypted string to restore
     the original key object, a securesystemslib key (e.g., RSAKEY_SCHEMA,
     ED25519KEY_SCHEMA). This function calls the appropriate cryptography module
-    (i.e., pyca_crypto_keys.py) to perform the decryption.
+    (i.e., rsa_keys.py) to perform the decryption.
 
     Encrypted securesystemslib keys use AES-256-CTR-Mode and passwords
     strengthened with PBKDF2-HMAC-SHA256 (100K iterations be default, but may
@@ -925,7 +925,7 @@ def _encrypt(key_data, derived_key_information):
 
   # Generate a random 128-bit IV.  Random bits of data is needed for salts and
   # initialization vectors suitable for the encryption algorithms used in
-  # 'pyca_crypto_keys.py'.
+  # 'rsa_keys.py'.
   iv = os.urandom(16)
 
   # Construct an AES-CTR Cipher object with the given key and a randomly
@@ -1031,7 +1031,7 @@ def _decrypt(file_contents, password):
 
 if __name__ == '__main__':
   # The interactive sessions of the documentation strings can be tested by
-  # running 'pyca_crypto_keys.py' as a standalone module:
-  # $ python pyca_crypto_keys.py
+  # running 'rsa_keys.py' as a standalone module:
+  # $ python rsa_keys.py
   import doctest
   doctest.testmod()

@@ -65,11 +65,11 @@ import binascii
 import warnings
 import logging
 
-# Try to import the pyca/Cryptography module (pyca_crypto_keys.py), which is
+# Try to import the pyca/Cryptography module (rsa_keys.py), which is
 # used for general-purpose cryptography and generation of RSA keys and
 # signatures.
 try:
-  import securesystemslib.pyca_crypto_keys
+  import securesystemslib.rsa_keys
 
 except ImportError: #pragma: no cover
   pass
@@ -217,7 +217,7 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-sha256'):
   # used to generate the actual key.  Raise 'ValueError' if 'bits' is less than
   # 1024, although a 2048-bit minimum is enforced by
   # securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match().
-  public, private = securesystemslib.pyca_crypto_keys.generate_rsa_public_and_private(bits)
+  public, private = securesystemslib.rsa_keys.generate_rsa_public_and_private(bits)
 
   # When loading in PEM keys, extract_pem() is called, which strips any
   # leading or trailing new line characters. Do the same here before generating
@@ -712,7 +712,7 @@ def create_signature(key_dict, data):
   # currently supported are: 'ed25519', 'ecdsa-sha2-nistp256', and rsa schemes
   # defined in `securesystemslib.keys.RSA_SIGNATURE_SCHEMES`.
   # RSASSA-PSS and RSA-PKCS1v15 keys and signatures can be generated and
-  # verified by pyca_crypto_keys.py, and Ed25519 keys by PyNaCl and PyCA's
+  # verified by rsa_keys.py, and Ed25519 keys by PyNaCl and PyCA's
   # optimized, pure python implementation of Ed25519.
   signature = {}
   keytype = key_dict['keytype']
@@ -725,7 +725,7 @@ def create_signature(key_dict, data):
   if keytype == 'rsa':
     if scheme in RSA_SIGNATURE_SCHEMES:
       private = private.replace('\r\n', '\n')
-      sig, scheme = securesystemslib.pyca_crypto_keys.create_rsa_signature(
+      sig, scheme = securesystemslib.rsa_keys.create_rsa_signature(
           private, data, scheme)
 
     else:
@@ -865,7 +865,7 @@ def verify_signature(key_dict, signature, data):
 
   if keytype == 'rsa':
     if scheme in RSA_SIGNATURE_SCHEMES:
-      valid_signature = securesystemslib.pyca_crypto_keys.verify_rsa_signature(sig,
+      valid_signature = securesystemslib.rsa_keys.verify_rsa_signature(sig,
         scheme, public, data)
 
     else:
@@ -981,7 +981,7 @@ def import_rsakey_from_private_pem(pem, scheme='rsassa-pss-sha256', password=Non
   # Generate the public and private RSA keys.  The pyca/cryptography library
   # performs the actual crypto operations.
   public, private = \
-    securesystemslib.pyca_crypto_keys.create_rsa_public_and_private_from_pem(
+    securesystemslib.rsa_keys.create_rsa_public_and_private_from_pem(
     pem, password)
 
   public =  extract_pem(public, private_pem=False)
@@ -1281,7 +1281,7 @@ def encrypt_key(key_object, password):
     strings may be safely saved to a file.  The corresponding decrypt_key()
     function can be applied to the encrypted string to restore the original key
     object.  'key_object' is a key (e.g., RSAKEY_SCHEMA, ED25519KEY_SCHEMA).
-    This function relies on the pyca_crypto_keys.py module to perform the
+    This function relies on the rsa_keys.py module to perform the
     actual encryption.
 
     Encrypted keys use AES-256-CTR-Mode, and passwords are strengthened with
@@ -1338,7 +1338,7 @@ def encrypt_key(key_object, password):
 
   # Generate an encrypted string of 'key_object' using AES-256-CTR-Mode, where
   # 'password' is strengthened with PBKDF2-HMAC-SHA256.
-  encrypted_key = securesystemslib.pyca_crypto_keys.encrypt_key(key_object, password)
+  encrypted_key = securesystemslib.rsa_keys.encrypt_key(key_object, password)
 
   return encrypted_key
 
@@ -1352,7 +1352,7 @@ def decrypt_key(encrypted_key, passphrase):
     Return a string containing 'encrypted_key' in non-encrypted form.  The
     decrypt_key() function can be applied to the encrypted string to restore
     the original key object, a key (e.g., RSAKEY_SCHEMA, ED25519KEY_SCHEMA).
-    This function calls pyca_crypto_keys.py to perform the actual decryption.
+    This function calls rsa_keys.py to perform the actual decryption.
 
     Encrypted keys use AES-256-CTR-Mode and passwords are strengthened with
     PBKDF2-HMAC-SHA256 (100K iterations be default, but may be overriden in
@@ -1415,7 +1415,7 @@ def decrypt_key(encrypted_key, passphrase):
   # encrypt_key() generates an encrypted string of the key object using
   # AES-256-CTR-Mode, where 'password' is strengthened with PBKDF2-HMAC-SHA256.
   key_object = \
-    securesystemslib.pyca_crypto_keys.decrypt_key(encrypted_key, passphrase)
+    securesystemslib.rsa_keys.decrypt_key(encrypted_key, passphrase)
 
   # The corresponding encrypt_key() encrypts and stores key objects in
   # non-metadata format (i.e., original format of key object argument to
@@ -1485,7 +1485,7 @@ def create_rsa_encrypted_pem(private_key, passphrase):
   # Generate the public and private RSA keys. A 2048-bit minimum is enforced by
   # create_rsa_encrypted_pem() via a
   # securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match().
-  encrypted_pem = securesystemslib.pyca_crypto_keys.create_rsa_encrypted_pem(
+  encrypted_pem = securesystemslib.rsa_keys.create_rsa_encrypted_pem(
       private_key, passphrase)
 
   return encrypted_pem

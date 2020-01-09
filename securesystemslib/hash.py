@@ -80,7 +80,7 @@ try:
     <Properties>
       algorithm:
         Specific for `cryptography.hazmat.primitives.hashes.Hash` object, but
-        needed for `pyca_crypto_keys.py`
+        needed for `rsa_keys.py`
 
       digest_size:
         Returns original's object digest size.
