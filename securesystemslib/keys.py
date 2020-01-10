@@ -876,7 +876,7 @@ def verify_signature(key_dict, signature, data):
     if scheme == 'ed25519':
       public = binascii.unhexlify(public.encode('utf-8'))
       valid_signature = securesystemslib.ed25519_keys.verify_signature(public,
-          scheme, sig, data, use_pynacl=USE_PYNACL)
+          scheme, sig, data)
 
     else:
       raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
