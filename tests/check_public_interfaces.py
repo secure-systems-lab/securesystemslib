@@ -180,6 +180,20 @@ class TestPublicInterfaces(unittest.TestCase):
           securesystemslib.exceptions.UnsupportedLibraryError):
       securesystemslib.keys.import_ecdsakey_from_private_pem(priv)
 
+  def test_purepy_ed25519(self):
+    data = b'The quick brown fox jumps over the lazy dog'
+    pub = b'\xbe\xb7\\&\x82\x06UN\x96<E\xdc\xbf<\x00A@\xd1\xcbi\xbb\xfe\x93p\xefso\x198\x8c\x9b&'
+    sig = b'.\xc7\xa5\xe2\x95\xfabe\xe1\x0f=\xa7\xf1\xa42\xe7t/\x04\x1f\x08\x1bO\xae\xca\xb3\xa1+\xf0\xfc\x8f6l\x91\x9c\x90\xc2g\xe9\xed\x1d\xfd\xebzuV\xb9Y\xa9m\xd0\xdc\xfe\xa1}\xa3Xb-9\xaf6\xbf\t'
+
+    valid = securesystemslib.ed25519_keys.verify_signature(
+        pub, 'ed25519', sig, data)
+    self.assertEqual(True, valid)
+
+    bsig = b'\xd3/\x7f\x7f\xa5;6Pq\x14f]\x8b\x0e@\x8a:\xc2\xa1\xb8\xee\x11\xef\x06s\x12\xa9\x0b0\xe9@\xd5Q\xb6\xf7\xe7\xb9\xf6\xc7J\x99_L\x01\xf7\xcdi\x05\xea\xdf\x05D\x12\x1f\xeeT\xe1y\xb1\x9a\x8e\xebS\x04'
+    invalid = securesystemslib.ed25519_keys.verify_signature(
+        pub, 'ed25519', bsig, data)
+    self.assertEqual(False, invalid)
+
 
 if __name__ == '__main__':
   suite = unittest.TestLoader().loadTestsFromTestCase(TestPublicInterfaces)
