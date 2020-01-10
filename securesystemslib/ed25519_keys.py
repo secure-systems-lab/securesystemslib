@@ -82,6 +82,7 @@ import os
 # used over the pure python implementation of Ed25519, due to its speedier
 # routines and side-channel protections available in the libsodium library.
 NACL = True
+NO_NACL_MSG = "ed25519 key support requires the nacl library"
 try:
   import nacl.signing
   import nacl.encoding
@@ -143,6 +144,9 @@ def generate_public_and_private():
     'securesystemslib.formats.ED25519SEED_SCHEMA', respectively.
   """
 
+  if not NACL: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_NACL_MSG)
+
   # Generate ed25519's seed key by calling os.urandom().  The random bytes
   # returned should be suitable for cryptographic use and is OS-specific.
   # Raise 'NotImplementedError' if a randomness source is not found.
@@ -153,18 +157,10 @@ def generate_public_and_private():
 
   # Generate the public key.  PyNaCl (i.e., 'nacl' module) performs the actual
   # key generation.
-  try:
-    nacl_key = nacl.signing.SigningKey(seed)
-    public = nacl_key.verify_key.encode(encoder=nacl.encoding.RawEncoder())
-
-  except NameError: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError('The PyNaCl'
-        ' library and/or its dependencies unavailable.')
-
+  nacl_key = nacl.signing.SigningKey(seed)
+  public = nacl_key.verify_key.encode(encoder=nacl.encoding.RawEncoder())
 
   return public, seed
-
-
 
 
 
@@ -215,6 +211,9 @@ def create_signature(public_key, private_key, data, scheme):
 
     securesystemslib.exceptions.CryptoError, if a signature cannot be created.
 
+    securesystemslib.exceptions.UnsupportedLibraryError, if the PyNaCl ('nacl')
+    module is unavailable.
+
   <Side Effects>
     nacl.signing.SigningKey.sign() called to generate the actual signature.
 
@@ -224,6 +223,9 @@ def create_signature(public_key, private_key, data, scheme):
     bytes, however, the hexlified signature is stored in the dictionary
     returned.
   """
+
+  if not NACL: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_NACL_MSG)
 
   # Does 'public_key' have the correct format?
   # This check will ensure 'public_key' conforms to
@@ -252,11 +254,6 @@ def create_signature(public_key, private_key, data, scheme):
       nacl_key = nacl.signing.SigningKey(private)
       nacl_sig = nacl_key.sign(data)
       signature = nacl_sig.signature
-
-    # The unit tests expect required libraries to be installed.
-    except NameError: # pragma: no cover
-      raise securesystemslib.exceptions.UnsupportedLibraryError('The PyNaCl'
-          ' library and/or its dependencies unavailable.')
 
     except (ValueError, TypeError, nacl.exceptions.CryptoError) as e:
       raise securesystemslib.exceptions.CryptoError('An "ed25519" signature'
