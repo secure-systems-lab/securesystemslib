@@ -65,44 +65,9 @@ import binascii
 import warnings
 import logging
 
-# Try to import the pyca/Cryptography module (rsa_keys.py), which is
-# used for general-purpose cryptography and generation of RSA keys and
-# signatures.
-try:
-  import securesystemslib.rsa_keys
-
-except ImportError: #pragma: no cover
-  pass
-
-# Import the PyNaCl library, if available.  It is recommended this library be
-# used over the pure python implementation of ed25519, due to its speedier
-# routines and side-channel protections available in the libsodium library.
-
-# NOTE: Version 0.2.3 of 'pynacl' prints: "UserWarning: reimporting '...' might
-# overwrite older definitions." when importing 'nacl.signing' below.  Suppress
-# user warnings temporarily (at least until this issue is fixed).
-with warnings.catch_warnings():
-  warnings.simplefilter('ignore')
-  try:
-    import nacl
-    import nacl.signing
-    USE_PYNACL = True
-
-  # PyNaCl's 'cffi' dependency may raise an 'IOError' exception when importing
-  # 'nacl.signing'.
-  except (ImportError, IOError): # pragma: no cover
-    USE_PYNACL = False
-    pass
-
-# The optimized version of the Ed25519 library provided by default is imported
-# regardless of the availability of PyNaCl.
+import securesystemslib.rsa_keys
 import securesystemslib.ed25519_keys
-
-try:
-  import securesystemslib.ecdsa_keys
-
-except ImportError: #pragma: no cover
-  pass
+import securesystemslib.ecdsa_keys
 
 import securesystemslib.exceptions
 
