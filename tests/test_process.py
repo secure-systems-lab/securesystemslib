@@ -23,6 +23,7 @@ import shlex
 import io
 import sys
 import securesystemslib.process
+import securesystemslib.settings
 
 
 class Test_Process(unittest.TestCase):
@@ -120,6 +121,20 @@ class Test_Process(unittest.TestCase):
       securesystemslib.process.run_duplicate_streams("python --version",
           timeout=-1)
 
+
+  def test__default_timeout(self):
+    """Test default timeout modification. """
+    # Backup timeout and check that it is what's returned by _default_timeout()
+    timeout_old = securesystemslib.settings.SUBPROCESS_TIMEOUT
+    self.assertEqual(securesystemslib.process._default_timeout(), timeout_old)
+
+    # Modify timeout and check that _default_timeout() returns the same value
+    timeout_new = timeout_old + 1
+    securesystemslib.settings.SUBPROCESS_TIMEOUT = timeout_new
+    self.assertEqual(securesystemslib.process._default_timeout(), timeout_new)
+
+    # Restore original timeout
+    securesystemslib.settings.SUBPROCESS_TIMEOUT = timeout_old
 
 
 if __name__ == "__main__":
