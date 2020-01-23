@@ -1,5 +1,11 @@
 # Changelog
 
+## securesystemslib vX.YY.Z
+
+* *behaviour change*
+  * Default to using pure Python to verify ed25519 signatures when nacl is
+    unavailable
+
 ## securesystemslib v0.13.1
 
 * Fix MANIFEST.in to include all test data in source release (#196)

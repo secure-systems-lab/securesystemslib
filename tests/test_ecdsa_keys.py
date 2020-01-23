@@ -32,7 +32,7 @@ import logging
 import securesystemslib.exceptions
 import securesystemslib.formats
 import securesystemslib.ecdsa_keys
-import securesystemslib.pyca_crypto_keys
+import securesystemslib.rsa_keys
 
 logger = logging.getLogger('securesystemslib_test_ecdsa_keys')
 
@@ -120,7 +120,7 @@ class TestECDSA_keys(unittest.TestCase):
 
     # Generate an RSA key so that we can verify that non-ECDSA keys are
     # rejected.
-    rsa_pem, junk = securesystemslib.pyca_crypto_keys.generate_rsa_public_and_private()
+    rsa_pem, junk = securesystemslib.rsa_keys.generate_rsa_public_and_private()
 
     # Verify that a non-ECDSA key (via the PEM argument) is rejected.
     self.assertRaises(securesystemslib.exceptions.FormatError,

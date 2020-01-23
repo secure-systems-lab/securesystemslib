@@ -2,7 +2,7 @@
 
 """
 <Program Name>
-  pyca_crypto_keys.py
+  rsa_keys.py
 
 <Author>
   Vladimir Diaz <vladimir.v.diaz@gmail.com>
@@ -62,59 +62,64 @@ import os
 import binascii
 import json
 
-# Import pyca/cryptography routines needed to generate and load cryptographic
-# keys in PEM format.
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.backends.interfaces import PEMSerializationBackend
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
-from cryptography.hazmat.backends import default_backend
+CRYPTO = True
+NO_CRYPTO_MSG = 'RSA key support requires the cryptography library'
+try:
+  # Import pyca/cryptography routines needed to generate and load cryptographic
+  # keys in PEM format.
+  from cryptography.hazmat.primitives import serialization
+  from cryptography.hazmat.backends.interfaces import PEMSerializationBackend
+  from cryptography.hazmat.primitives.serialization import load_pem_private_key
+  from cryptography.hazmat.backends import default_backend
 
-# Import Exception classes need to catch pyca/cryptography exceptions.
-import cryptography.exceptions
+  # Import Exception classes need to catch pyca/cryptography exceptions.
+  import cryptography.exceptions
 
-# 'cryptography.hazmat.primitives.asymmetric' (i.e., pyca/cryptography's
-# public-key cryptography modules) supports algorithms like the Digital
-# Signature Algorithm (DSA) and the ECDSA (Elliptic Curve Digital Signature
-# Algorithm) encryption system.  The 'rsa' module module is needed here to
-# generate RSA keys and PS
-from cryptography.hazmat.primitives.asymmetric import rsa
+  # 'cryptography.hazmat.primitives.asymmetric' (i.e., pyca/cryptography's
+  # public-key cryptography modules) supports algorithms like the Digital
+  # Signature Algorithm (DSA) and the ECDSA (Elliptic Curve Digital Signature
+  # Algorithm) encryption system.  The 'rsa' module module is needed here to
+  # generate RSA keys and PS
+  from cryptography.hazmat.primitives.asymmetric import rsa
 
-# pyca/cryptography requires hash objects to generate PKCS#1 PSS
-# signatures (i.e., padding.PSS).  The 'hmac' module is needed to verify
-# ciphertexts in encrypted key files.
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives import hmac
+  # pyca/cryptography requires hash objects to generate PKCS#1 PSS
+  # signatures (i.e., padding.PSS).  The 'hmac' module is needed to verify
+  # ciphertexts in encrypted key files.
+  from cryptography.hazmat.primitives import hashes
+  from cryptography.hazmat.primitives import hmac
 
-# RSA's probabilistic signature scheme with appendix (RSASSA-PSS).
-# PKCS#1 v1.5 is available for compatibility with existing applications, but
-# RSASSA-PSS is encouraged for newer applications.  RSASSA-PSS generates
-# a random salt to ensure the signature generated is probabilistic rather than
-# deterministic (e.g., PKCS#1 v1.5).
-# http://en.wikipedia.org/wiki/RSA-PSS#Schemes
-# https://tools.ietf.org/html/rfc3447#section-8.1
-# The 'padding' module is needed for PSS signatures.
-from cryptography.hazmat.primitives.asymmetric import padding
+  # RSA's probabilistic signature scheme with appendix (RSASSA-PSS).
+  # PKCS#1 v1.5 is available for compatibility with existing applications, but
+  # RSASSA-PSS is encouraged for newer applications.  RSASSA-PSS generates
+  # a random salt to ensure the signature generated is probabilistic rather than
+  # deterministic (e.g., PKCS#1 v1.5).
+  # http://en.wikipedia.org/wiki/RSA-PSS#Schemes
+  # https://tools.ietf.org/html/rfc3447#section-8.1
+  # The 'padding' module is needed for PSS signatures.
+  from cryptography.hazmat.primitives.asymmetric import padding
 
-# Import pyca/cryptography's Key Derivation Function (KDF) module.
-# 'securesystemslib.keys.py' needs this module to derive a secret key according
-# to the Password-Based Key Derivation Function 2 specification.  The derived
-# key is used as the symmetric key to encrypt securesystemslib key information.
-# PKCS#5 v2.0 PBKDF2 specification: http://tools.ietf.org/html/rfc2898#section-5.2
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+  # Import pyca/cryptography's Key Derivation Function (KDF) module.
+  # 'securesystemslib.keys.py' needs this module to derive a secret key according
+  # to the Password-Based Key Derivation Function 2 specification.  The derived
+  # key is used as the symmetric key to encrypt securesystemslib key information.
+  # PKCS#5 v2.0 PBKDF2 specification: http://tools.ietf.org/html/rfc2898#section-5.2
+  from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-# pyca/cryptography's AES implementation available in 'ciphers.Cipher. and
-# 'ciphers.algorithms'.  AES is a symmetric key algorithm that operates on
-# fixed block sizes of 128-bits.
-# https://en.wikipedia.org/wiki/Advanced_Encryption_Standard
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms
+  # pyca/cryptography's AES implementation available in 'ciphers.Cipher. and
+  # 'ciphers.algorithms'.  AES is a symmetric key algorithm that operates on
+  # fixed block sizes of 128-bits.
+  # https://en.wikipedia.org/wiki/Advanced_Encryption_Standard
+  from cryptography.hazmat.primitives.ciphers import Cipher, algorithms
 
-# The mode of operation is presently set to CTR (CounTeR Mode) for symmetric
-# block encryption (AES-256, where the symmetric key is 256 bits).  'modes' can
-# be used as an argument to 'ciphers.Cipher' to specify the mode of operation
-# for the block cipher.  The initial random block, or initialization vector
-# (IV), can be set to begin the process of incrementing the 128-bit blocks and
-# allowing the AES algorithm to perform cipher block operations on them.
-from cryptography.hazmat.primitives.ciphers import modes
+  # The mode of operation is presently set to CTR (CounTeR Mode) for symmetric
+  # block encryption (AES-256, where the symmetric key is 256 bits).  'modes' can
+  # be used as an argument to 'ciphers.Cipher' to specify the mode of operation
+  # for the block cipher.  The initial random block, or initialization vector
+  # (IV), can be set to begin the process of incrementing the 128-bit blocks and
+  # allowing the AES algorithm to perform cipher block operations on them.
+  from cryptography.hazmat.primitives.ciphers import modes
+except ImportError:
+  CRYPTO = False
 
 import securesystemslib.exceptions
 import securesystemslib.formats
@@ -194,6 +199,9 @@ def generate_rsa_public_and_private(bits=_DEFAULT_RSA_KEY_BITS):
     securesystemslib.exceptions.FormatError, if 'bits' does not contain the
     correct format.
 
+    securesystemslib.exceptions.UnsupportedLibraryError, if the cryptography
+    module is not available.
+
   <Side Effects>
     The RSA keys are generated from pyca/cryptography's
     rsa.generate_private_key() function.
@@ -201,6 +209,9 @@ def generate_rsa_public_and_private(bits=_DEFAULT_RSA_KEY_BITS):
   <Returns>
     A (public, private) tuple containing the RSA keys in PEM format.
   """
+
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Does 'bits' have the correct format?
   # This check will ensure 'bits' conforms to
@@ -277,6 +288,9 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
     securesystemslib.exceptions.CryptoError, if the signature cannot be
     generated.
 
+    securesystemslib.exceptions.UnsupportedLibraryError, if the cryptography
+    module is not available.
+
   <Side Effects>
     pyca/cryptography's 'RSAPrivateKey.signer()' called to generate the
     signature.
@@ -286,6 +300,9 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
     is one of the supported RSA signature schemes. For example:
     'rsassa-pss-sha256'.
   """
+
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Does the arguments have the correct format?
   # If not, raise 'securesystemslib.exceptions.FormatError' if any of the
@@ -409,6 +426,9 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
     securesystemslib.exceptions.CryptoError, if the private key cannot be
     decoded or its key type is unsupported.
 
+    securesystemslib.exceptions.UnsupportedLibraryError, if the cryptography
+    module is not available.
+
   <Side Effects>
     pyca/cryptography's RSAPublicKey.verifier() called to do the actual
     verification.
@@ -416,6 +436,9 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
    <Returns>
     Boolean.  True if the signature is valid, False otherwise.
   """
+
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Does 'public_key' have the correct format?
   # This check will ensure 'public_key' conforms to
@@ -513,11 +536,17 @@ def create_rsa_encrypted_pem(private_key, passphrase):
 
     ValueError, if 'private_key' is unset.
 
+    securesystemslib.exceptions.UnsupportedLibraryError, if the cryptography
+    module is not available.
+
 
   <Returns>
     A string in PEM format (TraditionalOpenSSL), where the private RSA key is
     encrypted. Conforms to 'securesystemslib.formats.PEMRSA_SCHEMA'.
   """
+
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # This check will ensure 'private_key' has the appropriate number
   # of objects and object types, and that all dict keys are properly named.
@@ -609,6 +638,9 @@ def create_rsa_public_and_private_from_pem(pem, passphrase=None):
     securesystemslib.exceptions.CryptoError, if the public and private RSA keys
     cannot be generated from 'pem', or exported in PEM format.
 
+    securesystemslib.exceptions.UnsupportedLibraryError, if the cryptography
+    module is not available.
+
   <Side Effects>
     pyca/cryptography's 'serialization.load_pem_private_key()' called to
     perform the actual conversion from an encrypted RSA private key to
@@ -617,6 +649,9 @@ def create_rsa_public_and_private_from_pem(pem, passphrase=None):
   <Returns>
     A (public, private) tuple containing the RSA keys in PEM format.
   """
+
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Does 'encryped_pem' have the correct format?
   # This check will ensure 'pem' has the appropriate number
@@ -725,6 +760,10 @@ def encrypt_key(key_object, password):
     securesystemslib.exceptions.CryptoError, if an Ed25519 key in encrypted
     securesystemslib format cannot be created.
 
+    securesystemslib.exceptions.UnsupportedLibraryError, if the cryptography
+    module is not available.
+
+
   <Side Effects>
     pyca/Cryptography cryptographic operations called to perform the actual
     encryption of 'key_object'.  'password' used to derive a suitable
@@ -733,6 +772,9 @@ def encrypt_key(key_object, password):
   <Returns>
     An encrypted string in 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA' format.
   """
+
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Do the arguments have the correct format?
   # Ensure the arguments have the appropriate number of objects and object
@@ -776,7 +818,7 @@ def decrypt_key(encrypted_key, password):
     The decrypt_key() function can be applied to the encrypted string to restore
     the original key object, a securesystemslib key (e.g., RSAKEY_SCHEMA,
     ED25519KEY_SCHEMA). This function calls the appropriate cryptography module
-    (i.e., pyca_crypto_keys.py) to perform the decryption.
+    (i.e., rsa_keys.py) to perform the decryption.
 
     Encrypted securesystemslib keys use AES-256-CTR-Mode and passwords
     strengthened with PBKDF2-HMAC-SHA256 (100K iterations be default, but may
@@ -824,6 +866,9 @@ def decrypt_key(encrypted_key, password):
     securesystemslib.exceptions.Error, if a valid securesystemslib key object
     is not found in 'encrypted_key'.
 
+    securesystemslib.exceptions.UnsupportedLibraryError, if the cryptography
+    module is not available.
+
   <Side Effects>
     The pyca/cryptography is library called to perform the actual decryption
     of 'encrypted_key'.  The key derivation data stored in 'encrypted_key' is
@@ -832,6 +877,9 @@ def decrypt_key(encrypted_key, password):
   <Returns>
     The decrypted key object in 'securesystemslib.formats.ANYKEY_SCHEMA' format.
   """
+
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Do the arguments have the correct format?
   # Ensure the arguments have the appropriate number of objects and object
@@ -925,7 +973,7 @@ def _encrypt(key_data, derived_key_information):
 
   # Generate a random 128-bit IV.  Random bits of data is needed for salts and
   # initialization vectors suitable for the encryption algorithms used in
-  # 'pyca_crypto_keys.py'.
+  # 'rsa_keys.py'.
   iv = os.urandom(16)
 
   # Construct an AES-CTR Cipher object with the given key and a randomly
@@ -1031,7 +1079,7 @@ def _decrypt(file_contents, password):
 
 if __name__ == '__main__':
   # The interactive sessions of the documentation strings can be tested by
-  # running 'pyca_crypto_keys.py' as a standalone module:
-  # $ python pyca_crypto_keys.py
+  # running 'rsa_keys.py' as a standalone module:
+  # $ python rsa_keys.py
   import doctest
   doctest.testmod()

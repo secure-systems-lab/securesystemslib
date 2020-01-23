@@ -48,11 +48,17 @@ import securesystemslib.keys
 
 import six
 
-from colorama import Fore
-
 # See 'log.py' to learn how logging is handled in securesystemslib.
 logger = logging.getLogger('securesystemslib_interface')
 
+try:
+  from colorama import Fore
+  TERM_RED = Fore.RED
+  TERM_RESET = Fore.RESET
+except ImportError:
+  logger.warning("Failed to find colorama module, terminal output won't be colored")
+  TERM_RED = ''
+  TERM_RESET = ''
 
 # Recommended RSA key sizes:
 # https://en.wikipedia.org/wiki/Key_size#Asymmetric_algorithm_key_lengths
@@ -196,7 +202,7 @@ def generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
     # However, care should be taken when including the full path in exceptions
     # and log files.
     password = get_password('Enter a password for the encrypted RSA'
-        ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
+        ' key (' + TERM_RED + filepath + TERM_RESET + '): ',
         confirm=True)
 
   else:
@@ -326,7 +332,7 @@ def import_rsa_privatekey_from_file(filepath, password=None,
     # to a programmer who can call the function with or without a 'password'.
     # Hence, we treat an empty password here, as if no 'password' was passed.
     password = get_password('Enter a password for an encrypted RSA'
-        ' file \'' + Fore.RED + filepath + Fore.RESET + '\': ',
+        ' file \'' + TERM_RED + filepath + TERM_RESET + '\': ',
         confirm=False) or None
 
   if password is not None:
@@ -475,7 +481,7 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None):
     # However, care should be taken when including the full path in exceptions
     # and log files.
     password = get_password('Enter a password for the Ed25519'
-        ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
+        ' key (' + TERM_RED + filepath + TERM_RESET + '): ',
         confirm=True)
 
   else:
@@ -649,7 +655,7 @@ def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False):
     # to a programmer who can call the function with or without a 'password'.
     # Hence, we treat an empty password here, as if no 'password' was passed.
     password = get_password('Enter a password for an encrypted RSA'
-        ' file \'' + Fore.RED + filepath + Fore.RESET + '\': ',
+        ' file \'' + TERM_RED + filepath + TERM_RESET + '\': ',
         confirm=False)
 
     # If user sets an empty string for the password, explicitly set the
@@ -730,7 +736,7 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None):
     # However, care should be taken when including the full path in exceptions
     # and log files.
     password = get_password('Enter a password for the ECDSA'
-        ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
+        ' key (' + TERM_RED + filepath + TERM_RESET + '): ',
         confirm=True)
 
   else:
@@ -875,7 +881,7 @@ def import_ecdsa_privatekey_from_file(filepath, password=None):
     # However, care should be taken when including the full path in exceptions
     # and log files.
     password = get_password('Enter a password for the encrypted ECDSA'
-        ' key (' + Fore.RED + filepath + Fore.RESET + '): ',
+        ' key (' + TERM_RED + filepath + TERM_RESET + '): ',
         confirm=False)
 
   # Does 'password' have the correct format?

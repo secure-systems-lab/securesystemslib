@@ -442,10 +442,10 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Invalid private key imported (contains unexpected keytype.)
     imported_ed25519_key['keytype'] = 'invalid_keytype'
 
-    # Use 'pyca_crypto_keys.py' to bypass the key format validation performed
+    # Use 'rsa_keys.py' to bypass the key format validation performed
     # by 'keys.py'.
     salt, iterations, derived_key = \
-      securesystemslib.pyca_crypto_keys._generate_derived_key('pw')
+      securesystemslib.rsa_keys._generate_derived_key('pw')
 
     # Store the derived key info in a dictionary, the object expected
     # by the non-public _encrypt() routine.
@@ -455,7 +455,7 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Convert the key object to json string format and encrypt it with the
     # derived key.
     encrypted_key = \
-      securesystemslib.pyca_crypto_keys._encrypt(json.dumps(imported_ed25519_key),
+      securesystemslib.rsa_keys._encrypt(json.dumps(imported_ed25519_key),
           derived_key_information)
 
     with open(ed25519_keypath, 'wb') as file_object:
@@ -592,10 +592,10 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Invalid private key imported (contains unexpected keytype.)
     imported_ecdsa_key['keytype'] = 'invalid_keytype'
 
-    # Use 'pyca_crypto_keys.py' to bypass the key format validation performed
+    # Use 'rsa_keys.py' to bypass the key format validation performed
     # by 'keys.py'.
     salt, iterations, derived_key = \
-      securesystemslib.pyca_crypto_keys._generate_derived_key('pw')
+      securesystemslib.rsa_keys._generate_derived_key('pw')
 
     # Store the derived key info in a dictionary, the object expected
     # by the non-public _encrypt() routine.
@@ -605,7 +605,7 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Convert the key object to json string format and encrypt it with the
     # derived key.
     encrypted_key = \
-      securesystemslib.pyca_crypto_keys._encrypt(json.dumps(imported_ecdsa_key),
+      securesystemslib.rsa_keys._encrypt(json.dumps(imported_ecdsa_key),
           derived_key_information)
 
     with open(ecdsa_keypath, 'wb') as file_object:

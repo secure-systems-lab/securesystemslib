@@ -95,15 +95,9 @@ class TestEd25519_keys(unittest.TestCase):
         scheme, signature, data)
     self.assertEqual(True, valid_signature)
 
-    # Test with 'pynacl'.
-    valid_signature = securesystemslib.ed25519_keys.verify_signature(public,
-        scheme, signature, data, use_pynacl=True)
-    self.assertEqual(True, valid_signature)
-
-    # Test with 'pynacl', but a bad signature is provided.
     bad_signature = os.urandom(64)
     valid_signature = securesystemslib.ed25519_keys.verify_signature(public,
-        scheme, bad_signature, data, use_pynacl=True)
+        scheme, bad_signature, data)
     self.assertEqual(False, valid_signature)
 
 
@@ -136,7 +130,7 @@ class TestEd25519_keys(unittest.TestCase):
     # Check for invalid signature and data.
     # Mismatched data.
     self.assertEqual(False, securesystemslib.ed25519_keys.verify_signature(
-        public, scheme, signature, '123'))
+        public, scheme, signature, b'123'))
 
     # Mismatched signature.
     bad_signature = b'a'*64

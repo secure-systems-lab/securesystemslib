@@ -81,24 +81,13 @@ import os
 # Import the PyNaCl library, if available.  It is recommended this library be
 # used over the pure python implementation of Ed25519, due to its speedier
 # routines and side-channel protections available in the libsodium library.
-#
-# TODO: Version 0.2.3 of 'pynacl' prints: "UserWarning: reimporting '...' might
-# overwrite older definitions." when importing 'nacl.signing'.  Suppress user
-# warnings temporarily (at least until this issue is fixed by PyNaCl).
-#
-# Note: A 'pragma: no cover' comment is intended for test 'coverage'.  Lines
-# or code blocks with this comment should not be flagged as uncovered.
-# pynacl will always be install prior to running the unit tests.
-with warnings.catch_warnings():
-  warnings.simplefilter('ignore')
-  try:
-    import nacl.signing
-    import nacl.encoding
-
-  # PyNaCl's 'cffi' dependency may raise an 'IOError' exception when importing
-  # 'nacl.signing'.
-  except (ImportError, IOError): # pragma: no cover
-    pass
+NACL = True
+NO_NACL_MSG = "ed25519 key support requires the nacl library"
+try:
+  import nacl.signing
+  import nacl.encoding
+except ImportError:
+    NACL = False
 
 # The optimized pure Python implementation of Ed25519.  If
 # PyNaCl cannot be imported and an attempt to use is made in this module, a
@@ -155,6 +144,9 @@ def generate_public_and_private():
     'securesystemslib.formats.ED25519SEED_SCHEMA', respectively.
   """
 
+  if not NACL: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_NACL_MSG)
+
   # Generate ed25519's seed key by calling os.urandom().  The random bytes
   # returned should be suitable for cryptographic use and is OS-specific.
   # Raise 'NotImplementedError' if a randomness source is not found.
@@ -165,18 +157,10 @@ def generate_public_and_private():
 
   # Generate the public key.  PyNaCl (i.e., 'nacl' module) performs the actual
   # key generation.
-  try:
-    nacl_key = nacl.signing.SigningKey(seed)
-    public = nacl_key.verify_key.encode(encoder=nacl.encoding.RawEncoder())
-
-  except NameError: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError('The PyNaCl'
-        ' library and/or its dependencies unavailable.')
-
+  nacl_key = nacl.signing.SigningKey(seed)
+  public = nacl_key.verify_key.encode(encoder=nacl.encoding.RawEncoder())
 
   return public, seed
-
-
 
 
 
@@ -227,6 +211,9 @@ def create_signature(public_key, private_key, data, scheme):
 
     securesystemslib.exceptions.CryptoError, if a signature cannot be created.
 
+    securesystemslib.exceptions.UnsupportedLibraryError, if the PyNaCl ('nacl')
+    module is unavailable.
+
   <Side Effects>
     nacl.signing.SigningKey.sign() called to generate the actual signature.
 
@@ -236,6 +223,9 @@ def create_signature(public_key, private_key, data, scheme):
     bytes, however, the hexlified signature is stored in the dictionary
     returned.
   """
+
+  if not NACL: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_NACL_MSG)
 
   # Does 'public_key' have the correct format?
   # This check will ensure 'public_key' conforms to
@@ -265,11 +255,6 @@ def create_signature(public_key, private_key, data, scheme):
       nacl_sig = nacl_key.sign(data)
       signature = nacl_sig.signature
 
-    # The unit tests expect required libraries to be installed.
-    except NameError: # pragma: no cover
-      raise securesystemslib.exceptions.UnsupportedLibraryError('The PyNaCl'
-          ' library and/or its dependencies unavailable.')
-
     except (ValueError, TypeError, nacl.exceptions.CryptoError) as e:
       raise securesystemslib.exceptions.CryptoError('An "ed25519" signature'
           ' could not be created with PyNaCl.' + str(e))
@@ -286,7 +271,7 @@ def create_signature(public_key, private_key, data, scheme):
 
 
 
-def verify_signature(public_key, scheme, signature, data, use_pynacl=False):
+def verify_signature(public_key, scheme, signature, data):
   """
   <Purpose>
     Determine whether the private key corresponding to 'public_key' produced
@@ -298,14 +283,12 @@ def verify_signature(public_key, scheme, signature, data, use_pynacl=False):
     >>> scheme = 'ed25519'
     >>> signature, scheme = \
         create_signature(public, private, data, scheme)
-    >>> verify_signature(public, scheme, signature, data, use_pynacl=False)
-    True
-    >>> verify_signature(public, scheme, signature, data, use_pynacl=True)
+    >>> verify_signature(public, scheme, signature, data)
     True
     >>> bad_data = b'The sly brown fox jumps over the lazy dog'
     >>> bad_signature, scheme = \
         create_signature(public, private, bad_data, scheme)
-    >>> verify_signature(public, scheme, bad_signature, data, use_pynacl=False)
+    >>> verify_signature(public, scheme, bad_signature, data)
     False
 
   <Arguments>
@@ -323,11 +306,6 @@ def verify_signature(public_key, scheme, signature, data, use_pynacl=False):
       Data object used by securesystemslib.ed25519_keys.create_signature() to
       generate 'signature'.  'data' is needed here to verify the signature.
 
-    use_pynacl:
-      True, if the ed25519 signature should be verified by PyNaCl.  False,
-      if the signature should be verified with the pure Python implementation
-      of ed25519 (slower).
-
   <Exceptions>
     securesystemslib.exceptions.UnsupportedAlgorithmError.  Raised if the
     signature scheme 'scheme' is not one supported by
@@ -337,9 +315,9 @@ def verify_signature(public_key, scheme, signature, data, use_pynacl=False):
     improperly formatted.
 
   <Side Effects>
+    nacl.signing.VerifyKey.verify() called if available, otherwise
     securesystemslib._vendor.ed25519.ed25519.checkvalid() called to do the
-    actual verification.  nacl.signing.VerifyKey.verify() called if
-    'use_pynacl' is True.
+    verification.
 
   <Returns>
     Boolean.  True if the signature is valid, False otherwise.
@@ -357,27 +335,17 @@ def verify_signature(public_key, scheme, signature, data, use_pynacl=False):
   # Is 'signature' properly formatted?
   securesystemslib.formats.ED25519SIGNATURE_SCHEMA.check_match(signature)
 
-  # Is 'use_pynacl' properly formatted?
-  securesystemslib.formats.BOOLEAN_SCHEMA.check_match(use_pynacl)
-
   # Verify 'signature'.  Before returning the Boolean result, ensure 'ed25519'
-  # was used as the signature scheme.  Raise
-  # 'securesystemslib.exceptions.UnsupportedLibraryError' if 'use_pynacl' is
-  # True but 'nacl' is unavailable.
+  # was used as the signature scheme.
   public = public_key
   valid_signature = False
 
   if scheme in _SUPPORTED_ED25519_SIGNING_SCHEMES:
-    if use_pynacl:
+    if NACL:
       try:
         nacl_verify_key = nacl.signing.VerifyKey(public)
         nacl_message = nacl_verify_key.verify(data, signature)
         valid_signature = True
-
-      # The unit tests expect PyNaCl to be installed.
-      except NameError: # pragma: no cover
-        raise securesystemslib.exceptions.UnsupportedLibraryError('The PyNaCl'
-            ' library and/or its dependencies unavailable.')
 
       except nacl.exceptions.BadSignatureError:
         pass
