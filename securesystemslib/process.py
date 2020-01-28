@@ -37,19 +37,22 @@ else: # pragma: no cover
   import subprocess
 
 import securesystemslib.formats
-
+import securesystemslib.settings
 
 DEVNULL = subprocess.DEVNULL
 PIPE = subprocess.PIPE
-# NOTE: If changed programatically, please do via this process module, e.g.
-# securesystemslib.process.SUBPROCESS_TIMEOUT = <seconds>
-from securesystemslib.settings import SUBPROCESS_TIMEOUT
-
 
 log = logging.getLogger(__name__)
 
+def _default_timeout():
+  """Helper to use securesystemslib.settings.SUBPROCESS_TIMEOUT as default
+  argument, and still be able to modify it after the function definitions are
+  evaluated. """
+  return securesystemslib.settings.SUBPROCESS_TIMEOUT
 
-def run(cmd, check=True, timeout=SUBPROCESS_TIMEOUT, **kwargs):
+
+
+def run(cmd, check=True, timeout=_default_timeout(), **kwargs):
   """
   <Purpose>
     Provide wrapper for `subprocess.run` (see
@@ -126,7 +129,7 @@ def run(cmd, check=True, timeout=SUBPROCESS_TIMEOUT, **kwargs):
 
 
 
-def run_duplicate_streams(cmd, timeout=SUBPROCESS_TIMEOUT):
+def run_duplicate_streams(cmd, timeout=_default_timeout()):
   """
   <Purpose>
     Provide a function that executes a command in a subprocess and, upon
