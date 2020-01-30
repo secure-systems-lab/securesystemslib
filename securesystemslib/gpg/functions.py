@@ -99,7 +99,7 @@ def create_signature(content, keyid=None, homedir=None):
   # TODO: It's suggested to take a look at `--status-fd` for proper error
   # reporting, as there is no clear distinction between the return codes
   # https://lists.gnupg.org/pipermail/gnupg-devel/2005-December/022559.html
-  if process.returncode is not 0:
+  if process.returncode != 0:
     raise securesystemslib.gpg.exceptions.CommandError("Command '{}' returned "
         "non-zero exit status '{}', stderr was:\n{}.".format(process.args,
         process.returncode, process.stderr.decode()))
