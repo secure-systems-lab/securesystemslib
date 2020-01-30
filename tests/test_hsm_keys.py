@@ -264,15 +264,38 @@ class TestHSM(unittest.TestCase):
   def test_verify_signature(self):
 
     available_HSM = HSM.load_HSMs()[0]
-    public_key = HSM.load_public_keys(available_HSM)[0]
-    private_key = HSM.load_private_keys(available_HSM, _USER_PIN)[0]
-    signature = HSM.create_signature(DATA, private_key)
+    public_keys = HSM.load_public_keys(available_HSM)
+    private_keys = HSM.load_private_keys(available_HSM, _USER_PIN)
 
-    self.assertTrue(HSM.verify_signature(DATA,
-        public_key, signature))
+    # There are two key pairs stored on the HSM, RSA and ECDSA.
+    # Get the key types of the obtained and make the corresponding
+    # key-pairs.
+    key_type_pub = HSM.smartcard.session.getAttributeValue(
+        public_keys[0], [PyKCS11.CKA_KEY_TYPE])[0]
+    key_type_priv = HSM.smartcard.session.getAttributeValue(
+        private_keys[0], [PyKCS11.CKA_KEY_TYPE])[0]
 
-    self.assertFalse(HSM.verify_signature(DATA_COMPROMISED,
-        public_key, signature))
+    # Form key pairs according to the key types.
+    key_pairs = []
+    if key_type_pub == key_type_priv:
+      key_pairs.append((public_keys[0], private_keys[0]))
+      key_pairs.append((public_keys[1], private_keys[1]))
+    else:
+      key_pairs.append((public_keys[0], private_keys[1]))
+      key_pairs.append((public_keys[1], private_keys[0]))
+
+    # Create the signatures using both the key-pairs
+    for key_pair in key_pairs:
+      # Generate signature using private key.
+      signature = HSM.create_signature(DATA, key_pair[1])
+
+      # Verify signature using public keys.
+      self.assertTrue(HSM.verify_signature(DATA,
+          key_pair[0], signature))
+
+      # Verification with compromised data.
+      self.assertFalse(HSM.verify_signature(DATA_COMPROMISED,
+          key_pair[0], signature))
 
 
 
