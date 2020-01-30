@@ -1,10 +1,14 @@
 # Changelog
 
-## securesystemslib vX.YY.Z
+## securesystemslib v0.14.0
 
-* *behaviour change*
-  * Default to using pure Python to verify ed25519 signatures when nacl is
-    unavailable
+* *behavior change*
+  * Default to pure Python ed25519 signature verification when nacl is unavailable (#200)
+  * Fix settings.SUBPROCESS_TIMEOUT access in process module (#202)
+* Improve schema-related error message (#199)
+* Generally improve optional dependency handling (#200)
+* Enhance test configuration, fix typos and remove unused code (#201)
+* Fix improper identity check (#203)
 
 ## securesystemslib v0.13.1
 
@@ -13,7 +17,7 @@
 ## securesystemslib v0.13.0
 
 * Add support for *OpenPGP* EdDSA/ed25519 keys and signatures (#188)
-
+bump
 ## securesystemslib v0.12.2
 
 * Remove unnecessary `python-dateutil==2.8.0` version pinning to not cause
