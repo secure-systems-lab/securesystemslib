@@ -71,7 +71,9 @@ setup(
   version = '0.14.0',
   description = 'A library that provides cryptographic and general-purpose'
       ' routines for Secure Systems Lab projects at NYU',
+  license = 'MIT',
   long_description = long_description,
+  long_description_content_type = 'text/x-rst',
   author = 'https://www.updateframework.com',
   author_email = 'theupdateframework@googlegroups.com',
   url = 'https://github.com/secure-systems-lab/securesystemslib',
@@ -91,6 +93,8 @@ setup(
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: Implementation :: CPython',
     'Topic :: Security',
     'Topic :: Software Development'
