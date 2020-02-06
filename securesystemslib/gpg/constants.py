@@ -31,6 +31,10 @@ GPG_COMMAND = "gpg2"
 GPG_VERSION_COMMAND = GPG_COMMAND + " --version"
 FULLY_SUPPORTED_MIN_VERSION = "2.1.0"
 
+HAVE_GPG = True
+NO_GPG_MSG = "GPG support requires a GPG command, {} version {} or newer is" \
+  " fully supported.".format(GPG_COMMAND, FULLY_SUPPORTED_MIN_VERSION)
+
 try:
   proc = process.run(GPG_VERSION_COMMAND, stdout=process.PIPE,
     stderr=process.PIPE)
@@ -38,6 +42,13 @@ try:
 except OSError: # pragma: no cover
   GPG_COMMAND = "gpg"
   GPG_VERSION_COMMAND = GPG_COMMAND + " --version"
+
+  try:
+    proc = process.run(GPG_VERSION_COMMAND, stdout=process.PIPE,
+      stderr=process.PIPE)
+
+  except OSError:
+    HAVE_GPG = False
 
 GPG_SIGN_COMMAND = GPG_COMMAND + \
                    " --detach-sign --digest-algo SHA256 {keyarg} {homearg}"
