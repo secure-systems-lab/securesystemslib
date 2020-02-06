@@ -18,12 +18,19 @@
 """
 import binascii
 import struct
+import securesystemslib.exceptions
 import securesystemslib.gpg.util
-import cryptography.hazmat.primitives.asymmetric.utils as pyca_utils
-import cryptography.hazmat.primitives.asymmetric.ed25519 as pyca_ed25519
-import cryptography.hazmat.backends as pyca_backends
-import cryptography.hazmat.primitives.hashes as pyca_hashing
-import cryptography.exceptions
+
+CRYPTO = True
+NO_CRYPTO_MSG = 'EdDSA key support for GPG requires the cryptography library'
+try:
+  import cryptography.hazmat.primitives.asymmetric.utils as pyca_utils
+  import cryptography.hazmat.primitives.asymmetric.ed25519 as pyca_ed25519
+  import cryptography.hazmat.backends as pyca_backends
+  import cryptography.hazmat.primitives.hashes as pyca_hashing
+  import cryptography.exceptions
+except ImportError:
+  CRYPTO = False
 
 # ECC Curve OID (see RFC4880-bis8 9.2.)
 ED25519_PUBLIC_KEY_OID = bytearray.fromhex("2B 06 01 04 01 DA 47 0F 01")
@@ -153,11 +160,17 @@ def create_pubkey(pubkey_info):
     securesystemslib.exceptions.FormatError if
       pubkey_info does not match securesystemslib.formats.GPG_DSA_PUBKEY_SCHEMA
 
+    securesystemslib.exceptions.UnsupportedLibraryError if
+      the cryptography module is unavailable
+
   <Returns>
     A cryptography.hazmat.primitives.asymmetric.ed25519.Ed25519PublicKey based
     on the passed pubkey_info.
 
   """
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+
   securesystemslib.formats.GPG_ED25519_PUBKEY_SCHEMA.check_match(pubkey_info)
 
   public_bytes = binascii.unhexlify(pubkey_info["keyval"]["public"]["q"])
@@ -197,6 +210,9 @@ def verify_signature(signature_object, pubkey_info, content,
       signature_object does not match securesystemslib.formats.GPG_SIGNATURE_SCHEMA
       pubkey_info does not match securesystemslib.formats.GPG_ED25519_PUBKEY_SCHEMA
 
+    securesystemslib.exceptions.UnsupportedLibraryError if:
+      the cryptography module is unavailable
+
     ValueError:
       if the passed hash_algorithm_id is not supported (see
       securesystemslib.gpg.util.get_hashing_class)
@@ -205,6 +221,9 @@ def verify_signature(signature_object, pubkey_info, content,
     True if signature verification passes and False otherwise.
 
   """
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+
   securesystemslib.formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
   securesystemslib.formats.GPG_ED25519_PUBKEY_SCHEMA.check_match(pubkey_info)
 
