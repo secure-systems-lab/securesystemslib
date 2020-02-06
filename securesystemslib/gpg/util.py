@@ -24,6 +24,7 @@ from distutils.version import StrictVersion # pylint: disable=no-name-in-module,
 import cryptography.hazmat.backends as backends
 import cryptography.hazmat.primitives.hashes as hashing
 
+import securesystemslib.exceptions
 import securesystemslib.gpg.exceptions
 import securesystemslib.process
 import securesystemslib.gpg.constants
@@ -294,10 +295,18 @@ def get_version():
 
     The executed base command is defined in constants.GPG_VERSION_COMMAND.
 
+  <Exceptions>
+    securesystemslib.exceptions.UnsupportedLibraryError:
+            If the gpg command is not available
+
   <Returns>
     Version number string, e.g. "2.1.22"
 
   """
+  if not securesystemslib.gpg.constants.HAVE_GPG: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(
+        securesystemslib.gpg.constants.NO_GPG_MSG)
+
   command = securesystemslib.gpg.constants.GPG_VERSION_COMMAND
   process = securesystemslib.process.run(command,
       stdout=securesystemslib.process.PIPE,
