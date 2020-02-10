@@ -21,9 +21,15 @@ import logging
 
 from distutils.version import StrictVersion # pylint: disable=no-name-in-module,import-error
 
-import cryptography.hazmat.backends as backends
-import cryptography.hazmat.primitives.hashes as hashing
+CRYPTO = True
+NO_CRYPTO_MSG = 'gpg.utils requires the cryptography library'
+try:
+  import cryptography.hazmat.backends as backends
+  import cryptography.hazmat.primitives.hashes as hashing
+except ImportError:
+  CRYPTO = False
 
+import securesystemslib.exceptions
 import securesystemslib.gpg.exceptions
 import securesystemslib.process
 import securesystemslib.gpg.constants
@@ -73,7 +79,8 @@ def hash_object(headers, algorithm, content):
     content: the signed content
 
   <Exceptions>
-    None
+    securesystemslib.exceptions.UnsupportedLibraryError if:
+      the cryptography module is unavailable
 
   <Side Effects>
     None
@@ -81,6 +88,9 @@ def hash_object(headers, algorithm, content):
   <Returns>
     The RFC4880-compliant hashed buffer
   """
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+
   # As per RFC4880 Section 5.2.4., we need to hash the content,
   # signature headers and add a very opinionated trailing header
   hasher = hashing.Hash(algorithm, backend=backends.default_backend())
@@ -209,7 +219,8 @@ def compute_keyid(pubkey_packet_data):
     pubkey_packet_data: the public-key packet buffer
 
   <Exceptions>
-    None
+    securesystemslib.exceptions.UnsupportedLibraryError if:
+      the cryptography module is unavailable
 
   <Side Effects>
     None
@@ -217,11 +228,15 @@ def compute_keyid(pubkey_packet_data):
   <Returns>
     The RFC4880-compliant hashed buffer
   """
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+
   hasher = hashing.Hash(hashing.SHA1(), backend=backends.default_backend())
   hasher.update(b'\x99')
   hasher.update(struct.pack(">H", len(pubkey_packet_data)))
   hasher.update(bytes(pubkey_packet_data))
   return binascii.hexlify(hasher.finalize()).decode("ascii")
+
 
 def parse_subpacket_header(data):
   """ Parse out subpacket header as per RFC4880 5.2.3.1. Signature Subpacket
@@ -294,10 +309,18 @@ def get_version():
 
     The executed base command is defined in constants.GPG_VERSION_COMMAND.
 
+  <Exceptions>
+    securesystemslib.exceptions.UnsupportedLibraryError:
+            If the gpg command is not available
+
   <Returns>
     Version number string, e.g. "2.1.22"
 
   """
+  if not securesystemslib.gpg.constants.HAVE_GPG: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(
+        securesystemslib.gpg.constants.NO_GPG_MSG)
+
   command = securesystemslib.gpg.constants.GPG_VERSION_COMMAND
   process = securesystemslib.process.run(command,
       stdout=securesystemslib.process.PIPE,

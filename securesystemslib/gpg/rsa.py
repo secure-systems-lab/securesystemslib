@@ -16,14 +16,20 @@
 """
 import binascii
 
-import cryptography.hazmat.primitives.asymmetric.rsa as rsa
-import cryptography.hazmat.backends as backends
-import cryptography.hazmat.primitives.asymmetric.padding as padding
-import cryptography.hazmat.primitives.asymmetric.utils as utils
-import cryptography.exceptions
+CRYPTO = True
+NO_CRYPTO_MSG = 'RSA key support for GPG requires the cryptography library'
+try:
+  import cryptography.hazmat.primitives.asymmetric.rsa as rsa
+  import cryptography.hazmat.backends as backends
+  import cryptography.hazmat.primitives.asymmetric.padding as padding
+  import cryptography.hazmat.primitives.asymmetric.utils as utils
+  import cryptography.exceptions
+except ImportError:
+  CRYPTO = False
 
 import securesystemslib.gpg.util
 import securesystemslib.gpg.exceptions
+import securesystemslib.exceptions
 import securesystemslib.formats
 
 
@@ -42,11 +48,17 @@ def create_pubkey(pubkey_info):
     securesystemslib.exceptions.FormatError if
       pubkey_info does not match securesystemslib.formats.GPG_RSA_PUBKEY_SCHEMA
 
+    securesystemslib.exceptions.UnsupportedLibraryError if
+      the cryptography module is unavailable
+
   <Returns>
     A cryptography.hazmat.primitives.asymmetric.rsa.RSAPublicKey based on the
     passed pubkey_info.
 
   """
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+
   securesystemslib.formats.GPG_RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
   e = int(pubkey_info['keyval']['public']['e'], 16)
@@ -165,6 +177,9 @@ def verify_signature(signature_object, pubkey_info, content,
       securesystemslib.formats.GPG_SIGNATURE_SCHEMA,
       pubkey_info does not match securesystemslib.formats.GPG_RSA_PUBKEY_SCHEMA
 
+    securesystemslib.exceptions.UnsupportedLibraryError if:
+      the cryptography module is unavailable
+
     ValueError:
       if the passed hash_algorithm_id is not supported (see
       securesystemslib.gpg.util.get_hashing_class)
@@ -173,6 +188,9 @@ def verify_signature(signature_object, pubkey_info, content,
     True if signature verification passes and False otherwise
 
   """
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+
   securesystemslib.formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
   securesystemslib.formats.GPG_RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 

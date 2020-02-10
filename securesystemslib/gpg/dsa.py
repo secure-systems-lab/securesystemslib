@@ -16,15 +16,21 @@
 """
 import binascii
 
-import cryptography.hazmat.primitives.asymmetric.dsa as dsa
-import cryptography.hazmat.backends as backends
-import cryptography.hazmat.primitives.asymmetric.utils as dsautils
-import cryptography.exceptions
+CRYPTO = True
+NO_CRYPTO_MSG = 'DSA key support for GPG requires the cryptography library'
+try:
+  import cryptography.hazmat.primitives.asymmetric.dsa as dsa
+  import cryptography.hazmat.backends as backends
+  import cryptography.hazmat.primitives.asymmetric.utils as dsautils
+  import cryptography.exceptions
+except ImportError:
+  CRYPTO = False
 
 import securesystemslib.gpg.util
 import securesystemslib.gpg.exceptions
-
+import securesystemslib.exceptions
 import securesystemslib.formats
+
 
 def create_pubkey(pubkey_info):
   """
@@ -41,11 +47,17 @@ def create_pubkey(pubkey_info):
     securesystemslib.exceptions.FormatError if
       pubkey_info does not match securesystemslib.formats.GPG_DSA_PUBKEY_SCHEMA
 
+    securesystemslib.exceptions.UnsupportedLibraryError if
+      the cryptography module is not available
+
   <Returns>
     A cryptography.hazmat.primitives.asymmetric.dsa.DSAPublicKey based on the
     passed pubkey_info.
 
   """
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+
   securesystemslib.formats.GPG_DSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
   y = int(pubkey_info['keyval']['public']['y'], 16)
@@ -138,12 +150,18 @@ def get_signature_params(data):
     securesystemslib.gpg.exceptions.PacketParsingError:
            if the public key parameters are malformed
 
+    securesystemslib.exceptions.UnsupportedLibraryError:
+           if the cryptography module is not available
+
   <Side Effects>
     None.
 
   <Returns>
     The decoded signature buffer
   """
+  if not CRYPTO: # pragma: no cover
+    return securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+
   ptr = 0
   r_length = securesystemslib.gpg.util.get_mpi_length(data[ptr:ptr+2])
   ptr += 2
@@ -198,6 +216,9 @@ def verify_signature(signature_object, pubkey_info, content,
       signature_object does not match securesystemslib.formats.GPG_SIGNATURE_SCHEMA
       pubkey_info does not match securesystemslib.formats.GPG_DSA_PUBKEY_SCHEMA
 
+    securesystemslib.exceptions.UnsupportedLibraryError if:
+      the cryptography module is not available
+
     ValueError:
       if the passed hash_algorithm_id is not supported (see
       securesystemslib.gpg.util.get_hashing_class)
@@ -206,6 +227,9 @@ def verify_signature(signature_object, pubkey_info, content,
     True if signature verification passes and False otherwise
 
   """
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+
   securesystemslib.formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
   securesystemslib.formats.GPG_DSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 

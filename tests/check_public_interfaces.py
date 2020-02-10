@@ -43,6 +43,9 @@ import unittest
 
 
 import securesystemslib.exceptions
+import securesystemslib.gpg.constants
+import securesystemslib.gpg.functions
+import securesystemslib.gpg.util
 import securesystemslib.interface
 import securesystemslib.keys
 
@@ -193,6 +196,21 @@ class TestPublicInterfaces(unittest.TestCase):
     invalid = securesystemslib.ed25519_keys.verify_signature(
         pub, 'ed25519', bsig, data)
     self.assertEqual(False, invalid)
+
+  def test_gpg_cmds(self):
+    """Ensure functions calling GPG commands throw an appropriate error"""
+
+    with self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError):
+      securesystemslib.gpg.functions.create_signature('bar')
+
+    with self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError):
+      securesystemslib.gpg.functions.verify_signature(None, 'f00', 'bar')
+
+    with self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError):
+      securesystemslib.gpg.functions.export_pubkey('f00')
+
+    with self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError):
+      securesystemslib.gpg.util.get_version()
 
 
 if __name__ == '__main__':
