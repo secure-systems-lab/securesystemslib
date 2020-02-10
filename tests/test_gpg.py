@@ -51,14 +51,14 @@ from securesystemslib.gpg.common import (parse_pubkey_payload,
     _get_verified_subkeys, parse_signature_packet)
 from securesystemslib.gpg.constants import (SHA1, SHA256, SHA512,
     GPG_EXPORT_PUBKEY_COMMAND, PACKET_TYPE_PRIMARY_KEY, PACKET_TYPE_USER_ID,
-    PACKET_TYPE_USER_ATTR, PACKET_TYPE_SUB_KEY)
+    PACKET_TYPE_USER_ATTR, PACKET_TYPE_SUB_KEY, HAVE_GPG)
 from securesystemslib.gpg.exceptions import (PacketParsingError,
     PacketVersionNotSupportedError, SignatureAlgorithmNotSupportedError,
     KeyNotFoundError, CommandError, KeyExpirationError)
 from securesystemslib.formats import GPG_PUBKEY_SCHEMA
 
 
-@unittest.skipIf(os.getenv("TEST_SKIP_GPG"), "gpg not found")
+@unittest.skipIf(not HAVE_GPG, "gpg not found")
 class TestUtil(unittest.TestCase):
   """Test util functions. """
   def test_version_utils_return_types(self):
@@ -171,7 +171,7 @@ class TestUtil(unittest.TestCase):
       self.assertEqual(result, expected[idx])
 
 
-@unittest.skipIf(os.getenv("TEST_SKIP_GPG"), "gpg not found")
+@unittest.skipIf(not HAVE_GPG, "gpg not found")
 class TestCommon(unittest.TestCase):
   """Test common functions of the securesystemslib.gpg module. """
   @classmethod
@@ -471,7 +471,7 @@ class TestCommon(unittest.TestCase):
           "'{}' not in '{}'".format(expected_error_str, str(ctx.exception)))
 
 
-@unittest.skipIf(os.getenv("TEST_SKIP_GPG"), "gpg not found")
+@unittest.skipIf(not HAVE_GPG, "gpg not found")
 class TestGPGRSA(unittest.TestCase):
   """Test signature creation, verification and key export from the gpg
   module"""
@@ -625,7 +625,7 @@ class TestGPGRSA(unittest.TestCase):
         "\ngot:      {}".format(expected, ctx.exception))
 
 
-@unittest.skipIf(os.getenv("TEST_SKIP_GPG"), "gpg not found")
+@unittest.skipIf(not HAVE_GPG, "gpg not found")
 class TestGPGDSA(unittest.TestCase):
   """ Test signature creation, verification and key export from the gpg
   module """
@@ -710,7 +710,7 @@ class TestGPGDSA(unittest.TestCase):
 
 
 
-@unittest.skipIf(os.getenv("TEST_SKIP_GPG"), "gpg not found")
+@unittest.skipIf(not HAVE_GPG, "gpg not found")
 class TestGPGEdDSA(unittest.TestCase):
   """ Test signature creation, verification and key export from the gpg
   module """
