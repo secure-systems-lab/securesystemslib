@@ -29,14 +29,15 @@ import six
 
 import securesystemslib.exceptions
 import securesystemslib.formats
-import securesystemslib.hsm
 
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from cryptography.x509 import Certificate
 
 # To initialize SoftHSM for testing purposes!
-import PyKCS11
+if not six.PY2:
+  import PyKCS11
+  import securesystemslib.hsm
 # Library to interact with SoftHSM.
 PKCS11LIB = '/usr/local/lib/softhsm/libsofthsm2.so'
 

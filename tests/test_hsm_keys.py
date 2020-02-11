@@ -30,7 +30,6 @@ import six
 
 import securesystemslib.exceptions
 import securesystemslib.formats
-import securesystemslib.hsm_keys
 from securesystemslib.settings import PKCS11LIB
 
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
@@ -38,7 +37,11 @@ from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from cryptography.x509 import Certificate
 
 # To initialize SoftHSM for testing purposes!
-import PyKCS11
+if not six.PY2:
+  import PyKCS11
+  import securesystemslib.hsm_keys
+  HSM = securesystemslib.hsm_keys
+
 # Library to interact with SoftHSM.
 PKCS11LIB = '/usr/local/lib/softhsm/libsofthsm2.so'
 
@@ -46,8 +49,6 @@ PKCS11LIB = '/usr/local/lib/softhsm/libsofthsm2.so'
 TOKENS_PATH = '/var/lib/softhsm/tokens'
 
 logger = logging.getLogger('securesystemslib_test_hsm_keys')
-
-HSM = securesystemslib.hsm_keys
 
 # Encoded data for generating signature
 DATA_STR = 'SOME DATA REQUIRING AUTHENTICITY.'
