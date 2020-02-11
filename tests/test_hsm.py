@@ -25,6 +25,7 @@ import logging
 
 import os
 import shutil
+import six
 
 import securesystemslib.exceptions
 import securesystemslib.formats
@@ -71,7 +72,7 @@ EC_PARAMS = b'\x06\x08*\x86H\xce=\x03\x01\x07'
 
 
 
-
+@unittest.skipIf(six.PY2, "HSM functionality not supported on Python 2")
 class TestHSM(unittest.TestCase):
 
 
