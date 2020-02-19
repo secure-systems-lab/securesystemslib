@@ -1,6 +1,39 @@
+# All runtime requirements including extras (see 'install_requires' and
+# 'extras_require' in setup.py)
+#
+# This file together with 'pip-compile' is used to generate a pinned
+# requirements file with all immediate and transitive dependencies.
+#
+# 'requirements-pinned.txt' is updated on GitHub with Dependabot, which
+# triggers CI/CD builds to automatically test against updated dependencies.
+#
+# Below instructions can be used to re-generate 'requirements-pinned.txt', e.g.
+# if:
+# - requirements are added or removed from this file
+# - Python version support is changed
+# - CI/CD build breaks due to updates (e.g. transitive dependency conflicts)
+#
+# 1. Use this script to create a pinned requirements file for each Python
+#    version
+# ```
+# for v in 2.7 3.5 3.6 3.7 3.8; do
+#   mkvirtualenv sslib-env-${v} -p python${v};
+#   pip install pip-tools;
+#   pip-compile --no-header -o requirements-${v}.txt requirements.txt;
+#   deactivate;
+#   rmvirtualenv sslib-env-${v};
+# done;
+#
+# ```
+# 2. Use this command to merge per-version files
+#    `sort -o requirements-pinned.txt -u requirements-?.?.txt`
+# 2. Manually add environment markers to requirements-pinned.txt
+# 3. Use this command to remove per-version files
+#    `rm requirements-?.?.txt`
+#
 cryptography
 pynacl
-six
 colorama
+six
 python-dateutil
 subprocess32; python_version < '3'

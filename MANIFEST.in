@@ -4,7 +4,7 @@ include LICENSE
 # Add test config files to show how to run tests
 include tox.ini
 include .travis.yml
-include *requirements.txt
+include requirements*.txt
 
 # Include all files under the tests directory (including test data)
 graft tests

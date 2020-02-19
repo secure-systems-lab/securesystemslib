@@ -7,9 +7,9 @@ Secure Systems Library
 .. image:: https://coveralls.io/repos/github/secure-systems-lab/securesystemslib/badge.svg?branch=master
    :target: https://coveralls.io/github/secure-systems-lab/securesystemslib?branch=master
 
-.. image:: https://pyup.io/repos/github/secure-systems-lab/securesystemslib/shield.svg
-     :target: https://pyup.io/repos/github/secure-systems-lab/securesystemslib/
-     :alt: Updates
+.. image:: https://api.dependabot.com/badges/status?host=github&repo=secure-systems-lab/securesystemslib
+   :target: https://api.dependabot.com/badges/status?host=github&repo=secure-systems-lab/securesystemslib
+
 
 A library that provides cryptographic and general-purpose functions for Secure
 Systems Lab projects at NYU.  The routines are general enough to be usable by

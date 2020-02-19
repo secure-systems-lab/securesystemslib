@@ -1,0 +1,5 @@
+# test runtime dependencies  (see 'tests_require' field in setup.py)
+mock; python_version < "3.3"
+
+# additional test tools
+coverage
