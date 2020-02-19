@@ -105,6 +105,7 @@ setup(
       'colors': ['colorama>=0.3.9'],
       'crypto': ['cryptography>=2.6'],
       'pynacl': ['pynacl>1.2.0']},
+  tests_require = 'mock; python_version < "3.3"',
   packages = find_packages(exclude=['tests', 'debian']),
   scripts = []
 )
