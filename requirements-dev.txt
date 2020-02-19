@@ -1,0 +1,7 @@
+# Install securesystemslib in editable mode with all runtime and test
+# requirements for local testing with tox, and also for the running test suite
+# or individual tests manually
+tox
+-r requirements.txt
+-r requirements-test.txt
+-e .
