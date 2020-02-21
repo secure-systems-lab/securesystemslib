@@ -30,7 +30,6 @@ import six
 
 import securesystemslib.exceptions
 import securesystemslib.formats
-from securesystemslib.settings import PKCS11LIB
 
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
