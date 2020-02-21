@@ -94,7 +94,7 @@ class HSM(object):
       # of available HSM.
       self.PKCS11.load(self.PKCS11LIB)
     except PyKCS11.PyKCS11Error as error:
-      logger.info('PKS11 Library not found or is corrupt!')
+      logger.error('PKS11 Library not found or is corrupt!')
       raise securesystemslib.exceptions.NotFoundError(error.__str__())
 
 
@@ -184,11 +184,9 @@ class HSM(object):
       self.session.login(user_pin)
     except PyKCS11.PyKCS11Error as error:
       if error.__str__() == 'CKR_USER_ALREADY_LOGGED_IN (0x00000100)':
-        logger.info('Already logged in as CKU_USER.')
+        logger.warning('Already logged in as CKU_USER.')
       else:
         raise securesystemslib.exceptions.BadPasswordError("Wrong User Pin!")
-
-
 
 
 
