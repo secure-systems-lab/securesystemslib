@@ -56,7 +56,7 @@ try:
   TERM_RED = Fore.RED
   TERM_RESET = Fore.RESET
 except ImportError:
-  logger.warning("Failed to find colorama module, terminal output won't be colored")
+  logger.debug("Failed to find colorama module, terminal output won't be colored")
   TERM_RED = ''
   TERM_RESET = ''
 
