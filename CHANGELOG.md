@@ -1,5 +1,12 @@
 # Changelog
 
+## securesystemslib v0.14.1
+
+* Improve logging (#212, #211)
+* Fix dependency monitoring and revise requirements files (#209)
+* Further improve optional dependency handling (#206)
+* Update release metadata (#205)
+
 ## securesystemslib v0.14.0
 
 * *behavior change*
