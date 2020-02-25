@@ -28,7 +28,6 @@ from __future__ import unicode_literals
 import os
 import time
 import datetime
-import logging
 import tempfile
 import json
 import shutil
@@ -48,8 +47,6 @@ import securesystemslib.hash
 import securesystemslib.interface as interface
 
 import six
-
-logger = logging.getLogger('securesystemslib_test_interface')
 
 
 

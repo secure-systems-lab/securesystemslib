@@ -102,7 +102,7 @@ RSA_SIGNATURE_SCHEMES = [
   'rsa-pkcs1v15-sha512',
 ]
 
-logger = logging.getLogger('securesystemslib_keys')
+logger = logging.getLogger(__name__)
 
 
 def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-sha256'):

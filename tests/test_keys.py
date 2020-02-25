@@ -26,15 +26,11 @@ from __future__ import division
 from __future__ import unicode_literals
 
 import unittest
-import logging
-
 
 import securesystemslib.exceptions
 import securesystemslib.formats
 import securesystemslib.keys
 import securesystemslib.ecdsa_keys
-
-logger = logging.getLogger('securesystemslib_test_keys')
 
 KEYS = securesystemslib.keys
 FORMAT_ERROR_MSG = 'securesystemslib.exceptions.FormatError was raised!' + \

@@ -30,7 +30,7 @@ import logging
 
 import securesystemslib.exceptions
 
-logger = logging.getLogger('test_exceptions')
+logger = logging.getLogger(__name__)
 
 class TestExceptions(unittest.TestCase):
   def setUp(self):

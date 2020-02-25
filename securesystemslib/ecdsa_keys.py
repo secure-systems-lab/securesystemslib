@@ -66,7 +66,7 @@ import securesystemslib.exceptions
 
 _SUPPORTED_ECDSA_SCHEMES = ['ecdsa-sha2-nistp256']
 
-logger = logging.getLogger('securesystemslib_ecdsa_keys')
+logger = logging.getLogger(__name__)
 
 
 def generate_public_and_private(scheme='ecdsa-sha2-nistp256'):

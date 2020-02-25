@@ -26,7 +26,6 @@ from __future__ import division
 from __future__ import unicode_literals
 
 import unittest
-import logging
 
 import securesystemslib.exceptions
 import securesystemslib.formats
@@ -34,7 +33,6 @@ import securesystemslib.keys
 import securesystemslib.rsa_keys
 
 from cryptography.hazmat.primitives import hashes
-logger = logging.getLogger('securesystemslib.test_rsa_keys')
 
 public_rsa, private_rsa = securesystemslib.rsa_keys.generate_rsa_public_and_private()
 FORMAT_ERROR_MSG = 'securesystemslib.exceptions.FormatError raised.  Check object\'s format.'
