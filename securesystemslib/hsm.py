@@ -23,29 +23,40 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import unicode_literals
 
-# Import python wrapper for PKCS#11 to communicate with the tokens
-import PyKCS11
-
 import binascii
 import logging
 import securesystemslib.exceptions
 
 # Import cryptography routines needed to retrieve cryptographic
-# keys and certificates in PEM format.
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.backends import default_backend
-from cryptography import x509
+# keys and certificates.
+CRYPTO = True
+NO_CRYPTO_MSG = "To retrieve cryptographic keys and certificates " \
+                "cryptography library is needed"
+try:
+  from cryptography.hazmat.primitives import serialization
+  from cryptography.hazmat.backends import default_backend
+  from cryptography import x509
+except ImportError:
+  CRYPTO = False
 
-# RSA-PSS with SHA256 hash to be used for signature generation.
-RSA_PSS_MECH = PyKCS11.CKM_SHA256_RSA_PKCS_PSS
-# SHA256 hash to be used to digest the data.
-RSA_PSS_HASH_SHA256 = PyKCS11.CKM_SHA256
-# Mask generating function for SHA256 Hash.
-RSA_PSS_MGF_SHA256 = PyKCS11.CKG_MGF1_SHA256
-# Length of salt to be used for hashing.
-RSA_PSS_SALT_LENGTH = 32
+# Import python wrapper for PKCS#11 to communicate with the tokens
+HSM_SUPPORT = True
+NO_HSM_MSG = "HSM support required PyKCS11 library"
+try:
+  import PyKCS11
 
-logger = logging.getLogger('securesystemslib_hsm')
+  # RSA-PSS with SHA256 hash to be used for signature generation.
+  RSA_PSS_MECH = PyKCS11.CKM_SHA256_RSA_PKCS_PSS
+  # SHA256 hash to be used to digest the data.
+  RSA_PSS_HASH_SHA256 = PyKCS11.CKM_SHA256
+  # Mask generating function for SHA256 Hash.
+  RSA_PSS_MGF_SHA256 = PyKCS11.CKG_MGF1_SHA256
+  # Length of salt to be used for hashing.
+  RSA_PSS_SALT_LENGTH = 32
+except ImportError:
+  HSM_SUPPORT = False
+
+logger = logging.getLogger('__securesystemslib_hsm__')
 
 class HSM(object):
   """
@@ -60,9 +71,15 @@ class HSM(object):
   <Exceptions>
     securesystemslib.exceptions.NotFoundError, if the path of PKCS#11
     library is not specified or the library is corrupt
+
+    securesystemslib.exceptions.UnsupportedLibraryError, if the PyKCS11 module
+    is not available.
   """
 
   def __init__(self, PKCS11Lib_path):
+
+    if not HSM_SUPPORT: # pragma: no cover
+      raise securesystemslib.exceptions.UnsupportedLibraryError(NO_HSM_MSG)
 
     self.PKCS11LIB = PKCS11Lib_path
 
@@ -236,9 +253,15 @@ class HSM(object):
       public_key_handle:
         element of the list returned by get_public_key_objects().
 
+    <Exceptions>
+      securesystemslib.exceptions.UnsupportedLibraryError, if the cryptography
+      module id not available.
+
     <Returns>
       'cryptography' public key object
     """
+    if not CRYPTO: # pragma: no cover
+      raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
     public_key_value = self.session.getAttributeValue(public_key_handle,
         [PyKCS11.CKA_VALUE])[0]
@@ -279,9 +302,15 @@ class HSM(object):
       x509_handle:
         element from the list returned by get_X509_objects().
 
+    <Exceptions>
+      securesystemslib.exceptions.UnsupportedLibraryError, if the cryptography
+      module id not available
+
     <Returns>
       'cryptography' public key object.
     """
+    if not CRYPTO: # pragma: no cover
+      raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
     x509_value = self.session.getAttributeValue(x509_handle,
         [PyKCS11.CKA_VALUE])[0]

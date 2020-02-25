@@ -48,6 +48,7 @@ import securesystemslib.gpg.functions
 import securesystemslib.gpg.util
 import securesystemslib.interface
 import securesystemslib.keys
+import securesystemslib.hsm_keys
 
 
 logger = logging.getLogger('securesystemslib_check_public_interfaces')
@@ -211,6 +212,16 @@ class TestPublicInterfaces(unittest.TestCase):
 
     with self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError):
       securesystemslib.gpg.util.get_version()
+
+  def test_hsm_keys(self):
+    """Ensure that functions using PyKCS11 or cryptography throws proper error"""
+
+    PKCS11LIB = "/usr/lib/opensc-pkcs11.so"
+
+    with self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError):
+      securesystemslib.hsm_keys.load_library(PKCS11LIB)
+
+
 
 
 if __name__ == '__main__':
