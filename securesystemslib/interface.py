@@ -49,7 +49,7 @@ import securesystemslib.keys
 import six
 
 # See 'log.py' to learn how logging is handled in securesystemslib.
-logger = logging.getLogger('securesystemslib_interface')
+logger = logging.getLogger(__name__)
 
 try:
   from colorama import Fore

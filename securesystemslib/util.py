@@ -39,7 +39,7 @@ import securesystemslib.formats
 
 import six
 
-logger = logging.getLogger('securesystemslib_util')
+logger = logging.getLogger(__name__)
 
 
 def get_file_details(filepath, hash_algorithms=['sha256']):

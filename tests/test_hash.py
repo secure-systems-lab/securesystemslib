@@ -36,7 +36,7 @@ import securesystemslib.hash
 
 import six
 
-logger = logging.getLogger('securesystemslib.test_hash')
+logger = logging.getLogger(__name__)
 
 
 if not 'hashlib' in securesystemslib.hash.SUPPORTED_LIBRARIES:
