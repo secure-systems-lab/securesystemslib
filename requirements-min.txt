@@ -2,4 +2,3 @@
 six
 python-dateutil
 subprocess32; python_version < '3'
-PyKCS11>=1.5.5; python_version > '3'
