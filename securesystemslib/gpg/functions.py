@@ -185,9 +185,6 @@ def verify_signature(signature_object, pubkey_info, content):
     securesystemslib.gpg.exceptions.KeyExpirationError:
             if the passed public key has expired
 
-    securesystemslib.exceptions.UnsupportedLibraryError:
-            If the gpg command is not available
-
   <Side Effects>
     None.
 
@@ -195,9 +192,6 @@ def verify_signature(signature_object, pubkey_info, content):
     True if signature verification passes, False otherwise.
 
   """
-  if not HAVE_GPG: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_GPG_MSG)
-
   securesystemslib.formats.GPG_PUBKEY_SCHEMA.check_match(pubkey_info)
   securesystemslib.formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
 
