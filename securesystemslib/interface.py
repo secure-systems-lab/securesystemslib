@@ -48,7 +48,6 @@ import securesystemslib.keys
 
 import six
 
-# See 'log.py' to learn how logging is handled in securesystemslib.
 logger = logging.getLogger(__name__)
 
 try:
@@ -73,7 +72,7 @@ SUPPORTED_KEY_TYPES = ['rsa', 'ed25519']
 
 def _prompt(message, result_type=str):
   """
-    Non-public function that prompts the user for input by logging 'message',
+    Non-public function that prompts the user for input by printing 'message',
     converting the input to 'result_type', and returning the value to the
     caller.
   """
