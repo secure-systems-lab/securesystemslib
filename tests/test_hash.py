@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 if not 'hashlib' in securesystemslib.hash.SUPPORTED_LIBRARIES:
-  logger.warn('Not testing hashlib: could not be imported.')
+  logger.warning('Not testing hashlib: could not be imported.')
 
 
 class TestHash(unittest.TestCase):
