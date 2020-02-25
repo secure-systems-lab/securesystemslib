@@ -50,6 +50,9 @@ def load_HSMs():
     securesystemslib.exceptions.NotFoundError, if the path of PKCS#11
     library is not specified in 'settings.py' or the library is corrupt
 
+    securesystemslib.exceptions.Error, if the function call is made
+    before the inilialization call using load_library.
+
   <Returns>
     list of dictionaries corresponding to all the available HSMs
   """
@@ -58,7 +61,13 @@ def load_HSMs():
   # to use same session for all the operations.
 
   # Get information reagarding the available HSM
-  available_HSM = smartcard.get_available_HSMs()
+
+  try:
+    available_HSM = smartcard.get_available_HSMs()
+  except NameError:
+    raise securesystemslib.exceptions.Error('securesystemslib.hsm_key.load_library'
+        'call must be used to initialize the module, before reading the list of HSMs')
+
   return available_HSM
 
 
