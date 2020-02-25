@@ -204,9 +204,6 @@ class TestPublicInterfaces(unittest.TestCase):
       securesystemslib.gpg.functions.create_signature('bar')
 
     with self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError):
-      securesystemslib.gpg.functions.verify_signature(None, 'f00', 'bar')
-
-    with self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError):
       securesystemslib.gpg.functions.export_pubkey('f00')
 
     with self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError):
