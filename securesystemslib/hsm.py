@@ -200,7 +200,7 @@ class HSM(object):
     try:
       self.session.login(user_pin)
     except PyKCS11.PyKCS11Error as error:
-      if error.__str__() == 'CKR_USER_ALREADY_LOGGED_IN (0x00000100)':
+      if PyKCS11.CKR[error.value] == "CKR_USER_ALREADY_LOGGED_IN":
         logger.warning('Already logged in as CKU_USER.')
       else:
         raise securesystemslib.exceptions.BadPasswordError("Wrong User Pin!")
