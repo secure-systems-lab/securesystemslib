@@ -27,14 +27,12 @@ from __future__ import unicode_literals
 
 import unittest
 import os
-import logging
 
 import securesystemslib.exceptions
 import securesystemslib.formats
 import securesystemslib.ecdsa_keys
 import securesystemslib.rsa_keys
 
-logger = logging.getLogger('securesystemslib_test_ecdsa_keys')
 
 public, private = securesystemslib.ecdsa_keys.generate_public_and_private()
 FORMAT_ERROR_MSG = 'securesystemslib.exceptions.FormatError raised.  Check object\'s format.'

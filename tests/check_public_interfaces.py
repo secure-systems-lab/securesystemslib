@@ -34,7 +34,6 @@ from __future__ import absolute_import
 
 import inspect
 import json
-import logging
 import os
 import shutil
 import sys
@@ -48,9 +47,6 @@ import securesystemslib.gpg.functions
 import securesystemslib.gpg.util
 import securesystemslib.interface
 import securesystemslib.keys
-
-
-logger = logging.getLogger('securesystemslib_check_public_interfaces')
 
 
 

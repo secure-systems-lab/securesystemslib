@@ -30,7 +30,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import unicode_literals
 
-import logging
 import hashlib
 
 import six
@@ -38,8 +37,6 @@ import six
 import securesystemslib.exceptions
 import securesystemslib.formats
 
-# Import securesystemslib logger to log warning messages.
-logger = logging.getLogger('securesystemslib.hash')
 
 DEFAULT_CHUNK_SIZE = 4096
 DEFAULT_HASH_ALGORITHM = 'sha256'

@@ -27,12 +27,10 @@ from __future__ import unicode_literals
 
 import unittest
 import re
-import logging
 
 import securesystemslib.exceptions
 import securesystemslib.schema as SCHEMA
 
-logger = logging.getLogger('securesystemslib.test_schema')
 
 
 class TestSchema(unittest.TestCase):

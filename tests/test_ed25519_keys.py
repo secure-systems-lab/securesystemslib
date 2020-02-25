@@ -27,13 +27,11 @@ from __future__ import unicode_literals
 
 import unittest
 import os
-import logging
 
 import securesystemslib.exceptions
 import securesystemslib.formats
 import securesystemslib.ed25519_keys
 
-logger = logging.getLogger('securesystemslib.test_ed25519_keys')
 
 public, private = securesystemslib.ed25519_keys.generate_public_and_private()
 FORMAT_ERROR_MSG = 'securesystemslib.exceptions.FormatError raised.  Check object\'s format.'
