@@ -27,8 +27,12 @@ from securesystemslib.gpg.constants import (GPG_EXPORT_PUBKEY_COMMAND,
 
 import securesystemslib.process
 import securesystemslib.formats
+from securesystemslib.gpg.rsa import CRYPTO
 
 log = logging.getLogger(__name__)
+
+NO_CRYPTO_MSG = "GPG support requires the cryptography library"
+
 
 
 def create_signature(content, keyid=None, homedir=None):
@@ -69,7 +73,8 @@ def create_signature(content, keyid=None, homedir=None):
             If the gpg command is not present or non-executable.
 
     securesystemslib.exceptions.UnsupportedLibraryError:
-            If the gpg command is not available
+            If the gpg command is not available, or
+            the cryptography library is not installed.
 
     securesystemslib.gpg.exceptions.CommandError:
             If the gpg command returned a non-zero exit code
@@ -88,6 +93,9 @@ def create_signature(content, keyid=None, homedir=None):
   """
   if not HAVE_GPG: # pragma: no cover
     raise securesystemslib.exceptions.UnsupportedLibraryError(NO_GPG_MSG)
+
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   keyarg = ""
   if keyid:
@@ -186,7 +194,7 @@ def verify_signature(signature_object, pubkey_info, content):
             if the passed public key has expired
 
     securesystemslib.exceptions.UnsupportedLibraryError:
-            If the gpg command is not available
+            if the cryptography module is unavailable
 
   <Side Effects>
     None.
@@ -195,8 +203,8 @@ def verify_signature(signature_object, pubkey_info, content):
     True if signature verification passes, False otherwise.
 
   """
-  if not HAVE_GPG: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_GPG_MSG)
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   securesystemslib.formats.GPG_PUBKEY_SCHEMA.check_match(pubkey_info)
   securesystemslib.formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
@@ -248,7 +256,8 @@ def export_pubkey(keyid, homedir=None):
             if the keyid does not match the required format.
 
     securesystemslib.exceptions.UnsupportedLibraryError:
-            If the gpg command is not available.
+            If the gpg command is not available, or
+            the cryptography library is not installed.
 
     securesystemslib.gpg.execeptions.KeyNotFoundError:
             if no key or subkey was found for that keyid.
@@ -264,6 +273,9 @@ def export_pubkey(keyid, homedir=None):
   """
   if not HAVE_GPG: # pragma: no cover
     raise securesystemslib.exceptions.UnsupportedLibraryError(NO_GPG_MSG)
+
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   if not securesystemslib.formats.KEYID_SCHEMA.matches(keyid):
     # FIXME: probably needs smarter parsing of what a valid keyid is so as to
