@@ -1,5 +1,9 @@
 # Changelog
 
+## securesystemslib v0.14.2
+
+* Re-enable OpenPGP signature verification without GnuPG (#215)
+
 ## securesystemslib v0.14.1
 
 * Improve logging (#212, #211)
