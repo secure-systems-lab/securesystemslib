@@ -210,11 +210,5 @@ class TestPublicInterfaces(unittest.TestCase):
       securesystemslib.gpg.functions.export_pubkey('f00')
     self.assertEqual(expected_error_msg, str(ctx.exception))
 
-
-
-if __name__ == '__main__':
-  suite = unittest.TestLoader().loadTestsFromTestCase(TestPublicInterfaces)
-  all_tests_passed = unittest.TextTestRunner(
-      verbosity=1, buffer=True).run(suite).wasSuccessful()
-  if not all_tests_passed:
-    sys.exit(1)
+if __name__ == "__main__":
+  unittest.main(verbosity=1, buffer=True)
