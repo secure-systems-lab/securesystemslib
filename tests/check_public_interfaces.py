@@ -193,25 +193,22 @@ class TestPublicInterfaces(unittest.TestCase):
         pub, 'ed25519', bsig, data)
     self.assertEqual(False, invalid)
 
-  def test_gpg_cmds(self):
-    """Ensure functions calling GPG commands throw an appropriate error"""
+  def test_gpg_functions(self):
+    """Public GPG functions must raise error on missing cryptography lib. """
+    expected_error = securesystemslib.exceptions.UnsupportedLibraryError
+    expected_error_msg = securesystemslib.gpg.functions.NO_CRYPTO_MSG
 
-    with self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError):
+    with self.assertRaises(expected_error) as ctx:
       securesystemslib.gpg.functions.create_signature('bar')
+    self.assertEqual(expected_error_msg, str(ctx.exception))
 
-    with self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError):
+    with self.assertRaises(expected_error) as ctx:
       securesystemslib.gpg.functions.verify_signature(None, 'f00', 'bar')
+    self.assertEqual(expected_error_msg, str(ctx.exception))
 
-    with self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError):
+    with self.assertRaises(expected_error) as ctx:
       securesystemslib.gpg.functions.export_pubkey('f00')
+    self.assertEqual(expected_error_msg, str(ctx.exception))
 
-    with self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError):
-      securesystemslib.gpg.util.get_version()
-
-
-if __name__ == '__main__':
-  suite = unittest.TestLoader().loadTestsFromTestCase(TestPublicInterfaces)
-  all_tests_passed = unittest.TextTestRunner(
-      verbosity=1, buffer=True).run(suite).wasSuccessful()
-  if not all_tests_passed:
-    sys.exit(1)
+if __name__ == "__main__":
+  unittest.main(verbosity=1, buffer=True)

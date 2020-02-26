@@ -8,6 +8,8 @@ matrix:
       env: TOXENV=py27
     - python: "2.7"
       env: TOXENV=purepy27
+    - python: "2.7"
+      env: TOXENV=py27-no-gpg
       before_install:
         - sudo apt-get remove -y --allow-remove-essential gnupg gnupg2
     - python: "3.5"
@@ -20,8 +22,10 @@ matrix:
       env: TOXENV=py38
     - python: "3.8"
       env: TOXENV=purepy38
+    - python: "3.8"
+      env: TOXENV=py38-no-gpg
       before_install:
-        - sudo apt-get remove -y  --allow-remove-essential gnupg gnupg2
+        - sudo apt-get remove -y --allow-remove-essential gnupg gnupg2
 
 install:
   - pip install -U tox coveralls
