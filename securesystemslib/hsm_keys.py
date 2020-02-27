@@ -11,7 +11,7 @@
   This module provides a high-level API for using hardware security modules
   for various cryptographic operations
 
-  This module current supports
+  This module currently supports
   1. Create and Verify signature using keys from a HSM
   2. Export public key and X509 certificates stored in HSM in PEM format.
 """
@@ -24,7 +24,7 @@ import binascii
 # Import cryptography routines needed to retrieve cryptographic
 # keys and certificates in PEM format.
 CRYPTO = True
-NO_CRYPTO_MSG = "To retrieve cryptographic keys and certificates in PEM format" \
+NO_CRYPTO_MSG = "To retrieve cryptographic keys and certificates in PEM format " \
                 "cryptography library is needed"
 try:
   from cryptography.hazmat.primitives import serialization
@@ -57,7 +57,7 @@ def load_HSMs():
     library is not specified in 'settings.py' or the library is corrupt
 
     securesystemslib.exceptions.Error, if the function call is made
-    before the inilialization call using load_library.
+    before the initialization call using load_library.
 
   <Returns>
     list of dictionaries corresponding to all the available HSMs
@@ -66,13 +66,14 @@ def load_HSMs():
   # All the functions must use the same object of the HSM class,
   # to use same session for all the operations.
 
-  # Get information reagarding the available HSM
+  # Get information regarding the available HSM
 
   try:
     available_HSM = smartcard.get_available_HSMs()
   except NameError:
-    raise securesystemslib.exceptions.Error('securesystemslib.hsm_key.load_library'
-        'call must be used to initialize the module, before reading the list of HSMs')
+    raise securesystemslib.exceptions.Error(
+        'securesystemslib.hsm_key.load_library call must be used '
+        'to initialize the module, before reading the list of HSMs')
 
   return available_HSM
 
@@ -187,7 +188,7 @@ def export_public_key_PEM(public_key_handle):
 
   <Exceptions>
       securesystemslib.exceptions.UnsupportedLibraryError, if the cryptography
-      module id not available
+      module is not available
 
   <Returns>
     PEM encoded public key

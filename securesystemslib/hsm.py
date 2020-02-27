@@ -41,7 +41,7 @@ except ImportError:
 
 # Import python wrapper for PKCS#11 to communicate with the tokens
 HSM_SUPPORT = True
-NO_HSM_MSG = "HSM support required PyKCS11 library"
+NO_HSM_MSG = "HSM support requires PyKCS11 library"
 try:
   import PyKCS11
 
@@ -255,7 +255,7 @@ class HSM(object):
 
     <Exceptions>
       securesystemslib.exceptions.UnsupportedLibraryError, if the cryptography
-      module id not available.
+      module is not available.
 
     <Returns>
       'cryptography' public key object
@@ -304,7 +304,7 @@ class HSM(object):
 
     <Exceptions>
       securesystemslib.exceptions.UnsupportedLibraryError, if the cryptography
-      module id not available
+      module is not available
 
     <Returns>
       'cryptography' public key object.
