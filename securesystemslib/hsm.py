@@ -56,7 +56,7 @@ try:
 except ImportError:
   HSM_SUPPORT = False
 
-logger = logging.getLogger('__securesystemslib_hsm__')
+logger = logging.getLogger(__name__)
 
 class HSM(object):
   """

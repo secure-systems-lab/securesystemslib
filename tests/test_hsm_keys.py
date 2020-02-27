@@ -47,7 +47,7 @@ PKCS11LIB = '/usr/local/lib/softhsm/libsofthsm2.so'
 # Path where SoftHSM is created and stored
 TOKENS_PATH = '/var/lib/softhsm/tokens'
 
-logger = logging.getLogger('securesystemslib_test_hsm_keys')
+logger = logging.getLogger(__name__)
 
 # Encoded data for generating signature
 DATA_STR = 'SOME DATA REQUIRING AUTHENTICITY.'
