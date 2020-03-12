@@ -11,6 +11,5 @@ omit =
 exclude_lines =
   pragma: no cover
   def get_password
-  def _prompt
   def __str__
   if __name__ == .__main__.:

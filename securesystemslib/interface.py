@@ -71,17 +71,6 @@ SUPPORTED_KEY_TYPES = ['rsa', 'ed25519']
 
 
 
-def _prompt(message, result_type=str):
-  """
-    Non-public function that prompts the user for input by printing 'message',
-    converting the input to 'result_type', and returning the value to the
-    caller.
-  """
-
-  return result_type(six.moves.input(message))
-
-
-
 
 
 def get_password(prompt='Password: ', confirm=False):
