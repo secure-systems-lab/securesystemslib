@@ -98,7 +98,38 @@ def load_pkcs11_library(path=None):
     raise securesystemslib.exceptions.NotFoundError(error.__str__())
 
 
-def _refresh(session):
+def get_available_HSMs():
+  """
+  <Purpose>
+    Generate the list of available cryptographic tokens for the user
+
+  <Returns>
+    A list of dictionaries consisting of relevant information
+    regarding all the available tokens
+  """
+
+  # Refresh the list of available slots for HSM
+  _refresh()
+
+  # Get the list of slots on which HSMs are available
+  slot_list = PKCS11.getSlotList()
+  slot_info_list = []
+
+  # For all the available HSMs available, add relevant information
+  # to the slots dictionary
+  for slot in slot_list:
+    slot_dict = dict()
+    slot_dict['slot_id'] = slot
+    slot_info = PKCS11.getSlotInfo(slot)
+    slot_dict['flags'] = slot_info.flags2text()
+    slot_dict['manufacturer_id'] = slot_info.manufacturerID
+    slot_dict['slot_description'] = slot_info.slotDescription
+    slot_info_list.append(slot_dict)
+
+  return slot_info_list
+
+
+def _refresh():
   """
   To refresh the list of available HSMs.
   """
