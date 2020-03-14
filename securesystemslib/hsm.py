@@ -96,3 +96,11 @@ def load_pkcs11_library(path=None):
   except PyKCS11.PyKCS11Error as error:
     logger.error('PKS11 Library not found or is corrupt!')
     raise securesystemslib.exceptions.NotFoundError(error.__str__())
+
+
+def _refresh(session):
+  """
+  To refresh the list of available HSMs.
+  """
+
+  PKCS11.load(PKCS11LIB)
