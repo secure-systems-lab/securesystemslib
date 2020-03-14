@@ -27,6 +27,10 @@ matrix:
       before_install:
         - sudo apt-get remove -y --allow-remove-essential gnupg gnupg2
 
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install -y swig
+
 install:
   - pip install -U tox coveralls
 
