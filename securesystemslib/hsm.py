@@ -135,3 +135,22 @@ def _refresh():
   """
 
   PKCS11.load(PKCS11LIB)
+
+
+def _create_session(slot_info):
+  """
+  Open a session with the HSM corresponding to the slot_info provided
+  by the user.
+  """
+
+  try:
+    session = PKCS11.openSession(slot_info['slot_id'],
+        PyKCS11.CKF_SERIAL_SESSION | PyKCS11.CKF_RW_SESSION)
+  except PyKCS11.PyKCS11Error as error:
+    raise securesystemslib.exceptions.InvalidNameError(
+        "The requested token is not available." + str(error))
+  except KeyError:
+    raise securesystemslib.exceptions.InvalidNameError(
+        "Invalid Input, not a slot_info dictionary.")
+
+  return session
