@@ -176,4 +176,23 @@ def _logout(session):
   """
 
   session.logout()
-  
+
+
+def _destroy_session(session):
+  """
+  To logout and terminate the session with the HSM completely.
+  """
+
+  # Logout form the admin session
+  try:
+    _logout(session)
+  except PyKCS11.PyKCS11Error as error:
+    # Error is raised when user does not have an active admin session
+    logger.warning(error)
+
+  # After logout, completely terminate the session with the HSM.
+  try:
+    session.closeSession()
+  except PyKCS11.PyKCS11Error as error:
+    # Error is raised when there is no active session with the HSM.
+    logger.warning(str(error))
