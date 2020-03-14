@@ -154,3 +154,26 @@ def _create_session(slot_info):
         "Invalid Input, not a slot_info dictionary.")
 
   return session
+
+
+def _login(session, user_pin):
+  """
+  User Login into the HSM. Required to access private objects.
+  """
+
+  try:
+    session.login(user_pin)
+  except PyKCS11.PyKCS11Error as error:
+    if PyKCS11.CKR[error.value] == "CKR_USER_ALREADY_LOGGED_IN":
+      logger.warning('Already logged in as CKU_USER.')
+    else:
+      raise securesystemslib.exceptions.BadPasswordError("Wrong User Pin!")
+
+
+def _logout(session):
+  """
+  Logout from the CKU_USER session
+  """
+
+  session.logout()
+  
