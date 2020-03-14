@@ -37,3 +37,4 @@ colorama
 six
 python-dateutil
 subprocess32; python_version < '3'
+PyKCS11>=1.5.7; python_version > '3'

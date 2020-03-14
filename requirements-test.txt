@@ -1,5 +1,6 @@
 # test runtime dependencies  (see 'tests_require' field in setup.py)
 mock; python_version < "3.3"
+PyKCS11>=1.5.7; python_version > '3'
 
 # additional test tools
 coverage
