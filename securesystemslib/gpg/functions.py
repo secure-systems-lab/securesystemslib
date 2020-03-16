@@ -299,3 +299,29 @@ def export_pubkey(keyid, homedir=None):
   key_bundle = securesystemslib.gpg.common.get_pubkey_bundle(key_packet, keyid)
 
   return key_bundle
+
+
+def export_pubkeys(keyids, homedir=None):
+  """Export multiple public keys from a GnuPG keyring.
+
+  Arguments:
+    keyids: A list of OpenPGP keyids in KEYID_SCHEMA format.
+    homedir (optional): A path to the GnuPG home directory. If not set the
+        default GnuPG home directory is used.
+
+  Raises:
+    TypeError: Keyids is not iterable.
+    See 'export_pubkey' for other exceptions.
+
+  Returns:
+    A dict with the OpenPGP keyids passed as the keyids argument for dict keys
+    and keys in GPG_PUBKEY_SCHEMA format for values.
+
+  """
+  public_key_dict = {}
+  for gpg_keyid in keyids:
+    public_key = export_pubkey(gpg_keyid, homedir=homedir)
+    keyid = public_key["keyid"]
+    public_key_dict[keyid] = public_key
+
+  return public_key_dict
