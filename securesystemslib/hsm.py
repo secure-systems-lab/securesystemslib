@@ -170,7 +170,7 @@ def get_public_key_objects(hsm_info):
   session = _create_session(hsm_info)
 
   public_key_objects = session.findObjects([(PyKCS11.CKA_CLASS,
-      PyKCS11.CKO_PRUBLIC_KEY)])
+      PyKCS11.CKO_PUBLIC_KEY)])
 
   # TODO: Find a better way to provide the details regarding the available keys.
   key_info = []
