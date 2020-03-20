@@ -42,12 +42,30 @@ try:
 except ImportError:
   CRYPTO = False
 
+# Default salt size, in bytes.  A 128-bit salt (i.e., a random sequence of data
+# to protect against attacks that use precomputed rainbow tables to crack
+# password hashes) is generated for PBKDF2.
+_SALT_SIZE = 16
+
 # Import python wrapper for PKCS#11 to communicate with the tokens
 HSM_SUPPORT = True
 NO_HSM_MSG = "HSM support requires PyKCS11 library."
 try:
   import PyKCS11
   PKCS11 = PyKCS11.PyKCS11Lib()
+
+  RSA_PKCS_SHA256 = PyKCS11.RSA_PSS_Mechanism(
+      PyKCS11.CKM_SHA256_RSA_PKCS,
+      PyKCS11.CKM_SHA256,
+      PyKCS11.CKG_MGF1_SHA256,
+      _SALT_SIZE)
+
+  ECDSA_SIGN = PyKCS11.Mechanism(PyKCS11.CKM_ECDSA)
+
+  MECHANISMS = {
+    "rsassa-pkcs-sha256": RSA_PKCS_SHA256,
+    "ecdsa-sign": ECDSA_SIGN
+  }
 
 except ImportError:
   HSM_SUPPORT = False
