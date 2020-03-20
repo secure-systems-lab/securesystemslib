@@ -285,6 +285,76 @@ def export_pubkey(hsm_info, public_key_info):
   return key_dict
 
 
+def create_signature(data, hsm_info, private_key_info, user_pin):
+  """
+  <Purpose>
+    Calculate signature over 'data' using the private key corresponding
+    to the 'private_key_info'
+
+    Supported Keys
+    1. RSA - rsassa-pss-sha256
+    2. ECDSA
+
+  <Arguments>
+    data:
+      bytes over which the signature is to be calculated
+      'data' should be encoded/serialized before it is passed here.
+
+    private_key_info:
+      element from the list returned by the get_private_key_objects()
+
+    user_pin:
+      PIN for the CKU_USER login.
+
+  <Exceptions>
+    securesystemslib.exceptions.UnsupportedAlgorithmError, when the
+    key type of the 'private_key_handle' is not supported
+
+  <Returns>
+    A signature dictionary conformant to
+    'securesystemslib_format.SIGNATURE_SCHEMA'.
+  """
+
+  if not HSM_SUPPORT: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_HSM_MSG)
+
+  if not HSM_LIB: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_HSM_LIB_MSG)
+
+  # Create a session and login to generate signature using keys stored in hsm
+  session = _create_session(hsm_info)
+  _login(session, str(user_pin))
+
+  mechanism = None
+  private_key_object = session.findObjects([(PyKCS11.CKA_CLASS,
+      PyKCS11.CKO_PRIVATE_KEY), (PyKCS11.CKA_ID, private_key_info[0])])[0]
+  key_type = session.getAttributeValue(private_key_object,
+      [PyKCS11.CKA_KEY_TYPE])[0]
+
+  if PyKCS11.CKK[key_type] == 'CKK_RSA':
+    mechanism = MECHANISMS["rsassa-pkcs-sha256"]
+
+  elif PyKCS11.CKK[key_type] == 'CKK_EC' or PyKCS11.CKK[key_type] == 'CKK_ECDSA':
+    mechanism = MECHANISMS["ecdsa-sign"]
+
+  if mechanism is None:
+    raise securesystemslib.exceptions.UnsupportedAlgorithmError(
+      "The Key type " + repr(key_type) + " is currently not supported!")
+
+
+  signature = session.sign(private_key_object, data, mechanism)
+
+  signature_dict = {}
+  # TODO: THis is not a key id, change this.
+  keyid = _to_hex(private_key_info[0])
+  sig = _to_hex(signature)
+
+  signature_dict['keyid'] = keyid
+  signature_dict['sig'] = sig
+
+  return signature_dict
+
+
 def _refresh():
   """
   To refresh the list of available HSMs.
