@@ -51,15 +51,16 @@ try:
 except ImportError:
   HSM_SUPPORT = False
 
-# Load the library needed to interact with HSM using PKCS#11.
-HSM_LIB = True
-NO_HSM_LIB_MSG = "Env variable PYKCS11LIB must be set to interact with HSM " \
-                 "using PKCS#11. Load the library using load_pkcs11_library()."
-try:
-  PKCS11.load()
+# Load the library needed to interact with HSM if PyKCS11 is present.
+if HSM_SUPPORT:
+  HSM_LIB = True
+  NO_HSM_LIB_MSG = "Env variable PYKCS11LIB must be set to interact with HSM " \
+                   "using PKCS#11. Load the library using load_pkcs11_library(path)."
+  try:
+    PKCS11.load()
 
-except PyKCS11.PyKCS11Error:
-  HSM_LIB = False
+  except PyKCS11.PyKCS11Error:
+    HSM_LIB = False
 
 # Path to PKCS11 Library. Can be initialized using load_pkcs11_library function call.
 # This variable would be used to keep track of the path of PKCS11LIB as it would be
@@ -89,11 +90,13 @@ def load_pkcs11_library(path=None):
     raise securesystemslib.exceptions.UnsupportedLibraryError(NO_HSM_MSG)
 
   global PKCS11LIB
+  global HSM_LIB
   # Try to load the PKCS11 library
   try:
     # Load the PKCS#11 library and simulataneously update the list of available HSMs.
     PKCS11.load(path)
     PKCS11LIB = path
+    HSM_LIB = True
   except PyKCS11.PyKCS11Error as error:
     logger.error('PKS11 Library not found or is corrupt!')
     raise securesystemslib.exceptions.NotFoundError(error.__str__())
@@ -108,6 +111,12 @@ def get_available_HSMs():
     A list of dictionaries consisting of relevant information
     regarding all the available tokens
   """
+
+  if not HSM_SUPPORT: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_HSM_MSG)
+
+  if not HSM_LIB: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_HSM_LIB_MSG)
 
   # Refresh the list of available slots for HSM
   _refresh()
@@ -140,10 +149,17 @@ def get_private_key_objects(hsm_info, user_pin):
     List of all key_id and key_modulus for all the keys in HSM
   """
 
+  if not HSM_SUPPORT: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_HSM_MSG)
+
+  if not HSM_LIB: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_HSM_LIB_MSG)
+
   # Create an HSM session and login to access private objects.
   session = _create_session(hsm_info)
   _login(session, str(user_pin))
 
+  # Retirve all the private key object present on the HSM
   private_key_objects = session.findObjects([(PyKCS11.CKA_CLASS,
       PyKCS11.CKO_PRIVATE_KEY)])
 
@@ -167,9 +183,16 @@ def get_public_key_objects(hsm_info):
     List of  key_id and key_modulus for all the public keys in HSM
   """
 
+  if not HSM_SUPPORT: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_HSM_MSG)
+
+  if not HSM_LIB: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_HSM_LIB_MSG)
+
   # Create an HSM session to access private objects.
   session = _create_session(hsm_info)
 
+  # Retirve all the public key object present on the HSM.
   public_key_objects = session.findObjects([(PyKCS11.CKA_CLASS,
       PyKCS11.CKO_PUBLIC_KEY)])
 
@@ -201,6 +224,12 @@ def export_pubkey(hsm_info, public_key_info):
     A dictionary containing the public key value and other identifying information.
     Conforms to 'securesystemslib.formats.PUBLIC_KEY_SCHEMA'.
   """
+
+  if not HSM_SUPPORT: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_HSM_MSG)
+
+  if not HSM_LIB: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_HSM_LIB_MSG)
 
   if not CRYPTO: # pragma: no cover
     raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
