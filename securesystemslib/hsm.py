@@ -145,7 +145,7 @@ def get_private_key_objects(hsm_info, user_pin):
 
   private_key_objects = session.findObjects([(PyKCS11.CKA_CLASS,
       PyKCS11.CKO_PRIVATE_KEY)])
-  print(private_key_objects)
+
   # TODO: Find a better way to provide the details regarding the available keys.
   key_info = []
   for object_handle in private_key_objects:
@@ -166,12 +166,12 @@ def get_public_key_objects(hsm_info):
     List of  key_id and key_modulus for all the public keys in HSM
   """
 
-  # Create an HSM session and login to access private objects.
+  # Create an HSM session to access private objects.
   session = _create_session(hsm_info)
 
   public_key_objects = session.findObjects([(PyKCS11.CKA_CLASS,
       PyKCS11.CKO_PRUBLIC_KEY)])
-  print(public_key_objects)
+
   # TODO: Find a better way to provide the details regarding the available keys.
   key_info = []
   for object_handle in public_key_objects:
