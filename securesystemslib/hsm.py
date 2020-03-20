@@ -157,6 +157,32 @@ def get_private_key_objects(hsm_info, user_pin):
   return key_info
 
 
+def get_public_key_objects(hsm_info):
+  """
+  <Purpose>
+    Get object handles of public keys stored on the HSM.
+
+  <Returns>
+    List of  key_id and key_modulus for all the public keys in HSM
+  """
+
+  # Create an HSM session and login to access private objects.
+  session = _create_session(hsm_info)
+
+  public_key_objects = session.findObjects([(PyKCS11.CKA_CLASS,
+      PyKCS11.CKO_PRUBLIC_KEY)])
+  print(public_key_objects)
+  # TODO: Find a better way to provide the details regarding the available keys.
+  key_info = []
+  for object_handle in public_key_objects:
+    # Find and return the key_id(with resepect to the HSM) and the key modulus
+    key_id, key_modulus = session.getAttributeValue(object_handle,
+        [PyKCS11.CKA_ID, PyKCS11.CKA_MODULUS])
+    key_info.append([key_id, key_modulus])
+
+  return key_info
+
+
 def _refresh():
   """
   To refresh the list of available HSMs.
