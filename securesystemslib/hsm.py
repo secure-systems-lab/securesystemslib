@@ -23,6 +23,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import unicode_literals
 
+import binascii
 import logging
 import securesystemslib.exceptions
 from securesystemslib.keys import extract_pem
@@ -333,3 +334,11 @@ def _destroy_session(session):
   except PyKCS11.PyKCS11Error as error:
     # Error is raised when there is no active session with the HSM.
     logger.warning(str(error))
+
+
+def _to_hex(data_tuple):
+  """
+  To convert values returned by HSM, in tuples, to HEX string
+  """
+
+  return binascii.hexlify(bytes(data_tuple)).decode('utf-8')
