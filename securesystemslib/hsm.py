@@ -25,6 +25,7 @@ from __future__ import unicode_literals
 
 import logging
 import securesystemslib.exceptions
+from securesystemslib.keys import extract_pem
 
 logger = logging.getLogger(__name__)
 
@@ -181,6 +182,59 @@ def get_public_key_objects(hsm_info):
     key_info.append([key_id, key_modulus])
 
   return key_info
+
+
+def export_pubkey(hsm_info, public_key_info):
+  """
+  <Purpose>
+    Get the public key value corresponding to the 'public_key_handle'
+
+  <Arguments>
+    public_key_info:
+      element of the list returned by get_public_key_objects().
+
+  <Exceptions>
+    securesystemslib.exceptions.UnsupportedLibraryError, if the cryptography
+    module is not available.
+
+  <Returns>
+    A dictionary containing the public key value and other identifying information.
+    Conforms to 'securesystemslib.formats.PUBLIC_KEY_SCHEMA'.
+  """
+
+  if not CRYPTO: # pragma: no cover
+    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+
+  # Create session with the HSM(corresponding to hsm_info) to retrieve public key value.
+  session = _create_session(hsm_info)
+
+  # Find the public key handle corresponding to the key_id.
+  public_key_object = session.findObjects([(PyKCS11.CKA_CLASS,
+      PyKCS11.CKO_PUBLIC_KEY), (PyKCS11.CKA_ID, public_key_info[0])])[0]
+
+  # Retrieve the public key bytes for the required public key
+  public_key_value, public_key_type = session.getAttributeValue(public_key_object,
+      [PyKCS11.CKA_VALUE, PyKCS11.CKA_KEY_TYPE])
+  public_key_value = bytes(public_key_value)
+
+  # Public key value exported from the HSM is der encoded
+  public_key = serialization.load_der_public_key(public_key_value,
+      default_backend())
+  public = public_key.public_bytes(encoding=serialization.Encoding.PEM,
+      format=serialization.PublicFormat.SubjectPublicKeyInfo)
+  # Strip any leading or trailing new line characters.
+  public = extract_pem(public, private_pem=False)
+
+  key_value = {'public': public.replace('\r\n', '\n'),
+               'private': ''}
+
+  # Return the public key conforming to the securesystemslib.format.PUBLIC_KEY_SCHEMA
+  key_dict = {}
+  key_type = PyKCS11.CKK[public_key_type]
+  key_dict['keytype'] = key_type
+  key_dict['keyval'] = key_value
+
+  return public
 
 
 def _refresh():
