@@ -223,7 +223,7 @@ def export_pubkey(hsm_info, public_key_info):
   public = public_key.public_bytes(encoding=serialization.Encoding.PEM,
       format=serialization.PublicFormat.SubjectPublicKeyInfo)
   # Strip any leading or trailing new line characters.
-  public = extract_pem(public, private_pem=False)
+  public = extract_pem(public.decode('utf-8'), private_pem=False)
 
   key_value = {'public': public.replace('\r\n', '\n'),
                'private': ''}
