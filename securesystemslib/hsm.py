@@ -234,7 +234,7 @@ def export_pubkey(hsm_info, public_key_info):
   key_dict['keytype'] = key_type
   key_dict['keyval'] = key_value
 
-  return public
+  return key_dict
 
 
 def _refresh():
