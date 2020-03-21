@@ -214,7 +214,7 @@ class TestHSM(unittest.TestCase):
 
   def test_load_pkcs11_library(self):
 
-    PKCS11LIB_ERR = "/NO/LIBRARY/HERE""
+    PKCS11LIB_ERR = '/NO/LIBRARY/HERE'
 
     self.assertRaises(securesystemslib.exceptions.NotFoundError,
         HSM.load_pkcs11_library, PKCS11LIB_ERR)
