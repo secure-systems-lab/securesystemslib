@@ -54,16 +54,25 @@ try:
   import PyKCS11
   PKCS11 = PyKCS11.PyKCS11Lib()
 
-  RSA_PKCS_SHA256 = PyKCS11.RSA_PSS_Mechanism(
+  RSA_PKCS1V15_SHA256 = PyKCS11.RSA_PSS_Mechanism(
       PyKCS11.CKM_SHA256_RSA_PKCS,
       PyKCS11.CKM_SHA256,
       PyKCS11.CKG_MGF1_SHA256,
-      _SALT_SIZE)
+      _SALT_SIZE
+  )
+
+  RSASSA_PSS_SHA256 = PyKCS11.RSA_PSS_Mechanism(
+      PyKCS11.CKM_SHA1_RSA_PKCS_PSS,
+      PyKCS11.CKM_SHA256,
+      PyKCS11.CKG_MGF1_SHA256,
+      _SALT_SIZE
+  )
 
   ECDSA_SIGN = PyKCS11.Mechanism(PyKCS11.CKM_ECDSA)
 
   MECHANISMS = {
-    "rsassa-pkcs-sha256": RSA_PKCS_SHA256,
+    "rsa-pkcs1v15-sha256": RSA_PKCS1V15_SHA256,
+    "rsassa-pss-sha256": RSASSA_PSS_SHA256,
     "ecdsa-sign": ECDSA_SIGN
   }
 
@@ -332,7 +341,7 @@ def create_signature(data, hsm_info, private_key_info, user_pin):
       [PyKCS11.CKA_KEY_TYPE])[0]
 
   if PyKCS11.CKK[key_type] == 'CKK_RSA':
-    mechanism = MECHANISMS["rsassa-pkcs-sha256"]
+    mechanism = MECHANISMS["rsa-pkcs1v15-sha256"]
 
   elif PyKCS11.CKK[key_type] == 'CKK_EC' or PyKCS11.CKK[key_type] == 'CKK_ECDSA':
     mechanism = MECHANISMS["ecdsa-sign"]
@@ -345,7 +354,7 @@ def create_signature(data, hsm_info, private_key_info, user_pin):
   signature = session.sign(private_key_object, data, mechanism)
 
   signature_dict = {}
-  # TODO: THis is not a key id, change this.
+  # TODO: This is not a key id, change this.
   keyid = _to_hex(private_key_info[0])
   sig = _to_hex(signature)
 
