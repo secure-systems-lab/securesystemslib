@@ -224,6 +224,19 @@ class TestHSM(unittest.TestCase):
 
 
 
+  def test_get_available_HSMs(self):
+
+    slot_list = HSM.get_available_HSMs()
+    self.assertIsInstance(slot_list, list)
+
+    slot_info = slot_list[0]
+    self.assertIsInstance(slot_info, dict)
+
+    slot_id = slot_info['slot_id']
+    self.assertIsInstance(slot_id, int)
+
+
+
 
 
 # Run the unit tests.
