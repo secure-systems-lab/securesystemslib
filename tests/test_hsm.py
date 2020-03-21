@@ -237,6 +237,17 @@ class TestHSM(unittest.TestCase):
 
 
 
+  def test_get_private_key_objects(self):
+
+    # Use the HSM on the first slot to retrieve private key objects
+    hsm_info = HSM.get_available_HSMs()[0]
+
+
+    private_key_info = HSM.get_private_key_objects(hsm_info, _USER_PIN)
+    self.assertIsInstance(private_key_info, list)
+
+
+
 
 
 # Run the unit tests.
