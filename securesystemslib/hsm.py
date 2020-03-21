@@ -287,9 +287,19 @@ def export_pubkey(hsm_info, public_key_info):
 
   # Return the public key conforming to the securesystemslib.format.PUBLIC_KEY_SCHEMA
   key_dict = {}
-  key_type = PyKCS11.CKK[public_key_type]
-  key_dict['keytype'] = key_type
   key_dict['keyval'] = key_value
+
+  if PyKCS11.CKK[public_key_type] == 'CKK_RSA':
+    key_dict['keytype'] = 'rsa'
+    # Currently keeping a default scheme
+    # TODO: Decide a way to provide user with options regarding various schemes available
+    key_dict['scheme'] = "rsa-pkcs1v15-sha256"
+  elif PyKCS11.CKK[public_key_type] == 'CKK_EC' or PyKCS11.CKK[public_key_type] == 'CKK_ECDSA':
+    key_dict['keytype'] = 'ecdsa'
+    key_dict['scheme'] = 'ecdsa-sign'
+  else:
+    raise securesystemslib.exceptions.UnsupportedAlgorithmError(
+        "The Key type " + repr(PyKCS11.CKK[public_key_type]) + " is currently not supported!")
 
   return key_dict
 
