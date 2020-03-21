@@ -50,6 +50,22 @@ _HSM_LABEL = 'TEST HSM SSL'
 
 KEY_LABEL = 'Test Keys'
 
+# Encoded data for generating signature
+DATA_STR = 'SOME DATA REQUIRING AUTHENTICITY.'
+DATA_STR_COMPROMISED = 'This one is also perfectly fine'
+DATA = securesystemslib.formats.encode_canonical(DATA_STR).encode('utf-8')
+DATA_COMPROMISED = securesystemslib.formats.encode_canonical(
+    DATA_STR_COMPROMISED).encode('utf-8')
+
+# RSA Key Parameters
+RSA_KEY_ID = (0x22,)
+RSA_BITS = 0x0800
+RSA_EXPONENTS = (0x01, 0x00, 0x01)
+
+# ECDSA Key Parameters. EC_PARAMS is generates using
+# the elliptic curve 'SECP256R1'
+EC_KEY_ID = (0x23,)
+EC_PARAMS = b'\x06\x08*\x86H\xce=\x03\x01\x07'
 
 
 
