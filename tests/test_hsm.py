@@ -258,6 +258,24 @@ class TestHSM(unittest.TestCase):
 
 
 
+  def test_export_pubkey(self):
+
+    hsm_info = HSM.get_available_HSMs()[0]
+
+    public_keys = HSM.get_public_key_objects(hsm_info)
+
+    # Export public key value for all the keys present in the HSM
+    for key_info in public_keys:
+      # Exporting ECC public keys results into an exception if CKA_VALUE is None
+      try:
+        key_dict = HSM.export_pubkey(hsm_info, key_info)
+        self.assertIsNone(
+            securesystemslib.formats.PUBLIC_KEY_SCHEMA.check_match(key_dict))
+      except securesystemslib.exceptions.UnsupportedAlgorithmError as e:
+        logger.warning(e)
+
+
+
 
 
 # Run the unit tests.
