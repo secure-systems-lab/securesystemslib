@@ -38,6 +38,8 @@ NO_CRYPTO_MSG = "To retrieve cryptographic keys and certificates " \
 try:
   from cryptography.hazmat.primitives import serialization
   from cryptography.hazmat.backends import default_backend
+  from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicNumbers
+  from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicNumbers
   from cryptography import x509
 except ImportError:
   CRYPTO = False
@@ -272,11 +274,32 @@ def export_pubkey(hsm_info, public_key_info):
   # Retrieve the public key bytes for the required public key
   public_key_value, public_key_type = session.getAttributeValue(public_key_object,
       [PyKCS11.CKA_VALUE, PyKCS11.CKA_KEY_TYPE])
-  public_key_value = bytes(public_key_value)
 
-  # Public key value exported from the HSM is der encoded
-  public_key = serialization.load_der_public_key(public_key_value,
-      default_backend())
+  public_key =""
+  if public_key_value:
+    public_key_value = bytes(public_key_value)
+    # Public key value exported from the HSM is der encoded
+    public_key = serialization.load_der_public_key(public_key_value,
+        default_backend())
+  else:
+    if PyKCS11.CKK[public_key_type] == 'CKK_RSA':
+      public_key_modulus, public_key_exponent = session.getAttributeValue(public_key_object,
+          [PyKCS11.CKA_MODULUS, PyKCS11.CKA_PUBLIC_EXPONENT])
+      public_key_modulus = _to_hex(public_key_modulus)
+      public_key_exponent = _to_hex(public_key_exponent)
+      public_numbers = RSAPublicNumbers( int(public_key_exponent,16),
+          int(public_key_modulus,16))
+      public_key = public_numbers.public_key(default_backend())
+    elif PyKCS11.CKK[public_key_type] == 'CKK_EC' or PyKCS11.CKK[public_key_type] == 'CKK_ECDSA':
+      raise securesystemslib.exceptions.UnsupportedAlgorithmError(
+          "The public key for " + repr(PyKCS11.CKK[public_key_type]) + " cannot be generated "
+          "using parameters. This functionality is yet not supported"
+      )
+    else:
+      raise securesystemslib.exceptions.UnsupportedAlgorithmError(
+          "The Key type " + repr(PyKCS11.CKK[public_key_type]) + " is currently not supported!")
+
+  logger.error(public_key)
   public = public_key.public_bytes(encoding=serialization.Encoding.PEM,
       format=serialization.PublicFormat.SubjectPublicKeyInfo)
   # Strip any leading or trailing new line characters.
