@@ -153,20 +153,22 @@ def get_available_HSMs():
 
   # Get the list of slots on which HSMs are available
   slot_list = PKCS11.getSlotList()
-  slot_info_list = []
+  hsm_info_list = []
 
   # For all the available HSMs available, add relevant information
   # to the slots dictionary
   for slot in slot_list:
-    slot_dict = dict()
-    slot_dict['slot_id'] = slot
-    slot_info = PKCS11.getSlotInfo(slot)
-    slot_dict['flags'] = slot_info.flags2text()
-    slot_dict['manufacturer_id'] = slot_info.manufacturerID
-    slot_dict['slot_description'] = slot_info.slotDescription
-    slot_info_list.append(slot_dict)
+    hsm_info = PKCS11.getSlotInfo(slot)
+    hsm_dict = {
+        'slot_id': slot,
+        'slot_info': hsm_info,
+        'flags': hsm_info.flags2text(),
+        'manufacturer_id': hsm_info.manufacturerID,
+        'slot_description': hsm_info.slotDescription.strip()
+    }
+    hsm_info_list.append(hsm_dict)
 
-  return slot_info_list
+  return hsm_info_list
 
 
 def get_private_key_objects(hsm_info, user_pin):
@@ -405,14 +407,14 @@ def _refresh():
   PKCS11.load(PKCS11LIB)
 
 
-def _create_session(slot_info):
+def _create_session(hsm_info):
   """
   Open a session with the HSM corresponding to the slot_info provided
   by the user.
   """
 
   try:
-    session = PKCS11.openSession(slot_info['slot_id'],
+    session = PKCS11.openSession(hsm_info['slot_id'],
         PyKCS11.CKF_SERIAL_SESSION | PyKCS11.CKF_RW_SESSION)
   except PyKCS11.PyKCS11Error as error:
     raise securesystemslib.exceptions.InvalidNameError(
