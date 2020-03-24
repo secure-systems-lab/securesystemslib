@@ -44,8 +44,11 @@ else:
 
 import securesystemslib.exceptions
 import securesystemslib.formats
+import securesystemslib.exceptions
 import securesystemslib.hash
 import securesystemslib.interface as interface
+
+from securesystemslib import KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA
 
 import six
 
@@ -612,6 +615,58 @@ class TestInterfaceFunctions(unittest.TestCase):
 
     self.assertRaises(securesystemslib.exceptions.FormatError,
         interface.import_ecdsa_privatekey_from_file, ecdsa_keypath, 'pw')
+
+
+
+  def test_import_public_keys_from_file(self):
+    """Test import multiple public keys with different types. """
+    temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
+    path_rsa = os.path.join(temporary_directory, "rsa_key")
+    path_ed25519 = os.path.join(temporary_directory, "ed25519_key")
+    path_ecdsa = os.path.join(temporary_directory, "ecdsa_key")
+
+    interface.generate_and_write_rsa_keypair(path_rsa, password="pw")
+    interface.generate_and_write_ed25519_keypair(path_ed25519, password="pw")
+    interface.generate_and_write_ecdsa_keypair(path_ecdsa, password="pw")
+
+    # Successfully import key dict with one key per supported key type
+    key_dict = interface.import_public_keys_from_file([
+        path_rsa + ".pub",
+        path_ed25519 + ".pub",
+        path_ecdsa + ".pub"],
+        [KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA])
+
+    securesystemslib.formats.ANY_PUBKEY_DICT_SCHEMA.check_match(key_dict)
+    self.assertListEqual(
+        sorted([key["keytype"] for key in key_dict.values()]),
+        sorted([KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA])
+      )
+
+    # Successfully import default rsa key
+    key_dict = interface.import_public_keys_from_file([path_rsa + ".pub"])
+    securesystemslib.formats.ANY_PUBKEY_DICT_SCHEMA.check_match(key_dict)
+    securesystemslib.formats.RSAKEY_SCHEMA.check_match(
+        list(key_dict.values()).pop())
+
+    # Bad default rsa key type for ed25519
+    with self.assertRaises(securesystemslib.exceptions.Error):
+      interface.import_public_keys_from_file([path_ed25519 + ".pub"])
+
+    # Bad ed25519 key type for rsa key
+    with self.assertRaises(securesystemslib.exceptions.Error):
+      interface.import_public_keys_from_file(
+          [path_rsa + ".pub"], [KEY_TYPE_ED25519])
+
+    # Unsupported key type
+    with self.assertRaises(securesystemslib.exceptions.FormatError):
+      interface.import_public_keys_from_file(
+          [path_ed25519 + ".pub"], ["KEY_TYPE_UNSUPPORTED"])
+
+    # Mismatching arguments lists lenghts
+    with self.assertRaises(securesystemslib.exceptions.FormatError):
+      interface.import_public_keys_from_file(
+          [path_rsa + ".pub", path_ed25519 + ".pub"],  [KEY_TYPE_ED25519])
+
 
 
 # Run the test cases.

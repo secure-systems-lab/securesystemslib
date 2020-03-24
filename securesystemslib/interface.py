@@ -47,6 +47,8 @@ import securesystemslib.storage
 import securesystemslib.util
 import securesystemslib.keys
 
+from securesystemslib import KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA
+
 import six
 
 logger = logging.getLogger(__name__)
@@ -947,6 +949,57 @@ def import_ecdsa_privatekey_from_file(filepath, password=None,
 
   return key_object
 
+
+
+def import_public_keys_from_file(filepaths, key_types=None):
+  """Import multiple public keys from files.
+
+  Arguments:
+    filepaths: A list of paths to public key files.
+    key_types (optional): A list of types of keys to be imported associated
+      with filepaths by index. Must be one of KEY_TYPE_RSA, KEY_TYPE_ED25519 or
+      KEY_TYPE_ECDSA. If not specified, all keys are assumed to be
+      KEY_TYPE_RSA.
+
+  Raises:
+    TypeError: filepaths or key_types (if passed) is not iterable.
+    securesystemslib.exceptions.FormatError: key_types is passed and does not
+        have the same length as filepaths or contains an unsupported key type.
+    See import_ed25519_publickey_from_file, import_rsa_publickey_from_file and
+    import_ecdsa_publickey_from_file for other exceptions.
+
+  Returns:
+    A dict of public keys in KEYDICT_SCHEMA format.
+
+  """
+  if key_types is None:
+    key_types = [securesystemslib.KEY_TYPE_RSA] * len(filepaths)
+
+  if len(key_types) != len(filepaths):
+    raise securesystemslib.exceptions.FormatError(
+        "Pass equal amount of 'filepaths' (got {}) and 'key_types (got {}), "
+        "or no 'key_types' at all to default to '{}'.".format(
+        len(filepaths), len(key_types), KEY_TYPE_RSA))
+
+  key_dict = {}
+  for idx, filepath in enumerate(filepaths):
+    if key_types[idx] == KEY_TYPE_ED25519:
+      key = import_ed25519_publickey_from_file(filepath)
+
+    elif key_types[idx] == KEY_TYPE_RSA:
+      key = import_rsa_publickey_from_file(filepath)
+
+    elif key_types[idx] == KEY_TYPE_ECDSA:
+      key = import_ecdsa_publickey_from_file(filepath)
+
+    else:
+      raise securesystemslib.exceptions.FormatError(
+          "Unsupported key type '{}'. Must be '{}', '{}' or '{}'.".format(
+          key_types[idx], KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA))
+
+    key_dict[key["keyid"]] = key
+
+  return key_dict
 
 
 if __name__ == '__main__':
