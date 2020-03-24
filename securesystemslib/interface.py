@@ -66,9 +66,6 @@ except ImportError: # pragma: no cover
 # security through 2031 and beyond.
 DEFAULT_RSA_KEY_BITS = 3072
 
-# Supported key types.
-SUPPORTED_KEY_TYPES = ['rsa', 'ed25519']
-
 
 
 
