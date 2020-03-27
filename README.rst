@@ -334,7 +334,30 @@ Miscellaneous functions
     >>> public_pem = ecdsa_key['keyval']['public']
     >>> ecdsa_key2 = import_ecdsakey_from_pem(public_pem)
 
+Testing
+~~~~~~~~~~~~~~~
 
+Testing is done with **tox**, which can be installed with pip:
+::
+
+    $ pip install tox
+
+
+Secure Systems Library supports multiple versions of Python.
+
+For that reason, the project is tested against multiple virtual environments with different Python versions.
+
+If you run 
+::
+
+$ tox
+
+this will run all tests creating virtual environments for all python versions described in the *tox.ini* file.
+
+If you want to run the tests against specific python version, for example Python 3.7, you will use:
+::
+
+$ tox -e py37
 
 
 GnuPG interface
