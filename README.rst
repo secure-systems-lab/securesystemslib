@@ -60,6 +60,8 @@ Python).  Support for RSA, ECDSA, and E25519 via the `cryptography` and
     $ pip install securesystemslib[crypto]
     $ pip install securesystemslib[pynacl]
 
+Usage
+++++++++++++
 
 Create RSA Keys
 ~~~~~~~~~~~~~~~
@@ -363,3 +365,26 @@ used).
 
     >>> gpg.verify_signature(signature, public_key, data)
     True
+    
+Testing
+++++++++++++
+
+Testing is done with **tox**, which can be installed with pip:
+::
+
+    $ pip install tox
+
+
+Secure Systems Library supports multiple versions of Python.
+For that reason, the project is tested against multiple virtual environments with different Python versions.
+If you run
+::
+
+$ tox
+
+this will run all tests creating virtual environments for all python versions described in the *tox.ini* file.
+
+If you want to run the tests against specific python version, for example Python 3.7, you will use:
+::
+
+$ tox -e py37
