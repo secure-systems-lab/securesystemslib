@@ -337,6 +337,8 @@ Miscellaneous functions
     >>> ecdsa_key2 = import_ecdsakey_from_pem(public_pem)
 
 
+
+
 GnuPG interface
 ~~~~~~~~~~~~~~~
 
@@ -374,10 +376,8 @@ Testing is done with **tox**, which can be installed with pip:
 
 
 Secure Systems Library supports multiple versions of Python.
-
 For that reason, the project is tested against multiple virtual environments with different Python versions.
-
-If you run 
+If you run
 ::
 
 $ tox
