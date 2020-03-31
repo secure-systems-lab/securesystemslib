@@ -369,7 +369,7 @@ used).
 Testing
 ++++++++++++
 
-Testing is done with **tox**, which can be installed with pip:
+Testing is done with `tox <https://testrun.org/tox/>`_, which can be installed with pip:
 ::
 
     $ pip install tox
