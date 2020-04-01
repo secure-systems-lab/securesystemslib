@@ -474,7 +474,8 @@ def format_keyval_to_metadata(keytype, scheme, key_value, private=False):
 
 
 
-def format_metadata_to_key(key_metadata, default_keyid=None):
+def format_metadata_to_key(key_metadata, default_keyid=None,
+    keyid_hash_algorithms=None):
   """
   <Purpose>
     Construct a key dictionary (e.g., securesystemslib.formats.RSAKEY_SCHEMA)
@@ -522,6 +523,10 @@ def format_metadata_to_key(key_metadata, default_keyid=None):
       provided, the keyid will be calculated by _get_keyid using the default
       hash algorithm. If provided, the default keyid can be any string.
 
+    keyid_hash_algorithms:
+      An optional list of hash algorithms to use when generating keyids.
+      Defaults to securesystemslib.settings.HASH_ALGORITHMS.
+
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'key_metadata' does not conform
     to 'securesystemslib.formats.KEY_SCHEMA'.
@@ -553,7 +558,10 @@ def format_metadata_to_key(key_metadata, default_keyid=None):
   keyids = set()
   keyids.add(default_keyid)
 
-  for hash_algorithm in securesystemslib.settings.HASH_ALGORITHMS:
+  if keyid_hash_algorithms is None:
+    keyid_hash_algorithms = securesystemslib.settings.HASH_ALGORITHMS
+
+  for hash_algorithm in keyid_hash_algorithms:
     keyid = _get_keyid(keytype, scheme, key_value, hash_algorithm)
     keyids.add(keyid)
 
@@ -562,7 +570,7 @@ def format_metadata_to_key(key_metadata, default_keyid=None):
   key_dict['keytype'] = keytype
   key_dict['scheme'] = scheme
   key_dict['keyid'] = default_keyid
-  key_dict['keyid_hash_algorithms'] = securesystemslib.settings.HASH_ALGORITHMS
+  key_dict['keyid_hash_algorithms'] = keyid_hash_algorithms
   key_dict['keyval'] = key_value
 
   return key_dict, keyids
