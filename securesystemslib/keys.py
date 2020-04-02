@@ -474,7 +474,7 @@ def format_keyval_to_metadata(keytype, scheme, key_value, private=False):
 
 
 
-def format_metadata_to_key(key_metadata):
+def format_metadata_to_key(key_metadata, default_keyid=None):
   """
   <Purpose>
     Construct a key dictionary (e.g., securesystemslib.formats.RSAKEY_SCHEMA)
@@ -544,7 +544,8 @@ def format_metadata_to_key(key_metadata):
 
   # Convert 'key_value' to 'securesystemslib.formats.KEY_SCHEMA' and generate
   # its hash The hash is in hexdigest form.
-  default_keyid = _get_keyid(keytype, scheme, key_value)
+  if (default_keyid == None):
+    default_keyid = _get_keyid(keytype, scheme, key_value)
   keyids = set()
   keyids.add(default_keyid)
 
