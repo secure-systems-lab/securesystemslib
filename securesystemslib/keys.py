@@ -544,7 +544,7 @@ def format_metadata_to_key(key_metadata, default_keyid=None):
 
   # Convert 'key_value' to 'securesystemslib.formats.KEY_SCHEMA' and generate
   # its hash The hash is in hexdigest form.
-  if (default_keyid == None):
+  if default_keyid is None:
     default_keyid = _get_keyid(keytype, scheme, key_value)
   keyids = set()
   keyids.add(default_keyid)
