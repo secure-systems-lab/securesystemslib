@@ -517,6 +517,10 @@ def format_metadata_to_key(key_metadata, default_keyid=None):
        'scheme': scheme,
        'keyval': {'public': '...',
                   'private': '...'}}
+    default_keyid:
+      A default keyid associated with the key metadata. If this is not
+      provided, the keyid will be calculated by _get_keyid using the default
+      hash algorithm. If provided, the default keyid can be any string.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'key_metadata' does not conform
