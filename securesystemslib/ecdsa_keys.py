@@ -57,6 +57,12 @@ try:
   from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
   import cryptography.exceptions
+
+  _SCHEME_HASHER = {
+    'ecdsa-sha2-nistp256': ec.ECDSA(hashes.SHA256()),
+    'ecdsa-sha2-nistp384': ec.ECDSA(hashes.SHA384())
+  }
+
 except ImportError:
   CRYPTO = False
 
@@ -331,7 +337,7 @@ def verify_signature(public_key, scheme, signature, data):
   # verify() raises an 'InvalidSignature' exception if 'signature'
   # is invalid.
   try:
-    ecdsa_key.verify(signature, data, ec.ECDSA(hashes.SHA256()))
+    ecdsa_key.verify(signature, data, _SCHEME_HASHER[scheme])
     return True
 
   except (TypeError, cryptography.exceptions.InvalidSignature):
