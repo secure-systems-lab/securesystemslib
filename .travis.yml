@@ -27,6 +27,13 @@ matrix:
       before_install:
         - sudo apt-get remove -y --allow-remove-essential gnupg gnupg2
 
+before_install:
+  - if [[ $TOXENV == "py35" || $TOXENV == "py36" || $TOXENV == "py37" || $TOXENV == "py38" || $TOXENV == py38-no-gpg ]]; then
+      sudo apt-get update && sudo apt-get install -y swig libsofthsm2-dev;
+      # NOTE: Will be '/usr/lib/softhsm/libsofthsm2.so' in bionic
+      export PYKCS11LIB=/usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so;
+    fi
+
 install:
   - pip install -U tox coveralls
 

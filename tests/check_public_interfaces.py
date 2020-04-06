@@ -47,6 +47,7 @@ import securesystemslib.gpg.functions
 import securesystemslib.gpg.util
 import securesystemslib.interface
 import securesystemslib.keys
+import securesystemslib.hsm
 
 
 
@@ -192,6 +193,41 @@ class TestPublicInterfaces(unittest.TestCase):
     invalid = securesystemslib.ed25519_keys.verify_signature(
         pub, 'ed25519', bsig, data)
     self.assertEqual(False, invalid)
+
+  def test_purepy_hsm(self):
+    # Iterate over HSM interface functions and trigger UnsupportedLibraryError.
+    # Note that argument checking happens after import checking, so we can pass
+    # anything, as long as it is the right amount of arguments.
+
+    # Raise UnsupportedLibraryError due to missing PyKCS11
+    for func, args in [
+          (securesystemslib.hsm.load_pkcs11_lib, []),
+          (securesystemslib.hsm.get_hsms, []),
+          (securesystemslib.hsm.get_keys_on_hsm, [None]),
+          (securesystemslib.hsm.export_pubkey, [None] * 4),
+          (securesystemslib.hsm.create_signature, [None] * 6)
+        ]:
+      with self.assertRaises(
+          securesystemslib.exceptions.UnsupportedLibraryError) as ctx:
+        func(*args)
+
+      self.assertEqual(
+          securesystemslib.hsm.NO_PKCS11_PY_LIB_MSG, str(ctx.exception))
+
+
+    # Raise UnsupportedLibraryError due to missing pyca/cryptography
+    # To do so we have to temporarily pretend that PyKCS11 is available
+    securesystemslib.hsm.PKCS11 = True
+    for func, args in [
+          (securesystemslib.hsm.export_pubkey, [None] * 4),
+          (securesystemslib.hsm.create_signature, [None] * 6)
+        ]:
+      with self.assertRaises(
+          securesystemslib.exceptions.UnsupportedLibraryError) as ctx:
+        func(*args)
+
+      self.assertEqual(securesystemslib.hsm.NO_CRYPTO_MSG, str(ctx.exception))
+    securesystemslib.hsm.PKCS11 = None
 
   def test_gpg_functions(self):
     """Public GPG functions must raise error on missing cryptography lib. """
