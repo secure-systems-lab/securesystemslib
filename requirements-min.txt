@@ -2,3 +2,4 @@
 six
 python-dateutil
 subprocess32; python_version < '3'
+asn1crypto; python_version > '3'
