@@ -164,9 +164,8 @@ BOOLEAN_SCHEMA = SCHEMA.Boolean()
 # http://www.emc.com/emc-plus/rsa-labs/historical/twirl-and-rsa-key-size.htm#table1
 RSAKEYBITS_SCHEMA = SCHEMA.Integer(lo=2048)
 
-# The supported ECDSA signature schemes (ecdsa-sha2-nistp256 is supported by
-# default).
-ECDSA_SCHEME_SCHEMA = SCHEMA.OneOf([SCHEMA.String('ecdsa-sha2-nistp256')])
+# The supported ECDSA signature schemes
+ECDSA_SCHEME_SCHEMA = SCHEMA.RegularExpression(r'ecdsa-sha2-nistp(256|384)')
 
 # A pyca-cryptography signature.
 PYCACRYPTOSIGNATURE_SCHEMA = SCHEMA.AnyBytes()
@@ -201,7 +200,7 @@ PUBLIC_KEYVAL_SCHEMA = SCHEMA.Object(
 # Supported securesystemslib key types.
 KEYTYPE_SCHEMA = SCHEMA.OneOf(
   [SCHEMA.String('rsa'), SCHEMA.String('ed25519'),
-   SCHEMA.String('ecdsa-sha2-nistp256')])
+   SCHEMA.RegularExpression(r'ecdsa-sha2-nistp(256|384)')])
 
 # A generic securesystemslib key.  All securesystemslib keys should be saved to
 # metadata files in this format.
@@ -254,7 +253,7 @@ RSAKEY_SCHEMA = SCHEMA.Object(
 # An ECDSA securesystemslib key.
 ECDSAKEY_SCHEMA = SCHEMA.Object(
   object_name = 'ECDSAKEY_SCHEMA',
-  keytype = SCHEMA.String('ecdsa-sha2-nistp256'),
+  keytype = SCHEMA.RegularExpression(r'ecdsa-sha2-nistp(256|384)'),
   scheme = ECDSA_SCHEME_SCHEMA,
   keyid = KEYID_SCHEMA,
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),
@@ -271,12 +270,6 @@ ED25519SIGNATURE_SCHEMA = SCHEMA.LengthBytes(64)
 
 # An ECDSA signature.
 ECDSASIGNATURE_SCHEMA = SCHEMA.AnyBytes()
-
-# Required installation libraries expected by the repository tools and other
-# cryptography modules.
-REQUIRED_LIBRARIES_SCHEMA = SCHEMA.ListOf(SCHEMA.OneOf(
-  [SCHEMA.String('general'), SCHEMA.String('ed25519'), SCHEMA.String('rsa'),
-   SCHEMA.String('ecdsa-sha2-nistp256')]))
 
 # Ed25519 signature schemes.  The vanilla Ed25519 signature scheme is currently
 # supported.
