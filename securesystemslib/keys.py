@@ -847,8 +847,8 @@ def verify_signature(key_dict, signature, data):
       raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
           ' signature scheme is specified: ' + repr(scheme))
 
-  elif keytype == 'ecdsa-sha2-nistp256':
-    if scheme == 'ecdsa-sha2-nistp256':
+  elif keytype in ['ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384']:
+    if scheme in ['ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384']:
       valid_signature = securesystemslib.ecdsa_keys.verify_signature(public,
         scheme, sig, data)
 
