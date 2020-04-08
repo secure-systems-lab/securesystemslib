@@ -27,7 +27,6 @@ from __future__ import unicode_literals
 
 import os
 import sys
-import gzip
 import shutil
 import logging
 import tempfile
@@ -54,30 +53,6 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
   def tearDown(self):
     unittest_toolbox.Modified_TestCase.tearDown(self)
     self.temp_fileobj.close()
-
-
-
-  def _compress_existing_file(self, filepath):
-    """
-    [Helper]Compresses file 'filepath' and returns file path of
-    the compresses file.
-    """
-
-    # NOTE: DO NOT forget to remove the newly created compressed file!
-    if os.path.exists(filepath):
-      compressed_filepath = filepath+'.gz'
-      f_in = open(filepath, 'rb')
-      f_out = gzip.open(compressed_filepath, 'wb')
-      f_out.writelines(f_in)
-      f_out.close()
-      f_in.close()
-
-      return compressed_filepath
-
-    else:
-      logger.error('Compression of ' + repr(filepath)  +' failed.'
-          '  Path does not exist.')
-      sys.exit(1)
 
 
 
@@ -189,11 +164,6 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     securesystemslib.util.json.dump(data, fileobj)
     fileobj.close()
     self.assertEqual(data, securesystemslib.util.load_json_file(filepath))
-
-    # Test a gzipped file.
-    compressed_filepath = self._compress_existing_file(filepath)
-    self.assertEqual(data,
-        securesystemslib.util.load_json_file(compressed_filepath))
 
     # Improperly formatted arguments.
     for bogus_arg in [1, [b'a'], {'a':b'b'}]:

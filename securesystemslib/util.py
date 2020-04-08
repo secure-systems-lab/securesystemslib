@@ -26,7 +26,6 @@ from __future__ import division
 from __future__ import unicode_literals
 
 import os
-import gzip
 import shutil
 import logging
 import tempfile
@@ -327,15 +326,7 @@ def load_json_file(filepath):
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
   deserialized_object = None
-
-  # The file is mostly likely gzipped.
-  if filepath.endswith('.gz'):
-    logger.debug('gzip.open(' + str(filepath) + ')')
-    fileobject = six.StringIO(gzip.open(filepath).read().decode('utf-8'))
-
-  else:
-    logger.debug('open(' + str(filepath) + ')')
-    fileobject = open(filepath)
+  fileobject = open(filepath)
 
   try:
     deserialized_object = json.load(fileobject)
@@ -345,7 +336,6 @@ def load_json_file(filepath):
       ' Python object: ' + repr(filepath))
 
   else:
-    fileobject.close()
     return deserialized_object
 
   finally:
