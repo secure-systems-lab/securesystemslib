@@ -474,7 +474,7 @@ def format_keyval_to_metadata(keytype, scheme, key_value, private=False):
 
 
 
-def format_metadata_to_key(key_metadata):
+def format_metadata_to_key(key_metadata, default_keyid=None):
   """
   <Purpose>
     Construct a key dictionary (e.g., securesystemslib.formats.RSAKEY_SCHEMA)
@@ -517,6 +517,10 @@ def format_metadata_to_key(key_metadata):
        'scheme': scheme,
        'keyval': {'public': '...',
                   'private': '...'}}
+    default_keyid:
+      A default keyid associated with the key metadata. If this is not
+      provided, the keyid will be calculated by _get_keyid using the default
+      hash algorithm. If provided, the default keyid can be any string.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'key_metadata' does not conform
@@ -544,7 +548,8 @@ def format_metadata_to_key(key_metadata):
 
   # Convert 'key_value' to 'securesystemslib.formats.KEY_SCHEMA' and generate
   # its hash The hash is in hexdigest form.
-  default_keyid = _get_keyid(keytype, scheme, key_value)
+  if default_keyid is None:
+    default_keyid = _get_keyid(keytype, scheme, key_value)
   keyids = set()
   keyids.add(default_keyid)
 
