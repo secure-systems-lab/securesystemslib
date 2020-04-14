@@ -26,6 +26,7 @@ import getpass
 import logging
 import tempfile
 import json
+import stat
 
 from securesystemslib import exceptions
 from securesystemslib import formats
@@ -53,8 +54,9 @@ except ImportError: # pragma: no cover
 # security through 2031 and beyond.
 DEFAULT_RSA_KEY_BITS = 3072
 
-
-
+# Private keys are created with read and write permissions for the user only.
+# Octal value 0o600.
+PRIVATE_KEY_MODE = stat.S_IRUSR | stat.S_IWUSR
 
 
 def get_password(prompt='Password: ', confirm=False):
@@ -239,7 +241,7 @@ def _generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
   # Write PEM-encoded private key to <filepath>
   file_object = tempfile.TemporaryFile()
   file_object.write(private.encode('utf-8'))
-  util.persist_temp_file(file_object, filepath)
+  util.persist_temp_file(file_object, filepath, mode=PRIVATE_KEY_MODE)
 
   return filepath
 
@@ -508,7 +510,7 @@ def _generate_and_write_ed25519_keypair(filepath=None, password=None,
   # Write private key to <filepath>
   file_object = tempfile.TemporaryFile()
   file_object.write(ed25519_key.encode('utf-8'))
-  util.persist_temp_file(file_object, filepath)
+  util.persist_temp_file(file_object, filepath, mode=PRIVATE_KEY_MODE)
 
   return filepath
 
@@ -752,7 +754,7 @@ def _generate_and_write_ecdsa_keypair(filepath=None, password=None,
   # Write private key to <filepath>
   file_object = tempfile.TemporaryFile()
   file_object.write(ecdsa_key.encode('utf-8'))
-  util.persist_temp_file(file_object, filepath)
+  util.persist_temp_file(file_object, filepath, mode=PRIVATE_KEY_MODE)
 
   return filepath
 
