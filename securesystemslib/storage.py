@@ -65,7 +65,7 @@ class StorageBackendInterface():
 
 
   @abc.abstractmethod
-  def put(self, fileobj: IO, filepath: str) -> None:
+  def put(self, fileobj: IO, filepath: str, mode=None):
     """
     <Purpose>
       Store a file-like object in the storage backend.
@@ -78,6 +78,13 @@ class StorageBackendInterface():
 
       filepath:
         The full path to the location where 'fileobj' will be stored.
+
+      mode:
+        Bit mask with custom file permissions for the file-like object. When
+        computing mode, the current OS umask value is first masked out. If None,
+        the default OS permissions apply. See os.open() 'mode' documentation.
+        On Windows systems only the file's read-only flag can be set. All other
+        bits are ignored.
 
     <Exceptions>
       securesystemslib.exceptions.StorageError, if the file can not be stored.
@@ -208,14 +215,29 @@ class FilesystemBackend(StorageBackendInterface):
         file_object.close()
 
 
-  def put(self, fileobj: IO, filepath: str) -> None:
+  def put(self, fileobj: IO, filepath: str, mode=None) -> None:
     # If we are passed an open file, seek to the beginning such that we are
     # copying the entire contents
     if not fileobj.closed:
       fileobj.seek(0)
 
+    # If a file with the same name already exists, the new permissions
+    # may not be applied.
     try:
-      with open(filepath, 'wb') as destination_file:
+      os.remove(filepath)
+    except OSError:
+      pass
+
+    try:
+      if mode is not None:
+        # The effective mode is modified by the process's umask. The mode
+        # of the created file is (mode & ~umask).
+        fd = os.open(filepath, os.O_WRONLY|os.O_CREAT, mode)
+      else:
+        # Use the default value (0o777) of the 'mode' argument of os.open()
+        fd = os.open(filepath, os.O_WRONLY|os.O_CREAT)
+
+      with os.fdopen(fd, "wb") as destination_file:
         shutil.copyfileobj(fileobj, destination_file)
         # Force the destination file to be written to disk from Python's internal
         # and the operating system's buffers.  os.fsync() should follow flush().
