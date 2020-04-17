@@ -36,6 +36,7 @@ import six
 
 import securesystemslib.exceptions
 import securesystemslib.formats
+import securesystemslib.storage
 
 
 DEFAULT_CHUNK_SIZE = 4096
@@ -314,7 +315,8 @@ def digest_fileobject(file_object, algorithm=DEFAULT_HASH_ALGORITHM,
 
 
 def digest_filename(filename, algorithm=DEFAULT_HASH_ALGORITHM,
-    hash_library=DEFAULT_HASH_LIBRARY, normalize_line_endings=False):
+    hash_library=DEFAULT_HASH_LIBRARY, normalize_line_endings=False,
+    storage_backend=None):
   """
   <Purpose>
     Generate a digest object, update its hash using a file object
@@ -332,6 +334,11 @@ def digest_filename(filename, algorithm=DEFAULT_HASH_ALGORITHM,
 
     normalize_line_endings:
       Whether or not to normalize line endings for cross-platform support.
+
+    storage_backend:
+      An object which implements
+      securesystemslib.storage.StorageBackendInterface. When no object is
+      passed a FilesystemBackend will be instantiated and used.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if the arguments are
@@ -361,8 +368,11 @@ def digest_filename(filename, algorithm=DEFAULT_HASH_ALGORITHM,
 
   digest_object = None
 
+  if storage_backend is None:
+    storage_backend = securesystemslib.storage.FilesystemBackend()
+
   # Open 'filename' in read+binary mode.
-  with open(filename, 'rb') as file_object:
+  with storage_backend.get(filename) as file_object:
     # Create digest_object and update its hash data from file_object.
     # digest_fileobject() raises:
     # securesystemslib.exceptions.UnsupportedAlgorithmError
