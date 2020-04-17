@@ -24,9 +24,14 @@ import logging
 import os
 import shutil
 
+import six
+
 import securesystemslib.exceptions
 
 logger = logging.getLogger(__name__)
+
+if six.PY2:
+  FileNotFoundError = OSError # pragma: no cover
 
 
 
@@ -148,3 +153,96 @@ class StorageBackendInterface():
       list.
     """
     raise NotImplementedError # pragma: no cover
+
+
+
+
+
+class FilesystemBackend(StorageBackendInterface):
+  """
+  <Purpose>
+    A concrete implementation of StorageBackendInterface which interacts with
+    local filesystems using Python standard library functions.
+  """
+
+  class GetFile(object):
+    # Implementing get() as a function with the @contextmanager decorator
+    # doesn't allow us to cleanly capture exceptions thrown by the underlying
+    # implementation and bubble up our generic
+    # securesystemslib.exceptions.StorageError, therefore we implement get as
+    # a class and also assign the class to the 'get' attribute of the parent
+    # FilesystemBackend class.
+
+    def __init__(self, filepath):
+      self.filepath = filepath
+
+
+    def __enter__(self):
+      try:
+        self.file_object = open(self.filepath, 'rb')
+        return self.file_object
+      except (FileNotFoundError, IOError):
+        raise securesystemslib.exceptions.StorageError(
+            "Can't open %s" % self.filepath)
+
+
+    def __exit__(self, exc_type, exc_val, traceback):
+      self.file_object.close()
+
+
+
+  # Map our class ContextManager implementation to the function expected of the
+  # securesystemslib.storage.StorageBackendInterface.get definition
+  get = GetFile
+
+
+  def put(self, fileobj, filepath):
+    # If we are passed an open file, seek to the beginning such that we are
+    # copying the entire contents
+    if not fileobj.closed:
+      fileobj.seek(0)
+
+    try:
+      with open(filepath, 'wb') as destination_file:
+        shutil.copyfileobj(fileobj, destination_file)
+        # Force the destination file to be written to disk from Python's internal
+        # and the operating system's buffers.  os.fsync() should follow flush().
+        destination_file.flush()
+        os.fsync(destination_file.fileno())
+    except (OSError, IOError):
+      raise securesystemslib.exceptions.StorageError(
+          "Can't write file %s" % filepath)
+
+
+  def getsize(self, filepath):
+    try:
+      return os.path.getsize(filepath)
+    except OSError:
+      raise securesystemslib.exceptions.StorageError(
+          "Can't access file %s" % filepath)
+
+
+  def create_folder(self, filepath):
+    # If called with an empty string, return immediately
+    if not filepath:
+      return
+
+    try:
+      os.makedirs(filepath)
+    except OSError as e:
+      # 'OSError' raised if the leaf directory already exists or cannot be
+      # created. Check for case where 'filepath' has already been created and
+      # silently ignore.
+      if e.errno == errno.EEXIST:
+        pass
+      else:
+        raise securesystemslib.exceptions.StorageError(
+            "Can't create folder at %s" % filepath)
+
+
+  def list_folder(self, filepath):
+    try:
+      return os.listdir(filepath)
+    except FileNotFoundError:
+      raise securesystemslib.exceptions.StorageError(
+          "Can't list folder at %s" % filepath)
