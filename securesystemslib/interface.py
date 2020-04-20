@@ -43,6 +43,7 @@ import random
 
 import securesystemslib.formats
 import securesystemslib.settings
+import securesystemslib.storage
 import securesystemslib.util
 import securesystemslib.keys
 
@@ -242,7 +243,8 @@ def generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
 
 
 def import_rsa_privatekey_from_file(filepath, password=None,
-    scheme='rsassa-pss-sha256', prompt=False):
+    scheme='rsassa-pss-sha256', prompt=False,
+    storage_backend=None):
   """
   <Purpose>
     Import the PEM file in 'filepath' containing the private key.
@@ -271,6 +273,11 @@ def import_rsa_privatekey_from_file(filepath, password=None,
     prompt:
       If True the user is prompted for a passphrase to decrypt 'filepath'.
       Default is False.
+
+    storage_backend:
+      An object which implements
+      securesystemslib.storage.StorageBackendInterface. When no object is
+      passed a FilesystemBackend will be instantiated and used.
 
   <Exceptions>
     ValueError, if 'password' is passed and 'prompt' is True.
@@ -344,8 +351,11 @@ def import_rsa_privatekey_from_file(filepath, password=None,
     logger.debug('No password was given. Attempting to import an'
         ' unencrypted file.')
 
+  if storage_backend is None:
+    storage_backend = securesystemslib.storage.FilesystemBackend()
+
   # Read the contents of 'filepath' that should be a PEM formatted private key.
-  with open(filepath, 'rb') as file_object:
+  with storage_backend.get(filepath) as file_object:
     pem_key = file_object.read().decode('utf-8')
 
   # Convert 'pem_key' to 'securesystemslib.formats.RSAKEY_SCHEMA' format.
@@ -360,7 +370,8 @@ def import_rsa_privatekey_from_file(filepath, password=None,
 
 
 
-def import_rsa_publickey_from_file(filepath, scheme='rsassa-pss-sha256'):
+def import_rsa_publickey_from_file(filepath, scheme='rsassa-pss-sha256',
+    storage_backend=None):
   """
   <Purpose>
     Import the RSA key stored in 'filepath'.  The key object returned is in the
@@ -373,6 +384,11 @@ def import_rsa_publickey_from_file(filepath, scheme='rsassa-pss-sha256'):
 
     scheme:
       The signature scheme used by the imported key.
+
+    storage_backend:
+      An object which implements
+      securesystemslib.storage.StorageBackendInterface. When no object is
+      passed a FilesystemBackend will be instantiated and used.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'filepath' is improperly
@@ -397,9 +413,12 @@ def import_rsa_publickey_from_file(filepath, scheme='rsassa-pss-sha256'):
   # Is 'scheme' properly formatted?
   securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
+  if storage_backend is None:
+    storage_backend = securesystemslib.storage.FilesystemBackend()
+
   # Read the contents of the key file that should be in PEM format and contains
   # the public portion of the RSA key.
-  with open(filepath, 'rb') as file_object:
+  with storage_backend.get(filepath) as file_object:
     rsa_pubkey_pem = file_object.read().decode('utf-8')
 
   # Convert 'rsa_pubkey_pem' to 'securesystemslib.formats.RSAKEY_SCHEMA' format.
@@ -587,7 +606,8 @@ def import_ed25519_publickey_from_file(filepath):
 
 
 
-def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False):
+def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False,
+    storage_backend=None):
   """
   <Purpose>
     Import the encrypted ed25519 key file in 'filepath', decrypt it, and return
@@ -609,6 +629,11 @@ def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False):
     prompt:
       If True the user is prompted for a passphrase to decrypt 'filepath'.
       Default is False.
+
+    storage_backend:
+      An object which implements
+      securesystemslib.storage.StorageBackendInterface. When no object is
+      passed a FilesystemBackend will be instantiated and used.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if the arguments are improperly
@@ -633,6 +658,9 @@ def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False):
 
   if password and prompt:
     raise ValueError("Passing 'password' and 'prompt' True is not allowed.")
+
+  if storage_backend is None:
+    storage_backend = securesystemslib.storage.FilesystemBackend()
 
   # If 'password' was passed check format and that it is not empty.
   if password is not None:
@@ -663,11 +691,12 @@ def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False):
       password = None
 
   # Finally, regardless of password, try decrypting the key, if necessary.
-  # Otherwise, load it straight from the disk.
-  with open(filepath, 'rb') as file_object:
+  # Otherwise, load it straight from storage.
+  with storage_backend.get(filepath) as file_object:
     json_str = file_object.read()
-    return securesystemslib.keys.\
-           import_ed25519key_from_private_json(json_str, password=password)
+
+  return securesystemslib.keys.\
+      import_ed25519key_from_private_json(json_str, password=password)
 
 
 
@@ -832,7 +861,8 @@ def import_ecdsa_publickey_from_file(filepath):
 
 
 
-def import_ecdsa_privatekey_from_file(filepath, password=None):
+def import_ecdsa_privatekey_from_file(filepath, password=None,
+    storage_backend=None):
   """
   <Purpose>
     Import the encrypted ECDSA key file in 'filepath', decrypt it, and return
@@ -849,6 +879,11 @@ def import_ecdsa_privatekey_from_file(filepath, password=None):
       The password, or passphrase, to import the private key (i.e., the
       encrypted key file 'filepath' must be decrypted before the ECDSA key
       object can be returned.
+
+    storage_backend:
+      An object which implements
+      securesystemslib.storage.StorageBackendInterface. When no object is
+      passed a FilesystemBackend will be instantiated and used.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if the arguments are improperly
@@ -886,11 +921,14 @@ def import_ecdsa_privatekey_from_file(filepath, password=None):
   # Does 'password' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
 
+  if storage_backend is None:
+    storage_backend = securesystemslib.storage.FilesystemBackend()
+
   # Store the encrypted contents of 'filepath' prior to calling the decryption
   # routine.
   encrypted_key = None
 
-  with open(filepath, 'rb') as file_object:
+  with storage_backend.get(filepath) as file_object:
     encrypted_key = file_object.read()
 
   # Decrypt the loaded key file, calling the 'cryptography' library to generate

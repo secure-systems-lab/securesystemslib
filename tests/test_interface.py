@@ -218,8 +218,8 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Non-existent key file.
     nonexistent_keypath = os.path.join(temporary_directory,
         'nonexistent_keypath')
-    self.assertRaises(IOError, interface.import_rsa_privatekey_from_file,
-        nonexistent_keypath, 'pw')
+    self.assertRaises(securesystemslib.exceptions.StorageError,
+        interface.import_rsa_privatekey_from_file, nonexistent_keypath, 'pw')
 
     # Invalid key file argument.
     invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
@@ -252,8 +252,8 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Non-existent key file.
     nonexistent_keypath = os.path.join(temporary_directory,
         'nonexistent_keypath')
-    self.assertRaises(IOError, interface.import_rsa_publickey_from_file,
-        nonexistent_keypath)
+    self.assertRaises(securesystemslib.exceptions.StorageError,
+        interface.import_rsa_publickey_from_file, nonexistent_keypath)
 
     # Invalid key file argument.
     invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
@@ -426,8 +426,9 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Non-existent key file.
     nonexistent_keypath = os.path.join(temporary_directory,
         'nonexistent_keypath')
-    self.assertRaises(IOError, interface.import_ed25519_privatekey_from_file,
-        nonexistent_keypath, 'pw')
+    self.assertRaises(securesystemslib.exceptions.StorageError,
+        interface.import_ed25519_privatekey_from_file, nonexistent_keypath,
+        'pw')
 
     # Invalid key file argument.
     invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
@@ -576,8 +577,8 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Test invalid argument.
     # Non-existent key file.
     nonexistent_keypath = os.path.join(temporary_directory, 'nonexistent_keypath')
-    self.assertRaises(IOError, interface.import_ecdsa_privatekey_from_file,
-        nonexistent_keypath, 'pw')
+    self.assertRaises(securesystemslib.exceptions.StorageError,
+        interface.import_ecdsa_privatekey_from_file, nonexistent_keypath, 'pw')
 
     # Invalid key file argument.
     invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
