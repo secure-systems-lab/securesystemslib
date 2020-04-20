@@ -55,7 +55,7 @@ try:
   from colorama import Fore
   TERM_RED = Fore.RED
   TERM_RESET = Fore.RESET
-except ImportError:
+except ImportError: # pragma: no cover
   logger.debug("Failed to find colorama module, terminal output won't be colored")
   TERM_RED = ''
   TERM_RESET = ''
