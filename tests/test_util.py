@@ -171,7 +171,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
           securesystemslib.util.load_json_file, bogus_arg)
 
     # Non-existent path.
-    self.assertRaises(IOError,
+    self.assertRaises(securesystemslib.exceptions.StorageError,
         securesystemslib.util.load_json_file, 'non-existent.json')
 
     # Invalid JSON content.
@@ -188,11 +188,23 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
   def test_B7_persist_temp_file(self):
     # Destination directory to save the temporary file in.
     dest_temp_dir = self.make_temp_directory()
+
+    # Test the default of persisting the file and closing the tmpfile
     dest_path = os.path.join(dest_temp_dir, self.random_string())
     tmpfile = tempfile.TemporaryFile()
     tmpfile.write(self.random_string().encode('utf-8'))
     securesystemslib.util.persist_temp_file(tmpfile, dest_path)
     self.assertTrue(dest_path)
+    self.assertTrue(tmpfile.closed)
+
+    # Test persisting a file without automatically closing the tmpfile
+    dest_path2 = os.path.join(dest_temp_dir, self.random_string())
+    tmpfile = tempfile.TemporaryFile()
+    tmpfile.write(self.random_string().encode('utf-8'))
+    securesystemslib.util.persist_temp_file(tmpfile, dest_path2,
+        should_close=False)
+    self.assertFalse(tmpfile.closed)
+    tmpfile.close()
 
 
 
