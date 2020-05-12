@@ -1,5 +1,27 @@
 # Changelog
 
+## securesystemslib v0.15.0
+
+* Allow Blake (blake2s and blake2b) hashing algorithms (#218)
+* *new features*
+  * Add nistp384 signature verification support (#228)
+  * Allow callers to provide a default keyid in format_metadata_to_key, rather
+    than using the default keyid value of a hash of the canonical JSON of the
+	key metadata (#225)
+  * Implement files and directories abstraction as an abstract base class;
+    StorageBackendInterface, with a concrete implementation for local
+	filesystems; FilesystemBackend  (#232). This enables users, such as tuf,
+	to support non-local/non-traditional filesystems, so long as they provide
+	an object implementing securesystemslib.storage.StorageBackendInterface.
+	All functions which take a StorageBackendInterface default to creating a
+	FilesystemBackend object for local filesystem interaction when an object
+	isn't provided. This means that behaviour remains the same as in prior
+	(0.14.x) releases of securesystemslib, only instead of throwing exceptions
+	from the Python standard library a custom, generic, error is thrown:
+	securesystemslib.exceptions.StorageError
+* *removed features*
+  * Remove support for gzipped files in load_json_file (#230)
+
 ## securesystemslib v0.14.2
 
 * Re-enable OpenPGP signature verification without GnuPG (#215)
