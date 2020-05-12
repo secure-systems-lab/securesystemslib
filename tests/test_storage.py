@@ -81,6 +81,10 @@ class TestStorage(unittest.TestCase):
       with open(put_path, 'rb') as put_file:
         self.assertEqual(put_file.read(), self.fileobj.read())
 
+    self.assertTrue(os.path.exists(put_path))
+    self.storage_backend.remove(put_path)
+    self.assertFalse(os.path.exists(put_path))
+
 
   def test_folders(self):
     leaves = ['test1', 'test2', 'test3']

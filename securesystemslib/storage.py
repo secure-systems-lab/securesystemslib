@@ -233,6 +233,14 @@ class FilesystemBackend(StorageBackendInterface):
           "Can't write file %s" % filepath)
 
 
+  def remove(self, filepath):
+    try:
+      os.remove(filepath)
+    except (FileNotFoundError, PermissionError, OSError):  # pragma: no cover
+      raise securesystemslib.exceptions.StorageError(
+          "Can't remove file %s" % filepath)
+
+
   def getsize(self, filepath):
     try:
       return os.path.getsize(filepath)
