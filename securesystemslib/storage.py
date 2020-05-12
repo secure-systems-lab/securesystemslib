@@ -94,6 +94,25 @@ class StorageBackendInterface():
 
 
   @abc.abstractmethod
+  def remove(self, filepath):
+    """
+    <Purpose>
+      Remove the file at 'filepath' from the storage.
+
+    <Arguments>
+      filepath:
+        The full path to the file.
+
+    <Exceptions>
+      securesystemslib.exceptions.StorageError, if the file can not be removed.
+
+    <Returns>
+      None
+    """
+    raise NotImplementedError # pragma: no cover
+
+
+  @abc.abstractmethod
   def getsize(self, filepath):
     """
     <Purpose>
