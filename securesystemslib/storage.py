@@ -76,6 +76,8 @@ class StorageBackendInterface():
     """
     <Purpose>
       Store a file-like object in the storage backend.
+      The file-like object is read from the beginning, not its current
+      offset (if any).
 
     <Arguments>
       fileobj:
@@ -138,6 +140,8 @@ class StorageBackendInterface():
     <Purpose>
       Create a folder at filepath and ensure all intermediate components of the
       path exist.
+      Passing an empty string for filepath does nothing and does not raise an
+      exception.
 
     <Arguments>
       filepath:
