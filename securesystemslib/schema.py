@@ -206,6 +206,47 @@ class AnyString(Schema):
 
 
 
+class AnyNonemptyString(Schema):
+  """
+  <Purpose>
+    Matches any string with one or more characters.
+    This schema can be viewed as the Any() schema applied to Strings, but an
+    additional check is performed to ensure only strings are considered and
+    that said strings have at least one character.
+
+    Supported methods include:
+      matches(): returns a Boolean result.
+      check_match(): raises 'exceptions.FormatError' on a mismatch.
+
+  <Example Use>
+
+    >>> schema = AnyNonemptyString()
+    >>> schema.matches('')
+    False
+    >>> schema.matches('a string')
+    True
+    >>> schema.matches(['a'])
+    False
+    >>> schema.matches(3)
+    False
+    >>> schema.matches(u'a unicode string')
+    True
+    >>> schema.matches({})
+    False
+  """
+
+  def __init__(self):
+    pass
+
+
+  def check_match(self, object):
+    if not isinstance(object, six.string_types):
+      raise securesystemslib.exceptions.FormatError('Expected a string'
+          ' but got ' + repr(object))
+
+    if object == "":
+        raise securesystemslib.exceptions.FormatError('Expected a string'
+            ' with at least one character but got' + repr(object))
 
 
 class AnyBytes(Schema):
