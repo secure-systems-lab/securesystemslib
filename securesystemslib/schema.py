@@ -246,7 +246,7 @@ class AnyNonemptyString(Schema):
 
     if object == "":
         raise securesystemslib.exceptions.FormatError('Expected a string'
-            ' with at least one character but got' + repr(object))
+            ' with at least one character but got ' + repr(object))
 
 
 class AnyBytes(Schema):
