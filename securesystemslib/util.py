@@ -210,7 +210,7 @@ def file_in_confined_directories(filepath, confined_directories):
   # Do the arguments have the correct format?
   # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
-  securesystemslib.formats.PATHS_SCHEMA.check_match(confined_directories)
+  securesystemslib.formats.NAMES_SCHEMA.check_match(confined_directories)
 
   for confined_directory in confined_directories:
     # The empty string (arbitrarily chosen) signifies the client is confined
