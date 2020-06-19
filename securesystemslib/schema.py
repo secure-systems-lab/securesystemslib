@@ -206,6 +206,8 @@ class AnyString(Schema):
 
 
 
+
+
 class AnyNonemptyString(AnyString):
   """
   <Purpose>
@@ -241,6 +243,9 @@ class AnyNonemptyString(AnyString):
     if object == "":
         raise securesystemslib.exceptions.FormatError('Expected a string'
             ' with at least one character but got ' + repr(object))
+
+
+
 
 
 class AnyBytes(Schema):
