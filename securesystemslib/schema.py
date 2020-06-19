@@ -236,7 +236,7 @@ class AnyNonemptyString(AnyString):
   """
 
   def check_match(self, object):
-    super().check_match()
+    super().check_match(object)
 
     if object == "":
         raise securesystemslib.exceptions.FormatError('Expected a string'
