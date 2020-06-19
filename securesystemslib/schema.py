@@ -206,7 +206,7 @@ class AnyString(Schema):
 
 
 
-class AnyNonemptyString(Schema):
+class AnyNonemptyString(AnyString):
   """
   <Purpose>
     Matches any string with one or more characters.
@@ -235,14 +235,8 @@ class AnyNonemptyString(Schema):
     False
   """
 
-  def __init__(self):
-    pass
-
-
   def check_match(self, object):
-    if not isinstance(object, six.string_types):
-      raise securesystemslib.exceptions.FormatError('Expected a string'
-          ' but got ' + repr(object))
+    super().check_match()
 
     if object == "":
         raise securesystemslib.exceptions.FormatError('Expected a string'
