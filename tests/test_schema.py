@@ -131,6 +131,19 @@ class TestSchema(unittest.TestCase):
 
 
 
+  def test_AnyNonemptyString(self):
+    anynonemptystring_schema = SCHEMA.AnyNonemptyString()
+
+    self.assertTrue(anynonemptystring_schema.matches("foo"))
+
+    # Test conditions for invalid arguments.
+    self.assertFalse(anynonemptystring_schema.matches(''))
+    self.assertFalse(anynonemptystring_schema.matches(['a']))
+    self.assertFalse(anynonemptystring_schema.matches(3))
+    self.assertFalse(anynonemptystring_schema.matches({'a': 'string'}))
+
+
+
   def test_OneOf(self):
     # Test conditions for valid arguments.
     oneof_schema = SCHEMA.OneOf([SCHEMA.ListOf(SCHEMA.Integer()),

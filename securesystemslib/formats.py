@@ -128,7 +128,7 @@ KEYIDS_SCHEMA = SCHEMA.ListOf(KEYID_SCHEMA)
 SCHEME_SCHEMA = SCHEMA.AnyString()
 
 # A path string, whether relative or absolute, e.g. 'metadata/root/'
-PATH_SCHEMA = SCHEMA.AnyString()
+PATH_SCHEMA = SCHEMA.AnyNonemptyString()
 PATHS_SCHEMA = SCHEMA.ListOf(PATH_SCHEMA)
 
 # An integer representing logger levels, such as logging.CRITICAL (=50).
