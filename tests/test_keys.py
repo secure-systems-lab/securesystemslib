@@ -26,6 +26,7 @@ from __future__ import division
 from __future__ import unicode_literals
 
 import unittest
+import copy
 
 import securesystemslib.exceptions
 import securesystemslib.formats
@@ -164,36 +165,50 @@ class TestKeys(unittest.TestCase):
 
 
   def test_format_metadata_to_key(self):
-    # Reconfiguring rsakey_dict to conform to KEY_SCHEMA
-    # i.e. {keytype: 'rsa', keyval: {public: pub_key, private: priv_key}}
-    keyid = self.rsakey_dict['keyid']
-    del self.rsakey_dict['keyid']
+    # Copying self.rsakey_dict so that rsakey_dict remains
+    # unchanged during and after this test execution.
+    test_rsakey_dict = copy.copy(self.rsakey_dict)
+    del test_rsakey_dict['keyid']
 
-    rsakey_dict_from_meta, junk = KEYS.format_metadata_to_key(self.rsakey_dict)
+    # Call format_metadata_to_key by using the default value for keyid_hash_algorithms
+    rsakey_dict_from_meta_default, junk = KEYS.format_metadata_to_key(test_rsakey_dict)
 
-    # Check if the format of the object returned by this function corresponds
+    # Check if the format of the object returned by calling this function with
+    # default hash algorithms e.g. securesystemslib.settings.HASH_ALGORITHMS corresponds
     # to RSAKEY_SCHEMA format.
-    self.assertEqual(None,
-        securesystemslib.formats.RSAKEY_SCHEMA.check_match(rsakey_dict_from_meta),
+    self.assertTrue(
+        securesystemslib.formats.RSAKEY_SCHEMA.matches(rsakey_dict_from_meta_default),
         FORMAT_ERROR_MSG)
 
-    self.assertEqual(None,
-        securesystemslib.formats.KEY_SCHEMA.check_match(rsakey_dict_from_meta),
+    self.assertTrue(
+        securesystemslib.formats.KEY_SCHEMA.matches(rsakey_dict_from_meta_default),
         FORMAT_ERROR_MSG)
 
-    self.rsakey_dict['keyid'] = keyid
+    # Call format_metadata_to_key by using custom value for keyid_hash_algorithms
+    rsakey_dict_from_meta_custom, junk = KEYS.format_metadata_to_key(test_rsakey_dict,
+        keyid_hash_algorithms=['sha384'])
+
+    # Check if the format of the object returned by calling this function with
+    # custom hash algorithms corresponds to RSAKEY_SCHEMA format.
+    self.assertTrue(
+        securesystemslib.formats.RSAKEY_SCHEMA.matches(rsakey_dict_from_meta_custom),
+        FORMAT_ERROR_MSG)
+
+    self.assertTrue(
+        securesystemslib.formats.KEY_SCHEMA.matches(rsakey_dict_from_meta_custom),
+        FORMAT_ERROR_MSG)
+
+    test_rsakey_dict['keyid'] = self.rsakey_dict['keyid']
 
     # Supplying a wrong number of arguments.
     self.assertRaises(TypeError, KEYS.format_metadata_to_key)
-    args = (self.rsakey_dict, self.rsakey_dict)
+    args = (test_rsakey_dict, test_rsakey_dict)
     self.assertRaises(TypeError, KEYS.format_metadata_to_key, *args)
 
     # Supplying a malformed argument to the function - should get FormatError
-    keyval = self.rsakey_dict['keyval']
-    del self.rsakey_dict['keyval']
+    del test_rsakey_dict['keyval']
     self.assertRaises(securesystemslib.exceptions.FormatError,
-        KEYS.format_metadata_to_key, self.rsakey_dict)
-    self.rsakey_dict['keyval'] = keyval
+        KEYS.format_metadata_to_key, test_rsakey_dict)
 
 
 
