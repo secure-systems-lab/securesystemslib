@@ -25,6 +25,7 @@ from __future__ import unicode_literals
 
 import os
 import tempfile
+import shutil
 import unittest
 
 import securesystemslib.exceptions
@@ -45,6 +46,7 @@ class TestStorage(unittest.TestCase):
 
   def tearDown(self):
     self.fileobj.close()
+    shutil.rmtree(self.temp_dir)
 
 
   def test_exceptions(self):
