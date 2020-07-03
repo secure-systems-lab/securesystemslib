@@ -378,7 +378,7 @@ def generate_ed25519_key(scheme='ed25519'):
 
 
 
-def format_keyval_to_metadata(keytype, scheme, key_value, private=False):
+def format_keyval_to_metadata(keytype, scheme, key_value, keyid=None, private=False):
   """
   <Purpose>
     Return a dictionary conformant to 'securesystemslib.formats.KEY_SCHEMA'.
@@ -464,7 +464,15 @@ def format_keyval_to_metadata(keytype, scheme, key_value, private=False):
 
   else:
     public_key_value = {'public': key_value['public']}
-
+    # If we encounter a keyid, we are dealing with pub key file generation
+    # as in interface.py#L526
+    if keyid is not None:
+      return {'keytype': keytype,
+            'scheme': scheme,
+            'keyid': keyid,
+            'keyid_hash_algorithms': securesystemslib.settings.HASH_ALGORITHMS,
+            'keyval': public_key_value}
+    
     return {'keytype': keytype,
             'scheme': scheme,
             'keyid_hash_algorithms': securesystemslib.settings.HASH_ALGORITHMS,

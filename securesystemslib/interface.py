@@ -516,13 +516,15 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None):
   # to final destination.
   file_object = tempfile.TemporaryFile()
 
-  # Generate the ed25519 public key file contents in metadata format (i.e.,
-  # does not include the keyid portion).
+  # Generate the ed25519 public key file contents in metadata format
+  # We can include the keyid here, because the keyid is calculated
+  # by the key data without the private key.
   keytype = ed25519_key['keytype']
+  keyid = ed25519_key['keyid']
   keyval = ed25519_key['keyval']
   scheme = ed25519_key['scheme']
   ed25519key_metadata_format = securesystemslib.keys.format_keyval_to_metadata(
-      keytype, scheme, keyval, private=False)
+      keytype, scheme, keyval, keyid=keyid, private=False)
 
   file_object.write(json.dumps(ed25519key_metadata_format).encode('utf-8'))
 
@@ -786,8 +788,9 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None):
   keytype = ecdsa_key['keytype']
   keyval = ecdsa_key['keyval']
   scheme = ecdsa_key['scheme']
+  keyid = ecdsa_key['keyid']
   ecdsakey_metadata_format = securesystemslib.keys.format_keyval_to_metadata(
-      keytype, scheme, keyval, private=False)
+      keytype, scheme, keyval, keyid=keyid, private=False)
 
   file_object.write(json.dumps(ecdsakey_metadata_format).encode('utf-8'))
 
