@@ -254,10 +254,6 @@ class FilesystemBackend(StorageBackendInterface):
 
 
   def create_folder(self, filepath):
-    # If called with an empty string, return immediately
-    if not filepath:
-      return
-
     try:
       os.makedirs(filepath)
     except OSError as e:
@@ -266,6 +262,9 @@ class FilesystemBackend(StorageBackendInterface):
       # silently ignore.
       if e.errno == errno.EEXIST:
         pass
+      elif e.errno == errno.ENOENT and not filepath:
+        raise securesystemslib.exceptions.StorageError(
+            "Can't create a folder with an empty filepath!")
       else:
         raise securesystemslib.exceptions.StorageError(
             "Can't create folder at %s" % filepath)
