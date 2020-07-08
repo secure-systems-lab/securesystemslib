@@ -66,6 +66,9 @@ class TestStorage(unittest.TestCase):
         self.storage_backend.create_folder, '/none/existent/path')
 
     self.assertRaises(securesystemslib.exceptions.StorageError,
+        self.storage_backend.create_folder, '')
+
+    self.assertRaises(securesystemslib.exceptions.StorageError,
         self.storage_backend.list_folder, '/none/existent/path')
 
 
@@ -97,6 +100,3 @@ class TestStorage(unittest.TestCase):
         fi.write(leaf.encode('utf-8'))
     found_leaves = self.storage_backend.list_folder(folder)
     self.assertListEqual(leaves, sorted(found_leaves))
-
-    # Test trying to create a folder with an empty string
-    self.storage_backend.create_folder('')
