@@ -31,11 +31,11 @@ import logging
 import tempfile
 import warnings
 
-import securesystemslib.exceptions
-import securesystemslib.settings
-import securesystemslib.hash
-import securesystemslib.formats
-import securesystemslib.storage
+from . import exceptions
+from . import settings
+from . import hash
+from . import formats
+from . import storage
 
 import six
 
@@ -75,11 +75,11 @@ def get_file_details(filepath, hash_algorithms=['sha256'],
 
   # Making sure that the format of 'filepath' is a path string.
   # 'securesystemslib.exceptions.FormatError' is raised on incorrect format.
-  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
-  securesystemslib.formats.HASHALGORITHMS_SCHEMA.check_match(hash_algorithms)
+  formats.PATH_SCHEMA.check_match(filepath)
+  formats.HASHALGORITHMS_SCHEMA.check_match(hash_algorithms)
 
   if storage_backend is None:
-    storage_backend = securesystemslib.storage.FilesystemBackend()
+    storage_backend = storage.FilesystemBackend()
 
   file_length = get_file_length(filepath, storage_backend)
   file_hashes = get_file_hashes(filepath, hash_algorithms, storage_backend)
@@ -121,23 +121,23 @@ def get_file_hashes(filepath, hash_algorithms=['sha256'],
 
   # Making sure that the format of 'filepath' is a path string.
   # 'securesystemslib.exceptions.FormatError' is raised on incorrect format.
-  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
-  securesystemslib.formats.HASHALGORITHMS_SCHEMA.check_match(hash_algorithms)
+  formats.PATH_SCHEMA.check_match(filepath)
+  formats.HASHALGORITHMS_SCHEMA.check_match(hash_algorithms)
 
   if storage_backend is None:
-    storage_backend = securesystemslib.storage.FilesystemBackend()
+    storage_backend = storage.FilesystemBackend()
 
   file_hashes = {}
 
   with storage_backend.get(filepath) as fileobj:
     # Obtaining hash of the file.
     for algorithm in hash_algorithms:
-      digest_object = securesystemslib.hash.digest_fileobject(fileobj, algorithm)
+      digest_object = hash.digest_fileobject(fileobj, algorithm)
       file_hashes.update({algorithm: digest_object.hexdigest()})
 
   # Performing a format check to ensure 'file_hash' corresponds HASHDICT_SCHEMA.
   # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
-  securesystemslib.formats.HASHDICT_SCHEMA.check_match(file_hashes)
+  formats.HASHDICT_SCHEMA.check_match(file_hashes)
 
   return file_hashes
 
@@ -166,10 +166,10 @@ def get_file_length(filepath, storage_backend=None):
 
   # Making sure that the format of 'filepath' is a path string.
   # 'securesystemslib.exceptions.FormatError' is raised on incorrect format.
-  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+  formats.PATH_SCHEMA.check_match(filepath)
 
   if storage_backend is None:
-      storage_backend = securesystemslib.storage.FilesystemBackend()
+      storage_backend = storage.FilesystemBackend()
 
   return storage_backend.getsize(filepath)
 
@@ -206,7 +206,7 @@ def persist_temp_file(temp_file, persist_path, storage_backend=None,
   """
 
   if storage_backend is None:
-    storage_backend = securesystemslib.storage.FilesystemBackend()
+    storage_backend = storage.FilesystemBackend()
 
   storage_backend.put(temp_file, persist_path)
 
@@ -246,10 +246,10 @@ def ensure_parent_dir(filename, storage_backend=None):
 
   # Ensure 'filename' corresponds to 'PATH_SCHEMA'.
   # Raise 'securesystemslib.exceptions.FormatError' on a mismatch.
-  securesystemslib.formats.PATH_SCHEMA.check_match(filename)
+  formats.PATH_SCHEMA.check_match(filename)
 
   if storage_backend is None:
-    storage_backend = securesystemslib.storage.FilesystemBackend()
+    storage_backend = storage.FilesystemBackend()
 
   # Split 'filename' into head and tail, check if head exists.
   directory = os.path.split(filename)[0]
@@ -284,8 +284,8 @@ def file_in_confined_directories(filepath, confined_directories):
 
   # Do the arguments have the correct format?
   # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
-  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
-  securesystemslib.formats.NAMES_SCHEMA.check_match(confined_directories)
+  formats.PATH_SCHEMA.check_match(filepath)
+  formats.NAMES_SCHEMA.check_match(confined_directories)
 
   for confined_directory in confined_directories:
     # The empty string (arbitrarily chosen) signifies the client is confined
@@ -382,11 +382,11 @@ def load_json_string(data):
 
   except TypeError:
     message = 'Invalid JSON string: ' + repr(data)
-    raise securesystemslib.exceptions.Error(message)
+    raise exceptions.Error(message)
 
   except ValueError:
     message = 'Cannot deserialize to a Python object: ' + repr(data)
-    raise securesystemslib.exceptions.Error(message)
+    raise exceptions.Error(message)
 
   else:
     return deserialized_object
@@ -424,10 +424,10 @@ def load_json_file(filepath, storage_backend=None):
 
   # Making sure that the format of 'filepath' is a path string.
   # securesystemslib.exceptions.FormatError is raised on incorrect format.
-  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+  formats.PATH_SCHEMA.check_match(filepath)
 
   if storage_backend is None:
-    storage_backend = securesystemslib.storage.FilesystemBackend()
+    storage_backend = storage.FilesystemBackend()
 
   deserialized_object = None
   with storage_backend.get(filepath) as file_obj:
@@ -437,7 +437,7 @@ def load_json_file(filepath, storage_backend=None):
       deserialized_object = json.loads(raw_data)
 
     except (ValueError, TypeError) as e:
-      raise securesystemslib.exceptions.Error('Cannot deserialize to a'
+      raise exceptions.Error('Cannot deserialize to a'
           ' Python object: ' + filepath)
 
     else:
@@ -471,8 +471,8 @@ def digests_are_equal(digest1, digest2):
   # Ensure the arguments have the appropriate number of objects and object
   # types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
-  securesystemslib.formats.HEX_SCHEMA.check_match(digest1)
-  securesystemslib.formats.HEX_SCHEMA.check_match(digest2)
+  formats.HEX_SCHEMA.check_match(digest1)
+  formats.HEX_SCHEMA.check_match(digest2)
 
   if len(digest1) != len(digest2):
     return False

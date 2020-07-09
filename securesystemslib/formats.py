@@ -79,8 +79,8 @@ import datetime
 import time
 import six
 
-import securesystemslib.schema as SCHEMA
-import securesystemslib.exceptions
+from . import schema as SCHEMA
+from . import exceptions
 
 # Note that in the schema definitions below, the 'SCHEMA.Object' types allow
 # additional keys which are not defined. Thus, any additions to them will be
@@ -410,7 +410,7 @@ KEYDICT_SCHEMA = SCHEMA.DictOf(
   key_schema = KEYID_SCHEMA,
   value_schema = KEY_SCHEMA)
 
-ANY_SIGNATURE_SCHEMA = securesystemslib.schema.OneOf([SIGNATURE_SCHEMA,
+ANY_SIGNATURE_SCHEMA = SCHEMA.OneOf([SIGNATURE_SCHEMA,
     GPG_SIGNATURE_SCHEMA])
 
 # List of ANY_SIGNATURE_SCHEMA.
@@ -476,7 +476,7 @@ def datetime_to_unix_timestamp(datetime_object):
   # Raise 'securesystemslib.exceptions.FormatError' if not.
   if not isinstance(datetime_object, datetime.datetime):
     message = repr(datetime_object) + ' is not a datetime.datetime() object.'
-    raise securesystemslib.exceptions.FormatError(message)
+    raise exceptions.FormatError(message)
 
   unix_timestamp = calendar.timegm(datetime_object.timetuple())
 
@@ -514,7 +514,7 @@ def unix_timestamp_to_datetime(unix_timestamp):
 
   # Is 'unix_timestamp' properly formatted?
   # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
-  securesystemslib.formats.UNIX_TIMESTAMP_SCHEMA.check_match(unix_timestamp)
+  UNIX_TIMESTAMP_SCHEMA.check_match(unix_timestamp)
 
   # Convert 'unix_timestamp' to a 'time.struct_time',  in UTC.  The Daylight
   # Savings Time (DST) flag is set to zero.  datetime.fromtimestamp() is not
@@ -554,7 +554,7 @@ def format_base64(data):
     return binascii.b2a_base64(data).decode('utf-8').rstrip('=\n ')
 
   except (TypeError, binascii.Error) as e:
-    raise securesystemslib.exceptions.FormatError('Invalid base64'
+    raise exceptions.FormatError('Invalid base64'
       ' encoding: ' + str(e))
 
 
@@ -583,7 +583,7 @@ def parse_base64(base64_string):
 
   if not isinstance(base64_string, six.string_types):
     message = 'Invalid argument: '+repr(base64_string)
-    raise securesystemslib.exceptions.FormatError(message)
+    raise exceptions.FormatError(message)
 
   extra = len(base64_string) % 4
   if extra:
@@ -594,7 +594,7 @@ def parse_base64(base64_string):
     return binascii.a2b_base64(base64_string.encode('utf-8'))
 
   except (TypeError, binascii.Error) as e:
-    raise securesystemslib.exceptions.FormatError('Invalid base64'
+    raise exceptions.FormatError('Invalid base64'
       ' encoding: ' + str(e))
 
 
@@ -661,7 +661,7 @@ def _encode_canonical(object, output_function):
       _encode_canonical(value, output_function)
     output_function("}")
   else:
-    raise securesystemslib.exceptions.FormatError('I cannot encode '+repr(object))
+    raise exceptions.FormatError('I cannot encode '+repr(object))
 
 
 def encode_canonical(object, output_function=None):
@@ -724,9 +724,9 @@ def encode_canonical(object, output_function=None):
   try:
     _encode_canonical(object, output_function)
 
-  except (TypeError, securesystemslib.exceptions.FormatError) as e:
+  except (TypeError, exceptions.FormatError) as e:
     message = 'Could not encode ' + repr(object) + ': ' + str(e)
-    raise securesystemslib.exceptions.FormatError(message)
+    raise exceptions.FormatError(message)
 
   # Return the encoded 'object' as a string.
   # Note: Implies 'output_function' is None,

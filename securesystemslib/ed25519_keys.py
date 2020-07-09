@@ -91,11 +91,11 @@ except ImportError:
 
 # The optimized pure Python implementation of Ed25519.  If
 # PyNaCl cannot be imported and an attempt to use is made in this module, a
-# 'securesystemslib.exceptions.UnsupportedLibraryError' exception is raised.
-import securesystemslib._vendor.ed25519.ed25519
+# 'exceptions.UnsupportedLibraryError' exception is raised.
+from ._vendor.ed25519 import ed25519
 
-import securesystemslib.formats
-import securesystemslib.exceptions
+from . import formats
+from . import exceptions
 
 # Supported ed25519 signing schemes: 'ed25519'.  The pure Python implementation
 # (i.e., ed25519') and PyNaCl (i.e., 'nacl', libsodium + Python bindings)
@@ -145,7 +145,7 @@ def generate_public_and_private():
   """
 
   if not NACL: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_NACL_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_NACL_MSG)
 
   # Generate ed25519's seed key by calling os.urandom().  The random bytes
   # returned should be suitable for cryptographic use and is OS-specific.
@@ -225,19 +225,19 @@ def create_signature(public_key, private_key, data, scheme):
   """
 
   if not NACL: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_NACL_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_NACL_MSG)
 
   # Does 'public_key' have the correct format?
   # This check will ensure 'public_key' conforms to
   # 'securesystemslib.formats.ED25519PUBLIC_SCHEMA', which must have length 32
   # bytes.  Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.ED25519PUBLIC_SCHEMA.check_match(public_key)
+  formats.ED25519PUBLIC_SCHEMA.check_match(public_key)
 
   # Is 'private_key' properly formatted?
-  securesystemslib.formats.ED25519SEED_SCHEMA.check_match(private_key)
+  formats.ED25519SEED_SCHEMA.check_match(private_key)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.ED25519_SIG_SCHEMA.check_match(scheme)
+  formats.ED25519_SIG_SCHEMA.check_match(scheme)
 
   # Signing the 'data' object requires a seed and public key.
   # nacl.signing.SigningKey.sign() generates the signature.
@@ -256,13 +256,13 @@ def create_signature(public_key, private_key, data, scheme):
       signature = nacl_sig.signature
 
     except (ValueError, TypeError, nacl.exceptions.CryptoError) as e:
-      raise securesystemslib.exceptions.CryptoError('An "ed25519" signature'
+      raise exceptions.CryptoError('An "ed25519" signature'
           ' could not be created with PyNaCl.' + str(e))
 
   # This is a defensive check for a valid 'scheme', which should have already
   # been validated in the check_match() above.
   else: #pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
+    raise exceptions.UnsupportedAlgorithmError('Unsupported'
       ' signature scheme is specified: ' + repr(scheme))
 
   return signature, scheme
@@ -316,7 +316,7 @@ def verify_signature(public_key, scheme, signature, data):
 
   <Side Effects>
     nacl.signing.VerifyKey.verify() called if available, otherwise
-    securesystemslib._vendor.ed25519.ed25519.checkvalid() called to do the
+    ed25519.checkvalid() called to do the
     verification.
 
   <Returns>
@@ -327,13 +327,13 @@ def verify_signature(public_key, scheme, signature, data):
   # This check will ensure 'public_key' conforms to
   # 'securesystemslib.formats.ED25519PUBLIC_SCHEMA', which must have length 32
   # bytes.  Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.ED25519PUBLIC_SCHEMA.check_match(public_key)
+  formats.ED25519PUBLIC_SCHEMA.check_match(public_key)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.ED25519_SIG_SCHEMA.check_match(scheme)
+  formats.ED25519_SIG_SCHEMA.check_match(scheme)
 
   # Is 'signature' properly formatted?
-  securesystemslib.formats.ED25519SIGNATURE_SCHEMA.check_match(signature)
+  formats.ED25519SIGNATURE_SCHEMA.check_match(signature)
 
   # Verify 'signature'.  Before returning the Boolean result, ensure 'ed25519'
   # was used as the signature scheme.
@@ -353,7 +353,7 @@ def verify_signature(public_key, scheme, signature, data):
     # Verify 'ed25519' signature with the pure Python implementation.
     else:
       try:
-        securesystemslib._vendor.ed25519.ed25519.checkvalid(signature,
+        ed25519.checkvalid(signature,
             data, public)
         valid_signature = True
 
@@ -367,7 +367,7 @@ def verify_signature(public_key, scheme, signature, data):
   else: #pragma: no cover
     message = 'Unsupported ed25519 signature scheme: ' + repr(scheme) + '.\n' + \
       'Supported schemes: ' + repr(_SUPPORTED_ED25519_SIGNING_SCHEMES) + '.'
-    raise securesystemslib.exceptions.UnsupportedAlgorithmError(message)
+    raise exceptions.UnsupportedAlgorithmError(message)
 
   return valid_signature
 

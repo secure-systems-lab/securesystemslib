@@ -14,6 +14,7 @@
 <Purpose>
   RSA-specific handling routines for signature verification and key parsing
 """
+from __future__ import absolute_import
 import binascii
 
 CRYPTO = True
@@ -27,10 +28,10 @@ try:
 except ImportError:
   CRYPTO = False
 
-import securesystemslib.gpg.util
-import securesystemslib.gpg.exceptions
-import securesystemslib.exceptions
-import securesystemslib.formats
+from . import util
+from . import exceptions
+from .. import exceptions as commonExceptions
+from .. import formats
 
 
 def create_pubkey(pubkey_info):
@@ -57,9 +58,9 @@ def create_pubkey(pubkey_info):
 
   """
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise commonExceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
-  securesystemslib.formats.GPG_RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
+  formats.GPG_RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
   e = int(pubkey_info['keyval']['public']['e'], 16)
   n = int(pubkey_info['keyval']['public']['n'], 16)
@@ -92,20 +93,20 @@ def get_pubkey_params(data):
   """
   ptr = 0
 
-  modulus_length = securesystemslib.gpg.util.get_mpi_length(data[ptr: ptr + 2])
+  modulus_length = util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   modulus = data[ptr:ptr + modulus_length]
   if len(modulus) != modulus_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
+    raise exceptions.PacketParsingError(
         "This modulus MPI was truncated!")
   ptr += modulus_length
 
-  exponent_e_length = securesystemslib.gpg.util.get_mpi_length(
+  exponent_e_length = util.get_mpi_length(
       data[ptr: ptr + 2])
   ptr += 2
   exponent_e = data[ptr:ptr + exponent_e_length]
   if len(exponent_e) != exponent_e_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
+    raise exceptions.PacketParsingError(
         "This e MPI has been truncated!")
 
   return {
@@ -136,11 +137,11 @@ def get_signature_params(data):
   """
 
   ptr = 0
-  signature_length = securesystemslib.gpg.util.get_mpi_length(data[ptr:ptr+2])
+  signature_length = util.get_mpi_length(data[ptr:ptr+2])
   ptr += 2
   signature = data[ptr:ptr + signature_length]
   if len(signature) != signature_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
+    raise exceptions.PacketParsingError(
         "This signature was truncated!")
 
   return signature
@@ -189,12 +190,12 @@ def verify_signature(signature_object, pubkey_info, content,
 
   """
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise commonExceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
-  securesystemslib.formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
-  securesystemslib.formats.GPG_RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
+  formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
+  formats.GPG_RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
-  hasher = securesystemslib.gpg.util.get_hashing_class(hash_algorithm_id)
+  hasher = util.get_hashing_class(hash_algorithm_id)
 
   pubkey_object = create_pubkey(pubkey_info)
 
@@ -210,7 +211,7 @@ def verify_signature(signature_object, pubkey_info, content,
     signature_object['signature'] = "{}{}".format(zero_pad,
         signature_object['signature'])
 
-  digest = securesystemslib.gpg.util.hash_object(
+  digest = util.hash_object(
       binascii.unhexlify(signature_object['other_headers']),
       hasher(), content)
 

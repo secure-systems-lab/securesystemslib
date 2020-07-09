@@ -121,13 +121,13 @@ try:
 except ImportError:
   CRYPTO = False
 
-import securesystemslib.exceptions
-import securesystemslib.formats
-import securesystemslib.hash
-import securesystemslib.util
+from . import exceptions
+from . import formats
+from . import hash
+from . import util
 
 # Extract/reference the cryptography library settings.
-import securesystemslib.settings
+from . import settings
 
 # Recommended RSA key sizes:
 # http://www.emc.com/emc-plus/rsa-labs/historical/twirl-and-rsa-key-size.htm#table1
@@ -159,7 +159,7 @@ _SALT_SIZE = 16
 # derived key+PBDKF2 combination if the key is loaded and re-saved, overriding
 # any previous iteration setting used by the old '<keyid>.key'.
 # https://en.wikipedia.org/wiki/PBKDF2
-_PBKDF2_ITERATIONS = securesystemslib.settings.PBKDF2_ITERATIONS
+_PBKDF2_ITERATIONS = settings.PBKDF2_ITERATIONS
 
 
 
@@ -211,14 +211,14 @@ def generate_rsa_public_and_private(bits=_DEFAULT_RSA_KEY_BITS):
   """
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Does 'bits' have the correct format?
   # This check will ensure 'bits' conforms to
   # 'securesystemslib.formats.RSAKEYBITS_SCHEMA'.  'bits' must be an integer
   # object, with a minimum value of 2048.  Raise
   # 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match(bits)
+  formats.RSAKEYBITS_SCHEMA.check_match(bits)
 
   # Generate the public and private RSA keys.  The pyca/cryptography 'rsa'
   # module performs the actual key generation.  The 'bits' argument is used,
@@ -302,14 +302,14 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
   """
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Does the arguments have the correct format?
   # If not, raise 'securesystemslib.exceptions.FormatError' if any of the
   # checks fail.
-  securesystemslib.formats.PEMRSA_SCHEMA.check_match(private_key)
-  securesystemslib.formats.DATA_SCHEMA.check_match(data)
-  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
+  formats.PEMRSA_SCHEMA.check_match(private_key)
+  formats.DATA_SCHEMA.check_match(data)
+  formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   # Signing 'data' requires a private key. Currently supported RSA signature
   # schemes are defined in `securesystemslib.keys.RSA_SIGNATURE_SCHEMES`.
@@ -330,7 +330,7 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
     private_key_object = load_pem_private_key(private_key.encode('utf-8'),
         password=None, backend=default_backend())
 
-    digest_obj = securesystemslib.hash.digest_from_rsa_scheme(scheme,
+    digest_obj = hash.digest_from_rsa_scheme(scheme,
         'pyca_crypto')
 
     if scheme.startswith('rsassa-pss'):
@@ -351,13 +351,13 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
     # The RSA_SCHEME_SCHEMA.check_match() above should have validated 'scheme'.
     # This is a defensive check check..
     else:  # pragma: no cover
-      raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
+      raise exceptions.UnsupportedAlgorithmError('Unsupported'
           ' signature scheme is specified: ' + repr(scheme))
 
   # If the PEM data could not be decrypted, or if its structure could not
   # be decoded successfully.
   except ValueError:
-    raise securesystemslib.exceptions.CryptoError('The private key'
+    raise exceptions.CryptoError('The private key'
         ' (in PEM format) could not be deserialized.')
 
   # 'TypeError' is raised if a password was given and the private key was
@@ -365,7 +365,7 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
   # supplied.  Note: A passphrase or password is not used when generating
   # 'private_key', since it should not be encrypted.
   except TypeError:
-    raise securesystemslib.exceptions.CryptoError('The private key was'
+    raise exceptions.CryptoError('The private key was'
         ' unexpectedly encrypted.')
 
   # 'cryptography.exceptions.UnsupportedAlgorithm' is raised if the
@@ -373,7 +373,7 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
   # the key is encrypted with a symmetric cipher that is not supported by
   # the backend.
   except cryptography.exceptions.UnsupportedAlgorithm:  # pragma: no cover
-    raise securesystemslib.exceptions.CryptoError('The private key is'
+    raise exceptions.CryptoError('The private key is'
         ' encrypted with an unsupported algorithm.')
 
   return signature, scheme
@@ -438,22 +438,22 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
   """
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Does 'public_key' have the correct format?
   # This check will ensure 'public_key' conforms to
   # 'securesystemslib.formats.PEMRSA_SCHEMA'.  Raise
   # 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.PEMRSA_SCHEMA.check_match(public_key)
+  formats.PEMRSA_SCHEMA.check_match(public_key)
 
   # Does 'signature_scheme' have the correct format?
-  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(signature_scheme)
+  formats.RSA_SCHEME_SCHEMA.check_match(signature_scheme)
 
   # Does 'signature' have the correct format?
-  securesystemslib.formats.PYCACRYPTOSIGNATURE_SCHEMA.check_match(signature)
+  formats.PYCACRYPTOSIGNATURE_SCHEMA.check_match(signature)
 
   # What about 'data'?
-  securesystemslib.formats.DATA_SCHEMA.check_match(data)
+  formats.DATA_SCHEMA.check_match(data)
 
   # Verify whether the private key of 'public_key' produced 'signature'.
   # Before returning the 'valid_signature' Boolean result, ensure 'RSASSA-PSS'
@@ -465,7 +465,7 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
     public_key_object = serialization.load_pem_public_key(
         public_key.encode('utf-8'), backend=default_backend())
 
-    digest_obj = securesystemslib.hash.digest_from_rsa_scheme(signature_scheme,
+    digest_obj = hash.digest_from_rsa_scheme(signature_scheme,
         'pyca_crypto')
 
     # verify() raises 'cryptography.exceptions.InvalidSignature' if the
@@ -485,7 +485,7 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
       # The RSA_SCHEME_SCHEMA.check_match() above should have validated 'scheme'.
       # This is a defensive check check..
       else:  # pragma: no cover
-        raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
+        raise exceptions.UnsupportedAlgorithmError('Unsupported'
             ' signature scheme is specified: ' + repr(scheme))
 
       return True
@@ -495,7 +495,7 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
 
   # Raised by load_pem_public_key().
   except (ValueError, cryptography.exceptions.UnsupportedAlgorithm) as e:
-    raise securesystemslib.exceptions.CryptoError('The PEM could not be'
+    raise exceptions.CryptoError('The PEM could not be'
         ' decoded successfully, or contained an unsupported key type: ' + str(e))
 
 
@@ -546,15 +546,15 @@ def create_rsa_encrypted_pem(private_key, passphrase):
   """
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # This check will ensure 'private_key' has the appropriate number
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.PEMRSA_SCHEMA.check_match(private_key)
+  formats.PEMRSA_SCHEMA.check_match(private_key)
 
   # Does 'passphrase' have the correct format?
-  securesystemslib.formats.PASSWORD_SCHEMA.check_match(passphrase)
+  formats.PASSWORD_SCHEMA.check_match(passphrase)
 
   # 'private_key' may still be a NULL string after the
   # 'securesystemslib.formats.PEMRSA_SCHEMA' so we need an additional check
@@ -563,7 +563,7 @@ def create_rsa_encrypted_pem(private_key, passphrase):
       private_key = load_pem_private_key(private_key.encode('utf-8'),
           password=None, backend=default_backend())
     except ValueError:
-      raise securesystemslib.exceptions.CryptoError('The private key'
+      raise exceptions.CryptoError('The private key'
           ' (in PEM format) could not be deserialized.')
 
   else:
@@ -651,17 +651,17 @@ def create_rsa_public_and_private_from_pem(pem, passphrase=None):
   """
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Does 'encryped_pem' have the correct format?
   # This check will ensure 'pem' has the appropriate number
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
+  formats.PEMRSA_SCHEMA.check_match(pem)
 
   # If passed, does 'passphrase' have the correct format?
   if passphrase is not None:
-    securesystemslib.formats.PASSWORD_SCHEMA.check_match(passphrase)
+    formats.PASSWORD_SCHEMA.check_match(passphrase)
     passphrase = passphrase.encode('utf-8')
 
   # Generate a pyca/cryptography key object from 'pem'.  The generated
@@ -683,7 +683,7 @@ def create_rsa_public_and_private_from_pem(pem, passphrase=None):
     # Raise 'securesystemslib.exceptions.CryptoError' and pyca/cryptography's
     # exception message.  Avoid propogating pyca/cryptography's exception trace
     # to avoid revealing sensitive error.
-    raise securesystemslib.exceptions.CryptoError('RSA (public, private) tuple'
+    raise exceptions.CryptoError('RSA (public, private) tuple'
       ' cannot be generated from the encrypted PEM string: ' + str(e))
 
   # Export the public and private halves of the pyca/cryptography RSA key
@@ -774,20 +774,20 @@ def encrypt_key(key_object, password):
   """
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Do the arguments have the correct format?
   # Ensure the arguments have the appropriate number of objects and object
   # types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.ANYKEY_SCHEMA.check_match(key_object)
+  formats.ANYKEY_SCHEMA.check_match(key_object)
 
   # Does 'password' have the correct format?
-  securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+  formats.PASSWORD_SCHEMA.check_match(password)
 
   # Ensure the private portion of the key is included in 'key_object'.
   if 'private' not in key_object['keyval'] or not key_object['keyval']['private']:
-    raise securesystemslib.exceptions.FormatError('Key object does not contain'
+    raise exceptions.FormatError('Key object does not contain'
       ' a private part.')
 
   # Derive a key (i.e., an appropriate encryption key and not the
@@ -879,16 +879,16 @@ def decrypt_key(encrypted_key, password):
   """
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Do the arguments have the correct format?
   # Ensure the arguments have the appropriate number of objects and object
   # types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.ENCRYPTEDKEY_SCHEMA.check_match(encrypted_key)
+  formats.ENCRYPTEDKEY_SCHEMA.check_match(encrypted_key)
 
   # Does 'password' have the correct format?
-  securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+  formats.PASSWORD_SCHEMA.check_match(password)
 
   # Decrypt 'encrypted_key', using 'password' (and additional key derivation
   # data like salts and password iterations) to re-derive the decryption key.
@@ -897,7 +897,7 @@ def decrypt_key(encrypted_key, password):
   # Raise 'securesystemslib.exceptions.Error' if 'json_data' cannot be
   # deserialized to a valid 'securesystemslib.formats.ANYKEY_SCHEMA' key
   # object.
-  key_object = securesystemslib.util.load_json_string(json_data.decode())
+  key_object = util.load_json_string(json_data.decode())
 
   return key_object
 
@@ -1035,7 +1035,7 @@ def _decrypt(file_contents, password):
       file_contents.split(_ENCRYPTION_DELIMITER)
 
   except ValueError:
-    raise securesystemslib.exceptions.CryptoError('Invalid encrypted file.')
+    raise exceptions.CryptoError('Invalid encrypted file.')
 
   # Ensure we have the expected raw data for the delimited cryptographic data.
   salt = binascii.unhexlify(salt.encode('utf-8'))
@@ -1061,8 +1061,8 @@ def _decrypt(file_contents, password):
   generated_hmac = binascii.hexlify(generated_hmac_object.finalize())
 
 
-  if not securesystemslib.util.digests_are_equal(generated_hmac.decode(), hmac):
-    raise securesystemslib.exceptions.CryptoError('Decryption failed.')
+  if not util.digests_are_equal(generated_hmac.decode(), hmac):
+    raise exceptions.CryptoError('Decryption failed.')
 
   # Construct a Cipher object, with the key and iv.
   decryptor = Cipher(algorithms.AES(symmetric_key), modes.CTR(iv),

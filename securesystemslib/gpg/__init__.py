@@ -21,3 +21,7 @@
   are almost guaranteed to have gpg installed, yet the same assumption can't be
   made for the gpgme python bindings.
 """
+from __future__ import absolute_import
+from . import constants
+from . import util
+util.constants = constants
