@@ -98,6 +98,13 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
         self.assertRaises(securesystemslib.exceptions.FormatError,
             securesystemslib.util.ensure_parent_dir, parent_dir)
 
+    # When we call ensure_parent_dir with filepath arg like "a.txt",
+    # then the directory of that filepath will be an empty string.
+    # We want to make sure that securesyslib.storage.create_folder()
+    # won't be called with an empty string and thus raise an exception.
+    # If an exception is thrown the test will fail.
+    securesystemslib.util.ensure_parent_dir('a.txt')
+
 
 
   def  test_B3_file_in_confined_directories(self):

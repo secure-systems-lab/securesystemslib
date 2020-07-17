@@ -182,7 +182,10 @@ def ensure_parent_dir(filename, storage_backend=None):
   # Split 'filename' into head and tail, check if head exists.
   directory = os.path.split(filename)[0]
 
-  storage_backend.create_folder(directory)
+  # Check for cases where filename is without directory like 'file.txt'
+  # and as a result directory is an empty string
+  if directory:
+    storage_backend.create_folder(directory)
 
 
 def file_in_confined_directories(filepath, confined_directories):
