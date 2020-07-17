@@ -85,7 +85,62 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
 
 
-  def  test_B2_ensure_parent_dir(self):
+  def test_B2_get_file_hashes(self):
+    # Goal: Verify proper output given certain expected/unexpected input.
+
+    # Making a temporary file.
+    filepath = self.make_temp_data_file()
+
+    # Computing the hash of the tempfile.
+    digest_object = securesystemslib.hash.digest_filename(filepath, algorithm='sha256')
+    file_hash = {'sha256' : digest_object.hexdigest()}
+
+    # Test: Expected input.
+    self.assertEqual(securesystemslib.util.get_file_hashes(filepath),
+        file_hash)
+
+    # Test: Incorrect input.
+    bogus_inputs = [self.random_string(), 1234, [self.random_string()],
+        {'a': 'b'}, None]
+
+    for bogus_input in bogus_inputs:
+      if isinstance(bogus_input, six.string_types):
+        self.assertRaises(securesystemslib.exceptions.Error,
+            securesystemslib.util.get_file_hashes, bogus_input)
+      else:
+        self.assertRaises(securesystemslib.exceptions.FormatError,
+            securesystemslib.util.get_file_hashes, bogus_input)
+
+
+
+  def test_B3_get_file_length(self):
+    # Goal: Verify proper output given certain expected/unexpected input.
+
+    # Making a temporary file.
+    filepath = self.make_temp_data_file()
+
+    # Computing the length of the tempfile.
+    digest_object = securesystemslib.hash.digest_filename(filepath, algorithm='sha256')
+    file_length = os.path.getsize(filepath)
+
+    # Test: Expected input.
+    self.assertEqual(securesystemslib.util.get_file_length(filepath), file_length)
+
+    # Test: Incorrect input.
+    bogus_inputs = [self.random_string(), 1234, [self.random_string()],
+        {'a': 'b'}, None]
+
+    for bogus_input in bogus_inputs:
+      if isinstance(bogus_input, six.string_types):
+        self.assertRaises(securesystemslib.exceptions.Error,
+            securesystemslib.util.get_file_length, bogus_input)
+      else:
+        self.assertRaises(securesystemslib.exceptions.FormatError,
+            securesystemslib.util.get_file_length, bogus_input)
+
+
+
+  def  test_B4_ensure_parent_dir(self):
     existing_parent_dir = self.make_temp_directory()
     non_existing_parent_dir = os.path.join(existing_parent_dir, 'a', 'b')
 
@@ -100,7 +155,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
 
 
-  def  test_B3_file_in_confined_directories(self):
+  def  test_B5_file_in_confined_directories(self):
     # Goal: Provide invalid input for 'filepath' and 'confined_directories'.
     # Include inputs like: '[1, 2, "a"]' and such...
     # Reference to 'file_in_confined_directories()' to improve readability.
@@ -131,7 +186,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     self.assertTrue(in_confined_directory('a/b/c/..', ['a/']))
 
 
-  def test_B4_import_json(self):
+  def test_B6_import_json(self):
     self.assertTrue('json' in sys.modules)
     json_module = securesystemslib.util.import_json()
     self.assertTrue(json_module is not None)
@@ -142,7 +197,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
 
 
-  def  test_B5_load_json_string(self):
+  def  test_B7_load_json_string(self):
     # Test normal case.
     data = ['a', {'b': ['c', None, 30.3, 29]}]
     json_string = securesystemslib.util.json.dumps(data)
@@ -157,7 +212,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
 
 
-  def  test_B6_load_json_file(self):
+  def  test_B8_load_json_file(self):
     data = ['a', {'b': ['c', None, 30.3, 29]}]
     filepath = self.make_temp_file()
     fileobj = open(filepath, 'wt')
@@ -185,7 +240,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
 
 
-  def test_B7_persist_temp_file(self):
+  def test_B9_persist_temp_file(self):
     # Destination directory to save the temporary file in.
     dest_temp_dir = self.make_temp_directory()
 

@@ -81,13 +81,53 @@ def get_file_details(filepath, hash_algorithms=['sha256'],
   if storage_backend is None:
     storage_backend = securesystemslib.storage.FilesystemBackend()
 
-  # The returned file hashes of 'filepath'.
+  file_length = get_file_length(filepath, storage_backend)
+  file_hashes = get_file_hashes(filepath, hash_algorithms, storage_backend)
+
+  return file_length, file_hashes
+
+
+def get_file_hashes(filepath, hash_algorithms=['sha256'],
+    storage_backend=None):
+  """
+  <Purpose>
+    Compute hash(es) of the file at filepath using each of the specified
+    hash algorithms. If no algorithms are specified, then the hash is
+    computed using the SHA-256 algorithm.
+
+  <Arguments>
+    filepath:
+      Absolute file path of a file.
+
+    hash_algorithms:
+      A list of hash algorithms with which the file's hash should be computed.
+      Defaults to ['sha256']
+
+    storage_backend:
+      An object which implements
+      securesystemslib.storage.StorageBackendInterface. When no object is
+      passed a FilesystemBackend will be instantiated and used.
+
+  <Exceptions>
+    securesystemslib.exceptions.FormatError: If hash of the file does not match
+    HASHDICT_SCHEMA.
+
+    securesystemslib.exceptions.Error: If 'filepath' does not exist.
+
+  <Returns>
+    A dictionary conforming to securesystemslib.formats.HASHDICT_SCHEMA
+    containing information about the hashes of the file at "filepath".
+  """
+
+  # Making sure that the format of 'filepath' is a path string.
+  # 'securesystemslib.exceptions.FormatError' is raised on incorrect format.
+  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+  securesystemslib.formats.HASHALGORITHMS_SCHEMA.check_match(hash_algorithms)
+
+  if storage_backend is None:
+    storage_backend = securesystemslib.storage.FilesystemBackend()
+
   file_hashes = {}
-
-  filepath = os.path.abspath(filepath)
-
-  # Obtaining length of the file.
-  file_length = storage_backend.getsize(filepath)
 
   with storage_backend.get(filepath) as fileobj:
     # Obtaining hash of the file.
@@ -99,7 +139,39 @@ def get_file_details(filepath, hash_algorithms=['sha256'],
   # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.HASHDICT_SCHEMA.check_match(file_hashes)
 
-  return file_length, file_hashes
+  return file_hashes
+
+
+
+def get_file_length(filepath, storage_backend=None):
+  """
+  <Purpose>
+    To get file's length information.
+
+  <Arguments>
+    filepath:
+      Absolute file path of a file.
+
+    storage_backend:
+      An object which implements
+      securesystemslib.storage.StorageBackendInterface. When no object is
+      passed a FilesystemBackend will be instantiated and used.
+
+  <Exceptions>
+    securesystemslib.exceptions.Error: If 'filepath' does not exist.
+
+  <Returns>
+    The length, in bytes, of the file at 'filepath'.
+  """
+
+  # Making sure that the format of 'filepath' is a path string.
+  # 'securesystemslib.exceptions.FormatError' is raised on incorrect format.
+  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+
+  if storage_backend is None:
+      storage_backend = securesystemslib.storage.FilesystemBackend()
+
+  return storage_backend.getsize(filepath)
 
 
 def persist_temp_file(temp_file, persist_path, storage_backend=None,
