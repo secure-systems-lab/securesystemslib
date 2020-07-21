@@ -84,24 +84,25 @@ try:
   # pyca/cryptography requires hash objects to generate PKCS#1 PSS
   # signatures (i.e., padding.PSS).  The 'hmac' module is needed to verify
   # ciphertexts in encrypted key files.
-  from cryptography.hazmat.primitives import hashes
-  from cryptography.hazmat.primitives import hmac
+  from cryptography.hazmat.primitives import hashes, hmac
 
   # RSA's probabilistic signature scheme with appendix (RSASSA-PSS).
   # PKCS#1 v1.5 is available for compatibility with existing applications, but
   # RSASSA-PSS is encouraged for newer applications.  RSASSA-PSS generates
-  # a random salt to ensure the signature generated is probabilistic rather than
-  # deterministic (e.g., PKCS#1 v1.5).
+  # a random salt to ensure the signature generated is probabilistic rather
+  # than deterministic (e.g., PKCS#1 v1.5).
   # http://en.wikipedia.org/wiki/RSA-PSS#Schemes
   # https://tools.ietf.org/html/rfc3447#section-8.1
   # The 'padding' module is needed for PSS signatures.
   from cryptography.hazmat.primitives.asymmetric import padding
 
   # Import pyca/cryptography's Key Derivation Function (KDF) module.
-  # 'securesystemslib.keys.py' needs this module to derive a secret key according
-  # to the Password-Based Key Derivation Function 2 specification.  The derived
-  # key is used as the symmetric key to encrypt securesystemslib key information.
-  # PKCS#5 v2.0 PBKDF2 specification: http://tools.ietf.org/html/rfc2898#section-5.2
+  # 'securesystemslib.keys.py' needs this module to derive a secret key
+  # according to the Password-Based Key Derivation Function 2 specification.
+  # The derived key is used as the symmetric key to encrypt securesystemslib
+  # key information.
+  # PKCS#5 v2.0 PBKDF2 specification:
+  # http://tools.ietf.org/html/rfc2898#section-5.2
   from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
   # pyca/cryptography's AES implementation available in 'ciphers.Cipher. and
@@ -111,11 +112,12 @@ try:
   from cryptography.hazmat.primitives.ciphers import Cipher, algorithms
 
   # The mode of operation is presently set to CTR (CounTeR Mode) for symmetric
-  # block encryption (AES-256, where the symmetric key is 256 bits).  'modes' can
-  # be used as an argument to 'ciphers.Cipher' to specify the mode of operation
-  # for the block cipher.  The initial random block, or initialization vector
-  # (IV), can be set to begin the process of incrementing the 128-bit blocks and
-  # allowing the AES algorithm to perform cipher block operations on them.
+  # block encryption (AES-256, where the symmetric key is 256 bits).  'modes'
+  # can be used as an argument to 'ciphers.Cipher' to specify the mode of
+  # operation for the block cipher.  The initial random block, or
+  # initialization vector (IV), can be set to begin the process of
+  # incrementing the 128-bit blocks and allowing the AES algorithm to perform
+  # cipher block operations on them.
   from cryptography.hazmat.primitives.ciphers import modes
 except ImportError:
   CRYPTO = False
@@ -245,7 +247,54 @@ def generate_rsa_public_and_private(bits=_DEFAULT_RSA_KEY_BITS):
 
 
 
-def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
+# The RSA-PSS scheme allows for choosing the salt length:
+# https://crypto.stackexchange.com/questions/1217/rsa-pss-salt-size
+# For compatibility with Golang, we borrow the salt lengths typically used in
+# its crypto package.
+# https://github.com/golang/go/blob/11f92e9dae96939c2d784ae963fa7763c300660b/src/crypto/rsa/pss.go#L225-L232
+# FIXME: really, we should encode the salt length as part of the metadata on
+# how to use the RSA-PSS public key.
+class SaltLengthType:
+  """A class to represent common salt lengths for RSA-PSS."""
+
+  @classmethod
+  def get_salt_length(self, algorithm):
+    """Get the salt length as integer."""
+    raise NotImplementedError
+
+
+
+
+
+# NOTE: This is what used to be the standard behaviour.
+class HashSaltLengthType(SaltLengthType):
+  """Salt length to equal the length of the hash used in the signature."""
+
+  @classmethod
+  def get_salt_length(cls, algorithm):
+    """Get the salt length as integer."""
+    return algorithm.digest_size
+
+
+
+
+
+class MaxSaltLengthType(SaltLengthType):
+  """Salt length in a PSS signature to be as large as possible when
+  signing, and to be auto-detected when verifying."""
+
+  @classmethod
+  def get_salt_length(cls, algorithm):
+    """Get the salt length as integer."""
+    # NOTE: We disregard algorithm here.
+    return padding.PSS.MAX_LENGTH
+
+
+
+
+
+def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256',
+  salt_length_type=HashSaltLengthType):
   """
   <Purpose>
     Generate a 'scheme' signature.  The signature, and the signature scheme
@@ -277,6 +326,10 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
 
     scheme:
       The signature scheme used to generate the signature.
+
+    salt_length_type:
+      The strategy for determining the length of the salt used in RSA-PSS, one of
+      HashSaltLengthType or MaxSaltLengthType.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'private_key' is improperly
@@ -336,9 +389,12 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
       # Generate an RSSA-PSS signature.  Raise
       # 'securesystemslib.exceptions.CryptoError' for any of the expected
       # exceptions raised by pyca/cryptography.
-      signature = private_key_object.sign(
-          data, padding.PSS(mgf=padding.MGF1(digest_obj.algorithm),
-          salt_length=digest_obj.algorithm.digest_size), digest_obj.algorithm)
+      signature = private_key_object.sign(data,
+          padding.PSS(
+            mgf=padding.MGF1(digest_obj.algorithm),
+            salt_length=salt_length_type.get_salt_length(
+              digest_obj.algorithm)),
+          digest_obj.algorithm)
 
     elif scheme.startswith('rsa-pkcs1v15'):
       # Generate an RSA-PKCS1v15 signature.  Raise
@@ -381,7 +437,8 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
 
 
 
-def verify_rsa_signature(signature, signature_scheme, public_key, data):
+def verify_rsa_signature(signature, signature_scheme, public_key, data,
+  salt_length_type=HashSaltLengthType):
   """
   <Purpose>
     Determine whether the corresponding private key of 'public_key' produced
@@ -413,6 +470,9 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
     data:
       Data used by securesystemslib.keys.create_signature() to generate
       'signature'.  'data' (a string) is needed here to verify 'signature'.
+
+    salt_length_type:
+      A SaltLengthType object that determines the RSA-PSS salt length.
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'signature',
@@ -468,16 +528,18 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
     try:
       if signature_scheme.startswith('rsassa-pss'):
         public_key_object.verify(signature, data,
-            padding.PSS(mgf=padding.MGF1(digest_obj.algorithm),
-            salt_length=digest_obj.algorithm.digest_size),
+            padding.PSS(
+              mgf=padding.MGF1(digest_obj.algorithm),
+              salt_length=salt_length_type.get_salt_length(
+                digest_obj.algorithm)),
             digest_obj.algorithm)
 
       elif signature_scheme.startswith('rsa-pkcs1v15'):
         public_key_object.verify(signature, data, padding.PKCS1v15(),
             digest_obj.algorithm)
 
-      # The RSA_SCHEME_SCHEMA.check_match() above should have validated 'scheme'.
-      # This is a defensive check check..
+      # The RSA_SCHEME_SCHEMA.check_match() above should have validated
+      # 'scheme'. This is a defensive check.
       else:  # pragma: no cover
         raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
             ' signature scheme is specified: ' + repr(signature_scheme))
@@ -490,7 +552,8 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
   # Raised by load_pem_public_key().
   except (ValueError, cryptography.exceptions.UnsupportedAlgorithm) as e:
     raise securesystemslib.exceptions.CryptoError('The PEM could not be'
-        ' decoded successfully, or contained an unsupported key type: ' + str(e))
+        ' decoded successfully, or contained an unsupported key type: ' + \
+          str(e))
 
 
 
@@ -673,7 +736,8 @@ def create_rsa_public_and_private_from_pem(pem, passphrase=None):
   # Or if the key was encrypted but no password was supplied.
   # UnsupportedAlgorithm: If the private key (or if the key is encrypted with
   # an unsupported symmetric cipher) is not supported by the backend.
-  except (ValueError, TypeError, cryptography.exceptions.UnsupportedAlgorithm) as e:
+  except (ValueError, TypeError,
+    cryptography.exceptions.UnsupportedAlgorithm) as e:
     # Raise 'securesystemslib.exceptions.CryptoError' and pyca/cryptography's
     # exception message.  Avoid propogating pyca/cryptography's exception trace
     # to avoid revealing sensitive error.
@@ -733,7 +797,8 @@ def encrypt_key(key_object, password):
           '1f26964cc8d4f7ee5f3c5da2fbb7ab35811169573ac367b860a537e47789f8c4'}}
     >>> passphrase = 'secret'
     >>> encrypted_key = encrypt_key(ed25519_key, passphrase)
-    >>> securesystemslib.formats.ENCRYPTEDKEY_SCHEMA.matches(encrypted_key.encode('utf-8'))
+    >>> securesystemslib.formats.ENCRYPTEDKEY_SCHEMA.matches(
+      encrypted_key.encode('utf-8'))
     True
 
   <Arguments>
@@ -764,7 +829,8 @@ def encrypt_key(key_object, password):
     encryption key.
 
   <Returns>
-    An encrypted string in 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA' format.
+    An encrypted string in 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA'
+    format.
   """
 
   if not CRYPTO: # pragma: no cover
@@ -780,7 +846,8 @@ def encrypt_key(key_object, password):
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
 
   # Ensure the private portion of the key is included in 'key_object'.
-  if 'private' not in key_object['keyval'] or not key_object['keyval']['private']:
+  if 'private' not in key_object['keyval'] or \
+    not key_object['keyval']['private']:
     raise securesystemslib.exceptions.FormatError('Key object does not contain'
       ' a private part.')
 
@@ -809,10 +876,10 @@ def decrypt_key(encrypted_key, password):
   """
   <Purpose>
     Return a string containing 'encrypted_key' in non-encrypted form.
-    The decrypt_key() function can be applied to the encrypted string to restore
-    the original key object, a securesystemslib key (e.g., RSAKEY_SCHEMA,
-    ED25519KEY_SCHEMA). This function calls the appropriate cryptography module
-    (i.e., rsa_keys.py) to perform the decryption.
+    The decrypt_key() function can be applied to the encrypted string to
+    restore the original key object, a securesystemslib key (e.g.,
+    RSAKEY_SCHEMA, ED25519KEY_SCHEMA). This function calls the appropriate
+    cryptography module (i.e., rsa_keys.py) to perform the decryption.
 
     Encrypted securesystemslib keys use AES-256-CTR-Mode and passwords
     strengthened with PBKDF2-HMAC-SHA256 (100K iterations be default, but may
@@ -869,7 +936,8 @@ def decrypt_key(encrypted_key, password):
     used to re-derive the encryption/decryption key.
 
   <Returns>
-    The decrypted key object in 'securesystemslib.formats.ANYKEY_SCHEMA' format.
+    The decrypted key object in 'securesystemslib.formats.ANYKEY_SCHEMA'
+    format.
   """
 
   if not CRYPTO: # pragma: no cover
@@ -938,11 +1006,11 @@ def _generate_derived_key(password, salt=None, iterations=None):
 
 def _encrypt(key_data, derived_key_information):
   """
-  Encrypt 'key_data' using the Advanced Encryption Standard (AES-256) algorithm.
-  'derived_key_information' should contain a key strengthened by PBKDF2.  The
-  key size is 256 bits and AES's mode of operation is set to CTR (CounTeR Mode).
-  The HMAC of the ciphertext is generated to ensure the ciphertext has not been
-  modified.
+  Encrypt 'key_data' using the Advanced Encryption Standard (AES-256)
+  algorithm. 'derived_key_information' should contain a key strengthened by
+  PBKDF2.  The key size is 256 bits and AES's mode of operation is set to CTR
+  (CounTeR Mode). The HMAC of the ciphertext is generated to ensure the
+  ciphertext has not been modified.
 
   'key_data' is the JSON string representation of the key.  In the case
   of RSA keys, this format would be 'securesystemslib.formats.RSAKEY_SCHEMA':
@@ -978,7 +1046,8 @@ def _encrypt(key_data, derived_key_information):
 
   # Encrypt the plaintext and get the associated ciphertext.
   # Do we need to check for any exceptions?
-  ciphertext = encryptor.update(key_data.encode('utf-8')) + encryptor.finalize()
+  ciphertext = encryptor.update(key_data.encode('utf-8')) + \
+      encryptor.finalize()
 
   # Generate the hmac of the ciphertext to ensure it has not been modified.
   # The decryption routine may verify a ciphertext without having to perform
