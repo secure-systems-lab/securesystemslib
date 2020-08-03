@@ -881,7 +881,7 @@ def import_ecdsa_privatekey_from_file(filepath, password=None,
   <Exceptions>
     securesystemslib.exceptions.FormatError, if the arguments are improperly
     formatted or the imported key object contains an invalid key type (i.e.,
-    not 'ecdsa-sha2-nistp256').
+    not 'ecdsa').
 
     securesystemslib.exceptions.CryptoError, if 'filepath' cannot be decrypted.
 
@@ -931,7 +931,12 @@ def import_ecdsa_privatekey_from_file(filepath, password=None,
       password)
 
   # Raise an exception if an unexpected key type is imported.
-  if key_object['keytype'] != 'ecdsa-sha2-nistp256':
+  # NOTE: we support keytype's of ecdsa-sha2-nistp256 and ecdsa-sha2-nistp384
+  # in order to support key files generated with older versions of
+  # securesystemslib. At some point this backwards compatibility should be
+  # removed.
+  if key_object['keytype'] not in['ecdsa', 'ecdsa-sha2-nistp256',
+      'ecdsa-sha2-nistp384']:
     message = 'Invalid key type loaded: ' + repr(key_object['keytype'])
     raise securesystemslib.exceptions.FormatError(message)
 
