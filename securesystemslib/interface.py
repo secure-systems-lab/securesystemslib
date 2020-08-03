@@ -848,13 +848,6 @@ def import_ecdsa_publickey_from_file(filepath):
   ecdsa_key, junk = \
     securesystemslib.keys.format_metadata_to_key(ecdsa_key_metadata)
 
-  # Raise an exception if an unexpected key type is imported.  Redundant
-  # validation of 'keytype'.  'securesystemslib.keys.format_metadata_to_key()'
-  # should have fully validated 'ecdsa_key_metadata'.
-  if ecdsa_key['keytype'] != 'ecdsa-sha2-nistp256': # pragma: no cover
-    message = 'Invalid key type loaded: ' + repr(ecdsa_key['keytype'])
-    raise securesystemslib.exceptions.FormatError(message)
-
   return ecdsa_key
 
 
