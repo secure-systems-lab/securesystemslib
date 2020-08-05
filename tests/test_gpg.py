@@ -655,31 +655,31 @@ class TestGPGDSA(unittest.TestCase):
   def test_export_pubkey(self):
     """ export a public key and make sure the parameters are the right ones:
 
-      since there's very little we can do to check rsa key parameters are right
-      we pre-exported the public key to an ssh key, which we can load with
-      cryptography for the sake of comparison """
+      since there's very little we can do to check key parameters are right
+      we pre-exported the public key to an x.509 SubjectPublicKeyInfo key,
+      which we can load with cryptography for the sake of comparison """
 
     # export our gpg key, using our functions
     key_data = export_pubkey(self.default_keyid, homedir=self.gnupg_home)
     our_exported_key = dsa_create_pubkey(key_data)
 
-    # load the equivalent ssh key, and make sure that we get the same RSA key
-    # parameters
-    ssh_key_basename = "{}.ssh".format(self.default_keyid)
-    ssh_key_path = os.path.join(self.gnupg_home, ssh_key_basename)
-    with open(ssh_key_path, "rb") as fp:
+    # load same key, pre-exported with 3rd-party tooling
+    pem_key_basename = "{}.pem".format(self.default_keyid)
+    pem_key_path = os.path.join(self.gnupg_home, pem_key_basename)
+    with open(pem_key_path, "rb") as fp:
       keydata = fp.read()
 
-    ssh_key = serialization.load_ssh_public_key(keydata,
+    pem_key = serialization.load_pem_public_key(keydata,
         backends.default_backend())
 
-    self.assertEqual(ssh_key.public_numbers().y,
+    # make sure keys match
+    self.assertEqual(pem_key.public_numbers().y,
         our_exported_key.public_numbers().y)
-    self.assertEqual(ssh_key.public_numbers().parameter_numbers.g,
+    self.assertEqual(pem_key.public_numbers().parameter_numbers.g,
         our_exported_key.public_numbers().parameter_numbers.g)
-    self.assertEqual(ssh_key.public_numbers().parameter_numbers.q,
+    self.assertEqual(pem_key.public_numbers().parameter_numbers.q,
         our_exported_key.public_numbers().parameter_numbers.q)
-    self.assertEqual(ssh_key.public_numbers().parameter_numbers.p,
+    self.assertEqual(pem_key.public_numbers().parameter_numbers.p,
         our_exported_key.public_numbers().parameter_numbers.p)
 
   def test_gpg_sign_and_verify_object_with_default_key(self):
