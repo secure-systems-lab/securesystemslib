@@ -1,5 +1,27 @@
 # Changelog
 
+## securesystemslib v0.16.0
+
+### Added
+* Added new, self-explanatory, AnyNonEmptyString schema (#244)
+* Separate functions for getting a file's length, `util.get_file_length()`, and
+  a file's hashes, `util.get_file_hashes()`  (#259)
+
+### Changed
+* Improved documentation for abstract storage interface (#240)
+* Change PATHS_SCHEMA to be any non-empty string (#244)
+* Updated `keys.format_metadata_to_key()` to take an optional list of hashing
+  algorithms rather than requiring users modify `settings.HASH_ALGORITHMS` to
+  change this behaviour (#227)
+* Rather than silently ignoring empty paths, throw an exception on empty file
+  path in `storage.FileSystemBackend.create_folder` (#252)
+
+### Fixed
+* Proper tearing down of storage tests (#249)
+* Handle empty directories in `util.ensure_parent_dir()` (#260)
+* Fix tests to work with newer versions (3.0 or newer) of the cryptography
+  module (#264)
+
 ## securesystemslib v0.15.0
 
 * Allow Blake (blake2s and blake2b) hashing algorithms (#218)
