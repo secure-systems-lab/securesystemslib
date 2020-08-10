@@ -99,6 +99,10 @@ setup(
     'Topic :: Security',
     'Topic :: Software Development'
   ],
+  project_urls = {
+    'Source': 'https://github.com/secure-systems-lab/securesystemslib',
+    'Issues': 'https://github.com/secure-systems-lab/securesystemslib/issues',
+  },
   install_requires = ['six>=1.11.0', 'subprocess32; python_version < "3"',
       'python-dateutil>=2.8.0'],
   extras_require = {
