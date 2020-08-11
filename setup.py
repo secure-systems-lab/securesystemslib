@@ -68,7 +68,7 @@ with open('README.rst') as file_object:
 
 setup(
   name = 'securesystemslib',
-  version = '0.15.0',
+  version = '0.16.0',
   description = 'A library that provides cryptographic and general-purpose'
       ' routines for Secure Systems Lab projects at NYU',
   license = 'MIT',
@@ -99,6 +99,10 @@ setup(
     'Topic :: Security',
     'Topic :: Software Development'
   ],
+  project_urls = {
+    'Source': 'https://github.com/secure-systems-lab/securesystemslib',
+    'Issues': 'https://github.com/secure-systems-lab/securesystemslib/issues',
+  },
   install_requires = ['six>=1.11.0', 'subprocess32; python_version < "3"',
       'python-dateutil>=2.8.0'],
   extras_require = {
