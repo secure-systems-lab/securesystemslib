@@ -19,7 +19,7 @@ Build-Depends:
  python3-dateutil,
  python3-six,
  gnupg2,
-Standards-Version: 4.4.1
+Standards-Version: 4.5.0
 Rules-Requires-Root: no
 Homepage: https://ssl.engineering.nyu.edu
 Vcs-Git: https://github.com/secure-systems-lab/securesystemslib.git

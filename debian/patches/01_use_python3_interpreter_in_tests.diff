@@ -5,8 +5,8 @@ Description: Use python3 in tests
  "python" with "python3" where applicable.
 Author: Lukas Puehringer <lukas.puehringer@nyu.edu>
 
---- python-securesystemslib-0.13.0.orig/tests/test_process.py
-+++ python-securesystemslib-0.13.0/tests/test_process.py
+--- python-securesystemslib-0.16.0.orig/tests/test_process.py
++++ python-securesystemslib-0.16.0/tests/test_process.py
 @@ -38,7 +38,7 @@ class Test_Process(unittest.TestCase):
  
      stdin_file = open(path)
