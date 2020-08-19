@@ -687,8 +687,9 @@ def create_signature(key_dict, data):
   securesystemslib.formats.ANYKEY_SCHEMA.check_match(key_dict)
 
   # Signing the 'data' object requires a private key. Signing schemes that are
-  # currently supported are: 'ed25519', 'ecdsa', and rsa schemes
-  # defined in `securesystemslib.keys.RSA_SIGNATURE_SCHEMES`.
+  # currently supported are: 'ed25519', 'ecdsa-sha2-nistp256',
+  # 'ecdsa-sha2-nistp384' and rsa schemes defined in
+  # `securesystemslib.keys.RSA_SIGNATURE_SCHEMES`.
   # RSASSA-PSS and RSA-PKCS1v15 keys and signatures can be generated and
   # verified by rsa_keys.py, and Ed25519 keys by PyNaCl and PyCA's
   # optimized, pure python implementation of Ed25519.
