@@ -199,7 +199,7 @@ PUBLIC_KEYVAL_SCHEMA = SCHEMA.Object(
 
 # Supported securesystemslib key types.
 KEYTYPE_SCHEMA = SCHEMA.OneOf(
-  [SCHEMA.String('rsa'), SCHEMA.String('ed25519'),
+  [SCHEMA.String('rsa'), SCHEMA.String('ed25519'), SCHEMA.String('ecdsa'),
    SCHEMA.RegularExpression(r'ecdsa-sha2-nistp(256|384)')])
 
 # A generic securesystemslib key.  All securesystemslib keys should be saved to
@@ -253,7 +253,8 @@ RSAKEY_SCHEMA = SCHEMA.Object(
 # An ECDSA securesystemslib key.
 ECDSAKEY_SCHEMA = SCHEMA.Object(
   object_name = 'ECDSAKEY_SCHEMA',
-  keytype = SCHEMA.RegularExpression(r'ecdsa-sha2-nistp(256|384)'),
+  keytype = SCHEMA.OneOf([SCHEMA.String('ecdsa'),
+                          SCHEMA.RegularExpression(r'ecdsa-sha2-nistp(256|384)')]),
   scheme = ECDSA_SCHEME_SCHEMA,
   keyid = KEYID_SCHEMA,
   keyid_hash_algorithms = SCHEMA.Optional(HASHALGORITHMS_SCHEMA),

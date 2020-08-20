@@ -125,7 +125,7 @@ class TestPublicInterfaces(unittest.TestCase):
           securesystemslib.exceptions.UnsupportedLibraryError):
       securesystemslib.keys.create_signature(keydict, data)
 
-    keydict['keytype'] = 'ecdsa-sha2-nistp256'
+    keydict['keytype'] = 'ecdsa'
     keydict['scheme'] = 'ecdsa-sha2-nistp256'
     with self.assertRaises(
           securesystemslib.exceptions.UnsupportedLibraryError):
@@ -137,7 +137,7 @@ class TestPublicInterfaces(unittest.TestCase):
           securesystemslib.exceptions.UnsupportedLibraryError):
       securesystemslib.keys.create_signature(keydict, data)
 
-    keydict['keytype'] = 'ecdsa-sha2-nistp256'
+    keydict['keytype'] = 'ecdsa'
     keydict['scheme'] = 'ecdsa-sha2-nistp256'
     sig = {'keyid': 'f00',
            'sig': 'cfbce8e23eef478975a4339036de2335002d57c7b1632dd01e526a3bc52a5b261508ad50b9e25f1b819d61017e7347e912db1af019bf47ee298cc58bbdef9703'}

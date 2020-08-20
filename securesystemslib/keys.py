@@ -222,7 +222,7 @@ def generate_ecdsa_key(scheme='ecdsa-sha2-nistp256'):
     ECDSA key is generated.  The object returned conforms to
     'securesystemslib.formats.ECDSAKEY_SCHEMA' and has the form:
 
-    {'keytype': 'ecdsa-sha2-nistp256',
+    {'keytype': 'ecdsa',
      'scheme', 'ecdsa-sha2-nistp256',
      'keyid': keyid,
      'keyval': {'public': '',
@@ -260,7 +260,7 @@ def generate_ecdsa_key(scheme='ecdsa-sha2-nistp256'):
 
   # Begin building the ECDSA key dictionary.
   ecdsa_key = {}
-  keytype = 'ecdsa-sha2-nistp256'
+  keytype = 'ecdsa'
   public = None
   private = None
 
@@ -687,8 +687,9 @@ def create_signature(key_dict, data):
   securesystemslib.formats.ANYKEY_SCHEMA.check_match(key_dict)
 
   # Signing the 'data' object requires a private key. Signing schemes that are
-  # currently supported are: 'ed25519', 'ecdsa-sha2-nistp256', and rsa schemes
-  # defined in `securesystemslib.keys.RSA_SIGNATURE_SCHEMES`.
+  # currently supported are: 'ed25519', 'ecdsa-sha2-nistp256',
+  # 'ecdsa-sha2-nistp384' and rsa schemes defined in
+  # `securesystemslib.keys.RSA_SIGNATURE_SCHEMES`.
   # RSASSA-PSS and RSA-PKCS1v15 keys and signatures can be generated and
   # verified by rsa_keys.py, and Ed25519 keys by PyNaCl and PyCA's
   # optimized, pure python implementation of Ed25519.
@@ -716,7 +717,9 @@ def create_signature(key_dict, data):
     sig, scheme = securesystemslib.ed25519_keys.create_signature(
         public, private, data, scheme)
 
-  elif keytype == 'ecdsa-sha2-nistp256':
+  # Continue to support keytypes of ecdsa-sha2-nistp256 and ecdsa-sha2-nistp384
+  # for backwards compatibility with older securesystemslib releases
+  elif keytype in ['ecdsa', 'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384']:
     sig, scheme = securesystemslib.ecdsa_keys.create_signature(
         public, private, data, scheme)
 
@@ -860,7 +863,7 @@ def verify_signature(key_dict, signature, data):
       raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
           ' signature scheme is specified: ' + repr(scheme))
 
-  elif keytype in ['ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384']:
+  elif keytype in ['ecdsa', 'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384']:
     if scheme in ['ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384']:
       valid_signature = securesystemslib.ecdsa_keys.verify_signature(public,
         scheme, sig, data)
@@ -1637,7 +1640,7 @@ def import_ecdsakey_from_private_pem(pem, scheme='ecdsa-sha2-nistp256', password
     a keyid identifier for the ECDSA key is generated.  The object returned
     conforms to:
 
-    {'keytype': 'ecdsa-sha2-nistp256',
+    {'keytype': 'ecdsa',
      'scheme': 'ecdsa-sha2-nistp256',
      'keyid': keyid,
      'keyval': {'public': '-----BEGIN PUBLIC KEY----- ... -----END PUBLIC KEY-----',
@@ -1696,7 +1699,7 @@ def import_ecdsakey_from_private_pem(pem, scheme='ecdsa-sha2-nistp256', password
 
   # Begin building the ECDSA key dictionary.
   ecdsakey_dict = {}
-  keytype = 'ecdsa-sha2-nistp256'
+  keytype = 'ecdsa'
   public = None
   private = None
 
@@ -1740,7 +1743,7 @@ def import_ecdsakey_from_public_pem(pem, scheme='ecdsa-sha2-nistp256'):
     for the ECDSA key is generated.  The object returned conforms to
     'securesystemslib.formats.ECDSAKEY_SCHEMA' and has the form:
 
-    {'keytype': 'ecdsa-sha2-nistp256',
+    {'keytype': 'ecdsa',
      'scheme': 'ecdsa-sha2-nistp256',
      'keyid': keyid,
      'keyval': {'public': '-----BEGIN PUBLIC KEY----- ...',
@@ -1801,7 +1804,7 @@ def import_ecdsakey_from_public_pem(pem, scheme='ecdsa-sha2-nistp256'):
 
   # Begin building the ECDSA key dictionary.
   ecdsakey_dict = {}
-  keytype = 'ecdsa-sha2-nistp256'
+  keytype = 'ecdsa'
 
   # Generate the keyid of the ECDSA key.  'key_value' corresponds to the
   # 'keyval' entry of the 'ECDSAKEY_SCHEMA' dictionary.  The private key
@@ -1882,7 +1885,7 @@ def import_ecdsakey_from_pem(pem, scheme='ecdsa-sha2-nistp256'):
 
   # Begin building the ECDSA key dictionary.
   ecdsakey_dict = {}
-  keytype = 'ecdsa-sha2-nistp256'
+  keytype = 'ecdsa'
 
   # Generate the keyid of the ECDSA key.  'key_value' corresponds to the
   # 'keyval' entry of the 'ECDSAKEY_SCHEMA' dictionary.  The private key

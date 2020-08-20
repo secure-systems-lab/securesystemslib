@@ -276,12 +276,8 @@ class TestKeys(unittest.TestCase):
 
     # Creating a signature for 'DATA'.
     ecdsa_signature = KEYS.create_signature(self.ecdsakey_dict, DATA)
-    ecdsa_signature = KEYS.create_signature(self.ecdsakey_dict, DATA)
 
     # Check format of output.
-    self.assertEqual(None,
-        securesystemslib.formats.SIGNATURE_SCHEMA.check_match(ecdsa_signature),
-        FORMAT_ERROR_MSG)
     self.assertEqual(None,
         securesystemslib.formats.SIGNATURE_SCHEMA.check_match(ecdsa_signature),
         FORMAT_ERROR_MSG)
@@ -304,8 +300,6 @@ class TestKeys(unittest.TestCase):
     # Creating a signature of 'DATA' to be verified.
     rsa_signature = KEYS.create_signature(self.rsakey_dict, DATA)
     ed25519_signature = KEYS.create_signature(self.ed25519key_dict, DATA)
-    ecdsa_signature = None
-
     ecdsa_signature = KEYS.create_signature(self.ecdsakey_dict, DATA)
 
     # Verifying the 'signature' of 'DATA'.
@@ -324,12 +318,14 @@ class TestKeys(unittest.TestCase):
         KEYS.verify_signature, self.ed25519key_dict, ed25519_signature, DATA)
     self.ed25519key_dict['scheme'] = valid_scheme
 
+    # Verifying the 'ecdsa_signature' of 'DATA'.
     verified = KEYS.verify_signature(self.ecdsakey_dict, ecdsa_signature, DATA)
     self.assertTrue(verified, "Incorrect signature.")
 
-    # Verifying the 'ecdsa_signature' of 'DATA'.
-    verified = KEYS.verify_signature(self.ecdsakey_dict, ecdsa_signature,
-                                     DATA)
+    # Verifying the 'ecdsa_signature' of 'DATA' with an old-style key dict
+    old_key_dict = self.ecdsakey_dict.copy()
+    old_key_dict['keytype'] = 'ecdsa-sha2-nistp256'
+    verified = KEYS.verify_signature(old_key_dict, ecdsa_signature, DATA)
     self.assertTrue(verified, "Incorrect signature.")
 
     # Test for an invalid ecdsa signature scheme.
