@@ -1,4 +1,3 @@
 # Minimal runtime requirements (see 'install_requires' in setup.py)
 six
-python-dateutil
 subprocess32; python_version < '3'
