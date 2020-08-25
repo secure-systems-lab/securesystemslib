@@ -35,5 +35,4 @@ cryptography
 pynacl
 colorama
 six
-python-dateutil
 subprocess32; python_version < '3'

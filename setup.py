@@ -103,8 +103,7 @@ setup(
     'Source': 'https://github.com/secure-systems-lab/securesystemslib',
     'Issues': 'https://github.com/secure-systems-lab/securesystemslib/issues',
   },
-  install_requires = ['six>=1.11.0', 'subprocess32; python_version < "3"',
-      'python-dateutil>=2.8.0'],
+  install_requires = ['six>=1.11.0', 'subprocess32; python_version < "3"'],
   extras_require = {
       'colors': ['colorama>=0.3.9'],
       'crypto': ['cryptography>=2.6'],
