@@ -1,3 +1,22 @@
+python-securesystemslib (0.16.0-1) unstable; urgency=medium
+
+  * New upstream release that includes i.a.:
+    - New enhanced OpenPGP interface (transferred from in-toto)
+    - New file and directory abstraction
+    - More signature schemes and hashing algorithms
+    - Improved optional/recommended dependency handling
+
+  * Update d/rules to run newly included upstream tests on build
+  * Add d/patches to fix interpreter location issues in tests
+  * Update d/rules
+    - Add required build dependencies for newly included tests
+    - Add recommended dependencies
+    - Change section from devel to utils
+    - Set "Rules-Requires-Root: no" for good practice
+    - Bump Standards-Version
+
+ -- Lukas Puehringer <lukas.puehringer@nyu.edu>  Thu, 13 Aug 2020 14:13:34 +0200
+
 python-securesystemslib (0.11.3-2) unstable; urgency=medium
 
   * No change source upload to allow migration to bullseye.
@@ -7,6 +26,5 @@ python-securesystemslib (0.11.3-2) unstable; urgency=medium
 python-securesystemslib (0.11.3-1) unstable; urgency=low
 
   * Initial Debian release. (Closes: #934137)
-
 
  -- Lukas Puehringer <lukas.puehringer@nyu.edu>  Wed, 07 Aug 2019 05:16:51 -0400

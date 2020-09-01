@@ -1,5 +1,5 @@
 Source: python-securesystemslib
-Section: devel
+Section: utils
 Priority: optional
 Maintainer: NYU Secure Systems Lab <securesystemslib-dev@googlegroups.com>
 Uploaders:
@@ -16,7 +16,11 @@ Build-Depends:
  python3-cryptography,
  python3-colorama,
  python3-mock,
-Standards-Version: 4.4.0
+ python3-dateutil,
+ python3-six,
+ gnupg2,
+Standards-Version: 4.5.0
+Rules-Requires-Root: no
 Homepage: https://ssl.engineering.nyu.edu
 Vcs-Git: https://github.com/secure-systems-lab/securesystemslib.git
 Vcs-Browser: https://github.com/secure-systems-lab/securesystemslib/
@@ -26,6 +30,10 @@ Architecture: all
 Depends:
   ${python3:Depends},
   ${misc:Depends},
+Recommends:
+ gnupg2,
+ python3-cryptography,
+ python3-nacl,
 Description: crypto and schema library for TUF and in-toto
  securesystemslib provides a high-level interface to cryptographic functions.
  It supports public-key and other cryptographic algorithms, such as ECDSA,
