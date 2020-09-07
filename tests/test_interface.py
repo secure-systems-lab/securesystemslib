@@ -35,6 +35,9 @@ import stat
 import sys
 import unittest
 
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.hazmat.backends import default_backend
+
 # Use external backport 'mock' on versions under 3.3
 if sys.version_info >= (3, 3):
   import unittest.mock as mock
@@ -42,631 +45,501 @@ if sys.version_info >= (3, 3):
 else:
   import mock
 
-import securesystemslib.exceptions
-import securesystemslib.formats
-import securesystemslib.exceptions
-import securesystemslib.hash
-import securesystemslib.interface as interface
+from securesystemslib import (
+    KEY_TYPE_RSA,
+    KEY_TYPE_ED25519,
+    KEY_TYPE_ECDSA)
 
-from securesystemslib import KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA
+from securesystemslib.formats import (
+    RSAKEY_SCHEMA,
+    PUBLIC_KEY_SCHEMA,
+    ANY_PUBKEY_DICT_SCHEMA,
+    ED25519KEY_SCHEMA,
+    ECDSAKEY_SCHEMA)
 
-import six
+from securesystemslib.exceptions import Error, FormatError, CryptoError
+
+from securesystemslib.interface import (
+    generate_and_write_rsa_keypair,
+    import_rsa_privatekey_from_file,
+    import_rsa_publickey_from_file,
+    generate_and_write_ed25519_keypair,
+    import_ed25519_publickey_from_file,
+    import_ed25519_privatekey_from_file,
+    generate_and_write_ecdsa_keypair,
+    import_ecdsa_publickey_from_file,
+    import_ecdsa_privatekey_from_file,
+    import_public_keys_from_file)
 
 
 
 class TestInterfaceFunctions(unittest.TestCase):
   @classmethod
   def setUpClass(cls):
+    cls.test_data_dir = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "data")
 
-    # setUpClass() is called before tests in an individual class are executed.
+    cls.path_rsa = os.path.join(
+        cls.test_data_dir, "keystore", "rsa_key")
+    cls.path_ed25519 = os.path.join(
+        cls.test_data_dir, "keystore", "ed25519_key")
+    cls.path_ecdsa = os.path.join(
+        cls.test_data_dir, "keystore", "ecdsa_key")
+    cls.path_no_key = os.path.join(
+        cls.test_data_dir, "keystore", "no_key")
 
-    # Create a temporary directory to store the repository, metadata, and target
-    # files.  'temporary_directory' must be deleted in TearDownClass() so that
-    # temporary files are always removed, even when exceptions occur.
-    cls.temporary_directory = tempfile.mkdtemp(dir=os.getcwd())
-
-
-
-  @classmethod
-  def tearDownClass(cls):
-
-    # tearDownModule() is called after all the tests have run.
-    # http://docs.python.org/2/library/unittest.html#class-and-module-fixtures
-
-    # Remove the temporary repository directory, which should contain all the
-    # metadata, targets, and key files generated for the test cases.
-    shutil.rmtree(cls.temporary_directory)
-
+    cls.orig_cwd = os.getcwd()
 
   def setUp(self):
-    pass
-
+    self.tmp_dir = tempfile.mkdtemp(dir=self.orig_cwd)
+    os.chdir(self.tmp_dir)
 
   def tearDown(self):
-    pass
-
-
-  def test_generate_and_write_rsa_keypair(self):
-
-    # Test normal case.
-    temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
-    test_keypath = os.path.join(temporary_directory, 'rsa_key')
-    test_keypath_unencrypted = os.path.join(temporary_directory,
-        'rsa_key_unencrypted')
-
-    returned_path = interface.generate_and_write_rsa_keypair(test_keypath,
-        password='pw')
-    self.assertTrue(os.path.exists(test_keypath))
-    self.assertTrue(os.path.exists(test_keypath + '.pub'))
-    self.assertEqual(returned_path, test_keypath)
-
-    # If an empty string is given for 'password', the private key file
-    # is written to disk unencrypted.
-    interface.generate_and_write_rsa_keypair(test_keypath_unencrypted,
-        password='')
-    self.assertTrue(os.path.exists(test_keypath_unencrypted))
-    self.assertTrue(os.path.exists(test_keypath_unencrypted + '.pub'))
-
-    # Ensure the generated key files are importable.
-    scheme = 'rsassa-pss-sha256'
-    imported_pubkey = \
-      interface.import_rsa_publickey_from_file(test_keypath + '.pub')
-    self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_pubkey))
-
-    imported_privkey = interface.import_rsa_privatekey_from_file(test_keypath,
-      'pw')
-    self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_privkey))
-
-    # Try to import the unencrypted key file, by not passing a password
-    imported_privkey = interface.import_rsa_privatekey_from_file(test_keypath_unencrypted)
-    self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_privkey))
-
-    # Try to import the unencrypted key file, by entering an empty password
-    with mock.patch('securesystemslib.interface.get_password',
-        return_value=''):
-      imported_privkey = \
-            interface.import_rsa_privatekey_from_file(test_keypath_unencrypted,
-                                                      prompt=True)
-      self.assertTrue(
-          securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_privkey))
-
-    # Fail importing unencrypted key passing a password
-    with self.assertRaises(securesystemslib.exceptions.CryptoError):
-      interface.import_rsa_privatekey_from_file(test_keypath_unencrypted, 'pw')
-
-    # Fail importing encrypted key passing no password
-    with self.assertRaises(securesystemslib.exceptions.CryptoError):
-      interface.import_rsa_privatekey_from_file(test_keypath)
-
-    # Custom 'bits' argument.
-    os.remove(test_keypath)
-    os.remove(test_keypath + '.pub')
-    interface.generate_and_write_rsa_keypair(test_keypath, bits=2048,
-        password='pw')
-    self.assertTrue(os.path.exists(test_keypath))
-    self.assertTrue(os.path.exists(test_keypath + '.pub'))
-
-    # Test for a default filepath.  If 'filepath' is not given, the key's
-    # KEYID is used as the filename.  The key is saved to the current working
-    # directory.
-    default_keypath = interface.generate_and_write_rsa_keypair(password='pw')
-    self.assertTrue(os.path.exists(default_keypath))
-    self.assertTrue(os.path.exists(default_keypath + '.pub'))
-
-    written_key = interface.import_rsa_publickey_from_file(default_keypath + '.pub')
-    self.assertEqual(written_key['keyid'], os.path.basename(default_keypath))
-
-    os.remove(default_keypath)
-    os.remove(default_keypath + '.pub')
-
-    # Test improperly formatted arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-      interface.generate_and_write_rsa_keypair, 3, bits=2048, password='pw')
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-      interface.generate_and_write_rsa_keypair, test_keypath, bits='bad',
-      password='pw')
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-      interface.generate_and_write_rsa_keypair, test_keypath, bits=2048,
-      password=3)
-
-
-    # Test invalid 'bits' argument.
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-      interface.generate_and_write_rsa_keypair, test_keypath, bits=1024,
-      password='pw')
-
-
-
-  def test_import_rsa_privatekey_from_file(self):
-    # Test normal case.
-    temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
-
-    # Load one of the pre-generated key files from
-    # 'securesystemslib/tests/repository_data'.  'password' unlocks the
-    # pre-generated key files.
-    key_filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-        'data', 'keystore', 'rsa_key')
-    self.assertTrue(os.path.exists(key_filepath))
-
-    imported_rsa_key = interface.import_rsa_privatekey_from_file(
-        key_filepath, 'password')
-    self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_rsa_key))
-
-    # Test load encrypted key prompt for password
-    with mock.patch('securesystemslib.interface.get_password',
-        return_value='password'):
-      imported_rsa_key = interface.import_rsa_privatekey_from_file(
-          key_filepath, prompt=True)
-      self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(
-          imported_rsa_key))
-
-    # Test improperly formatted 'filepath' argument.
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        interface.import_rsa_privatekey_from_file, 3, 'pw')
-
-    # Test improperly formatted 'password' argument.
-    with self.assertRaises(securesystemslib.exceptions.FormatError):
-      interface.import_rsa_privatekey_from_file(key_filepath, 123)
-
-    # Test unallowed empty 'password'
-    with self.assertRaises(ValueError):
-      interface.import_rsa_privatekey_from_file(key_filepath, '')
-
-    # Test unallowed passing 'prompt' and 'password'
-    with self.assertRaises(ValueError):
-      interface.import_rsa_privatekey_from_file(key_filepath,
-          password='pw', prompt=True)
-
-    # Test invalid argument.
-    # Non-existent key file.
-    nonexistent_keypath = os.path.join(temporary_directory,
-        'nonexistent_keypath')
-    self.assertRaises(securesystemslib.exceptions.StorageError,
-        interface.import_rsa_privatekey_from_file, nonexistent_keypath, 'pw')
-
-    # Invalid key file argument.
-    invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
-    with open(invalid_keyfile, 'wb') as file_object:
-      file_object.write(b'bad keyfile')
-    self.assertRaises(securesystemslib.exceptions.CryptoError,
-        interface.import_rsa_privatekey_from_file, invalid_keyfile, 'pw')
-
-
-
-  def test_import_rsa_publickey_from_file(self):
-    # Test normal case.
-    temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
-
-    # Load one of the pre-generated key files from 'securesystemslib/tests/data'.
-    key_filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-        'data', 'keystore', 'rsa_key.pub')
-    self.assertTrue(os.path.exists(key_filepath))
-
-    imported_rsa_key = interface.import_rsa_publickey_from_file(key_filepath)
-    self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(imported_rsa_key))
-
-
-    # Test improperly formatted argument.
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        interface.import_rsa_privatekey_from_file, 3)
-
-
-    # Test invalid argument.
-    # Non-existent key file.
-    nonexistent_keypath = os.path.join(temporary_directory,
-        'nonexistent_keypath')
-    self.assertRaises(securesystemslib.exceptions.StorageError,
-        interface.import_rsa_publickey_from_file, nonexistent_keypath)
-
-    # Invalid key file argument.
-    invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
-    with open(invalid_keyfile, 'wb') as file_object:
-      file_object.write(b'bad keyfile')
-    self.assertRaises(securesystemslib.exceptions.Error,
-        interface.import_rsa_publickey_from_file, invalid_keyfile)
-
-
-
-  def test_generate_and_write_ed25519_keypair(self):
-
-    # Test normal case.
-    temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
-    test_keypath = os.path.join(temporary_directory, 'ed25519_key')
-    test_keypath_unencrypted = os.path.join(temporary_directory,
-                                            'ed25519_key_unencrypted')
-
-    returned_path = interface.generate_and_write_ed25519_keypair(
-        test_keypath, password='pw')
-    self.assertTrue(os.path.exists(test_keypath))
-    self.assertTrue(os.path.exists(test_keypath + '.pub'))
-    self.assertEqual(returned_path, test_keypath)
-
-    # If an empty string is given for 'password', the private key file
-    # is written to disk unencrypted.
-    interface.generate_and_write_ed25519_keypair(test_keypath_unencrypted,
-                                                 password='')
-    self.assertTrue(os.path.exists(test_keypath_unencrypted))
-    self.assertTrue(os.path.exists(test_keypath_unencrypted + '.pub'))
-
-    # Ensure the generated key files are importable.
-    imported_pubkey = \
-      interface.import_ed25519_publickey_from_file(test_keypath + '.pub')
-    self.assertTrue(securesystemslib.formats.ED25519KEY_SCHEMA\
-                    .matches(imported_pubkey))
-
-    imported_privkey = \
-      interface.import_ed25519_privatekey_from_file(test_keypath, 'pw')
-    self.assertTrue(securesystemslib.formats.ED25519KEY_SCHEMA\
-                    .matches(imported_privkey))
-
-    # Fail importing encrypted key passing password and prompt
-    with self.assertRaises(ValueError):
-      interface.import_ed25519_privatekey_from_file(test_keypath,
-                                                    password='pw',
-                                                    prompt=True)
-
-    # Fail importing encrypted key passing an empty string for passwd 
-    with self.assertRaises(ValueError):
-      interface.import_ed25519_privatekey_from_file(test_keypath,
-                                                    password='')
-
-    # Try to import the unencrypted key file, by not passing a password
-    imported_privkey = \
-        interface.import_ed25519_privatekey_from_file(test_keypath_unencrypted)
-    self.assertTrue(securesystemslib.formats.ED25519KEY_SCHEMA.\
-                    matches(imported_privkey))
-
-    # Try to import the unencrypted key file, by entering an empty password
-    with mock.patch('securesystemslib.interface.get_password',
-        return_value=''):
-      imported_privkey = \
-        interface.import_ed25519_privatekey_from_file(test_keypath_unencrypted,
-                                                      prompt=True)
-      self.assertTrue(
-          securesystemslib.formats.ED25519KEY_SCHEMA.matches(imported_privkey))
-
-    # Fail importing unencrypted key passing a password
-    with self.assertRaises(securesystemslib.exceptions.CryptoError):
-      interface.import_ed25519_privatekey_from_file(test_keypath_unencrypted,
-                                                    'pw')
-
-    # Fail importing encrypted key passing no password
-    with self.assertRaises(securesystemslib.exceptions.CryptoError):
-      interface.import_ed25519_privatekey_from_file(test_keypath)
-
-    # Test for a default filepath.  If 'filepath' is not given, the key's
-    # KEYID is used as the filename.  The key is saved to the current working
-    # directory.
-    default_keypath = interface.generate_and_write_ed25519_keypair(password='pw')
-    self.assertTrue(os.path.exists(default_keypath))
-    self.assertTrue(os.path.exists(default_keypath + '.pub'))
-
-    written_key = interface.import_ed25519_publickey_from_file(default_keypath + '.pub')
-    self.assertEqual(written_key['keyid'], os.path.basename(default_keypath))
-
-    os.remove(default_keypath)
-    os.remove(default_keypath + '.pub')
-
-
-    # Test improperly formatted arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        interface.generate_and_write_ed25519_keypair, 3, password='pw')
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        interface.generate_and_write_rsa_keypair, test_keypath, password=3)
-
-
-
-  def test_import_ed25519_publickey_from_file(self):
-    # Test normal case.
-    # Generate ed25519 keys that can be imported.
-    temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
-    ed25519_keypath = os.path.join(temporary_directory, 'ed25519_key')
-    interface.generate_and_write_ed25519_keypair(ed25519_keypath, password='pw')
-
-    imported_ed25519_key = \
-      interface.import_ed25519_publickey_from_file(ed25519_keypath + '.pub')
-    self.assertTrue(securesystemslib.formats.ED25519KEY_SCHEMA.matches(imported_ed25519_key))
-
-
-    # Test improperly formatted argument.
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        interface.import_ed25519_publickey_from_file, 3)
-
-
-    # Test invalid argument.
-    # Non-existent key file.
-    nonexistent_keypath = os.path.join(temporary_directory,
-        'nonexistent_keypath')
-    self.assertRaises(securesystemslib.exceptions.StorageError,
-        interface.import_ed25519_publickey_from_file, nonexistent_keypath)
-
-    # Invalid key file argument.
-    invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
-    with open(invalid_keyfile, 'wb') as file_object:
-      file_object.write(b'bad keyfile')
-
-    self.assertRaises(securesystemslib.exceptions.Error,
-        interface.import_ed25519_publickey_from_file, invalid_keyfile)
-
-    # Invalid public key imported (contains unexpected keytype.)
-    keytype = imported_ed25519_key['keytype']
-    keyval = imported_ed25519_key['keyval']
-    scheme = imported_ed25519_key['scheme']
-
-    ed25519key_metadata_format = \
-      securesystemslib.keys.format_keyval_to_metadata(keytype, scheme,
-      keyval, private=False)
-
-    ed25519key_metadata_format['keytype'] = 'invalid_keytype'
-    with open(ed25519_keypath + '.pub', 'wb') as file_object:
-      file_object.write(json.dumps(ed25519key_metadata_format).encode('utf-8'))
-
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        interface.import_ed25519_publickey_from_file,
-        ed25519_keypath + '.pub')
-
-
-
-  def test_import_ed25519_privatekey_from_file(self):
-    # Test normal case.
-    # Generate ed25519 keys that can be imported.
-    scheme = 'ed25519'
-    temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
-    ed25519_keypath = os.path.join(temporary_directory, 'ed25519_key')
-    interface.generate_and_write_ed25519_keypair(ed25519_keypath, password='pw')
-
-    imported_ed25519_key = \
-      interface.import_ed25519_privatekey_from_file(ed25519_keypath, 'pw')
-    self.assertTrue(securesystemslib.formats.ED25519KEY_SCHEMA.matches(imported_ed25519_key))
-
-
-    # Test improperly formatted argument.
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        interface.import_ed25519_privatekey_from_file, 3, 'pw')
-
-
-    # Test invalid argument.
-    # Non-existent key file.
-    nonexistent_keypath = os.path.join(temporary_directory,
-        'nonexistent_keypath')
-    self.assertRaises(securesystemslib.exceptions.StorageError,
-        interface.import_ed25519_privatekey_from_file, nonexistent_keypath,
-        'pw')
-
-    # Invalid key file argument.
-    invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
-    with open(invalid_keyfile, 'wb') as file_object:
-      file_object.write(b'bad keyfile')
-
-    self.assertRaises(securesystemslib.exceptions.Error,
-      interface.import_ed25519_privatekey_from_file, invalid_keyfile, 'pw')
-
-    # Invalid private key imported (contains unexpected keytype.)
-    imported_ed25519_key['keytype'] = 'invalid_keytype'
-
-    # Use 'rsa_keys.py' to bypass the key format validation performed
-    # by 'keys.py'.
-    salt, iterations, derived_key = \
-      securesystemslib.rsa_keys._generate_derived_key('pw')
-
-    # Store the derived key info in a dictionary, the object expected
-    # by the non-public _encrypt() routine.
-    derived_key_information = {'salt': salt, 'iterations': iterations,
-        'derived_key': derived_key}
-
-    # Convert the key object to json string format and encrypt it with the
-    # derived key.
-    encrypted_key = \
-      securesystemslib.rsa_keys._encrypt(json.dumps(imported_ed25519_key),
-          derived_key_information)
-
-    with open(ed25519_keypath, 'wb') as file_object:
-      file_object.write(encrypted_key.encode('utf-8'))
-
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        interface.import_ed25519_privatekey_from_file, ed25519_keypath, 'pw')
-
-
-
-  def test_generate_and_write_ecdsa_keypair(self):
-
-    # Test normal case.
-    temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
-    test_keypath = os.path.join(temporary_directory, 'ecdsa_key')
-
-    returned_path = interface.generate_and_write_ecdsa_keypair(test_keypath, password='pw')
-    self.assertTrue(os.path.exists(test_keypath))
-    self.assertTrue(os.path.exists(test_keypath + '.pub'))
-    self.assertEqual(returned_path, test_keypath)
-
-    # Ensure the generated key files are importable.
-    imported_pubkey = \
-      interface.import_ecdsa_publickey_from_file(test_keypath + '.pub')
-    self.assertTrue(securesystemslib.formats.ECDSAKEY_SCHEMA.matches(imported_pubkey))
-
-    imported_privkey = \
-      interface.import_ecdsa_privatekey_from_file(test_keypath, 'pw')
-    self.assertTrue(securesystemslib.formats.ECDSAKEY_SCHEMA.matches(imported_privkey))
-
-    # Test for a default filepath.  If 'filepath' is not given, the key's
-    # KEYID is used as the filename.  The key is saved to the current working
-    # directory.
-    default_keypath = interface.generate_and_write_ecdsa_keypair(password='pw')
-    self.assertTrue(os.path.exists(default_keypath))
-    self.assertTrue(os.path.exists(default_keypath + '.pub'))
-
-    written_key = interface.import_ecdsa_publickey_from_file(default_keypath + '.pub')
-    self.assertEqual(written_key['keyid'], os.path.basename(default_keypath))
-
-    os.remove(default_keypath)
-    os.remove(default_keypath + '.pub')
-
-    # Test improperly formatted arguments.
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        interface.generate_and_write_ecdsa_keypair, 3, password='pw')
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        interface.generate_and_write_ecdsa_keypair, test_keypath, password=3)
-
-
-
-  def test_import_ecdsa_publickey_from_file(self):
-    # Test normal case.
-    # Generate ecdsa keys that can be imported.
-    temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
-    ecdsa_keypath = os.path.join(temporary_directory, 'ecdsa_key')
-    interface.generate_and_write_ecdsa_keypair(ecdsa_keypath, password='pw')
-
-    imported_ecdsa_key = \
-      interface.import_ecdsa_publickey_from_file(ecdsa_keypath + '.pub')
-    self.assertTrue(securesystemslib.formats.ECDSAKEY_SCHEMA.matches(imported_ecdsa_key))
-
-
-    # Test improperly formatted argument.
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        interface.import_ecdsa_publickey_from_file, 3)
-
-
-    # Test invalid argument.
-    # Non-existent key file.
-    nonexistent_keypath = os.path.join(temporary_directory,
-        'nonexistent_keypath')
-    self.assertRaises(securesystemslib.exceptions.StorageError,
-        interface.import_ecdsa_publickey_from_file, nonexistent_keypath)
-
-    # Invalid key file argument.
-    invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
-    with open(invalid_keyfile, 'wb') as file_object:
-      file_object.write(b'bad keyfile')
-
-    self.assertRaises(securesystemslib.exceptions.Error,
-        interface.import_ecdsa_publickey_from_file, invalid_keyfile)
-
-    # Invalid public key imported (contains unexpected keytype.)
-    keytype = imported_ecdsa_key['keytype']
-    keyval = imported_ecdsa_key['keyval']
-    scheme = imported_ecdsa_key['scheme']
-
-    ecdsakey_metadata_format = \
-      securesystemslib.keys.format_keyval_to_metadata(keytype,
-          scheme, keyval, private=False)
-
-    ecdsakey_metadata_format['keytype'] = 'invalid_keytype'
-    with open(ecdsa_keypath + '.pub', 'wb') as file_object:
-      file_object.write(json.dumps(ecdsakey_metadata_format).encode('utf-8'))
-
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        interface.import_ecdsa_publickey_from_file,
-        ecdsa_keypath + '.pub')
-
-
-
-  def test_import_ecdsa_privatekey_from_file(self):
-    # Test normal case.
-    # Generate ecdsa keys that can be imported.
-    temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
-    ecdsa_keypath = os.path.join(temporary_directory, 'ecdsa_key')
-    interface.generate_and_write_ecdsa_keypair(ecdsa_keypath, password='pw')
-
-    imported_ecdsa_key = \
-      interface.import_ecdsa_privatekey_from_file(ecdsa_keypath, 'pw')
-    self.assertTrue(securesystemslib.formats.ECDSAKEY_SCHEMA.matches(imported_ecdsa_key))
-
-
-    # Test improperly formatted argument.
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        interface.import_ecdsa_privatekey_from_file, 3, 'pw')
-
-
-    # Test invalid argument.
-    # Non-existent key file.
-    nonexistent_keypath = os.path.join(temporary_directory, 'nonexistent_keypath')
-    self.assertRaises(securesystemslib.exceptions.StorageError,
-        interface.import_ecdsa_privatekey_from_file, nonexistent_keypath, 'pw')
-
-    # Invalid key file argument.
-    invalid_keyfile = os.path.join(temporary_directory, 'invalid_keyfile')
-    with open(invalid_keyfile, 'wb') as file_object:
-      file_object.write(b'bad keyfile')
-
-    self.assertRaises(securesystemslib.exceptions.Error,
-      interface.import_ecdsa_privatekey_from_file, invalid_keyfile, 'pw')
-
-    # Invalid private key imported (contains unexpected keytype.)
-    imported_ecdsa_key['keytype'] = 'invalid_keytype'
-
-    # Use 'rsa_keys.py' to bypass the key format validation performed
-    # by 'keys.py'.
-    salt, iterations, derived_key = \
-      securesystemslib.rsa_keys._generate_derived_key('pw')
-
-    # Store the derived key info in a dictionary, the object expected
-    # by the non-public _encrypt() routine.
-    derived_key_information = {'salt': salt, 'iterations': iterations,
-        'derived_key': derived_key}
-
-    # Convert the key object to json string format and encrypt it with the
-    # derived key.
-    encrypted_key = \
-      securesystemslib.rsa_keys._encrypt(json.dumps(imported_ecdsa_key),
-          derived_key_information)
-
-    with open(ecdsa_keypath, 'wb') as file_object:
-      file_object.write(encrypted_key.encode('utf-8'))
-
-    self.assertRaises(securesystemslib.exceptions.FormatError,
-        interface.import_ecdsa_privatekey_from_file, ecdsa_keypath, 'pw')
+    os.chdir(self.orig_cwd)
+    shutil.rmtree(self.tmp_dir)
+
+
+  def test_rsa(self):
+    """Test RSA key generation and import interface functions. """
+
+    # TEST: Generate default keys and import
+    # Assert location and format
+    fn_default = "default"
+    fn_default_ret = generate_and_write_rsa_keypair(
+        filepath=fn_default, password="")
+
+    pub = import_rsa_publickey_from_file(fn_default + ".pub")
+    priv = import_rsa_privatekey_from_file(fn_default)
+
+    self.assertEqual(fn_default, fn_default_ret)
+    self.assertTrue(RSAKEY_SCHEMA.matches(pub))
+    self.assertTrue(PUBLIC_KEY_SCHEMA.matches(pub))
+    self.assertTrue(RSAKEY_SCHEMA.matches(priv))
+    # NOTE: There is no private key schema, at least check it has a value
+    self.assertTrue(priv["keyval"]["private"])
+
+
+    # TEST: Generate unencrypted keys with empty prompt
+    # Assert importable without password
+    fn_empty_prompt = "empty_prompt"
+    with mock.patch("securesystemslib.interface.get_password", return_value=""):
+      generate_and_write_rsa_keypair(filepath=fn_empty_prompt)
+    import_rsa_privatekey_from_file(fn_empty_prompt)
+
+
+    # TEST: Generate keys with auto-filename, i.e. keyid
+    # Assert filename is keyid
+    fn_keyid = generate_and_write_rsa_keypair(password="")
+    pub = import_rsa_publickey_from_file(fn_keyid + ".pub")
+    priv = import_rsa_privatekey_from_file(fn_keyid)
+    self.assertTrue(
+        os.path.basename(fn_keyid) == pub["keyid"] == priv["keyid"])
+
+
+    # TEST: Generate keys with custom bits
+    # Assert length
+    bits = 4096
+    fn_bits = "bits"
+    generate_and_write_rsa_keypair(filepath=fn_bits, password="", bits=bits)
+
+    priv = import_rsa_privatekey_from_file(fn_bits)
+    # NOTE: Parse PEM with pyca/cryptography to get the key size property
+    obj_bits = load_pem_private_key(
+        priv["keyval"]["private"].encode("utf-8"),
+        password=None,
+        backend=default_backend())
+
+    self.assertEqual(obj_bits.key_size, bits)
+
+
+    # TEST: Generate keys with encrypted private key using passed password
+    # Assert importable with password
+    pw = "pw"
+    fn_encrypted = "encrypted"
+    generate_and_write_rsa_keypair(filepath=fn_encrypted, password=pw)
+    import_rsa_privatekey_from_file(fn_encrypted, password=pw)
+
+
+    # TEST: Generate keys with encrypted private key using prompted password
+    # Assert load with prompted password
+    fn_prompt = "prompt"
+    with mock.patch("securesystemslib.interface.get_password", return_value=pw):
+      generate_and_write_rsa_keypair(filepath=fn_prompt)
+      import_rsa_privatekey_from_file(fn_prompt, prompt=True)
+
+
+    # TEST: Import existing keys with encrypted private key (test regression)
+    # Assert format
+    pub = import_rsa_publickey_from_file(self.path_rsa + ".pub")
+    priv = import_rsa_privatekey_from_file(self.path_rsa, "password")
+
+    self.assertTrue(RSAKEY_SCHEMA.matches(pub))
+    self.assertTrue(PUBLIC_KEY_SCHEMA.matches(pub))
+    self.assertTrue(RSAKEY_SCHEMA.matches(priv))
+    # NOTE: There is no private key schema, at least check it has a value
+    self.assertTrue(priv["keyval"]["private"])
+
+
+    # TEST: Import errors
+
+    # Error public key import
+    err_msg = "Invalid public pem"
+    with self.assertRaises(Error) as ctx:
+      import_rsa_publickey_from_file(fn_default)
+
+    self.assertTrue(err_msg in str(ctx.exception),
+        "expected: '{}' got: '{}'".format(err_msg, ctx.exception))
+
+    # Error on private key import...
+    for idx, (args, kwargs, err, err_msg) in enumerate([
+        # Error on not a private key
+        ([fn_default + ".pub"], {}, CryptoError,
+          "Could not deserialize key data"),
+        # Error on not encrypted
+        ([fn_default], {"password": pw}, CryptoError,
+          "Password was given but private key is not encrypted"),
+        # Error on encrypted but no pw
+        ([fn_encrypted], {}, CryptoError,
+          "Password was not given but private key is encrypted"),
+        # Error on encrypted but empty pw passed
+        ([fn_encrypted], {"password": ""}, ValueError,
+          "Password must be 1 or more character"),
+        # Error on encrypted but bad pw passed
+        ([fn_encrypted], {"password": "bad pw"}, CryptoError,
+          "Bad decrypt. Incorrect password?"),
+        # Error on pw and prompt
+        ([fn_default], {"password": pw, "prompt": True}, ValueError,
+          "Passing 'password' and 'prompt' True is not allowed.")]):
+
+      with self.assertRaises(err, msg="(row {})".format(idx)) as ctx:
+        import_rsa_privatekey_from_file(*args, **kwargs)
+
+      self.assertTrue(err_msg in str(ctx.exception),
+          "expected: '{}' got: '{}' (row {})".format(
+          err_msg, ctx.exception, idx))
+
+    # Error on encrypted but bad pw prompted
+    err_msg = "Password was not given but private key is encrypted"
+    with self.assertRaises(CryptoError) as ctx, mock.patch(
+        "securesystemslib.interface.get_password", return_value="bad_pw"):
+      import_rsa_privatekey_from_file(fn_encrypted)
+
+    self.assertTrue(err_msg in str(ctx.exception),
+        "expected: '{}' got: '{}'".format(err_msg, ctx.exception))
+
+    # Error on bad argument format
+    for idx, (args, kwargs) in enumerate([
+          ([123456], {}), # bad path
+          ([fn_default], {"scheme": 123456}), # bad scheme
+          ([fn_default], {"scheme": "bad scheme"}) # bad scheme
+        ]):
+      with self.assertRaises(FormatError, msg="(row {})".format(idx)):
+        import_rsa_publickey_from_file(*args, **kwargs)
+      with self.assertRaises(FormatError, msg="(row {})".format(idx)):
+        import_rsa_privatekey_from_file(*args, **kwargs)
+
+    # bad password
+    with self.assertRaises(FormatError):
+      import_rsa_privatekey_from_file(fn_default, password=123456)
+
+
+
+  def test_ed25519(self):
+    """Test ed25519 key generation and import interface functions. """
+
+    # TEST: Generate default keys and import
+    # Assert location and format
+    fn_default = "default"
+    fn_default_ret = generate_and_write_ed25519_keypair(
+        filepath=fn_default, password="")
+
+    pub = import_ed25519_publickey_from_file(fn_default + ".pub")
+    priv = import_ed25519_privatekey_from_file(fn_default)
+
+    self.assertEqual(fn_default, fn_default_ret)
+    self.assertTrue(ED25519KEY_SCHEMA.matches(pub))
+    self.assertTrue(PUBLIC_KEY_SCHEMA.matches(pub))
+    self.assertTrue(ED25519KEY_SCHEMA.matches(priv))
+    # NOTE: There is no private key schema, at least check it has a value
+    self.assertTrue(priv["keyval"]["private"])
+
+
+    # TEST: Generate unencrypted keys with empty prompt
+    # Assert importable with empty prompt password and without password
+    fn_empty_prompt = "empty_prompt"
+    with mock.patch("securesystemslib.interface.get_password", return_value=""):
+      generate_and_write_ed25519_keypair(filepath=fn_empty_prompt)
+      import_ed25519_privatekey_from_file(fn_empty_prompt, prompt=True)
+    import_ed25519_privatekey_from_file(fn_empty_prompt)
+
+
+    # TEST: Generate keys with auto-filename, i.e. keyid
+    # Assert filename is keyid
+    fn_keyid = generate_and_write_ed25519_keypair(password="")
+    pub = import_ed25519_publickey_from_file(fn_keyid + ".pub")
+    priv = import_ed25519_privatekey_from_file(fn_keyid)
+    self.assertTrue(
+        os.path.basename(fn_keyid) == pub["keyid"] == priv["keyid"])
+
+
+    # TEST: Generate keys with encrypted private key using passed password
+    # Assert importable with password
+    pw = "pw"
+    fn_encrypted = "encrypted"
+    generate_and_write_ed25519_keypair(filepath=fn_encrypted, password=pw)
+    import_ed25519_privatekey_from_file(fn_encrypted, password=pw)
+
+
+    # TEST: Generate keys with encrypted private key using prompted password
+    # Assert load with prompted password
+    fn_prompt = "prompt"
+    with mock.patch("securesystemslib.interface.get_password", return_value=pw):
+      generate_and_write_ed25519_keypair(filepath=fn_prompt)
+      import_ed25519_privatekey_from_file(fn_prompt, prompt=True)
+
+
+    # TEST: Import existing keys with encrypted private key (test regression)
+    # Assert format
+    pub = import_ed25519_publickey_from_file(self.path_ed25519 + ".pub")
+    priv = import_ed25519_privatekey_from_file(self.path_ed25519, "password")
+
+    self.assertTrue(PUBLIC_KEY_SCHEMA.matches(pub))
+    self.assertTrue(ED25519KEY_SCHEMA.matches(priv))
+    # NOTE: There is no private key schema, at least check it has a value
+    self.assertTrue(priv["keyval"]["private"])
+
+
+    # TEST: Unexpected behavior
+    # FIXME: Should 'import_ed25519_publickey_from_file' be able to import a
+    # a non-encrypted ed25519 private key? I think it should not, but it is:
+    priv = import_ed25519_publickey_from_file(fn_default)
+    self.assertTrue(ED25519KEY_SCHEMA.matches(priv))
+    self.assertTrue(priv["keyval"]["private"])
+
+    # FIXME: Should 'import_ed25519_privatekey_from_file' be able to import a
+    # an ed25519 public key? I think it should not, but it is:
+    pub = import_ed25519_privatekey_from_file(fn_default + ".pub")
+    self.assertTrue(PUBLIC_KEY_SCHEMA.matches(pub))
+
+
+    # TEST: Import errors
+    # Error on public key import...
+    for idx, (fn, err_msg) in enumerate([
+        # Error on invalid json (custom key format)
+        (fn_encrypted, "Cannot deserialize to a Python object"),
+        # Error on invalid custom key format
+        (self.path_no_key, "Missing key" ),
+        # Error on invalid key type
+        (self.path_ecdsa + ".pub", "Invalid key type loaded")]):
+      with self.assertRaises(Error, msg="(row {})".format(idx)) as ctx:
+        import_ed25519_publickey_from_file(fn)
+
+      self.assertTrue(err_msg in str(ctx.exception),
+          "expected: '{}' got: '{}' (row {})".format(
+          err_msg, ctx.exception, idx))
+
+    # Error on private key import...
+    for idx, (args, kwargs, err, err_msg) in enumerate([
+        # Error on not an ed25519 private key
+        ([self.path_ecdsa], {}, CryptoError,
+          "Malformed Ed25519 key JSON, possibly due to encryption, "
+          "but no password provided?"),
+        # Error on not encrypted
+        ([fn_default], {"password": pw}, CryptoError,
+          "Invalid encrypted file."),
+        # Error on encrypted but no pw
+        ([fn_encrypted], {}, CryptoError,
+          "Malformed Ed25519 key JSON, possibly due to encryption, "
+          "but no password provided?"),
+        # Error on encrypted but empty pw passed
+        ([fn_encrypted], {"password": ""}, ValueError,
+          "Password must be 1 or more character"),
+        # Error on encrypted but bad pw passed
+        ([fn_encrypted], {"password": "bad pw"}, CryptoError,
+          "Decryption failed."),
+        # Error on pw and prompt
+        ([fn_default], {"password": pw, "prompt": True}, ValueError,
+          "Passing 'password' and 'prompt' True is not allowed.")]):
+
+      with self.assertRaises(err, msg="(row {})".format(idx)) as ctx:
+        import_ed25519_privatekey_from_file(*args, **kwargs)
+
+      self.assertTrue(err_msg in str(ctx.exception),
+          "expected: '{}' got: '{}' (row {})".format(
+          err_msg, ctx.exception, idx))
+
+
+    # Error on encrypted but bad pw prompted
+    err_msg = ("Malformed Ed25519 key JSON, possibly due to encryption, "
+        "but no password provided?")
+    with self.assertRaises(CryptoError) as ctx, mock.patch(
+        "securesystemslib.interface.get_password", return_value="bad_pw"):
+      import_ed25519_privatekey_from_file(fn_encrypted)
+
+    self.assertTrue(err_msg in str(ctx.exception),
+        "expected: '{}' got: '{}'".format(err_msg, ctx.exception))
+
+
+    # Error on bad path format
+    with self.assertRaises(FormatError):
+      import_ed25519_publickey_from_file(123456)
+    with self.assertRaises(FormatError):
+      import_ed25519_privatekey_from_file(123456)
+
+    # Error on bad password format
+    with self.assertRaises(FormatError):
+      import_ed25519_privatekey_from_file(fn_default, password=123456)
+
+
+
+  def test_ecdsa(self):
+    """Test ecdsa key generation and import interface functions. """
+    # NOTE: Unlike rsa and ed25519, the ecdsa (key creation and private key
+    # import) interface only supports encrypted keys, even if the passed or
+    # prompted password is an empty string.
+
+    # TEST: Generate pw encrypted keys and import
+    # Assert location and format
+    pw = "pw"
+    fn_default = "default"
+    fn_default_ret = generate_and_write_ecdsa_keypair(
+        filepath=fn_default, password=pw)
+
+    pub = import_ecdsa_publickey_from_file(fn_default + ".pub")
+    priv = import_ecdsa_privatekey_from_file(fn_default, password=pw)
+
+    self.assertEqual(fn_default, fn_default_ret)
+    self.assertTrue(ECDSAKEY_SCHEMA.matches(pub))
+    self.assertTrue(PUBLIC_KEY_SCHEMA.matches(pub))
+    self.assertTrue(ECDSAKEY_SCHEMA.matches(priv))
+    # NOTE: There is no private key schema, at least check it has a value
+    self.assertTrue(priv["keyval"]["private"])
+
+
+    # TEST: Generate keys with auto-filename, i.e. keyid
+    # Assert filename is keyid
+    fn_keyid = generate_and_write_ecdsa_keypair(password=pw)
+    pub = import_ecdsa_publickey_from_file(fn_keyid + ".pub")
+    priv = import_ecdsa_privatekey_from_file(
+        fn_keyid, password=pw)
+    self.assertTrue(
+        os.path.basename(fn_keyid) == pub["keyid"] == priv["keyid"])
+
+
+    # TEST: Generate keys with encrypted private key using prompted password
+    # Assert load with prompted password
+    fn_prompt = "prompt"
+    with mock.patch("securesystemslib.interface.get_password", return_value=pw):
+      generate_and_write_ecdsa_keypair(filepath=fn_prompt)
+      import_ecdsa_privatekey_from_file(fn_prompt)
+
+
+    # TEST: Import existing keys with encrypted private key (test regression)
+    # Assert format
+    pub = import_ecdsa_publickey_from_file(self.path_ecdsa + ".pub")
+    priv = import_ecdsa_privatekey_from_file(self.path_ecdsa, "password")
+
+    self.assertTrue(ECDSAKEY_SCHEMA.matches(pub))
+    self.assertTrue(PUBLIC_KEY_SCHEMA.matches(pub))
+    self.assertTrue(ECDSAKEY_SCHEMA.matches(priv))
+    # NOTE: There is no private key schema, at least check it has a value
+    self.assertTrue(priv["keyval"]["private"])
+
+
+    # FIXME: Should 'import_ecdsa_publickey_from_file' be able to import a
+    # an ed25519 public key? I think it should not, but it is:
+    import_ecdsa_publickey_from_file(self.path_ed25519 + ".pub")
+    self.assertTrue(ECDSAKEY_SCHEMA.matches(pub))
+
+
+    # TEST: Import errors
+
+    # Error on public key import...
+    for idx, (fn, err_msg) in enumerate([
+        # Error on invalid custom json key format
+        (fn_default, "Cannot deserialize to a Python object"),
+        # Error on invalid custom key format
+        (self.path_no_key, "Missing key")]):
+      with self.assertRaises(Error, msg="(row {})".format(idx)) as ctx:
+        import_ecdsa_publickey_from_file(fn)
+
+      self.assertTrue(err_msg in str(ctx.exception),
+          "expected: '{}' got: '{}' (row {})".format(
+          err_msg, ctx.exception, idx))
+
+
+    # Error on private key import...
+    for idx, (args, kwargs, err, err_msg) in enumerate([
+        # Error on not an ecdsa private key
+        ([self.path_ed25519], {"password": "password"}, FormatError,
+          "Invalid key type loaded"),
+        # Error on encrypted but empty pw passed
+        ([fn_default], {"password": ""}, CryptoError,
+          "Decryption failed."),
+        # Error on encrypted but wrong pw passed
+        ([fn_default], {"password": "bad pw"}, CryptoError,
+          "Decryption failed.")]):
+
+      with self.assertRaises(err, msg="(row {})".format(idx)) as ctx:
+        import_ecdsa_privatekey_from_file(*args, **kwargs)
+
+      self.assertTrue(err_msg in str(ctx.exception),
+          "expected: '{}' got: '{}' (row {})".format(
+          err_msg, ctx.exception, idx))
+
+    # Error on bad path format
+    with self.assertRaises(FormatError):
+      import_ecdsa_publickey_from_file(123456)
+    with self.assertRaises(FormatError):
+      import_ecdsa_privatekey_from_file(123456)
+
+    # Error on bad password format
+    with self.assertRaises(FormatError): # bad password
+      import_ecdsa_privatekey_from_file(fn_default, password=123456)
 
 
 
   def test_import_public_keys_from_file(self):
     """Test import multiple public keys with different types. """
-    temporary_directory = tempfile.mkdtemp(dir=self.temporary_directory)
-    path_rsa = os.path.join(temporary_directory, "rsa_key")
-    path_ed25519 = os.path.join(temporary_directory, "ed25519_key")
-    path_ecdsa = os.path.join(temporary_directory, "ecdsa_key")
-
-    interface.generate_and_write_rsa_keypair(path_rsa, password="pw")
-    interface.generate_and_write_ed25519_keypair(path_ed25519, password="pw")
-    interface.generate_and_write_ecdsa_keypair(path_ecdsa, password="pw")
 
     # Successfully import key dict with one key per supported key type
-    key_dict = interface.import_public_keys_from_file([
-        path_rsa + ".pub",
-        path_ed25519 + ".pub",
-        path_ecdsa + ".pub"],
+    key_dict = import_public_keys_from_file([
+        self.path_rsa + ".pub",
+        self.path_ed25519  + ".pub",
+        self.path_ecdsa  + ".pub"],
         [KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA])
 
-    securesystemslib.formats.ANY_PUBKEY_DICT_SCHEMA.check_match(key_dict)
+    ANY_PUBKEY_DICT_SCHEMA.check_match(key_dict)
     self.assertListEqual(
         sorted([key["keytype"] for key in key_dict.values()]),
         sorted([KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA])
       )
 
     # Successfully import default rsa key
-    key_dict = interface.import_public_keys_from_file([path_rsa + ".pub"])
-    securesystemslib.formats.ANY_PUBKEY_DICT_SCHEMA.check_match(key_dict)
-    securesystemslib.formats.RSAKEY_SCHEMA.check_match(
+    key_dict = import_public_keys_from_file([self.path_rsa + ".pub"])
+    ANY_PUBKEY_DICT_SCHEMA.check_match(key_dict)
+    RSAKEY_SCHEMA.check_match(
         list(key_dict.values()).pop())
 
     # Bad default rsa key type for ed25519
-    with self.assertRaises(securesystemslib.exceptions.Error):
-      interface.import_public_keys_from_file([path_ed25519 + ".pub"])
+    with self.assertRaises(Error):
+      import_public_keys_from_file([self.path_ed25519 + ".pub"])
 
     # Bad ed25519 key type for rsa key
-    with self.assertRaises(securesystemslib.exceptions.Error):
-      interface.import_public_keys_from_file(
-          [path_rsa + ".pub"], [KEY_TYPE_ED25519])
+    with self.assertRaises(Error):
+      import_public_keys_from_file(
+          [self.path_rsa + ".pub"], [KEY_TYPE_ED25519])
 
     # Unsupported key type
-    with self.assertRaises(securesystemslib.exceptions.FormatError):
-      interface.import_public_keys_from_file(
-          [path_ed25519 + ".pub"], ["KEY_TYPE_UNSUPPORTED"])
+    with self.assertRaises(FormatError):
+      import_public_keys_from_file(
+          [self.path_ed25519 + ".pub"], ["KEY_TYPE_UNSUPPORTED"])
 
     # Mismatching arguments lists lenghts
-    with self.assertRaises(securesystemslib.exceptions.FormatError):
-      interface.import_public_keys_from_file(
-          [path_rsa + ".pub", path_ed25519 + ".pub"],  [KEY_TYPE_ED25519])
-
+    with self.assertRaises(FormatError):
+      import_public_keys_from_file(
+          [self.path_rsa + ".pub", self.path_ed25519 + ".pub"],
+          [KEY_TYPE_ED25519])
 
 
 # Run the test cases.
