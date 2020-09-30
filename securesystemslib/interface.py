@@ -66,20 +66,6 @@ except ImportError: # pragma: no cover
 # security through 2031 and beyond.
 DEFAULT_RSA_KEY_BITS = 3072
 
-# Supported key types.
-SUPPORTED_KEY_TYPES = ['rsa', 'ed25519']
-
-
-
-def _prompt(message, result_type=str):
-  """
-    Non-public function that prompts the user for input by printing 'message',
-    converting the input to 'result_type', and returning the value to the
-    caller.
-  """
-
-  return result_type(six.moves.input(message))
-
 
 
 
