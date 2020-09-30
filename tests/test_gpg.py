@@ -40,7 +40,7 @@ import cryptography.hazmat.primitives.hashes as hashing
 
 from securesystemslib import process
 from securesystemslib.gpg.functions import (create_signature, export_pubkey,
-    verify_signature)
+    verify_signature, export_pubkeys)
 from securesystemslib.gpg.util import (get_version, is_version_fully_supported,
     get_hashing_class, parse_packet_header, parse_subpacket_header)
 from securesystemslib.gpg.rsa import create_pubkey as rsa_create_pubkey
@@ -55,7 +55,8 @@ from securesystemslib.gpg.constants import (SHA1, SHA256, SHA512,
 from securesystemslib.gpg.exceptions import (PacketParsingError,
     PacketVersionNotSupportedError, SignatureAlgorithmNotSupportedError,
     KeyNotFoundError, CommandError, KeyExpirationError)
-from securesystemslib.formats import GPG_PUBKEY_SCHEMA
+from securesystemslib.formats import (GPG_PUBKEY_SCHEMA,
+    ANY_PUBKEY_DICT_SCHEMA)
 
 
 @unittest.skipIf(not HAVE_GPG, "gpg not found")
@@ -481,6 +482,8 @@ class TestGPGRSA(unittest.TestCase):
   unsupported_subkey_keyid = "611A9B648E16F54E8A7FAD5DA51E8CDF3B06524F"
   expired_key_keyid = "E8AC80C924116DABB51D4B987CB07D6D2C199C7C"
 
+  keyid_768C43 = "7B3ABB26B97B655AB9296BD15B0BD02E1C768C43"
+
   @classmethod
   def setUpClass(self):
     # Create directory to run the tests without having everything blow up
@@ -545,6 +548,17 @@ class TestGPGRSA(unittest.TestCase):
     key_data2 = export_pubkey(self.signing_subkey_keyid,
         homedir=self.gnupg_home)
     self.assertDictEqual(key_data, key_data2)
+
+
+  def test_export_pubkeys(self):
+    """Test export multiple pubkeys at once. """
+    key_dict = export_pubkeys([self.default_keyid, self.keyid_768C43],
+        homedir=self.gnupg_home)
+
+    ANY_PUBKEY_DICT_SCHEMA.check_match(key_dict)
+    self.assertListEqual(
+        sorted([self.default_keyid.lower(), self.keyid_768C43.lower()]),
+        sorted(key_dict.keys()))
 
 
   def test_gpg_sign_and_verify_object_with_default_key(self):

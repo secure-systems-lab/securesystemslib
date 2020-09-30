@@ -27,7 +27,7 @@ import unittest
 from securesystemslib.gpg.constants import HAVE_GPG, NO_GPG_MSG
 from securesystemslib.gpg.util import get_version
 from securesystemslib.gpg.functions import (
-    create_signature, export_pubkey, verify_signature)
+    create_signature, export_pubkey, export_pubkeys, verify_signature)
 
 from securesystemslib.exceptions import UnsupportedLibraryError
 
@@ -46,6 +46,10 @@ class TestPublicInterfacesGPG(unittest.TestCase):
 
     with self.assertRaises(UnsupportedLibraryError) as ctx:
       export_pubkey('f00')
+    self.assertEqual(NO_GPG_MSG, str(ctx.exception))
+
+    with self.assertRaises(UnsupportedLibraryError) as ctx:
+      export_pubkeys(['f00'])
     self.assertEqual(NO_GPG_MSG, str(ctx.exception))
 
     with self.assertRaises(UnsupportedLibraryError) as ctx:
