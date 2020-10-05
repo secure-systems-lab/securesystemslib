@@ -183,7 +183,7 @@ def generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
   # If the caller does not provide a password argument, prompt for one.
-  if password is None: # pragma: no cover
+  if password is None:
 
     # It is safe to specify the full path of 'filepath' in the prompt and not
     # worry about leaking sensitive information about the key's location.
@@ -480,7 +480,7 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None):
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
   # If the caller does not provide a password argument, prompt for one.
-  if password is None: # pragma: no cover
+  if password is None:
 
     # It is safe to specify the full path of 'filepath' in the prompt and not
     # worry about leaking sensitive information about the key's location.
@@ -584,7 +584,7 @@ def import_ed25519_publickey_from_file(filepath):
   # Raise an exception if an unexpected key type is imported.  Redundant
   # validation of 'keytype'.  'securesystemslib.keys.format_metadata_to_key()'
   # should have fully validated 'ed25519_key_metadata'.
-  if ed25519_key['keytype'] != 'ed25519': # pragma: no cover
+  if ed25519_key['keytype'] != 'ed25519':
     message = 'Invalid key type loaded: ' + repr(ed25519_key['keytype'])
     raise securesystemslib.exceptions.FormatError(message)
 
@@ -675,7 +675,7 @@ def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False,
 
     # If user sets an empty string for the password, explicitly set the
     # password to None, because some functions may expect this later.
-    if len(password) == 0: # pragma: no cover
+    if len(password) == 0:
       password = None
 
   # Finally, regardless of password, try decrypting the key, if necessary.
@@ -745,7 +745,7 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None):
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
   # If the caller does not provide a password argument, prompt for one.
-  if password is None: # pragma: no cover
+  if password is None:
 
     # It is safe to specify the full path of 'filepath' in the prompt and not
     # worry about leaking sensitive information about the key's location.
@@ -889,7 +889,7 @@ def import_ecdsa_privatekey_from_file(filepath, password=None,
   # If the caller does not provide a password argument, prompt for one.
   # Password confirmation disabled here, which should ideally happen only
   # when creating encrypted key files (i.e., improve usability).
-  if password is None: # pragma: no cover
+  if password is None:
 
     # It is safe to specify the full path of 'filepath' in the prompt and not
     # worry about leaking sensitive information about the key's location.
