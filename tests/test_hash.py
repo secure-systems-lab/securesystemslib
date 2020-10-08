@@ -45,13 +45,89 @@ if not 'hashlib' in securesystemslib.hash.SUPPORTED_LIBRARIES:
 
 class TestHash(unittest.TestCase):
 
-  def _run_with_all_hash_libraries(self, test_func):
-    for lib in securesystemslib.hash.SUPPORTED_LIBRARIES:
+  @staticmethod
+  def _get_algorithms(library):
+    algorithms = ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512']
+    if library != 'pyca_crypto':
+      algorithms += ['blake2b', 'blake2b-256', 'blake2s']
+    return algorithms
+
+  @staticmethod
+  def _run_with_hash_libraries(test_func, libraries=None):
+    if libraries is None:
+      libraries = securesystemslib.hash.SUPPORTED_LIBRARIES
+    for lib in libraries:
       test_func(lib)
 
 
+  def test_blake2s_update(self):
+    # blake2s is not supported in pyca
+    libraries = list(securesystemslib.hash.SUPPORTED_LIBRARIES)
+    libraries.remove('pyca_crypto')
+    self._run_with_hash_libraries(self._do_blake2s_update, libraries)
+
+
+  def _do_blake2s_update(self, library):
+    digest_object = securesystemslib.hash.digest('blake2s', library)
+    self.assertEqual(digest_object.hexdigest(),
+        '69217a3079908094e11121d042354a7c1f55b6482ca1a51e1b250dfd1ed0eef9')
+    digest_object.update('a'.encode('utf-8'))
+    self.assertEqual(digest_object.hexdigest(),
+        '4a0d129873403037c2cd9b9048203687f6233fb6738956e0349bd4320fec3e90')
+    digest_object.update('bbb'.encode('utf-8'))
+    self.assertEqual(digest_object.hexdigest(),
+        '2b68156e70f71280f7ad021f74620446ee49613a7ed34f5220da7b1dbae9adb2')
+    digest_object.update(''.encode('utf-8'))
+    self.assertEqual(digest_object.hexdigest(),
+        '2b68156e70f71280f7ad021f74620446ee49613a7ed34f5220da7b1dbae9adb2')
+
+
+  def test_blake2b_update(self):
+    # blake2b is not supported in pyca
+    libraries = list(securesystemslib.hash.SUPPORTED_LIBRARIES)
+    libraries.remove('pyca_crypto')
+    self._run_with_hash_libraries(self._do_blake2b_update, libraries)
+
+
+  def _do_blake2b_update(self, library):
+    digest_object = securesystemslib.hash.digest('blake2b', library)
+    self.assertEqual(digest_object.hexdigest(),
+        '786a02f742015903c6c6fd852552d272912f4740e15847618a86e217f71f5419d25e1031afee585313896444934eb04b903a685b1448b755d56f701afe9be2ce')
+    digest_object.update('a'.encode('utf-8'))
+    self.assertEqual(digest_object.hexdigest(),
+        '333fcb4ee1aa7c115355ec66ceac917c8bfd815bf7587d325aec1864edd24e34d5abe2c6b1b5ee3face62fed78dbef802f2a85cb91d455a8f5249d330853cb3c')
+    digest_object.update('bbb'.encode('utf-8'))
+    self.assertEqual(digest_object.hexdigest(),
+        'e1161a4e6e6ed9da6928b5e96c24d5b957018f997994f16c05497af059d4f32bb80b34f478aa1fc173f6e45d859958c891e53c2c0bf8eda7c6d3917263641b46')
+    digest_object.update(''.encode('utf-8'))
+    self.assertEqual(digest_object.hexdigest(),
+        'e1161a4e6e6ed9da6928b5e96c24d5b957018f997994f16c05497af059d4f32bb80b34f478aa1fc173f6e45d859958c891e53c2c0bf8eda7c6d3917263641b46')
+
+
+  def test_blake2b_256_update(self):
+    # blake2b is not supported in pyca
+    libraries = list(securesystemslib.hash.SUPPORTED_LIBRARIES)
+    libraries.remove('pyca_crypto')
+    self._run_with_hash_libraries(self._do_blake2b_256_update, libraries)
+
+
+  def _do_blake2b_256_update(self, library):
+    digest_object = securesystemslib.hash.digest('blake2b-256', library)
+    self.assertEqual(digest_object.hexdigest(),
+        '0e5751c026e543b2e8ab2eb06099daa1d1e5df47778f7787faab45cdf12fe3a8')
+    digest_object.update('a'.encode('utf-8'))
+    self.assertEqual(digest_object.hexdigest(),
+        '8928aae63c84d87ea098564d1e03ad813f107add474e56aedd286349c0c03ea4')
+    digest_object.update('bbb'.encode('utf-8'))
+    self.assertEqual(digest_object.hexdigest(),
+        '92af150df67e34827f3c13239c4d11cad6f488b447f72e844c10fce6c651e9f0')
+    digest_object.update(''.encode('utf-8'))
+    self.assertEqual(digest_object.hexdigest(),
+        '92af150df67e34827f3c13239c4d11cad6f488b447f72e844c10fce6c651e9f0')
+
+
   def test_md5_update(self):
-    self._run_with_all_hash_libraries(self._do_md5_update)
+    self._run_with_hash_libraries(self._do_md5_update)
 
 
   def _do_md5_update(self, library):
@@ -70,7 +146,7 @@ class TestHash(unittest.TestCase):
 
 
   def test_sha1_update(self):
-    self._run_with_all_hash_libraries(self._do_sha1_update)
+    self._run_with_hash_libraries(self._do_sha1_update)
 
 
   def _do_sha1_update(self, library):
@@ -90,7 +166,7 @@ class TestHash(unittest.TestCase):
 
 
   def test_sha224_update(self):
-    self._run_with_all_hash_libraries(self._do_sha224_update)
+    self._run_with_hash_libraries(self._do_sha224_update)
 
 
   def _do_sha224_update(self, library):
@@ -110,7 +186,7 @@ class TestHash(unittest.TestCase):
 
 
   def test_sha256_update(self):
-    self._run_with_all_hash_libraries(self._do_sha256_update)
+    self._run_with_hash_libraries(self._do_sha256_update)
 
 
   def _do_sha256_update(self, library):
@@ -129,7 +205,7 @@ class TestHash(unittest.TestCase):
 
 
   def test_sha384_update(self):
-    self._run_with_all_hash_libraries(self._do_sha384_update)
+    self._run_with_hash_libraries(self._do_sha384_update)
 
 
   def _do_sha384_update(self, library):
@@ -152,7 +228,7 @@ class TestHash(unittest.TestCase):
 
 
   def test_sha512_update(self):
-    self._run_with_all_hash_libraries(self._do_sha512_update)
+    self._run_with_hash_libraries(self._do_sha512_update)
 
 
   def _do_sha512_update(self, library):
@@ -176,7 +252,7 @@ class TestHash(unittest.TestCase):
 
 
   def test_unsupported_algorithm(self):
-    self._run_with_all_hash_libraries(self._do_unsupported_algorithm)
+    self._run_with_hash_libraries(self._do_unsupported_algorithm)
 
 
   def _do_unsupported_algorithm(self, library):
@@ -185,26 +261,28 @@ class TestHash(unittest.TestCase):
 
 
   def test_digest_size(self):
-    self._run_with_all_hash_libraries(self._do_digest_size)
+    self._run_with_hash_libraries(self._do_digest_size)
 
 
   def _do_digest_size(self, library):
-    self.assertEqual(16,
-        securesystemslib.hash.digest('md5', library).digest_size)
-    self.assertEqual(20,
-        securesystemslib.hash.digest('sha1', library).digest_size)
-    self.assertEqual(28,
-        securesystemslib.hash.digest('sha224', library).digest_size)
-    self.assertEqual(32,
-        securesystemslib.hash.digest('sha256', library).digest_size)
-    self.assertEqual(48,
-        securesystemslib.hash.digest('sha384', library).digest_size)
-    self.assertEqual(64,
-        securesystemslib.hash.digest('sha512', library).digest_size)
+    digest_sizes = {
+      'md5': 16,
+      'sha1': 20,
+      'sha224': 28,
+      'sha256': 32,
+      'sha384': 48,
+      'sha512': 64,
+      'blake2b-256': 32,
+      'blake2b': 64,
+      'blake2s': 32,
+    }
+    for algorithm in self._get_algorithms(library):
+      self.assertEqual(digest_sizes[algorithm],
+          securesystemslib.hash.digest(algorithm, library).digest_size)
 
 
   def test_update_filename(self):
-    self._run_with_all_hash_libraries(self._do_update_filename)
+    self._run_with_hash_libraries(self._do_update_filename)
 
 
   def _do_update_filename(self, library):
@@ -213,7 +291,7 @@ class TestHash(unittest.TestCase):
     try:
       os.write(fd, data.encode('utf-8'))
       os.close(fd)
-      for algorithm in ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512']:
+      for algorithm in self._get_algorithms(library):
         digest_object_truth = securesystemslib.hash.digest(algorithm, library)
         digest_object_truth.update(data.encode('utf-8'))
         digest_object = securesystemslib.hash.digest_filename(filename,
@@ -225,7 +303,7 @@ class TestHash(unittest.TestCase):
 
 
   def test_update_filename_normalize(self):
-    self._run_with_all_hash_libraries(self._do_update_filename_normalize)
+    self._run_with_hash_libraries(self._do_update_filename_normalize)
 
 
   def _do_update_filename_normalize(self, library):
@@ -235,7 +313,7 @@ class TestHash(unittest.TestCase):
     try:
       os.write(fd, data)
       os.close(fd)
-      for algorithm in ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512']:
+      for algorithm in self._get_algorithms(library):
         digest_object_truth = securesystemslib.hash.digest(algorithm, library)
         digest_object_truth.update(normalized_data)
         digest_object = securesystemslib.hash.digest_filename(filename,
@@ -247,14 +325,14 @@ class TestHash(unittest.TestCase):
 
 
   def test_update_file_obj(self):
-    self._run_with_all_hash_libraries(self._do_update_file_obj)
+    self._run_with_hash_libraries(self._do_update_file_obj)
 
 
   def _do_update_file_obj(self, library):
     data = 'abcdefgh' * 4096
     file_obj = six.StringIO()
     file_obj.write(data)
-    for algorithm in ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512']:
+    for algorithm in self._get_algorithms(library):
       digest_object_truth = securesystemslib.hash.digest(algorithm, library)
       digest_object_truth.update(data.encode('utf-8'))
       digest_object = securesystemslib.hash.digest_fileobject(file_obj,
@@ -266,8 +344,8 @@ class TestHash(unittest.TestCase):
 
 
   def test_digest_from_rsa_scheme(self):
-    self._run_with_all_hash_libraries(self._do_get_digest_from_rsa_valid_schemes)
-    self._run_with_all_hash_libraries(self._do_get_digest_from_rsa_non_valid_schemes)
+    self._run_with_hash_libraries(self._do_get_digest_from_rsa_valid_schemes)
+    self._run_with_hash_libraries(self._do_get_digest_from_rsa_non_valid_schemes)
 
 
   def _do_get_digest_from_rsa_valid_schemes(self, library):
