@@ -150,7 +150,8 @@ HASHALGORITHMS_SCHEMA = SCHEMA.ListOf(SCHEMA.OneOf(
   [SCHEMA.String('md5'), SCHEMA.String('sha1'),
    SCHEMA.String('sha224'), SCHEMA.String('sha256'),
    SCHEMA.String('sha384'), SCHEMA.String('sha512'),
-   SCHEMA.String('blake2s'), SCHEMA.String('blake2b')]))
+   SCHEMA.String('blake2s'), SCHEMA.String('blake2b'),
+   SCHEMA.String('blake2b-256')]))
 
 # The contents of an encrypted key.  Encrypted keys are saved to files
 # in this format.
