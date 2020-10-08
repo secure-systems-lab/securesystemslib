@@ -28,6 +28,7 @@ from __future__ import unicode_literals
 
 import os
 import logging
+import sys
 import tempfile
 import unittest
 
@@ -48,9 +49,10 @@ class TestHash(unittest.TestCase):
   @staticmethod
   def _get_algorithms(library):
     algorithms = ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512']
-    if library != 'pyca_crypto':
+    if library in TestHash._get_blake_libraries():
       algorithms += ['blake2b', 'blake2b-256', 'blake2s']
     return algorithms
+
 
   @staticmethod
   def _run_with_hash_libraries(test_func, libraries=None):
@@ -60,11 +62,20 @@ class TestHash(unittest.TestCase):
       test_func(lib)
 
 
-  def test_blake2s_update(self):
-    # blake2s is not supported in pyca
+  @staticmethod
+  def _get_blake_libraries():
+    # blake2* is not supported in pyca
     libraries = list(securesystemslib.hash.SUPPORTED_LIBRARIES)
     libraries.remove('pyca_crypto')
-    self._run_with_hash_libraries(self._do_blake2s_update, libraries)
+    # blake* is not supported in hashlib if < 3.6
+    if sys.version_info[:2] < (3, 6):
+      libraries.remove('hashlib')
+    return libraries
+
+
+  def test_blake2s_update(self):
+    self._run_with_hash_libraries(self._do_blake2s_update,
+        self._get_blake_libraries())
 
 
   def _do_blake2s_update(self, library):
@@ -83,10 +94,8 @@ class TestHash(unittest.TestCase):
 
 
   def test_blake2b_update(self):
-    # blake2b is not supported in pyca
-    libraries = list(securesystemslib.hash.SUPPORTED_LIBRARIES)
-    libraries.remove('pyca_crypto')
-    self._run_with_hash_libraries(self._do_blake2b_update, libraries)
+    self._run_with_hash_libraries(self._do_blake2b_update,
+        self._get_blake_libraries())
 
 
   def _do_blake2b_update(self, library):
@@ -105,10 +114,8 @@ class TestHash(unittest.TestCase):
 
 
   def test_blake2b_256_update(self):
-    # blake2b is not supported in pyca
-    libraries = list(securesystemslib.hash.SUPPORTED_LIBRARIES)
-    libraries.remove('pyca_crypto')
-    self._run_with_hash_libraries(self._do_blake2b_256_update, libraries)
+    self._run_with_hash_libraries(self._do_blake2b_256_update,
+        self._get_blake_libraries())
 
 
   def _do_blake2b_256_update(self, library):
