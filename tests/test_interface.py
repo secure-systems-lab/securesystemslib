@@ -152,20 +152,24 @@ class TestInterfaceFunctions(unittest.TestCase):
     self.assertEqual(obj_bits.key_size, bits)
 
 
-    # TEST: Generate keys with encrypted private key using passed password
-    # Assert importable with password
+    # TEST: Generate two keypairs with encrypted private keys using ...
     pw = "pw"
     fn_encrypted = "encrypted"
-    generate_and_write_rsa_keypair(filepath=fn_encrypted, password=pw)
-    import_rsa_privatekey_from_file(fn_encrypted, password=pw)
-
-
-    # TEST: Generate keys with encrypted private key using prompted password
-    # Assert load with prompted password
     fn_prompt = "prompt"
+
+    # ... a passed pw ...
+    generate_and_write_rsa_keypair(filepath=fn_encrypted, password=pw)
     with mock.patch("securesystemslib.interface.get_password", return_value=pw):
+      # ... and a prompted pw.
       generate_and_write_rsa_keypair(filepath=fn_prompt)
+
+      # Assert that both private keys are importable using the prompted pw ...
       import_rsa_privatekey_from_file(fn_prompt, prompt=True)
+      import_rsa_privatekey_from_file(fn_encrypted, prompt=True)
+
+    # ... and the passed pw.
+    import_rsa_privatekey_from_file(fn_prompt, password=pw)
+    import_rsa_privatekey_from_file(fn_encrypted, password=pw)
 
 
     # TEST: Import existing keys with encrypted private key (test regression)
@@ -178,6 +182,18 @@ class TestInterfaceFunctions(unittest.TestCase):
     self.assertTrue(RSAKEY_SCHEMA.matches(priv))
     # NOTE: There is no private key schema, at least check it has a value
     self.assertTrue(priv["keyval"]["private"])
+
+
+    # TEST: Generation errors
+
+    # Error on bad argument format
+    for idx, kwargs in enumerate([
+        {"bits": 1024}, # Too low
+        {"bits": "not-an-int"},
+        {"filepath": 123456}, # Not a string
+        {"password": 123456}]): # Not a string
+      with self.assertRaises(FormatError, msg="(row {})".format(idx)):
+        generate_and_write_rsa_keypair(**kwargs)
 
 
     # TEST: Import errors
@@ -282,20 +298,23 @@ class TestInterfaceFunctions(unittest.TestCase):
         os.path.basename(fn_keyid) == pub["keyid"] == priv["keyid"])
 
 
-    # TEST: Generate keys with encrypted private key using passed password
-    # Assert importable with password
+    # TEST: Generate two keypairs with encrypted private keys using ...
     pw = "pw"
     fn_encrypted = "encrypted"
-    generate_and_write_ed25519_keypair(filepath=fn_encrypted, password=pw)
-    import_ed25519_privatekey_from_file(fn_encrypted, password=pw)
-
-
-    # TEST: Generate keys with encrypted private key using prompted password
-    # Assert load with prompted password
     fn_prompt = "prompt"
+    # ... a passed pw ...
+    generate_and_write_ed25519_keypair(filepath=fn_encrypted, password=pw)
     with mock.patch("securesystemslib.interface.get_password", return_value=pw):
+      # ... and a prompted pw.
       generate_and_write_ed25519_keypair(filepath=fn_prompt)
+
+      # Assert that both private keys are importable using the prompted pw ...
       import_ed25519_privatekey_from_file(fn_prompt, prompt=True)
+      import_ed25519_privatekey_from_file(fn_encrypted, prompt=True)
+
+    # ... and the passed pw.
+    import_ed25519_privatekey_from_file(fn_prompt, password=pw)
+    import_ed25519_privatekey_from_file(fn_encrypted, password=pw)
 
 
     # TEST: Import existing keys with encrypted private key (test regression)
@@ -304,6 +323,7 @@ class TestInterfaceFunctions(unittest.TestCase):
     priv = import_ed25519_privatekey_from_file(self.path_ed25519, "password")
 
     self.assertTrue(PUBLIC_KEY_SCHEMA.matches(pub))
+    self.assertTrue(ED25519KEY_SCHEMA.matches(pub))
     self.assertTrue(ED25519KEY_SCHEMA.matches(priv))
     # NOTE: There is no private key schema, at least check it has a value
     self.assertTrue(priv["keyval"]["private"])
@@ -320,6 +340,16 @@ class TestInterfaceFunctions(unittest.TestCase):
     # an ed25519 public key? I think it should not, but it is:
     pub = import_ed25519_privatekey_from_file(fn_default + ".pub")
     self.assertTrue(PUBLIC_KEY_SCHEMA.matches(pub))
+
+
+    # TEST: Generation errors
+
+    # Error on bad argument format
+    for idx, kwargs in enumerate([
+        {"filepath": 123456}, # Not a string
+        {"password": 123456}]): # Not a string
+      with self.assertRaises(FormatError, msg="(row {})".format(idx)):
+        generate_and_write_ed25519_keypair(**kwargs)
 
 
     # TEST: Import errors
@@ -426,12 +456,23 @@ class TestInterfaceFunctions(unittest.TestCase):
         os.path.basename(fn_keyid) == pub["keyid"] == priv["keyid"])
 
 
-    # TEST: Generate keys with encrypted private key using prompted password
-    # Assert load with prompted password
+    # TEST: Generate two key pairs with encrypted private keys using ...
+    pw = "pw"
+    fn_encrypted = "encrypted"
     fn_prompt = "prompt"
+    # ...  a passed pw ...
+    generate_and_write_ecdsa_keypair(filepath=fn_encrypted, password=pw)
     with mock.patch("securesystemslib.interface.get_password", return_value=pw):
+      # ... and a prompted pw.
       generate_and_write_ecdsa_keypair(filepath=fn_prompt)
+
+      # Assert that both private keys are importable using the prompted pw ...
       import_ecdsa_privatekey_from_file(fn_prompt)
+      import_ecdsa_privatekey_from_file(fn_encrypted)
+
+    # ... and the passed pw.
+    import_ecdsa_privatekey_from_file(fn_prompt, password=pw)
+    import_ecdsa_privatekey_from_file(fn_encrypted, password=pw)
 
 
     # TEST: Import existing keys with encrypted private key (test regression)
@@ -450,6 +491,16 @@ class TestInterfaceFunctions(unittest.TestCase):
     # an ed25519 public key? I think it should not, but it is:
     import_ecdsa_publickey_from_file(self.path_ed25519 + ".pub")
     self.assertTrue(ECDSAKEY_SCHEMA.matches(pub))
+
+
+    # TEST: Generation errors
+
+    # Error on bad argument format
+    for idx, kwargs in enumerate([
+        {"filepath": 123456}, # Not a string
+        {"password": 123456}]): # Not a string
+      with self.assertRaises(FormatError, msg="(row {})".format(idx)):
+        generate_and_write_ecdsa_keypair(**kwargs)
 
 
     # TEST: Import errors
