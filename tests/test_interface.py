@@ -105,8 +105,7 @@ class TestInterfaceFunctions(unittest.TestCase):
     # TEST: Generate default keys and import
     # Assert location and format
     fn_default = "default"
-    fn_default_ret = generate_and_write_rsa_keypair(
-        filepath=fn_default, password="")
+    fn_default_ret = generate_and_write_rsa_keypair(filepath=fn_default)
 
     pub = import_rsa_publickey_from_file(fn_default + ".pub")
     priv = import_rsa_privatekey_from_file(fn_default)
@@ -123,13 +122,13 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Assert importable without password
     fn_empty_prompt = "empty_prompt"
     with mock.patch("securesystemslib.interface.get_password", return_value=""):
-      generate_and_write_rsa_keypair(filepath=fn_empty_prompt)
+      generate_and_write_rsa_keypair(filepath=fn_empty_prompt, prompt=True)
     import_rsa_privatekey_from_file(fn_empty_prompt)
 
 
     # TEST: Generate keys with auto-filename, i.e. keyid
     # Assert filename is keyid
-    fn_keyid = generate_and_write_rsa_keypair(password="")
+    fn_keyid = generate_and_write_rsa_keypair()
     pub = import_rsa_publickey_from_file(fn_keyid + ".pub")
     priv = import_rsa_privatekey_from_file(fn_keyid)
     self.assertTrue(
@@ -140,7 +139,7 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Assert length
     bits = 4096
     fn_bits = "bits"
-    generate_and_write_rsa_keypair(filepath=fn_bits, password="", bits=bits)
+    generate_and_write_rsa_keypair(filepath=fn_bits, bits=bits)
 
     priv = import_rsa_privatekey_from_file(fn_bits)
     # NOTE: Parse PEM with pyca/cryptography to get the key size property
@@ -161,7 +160,7 @@ class TestInterfaceFunctions(unittest.TestCase):
     generate_and_write_rsa_keypair(filepath=fn_encrypted, password=pw)
     with mock.patch("securesystemslib.interface.get_password", return_value=pw):
       # ... and a prompted pw.
-      generate_and_write_rsa_keypair(filepath=fn_prompt)
+      generate_and_write_rsa_keypair(filepath=fn_prompt, prompt=True)
 
       # Assert that both private keys are importable using the prompted pw ...
       import_rsa_privatekey_from_file(fn_prompt, prompt=True)
@@ -185,13 +184,28 @@ class TestInterfaceFunctions(unittest.TestCase):
 
 
     # TEST: Generation errors
+    for idx, (kwargs, err_msg) in enumerate([
+        # Error on empty password
+        ({"password": ""},
+          "encryption password must be 1 or more characters long"),
+        # Error on 'password' and 'prompt=True'
+        ({"password": pw, "prompt": True},
+          "passing 'password' and 'prompt=True' is not allowed")]):
+
+      with self.assertRaises(ValueError, msg="(row {})".format(idx)) as ctx:
+        generate_and_write_rsa_keypair(**kwargs)
+
+      self.assertEqual(err_msg, str(ctx.exception),
+          "expected: '{}' got: '{}' (row {})".format(
+          err_msg, ctx.exception, idx))
 
     # Error on bad argument format
     for idx, kwargs in enumerate([
         {"bits": 1024}, # Too low
         {"bits": "not-an-int"},
         {"filepath": 123456}, # Not a string
-        {"password": 123456}]): # Not a string
+        {"password": 123456}, # Not a string
+        {"prompt": "not-a-bool"}]):
       with self.assertRaises(FormatError, msg="(row {})".format(idx)):
         generate_and_write_rsa_keypair(**kwargs)
 
@@ -270,8 +284,7 @@ class TestInterfaceFunctions(unittest.TestCase):
     # TEST: Generate default keys and import
     # Assert location and format
     fn_default = "default"
-    fn_default_ret = generate_and_write_ed25519_keypair(
-        filepath=fn_default, password="")
+    fn_default_ret = generate_and_write_ed25519_keypair(filepath=fn_default)
 
     pub = import_ed25519_publickey_from_file(fn_default + ".pub")
     priv = import_ed25519_privatekey_from_file(fn_default)
@@ -295,7 +308,7 @@ class TestInterfaceFunctions(unittest.TestCase):
 
     # TEST: Generate keys with auto-filename, i.e. keyid
     # Assert filename is keyid
-    fn_keyid = generate_and_write_ed25519_keypair(password="")
+    fn_keyid = generate_and_write_ed25519_keypair()
     pub = import_ed25519_publickey_from_file(fn_keyid + ".pub")
     priv = import_ed25519_privatekey_from_file(fn_keyid)
     self.assertTrue(
@@ -310,7 +323,7 @@ class TestInterfaceFunctions(unittest.TestCase):
     generate_and_write_ed25519_keypair(filepath=fn_encrypted, password=pw)
     with mock.patch("securesystemslib.interface.get_password", return_value=pw):
       # ... and a prompted pw.
-      generate_and_write_ed25519_keypair(filepath=fn_prompt)
+      generate_and_write_ed25519_keypair(filepath=fn_prompt, prompt=True)
 
       # Assert that both private keys are importable using the prompted pw ...
       import_ed25519_privatekey_from_file(fn_prompt, prompt=True)
@@ -347,11 +360,26 @@ class TestInterfaceFunctions(unittest.TestCase):
 
 
     # TEST: Generation errors
+    for idx, (kwargs, err_msg) in enumerate([
+        # Error on empty password
+        ({"password": ""},
+          "encryption password must be 1 or more characters long"),
+        # Error on 'password' and 'prompt=True'
+        ({"password": pw, "prompt": True},
+          "passing 'password' and 'prompt=True' is not allowed")]):
+
+      with self.assertRaises(ValueError, msg="(row {})".format(idx)) as ctx:
+        generate_and_write_ed25519_keypair(**kwargs)
+
+      self.assertEqual(err_msg, str(ctx.exception),
+          "expected: '{}' got: '{}' (row {})".format(
+          err_msg, ctx.exception, idx))
 
     # Error on bad argument format
     for idx, kwargs in enumerate([
         {"filepath": 123456}, # Not a string
-        {"password": 123456}]): # Not a string
+        {"password": 123456}, # Not a string
+        {"prompt": "not-a-bool"}]):
       with self.assertRaises(FormatError, msg="(row {})".format(idx)):
         generate_and_write_ed25519_keypair(**kwargs)
 
