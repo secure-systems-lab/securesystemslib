@@ -459,19 +459,13 @@ class TestInterfaceFunctions(unittest.TestCase):
 
   def test_ecdsa(self):
     """Test ecdsa key generation and import interface functions. """
-    # NOTE: Unlike rsa and ed25519, the ecdsa (key creation and private key
-    # import) interface only supports encrypted keys, even if the passed or
-    # prompted password is an empty string.
-
-    # TEST: Generate pw encrypted keys and import
+    # TEST: Generate default keys and import
     # Assert location and format
-    pw = "pw"
     fn_default = "default"
-    fn_default_ret = generate_and_write_ecdsa_keypair(
-        filepath=fn_default, password=pw)
+    fn_default_ret = generate_and_write_ecdsa_keypair(filepath=fn_default)
 
     pub = import_ecdsa_publickey_from_file(fn_default + ".pub")
-    priv = import_ecdsa_privatekey_from_file(fn_default, password=pw)
+    priv = import_ecdsa_privatekey_from_file(fn_default)
 
     self.assertEqual(fn_default, fn_default_ret)
     self.assertTrue(ECDSAKEY_SCHEMA.matches(pub))
@@ -480,13 +474,20 @@ class TestInterfaceFunctions(unittest.TestCase):
     # NOTE: There is no private key schema, at least check it has a value
     self.assertTrue(priv["keyval"]["private"])
 
+    # TEST: Generate unencrypted keys with empty prompt
+    # Assert importable with empty prompt password and without password
+    fn_empty_prompt = "empty_prompt"
+    with mock.patch("securesystemslib.interface.get_password", return_value=""):
+      generate_and_write_ecdsa_keypair(filepath=fn_empty_prompt)
+      import_ecdsa_privatekey_from_file(fn_empty_prompt, prompt=True)
+    import_ecdsa_privatekey_from_file(fn_empty_prompt)
+
 
     # TEST: Generate keys with auto-filename, i.e. keyid
     # Assert filename is keyid
-    fn_keyid = generate_and_write_ecdsa_keypair(password=pw)
+    fn_keyid = generate_and_write_ecdsa_keypair()
     pub = import_ecdsa_publickey_from_file(fn_keyid + ".pub")
-    priv = import_ecdsa_privatekey_from_file(
-        fn_keyid, password=pw)
+    priv = import_ecdsa_privatekey_from_file(fn_keyid)
     self.assertTrue(
         os.path.basename(fn_keyid) == pub["keyid"] == priv["keyid"])
 
@@ -499,11 +500,11 @@ class TestInterfaceFunctions(unittest.TestCase):
     generate_and_write_ecdsa_keypair(filepath=fn_encrypted, password=pw)
     with mock.patch("securesystemslib.interface.get_password", return_value=pw):
       # ... and a prompted pw.
-      generate_and_write_ecdsa_keypair(filepath=fn_prompt)
+      generate_and_write_ecdsa_keypair(filepath=fn_prompt, prompt=True)
 
       # Assert that both private keys are importable using the prompted pw ...
-      import_ecdsa_privatekey_from_file(fn_prompt)
-      import_ecdsa_privatekey_from_file(fn_encrypted)
+      import_ecdsa_privatekey_from_file(fn_prompt, prompt=True)
+      import_ecdsa_privatekey_from_file(fn_encrypted, prompt=True)
 
     # ... and the passed pw.
     import_ecdsa_privatekey_from_file(fn_prompt, password=pw)
@@ -529,11 +530,26 @@ class TestInterfaceFunctions(unittest.TestCase):
 
 
     # TEST: Generation errors
+    for idx, (kwargs, err_msg) in enumerate([
+        # Error on empty password
+        ({"password": ""},
+          "encryption password must be 1 or more characters long"),
+        # Error on 'password' and 'prompt=True'
+        ({"password": pw, "prompt": True},
+          "passing 'password' and 'prompt=True' is not allowed")]):
+
+      with self.assertRaises(ValueError, msg="(row {})".format(idx)) as ctx:
+        generate_and_write_ecdsa_keypair(**kwargs)
+
+      self.assertEqual(err_msg, str(ctx.exception),
+          "expected: '{}' got: '{}' (row {})".format(
+          err_msg, ctx.exception, idx))
 
     # Error on bad argument format
     for idx, kwargs in enumerate([
         {"filepath": 123456}, # Not a string
-        {"password": 123456}]): # Not a string
+        {"password": 123456}, # Not a string
+        {"prompt": "not-a-bool"}]):
       with self.assertRaises(FormatError, msg="(row {})".format(idx)):
         generate_and_write_ecdsa_keypair(**kwargs)
 
@@ -542,8 +558,8 @@ class TestInterfaceFunctions(unittest.TestCase):
 
     # Error on public key import...
     for idx, (fn, err_msg) in enumerate([
-        # Error on invalid custom json key format
-        (fn_default, "Cannot deserialize to a Python object"),
+        # Error on invalid json (custom key format)
+        (fn_encrypted, "Cannot deserialize to a Python object"),
         # Error on invalid custom key format
         (self.path_no_key, "Missing key")]):
       with self.assertRaises(Error, msg="(row {})".format(idx)) as ctx:
@@ -557,14 +573,23 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Error on private key import...
     for idx, (args, kwargs, err, err_msg) in enumerate([
         # Error on not an ecdsa private key
-        ([self.path_ed25519], {"password": "password"}, FormatError,
-          "Invalid key type loaded"),
-        # Error on encrypted but empty pw passed
-        ([fn_default], {"password": ""}, CryptoError,
+        ([self.path_ed25519], {}, Error,
+          "Cannot deserialize to a Python object"),
+        # Error on not encrypted
+        ([fn_default], {"password": pw}, CryptoError,
+          "Invalid encrypted file."),
+        # Error on encrypted but no pw
+        ([fn_encrypted], {}, Error,
+          "Cannot deserialize to a Python object"),
+        # Error on encrypted but empty pw
+        ([fn_encrypted], {"password": ""}, CryptoError,
           "Decryption failed."),
-        # Error on encrypted but wrong pw passed
-        ([fn_default], {"password": "bad pw"}, CryptoError,
-          "Decryption failed.")]):
+        # Error on encrypted but bad pw passed
+        ([fn_encrypted], {"password": "bad pw"}, CryptoError,
+          "Decryption failed."),
+        # Error on pw and prompt
+        ([fn_default], {"password": pw, "prompt": True}, ValueError,
+          "passing 'password' and 'prompt=True' is not allowed")]):
 
       with self.assertRaises(err, msg="(row {})".format(idx)) as ctx:
         import_ecdsa_privatekey_from_file(*args, **kwargs)
@@ -572,6 +597,16 @@ class TestInterfaceFunctions(unittest.TestCase):
       self.assertTrue(err_msg in str(ctx.exception),
           "expected: '{}' got: '{}' (row {})".format(
           err_msg, ctx.exception, idx))
+
+    # Error on encrypted but bad pw prompted
+    err_msg = ("Decryption failed")
+    with self.assertRaises(CryptoError) as ctx, mock.patch(
+        "securesystemslib.interface.get_password", return_value="bad_pw"):
+      import_ecdsa_privatekey_from_file(fn_encrypted, prompt=True)
+
+    self.assertTrue(err_msg in str(ctx.exception),
+        "expected: '{}' got: '{}'".format(err_msg, ctx.exception))
+
 
     # Error on bad path format
     with self.assertRaises(FormatError):
@@ -582,6 +617,10 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Error on bad password format
     with self.assertRaises(FormatError): # bad password
       import_ecdsa_privatekey_from_file(fn_default, password=123456)
+
+    # Error on bad prompt format
+    with self.assertRaises(FormatError):
+      import_ecdsa_privatekey_from_file(fn_default, prompt="not-a-bool")
 
 
 

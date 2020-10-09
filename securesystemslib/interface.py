@@ -662,7 +662,8 @@ def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False,
 
 
 
-def generate_and_write_ecdsa_keypair(filepath=None, password=None):
+def generate_and_write_ecdsa_keypair(filepath=None, password=None,
+    prompt=False):
   """
   <Purpose>
     Generate an ECDSA keypair, where the encrypted key (using 'password' as the
@@ -701,6 +702,8 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None):
     The 'filepath' of the written key.
   """
 
+  password = _get_key_file_encryption_password(password, prompt, filepath)
+
   # Generate a new ECDSA key object.  The 'cryptography' library is currently
   # supported and performs the actual cryptographic operations.
   ecdsa_key = securesystemslib.keys.generate_ecdsa_key()
@@ -715,23 +718,6 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None):
   # Does 'filepath' have the correct format?
   # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
-
-  # If the caller does not provide a password argument, prompt for one.
-  if password is None:
-
-    # It is safe to specify the full path of 'filepath' in the prompt and not
-    # worry about leaking sensitive information about the key's location.
-    # However, care should be taken when including the full path in exceptions
-    # and log files.
-    password = get_password('Enter a password for the ECDSA'
-        ' key (' + TERM_RED + filepath + TERM_RESET + '): ',
-        confirm=True)
-
-  else:
-    logger.debug('The password has been specified.  Not prompting for one')
-
-  # Does 'password' have the correct format?
-  securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
 
   # If the parent directory of filepath does not exist,
   # create it (and all its parent directories, if necessary).
@@ -759,10 +745,16 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None):
   # Write the encrypted key string, conformant to
   # 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA', to '<filepath>'.
   file_object = tempfile.TemporaryFile()
+
+  if password is not None:
+    ecdsa_key = securesystemslib.keys.encrypt_key(ecdsa_key, password)
+
+  else:
+    ecdsa_key = json.dumps(ecdsa_key)
+
   # Raise 'securesystemslib.exceptions.CryptoError' if 'ecdsa_key' cannot be
   # encrypted.
-  encrypted_key = securesystemslib.keys.encrypt_key(ecdsa_key, password)
-  file_object.write(encrypted_key.encode('utf-8'))
+  file_object.write(ecdsa_key.encode('utf-8'))
   securesystemslib.util.persist_temp_file(file_object, filepath)
 
   return filepath
@@ -814,7 +806,7 @@ def import_ecdsa_publickey_from_file(filepath):
 
 
 
-def import_ecdsa_privatekey_from_file(filepath, password=None,
+def import_ecdsa_privatekey_from_file(filepath, password=None, prompt=False,
     storage_backend=None):
   """
   <Purpose>
@@ -858,37 +850,25 @@ def import_ecdsa_privatekey_from_file(filepath, password=None,
   # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
-  # If the caller does not provide a password argument, prompt for one.
-  # Password confirmation disabled here, which should ideally happen only
-  # when creating encrypted key files (i.e., improve usability).
-  if password is None:
-
-    # It is safe to specify the full path of 'filepath' in the prompt and not
-    # worry about leaking sensitive information about the key's location.
-    # However, care should be taken when including the full path in exceptions
-    # and log files.
-    password = get_password('Enter a password for the encrypted ECDSA'
-        ' key (' + TERM_RED + filepath + TERM_RESET + '): ',
-        confirm=False)
-
-  # Does 'password' have the correct format?
-  securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+  password = _get_key_file_decryption_password(password, prompt, filepath)
 
   if storage_backend is None:
     storage_backend = securesystemslib.storage.FilesystemBackend()
 
   # Store the encrypted contents of 'filepath' prior to calling the decryption
   # routine.
-  encrypted_key = None
-
   with storage_backend.get(filepath) as file_object:
-    encrypted_key = file_object.read()
+    key_data = file_object.read().decode('utf-8')
 
   # Decrypt the loaded key file, calling the 'cryptography' library to generate
   # the derived encryption key from 'password'.  Raise
   # 'securesystemslib.exceptions.CryptoError' if the decryption fails.
-  key_object = securesystemslib.keys.decrypt_key(encrypted_key.decode('utf-8'),
-      password)
+  if password is not None:
+    key_object = securesystemslib.keys.decrypt_key(key_data, password)
+
+  else:
+    key_object = securesystemslib.util.load_json_string(key_data)
+
 
   # Raise an exception if an unexpected key type is imported.
   # NOTE: we support keytype's of ecdsa-sha2-nistp256 and ecdsa-sha2-nistp384
