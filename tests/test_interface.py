@@ -218,14 +218,14 @@ class TestInterfaceFunctions(unittest.TestCase):
         ([fn_encrypted], {}, CryptoError,
           "Password was not given but private key is encrypted"),
         # Error on encrypted but empty pw passed
-        ([fn_encrypted], {"password": ""}, ValueError,
-          "Password must be 1 or more character"),
+        ([fn_encrypted], {"password": ""}, CryptoError,
+          "Password was not given but private key is encrypted"),
         # Error on encrypted but bad pw passed
         ([fn_encrypted], {"password": "bad pw"}, CryptoError,
           "Bad decrypt. Incorrect password?"),
         # Error on pw and prompt
         ([fn_default], {"password": pw, "prompt": True}, ValueError,
-          "Passing 'password' and 'prompt' True is not allowed.")]):
+          "passing 'password' and 'prompt=True' is not allowed")]):
 
       with self.assertRaises(err, msg="(row {})".format(idx)) as ctx:
         import_rsa_privatekey_from_file(*args, **kwargs)
@@ -257,6 +257,10 @@ class TestInterfaceFunctions(unittest.TestCase):
     # bad password
     with self.assertRaises(FormatError):
       import_rsa_privatekey_from_file(fn_default, password=123456)
+
+    # bad prompt
+    with self.assertRaises(FormatError):
+      import_rsa_privatekey_from_file(fn_default, prompt="not-a-bool")
 
 
 
@@ -381,15 +385,15 @@ class TestInterfaceFunctions(unittest.TestCase):
         ([fn_encrypted], {}, CryptoError,
           "Malformed Ed25519 key JSON, possibly due to encryption, "
           "but no password provided?"),
-        # Error on encrypted but empty pw passed
-        ([fn_encrypted], {"password": ""}, ValueError,
-          "Password must be 1 or more character"),
+        # Error on encrypted but empty pw
+        ([fn_encrypted], {"password": ""}, CryptoError,
+          "Decryption failed."),
         # Error on encrypted but bad pw passed
         ([fn_encrypted], {"password": "bad pw"}, CryptoError,
           "Decryption failed."),
         # Error on pw and prompt
         ([fn_default], {"password": pw, "prompt": True}, ValueError,
-          "Passing 'password' and 'prompt' True is not allowed.")]):
+          "passing 'password' and 'prompt=True' is not allowed")]):
 
       with self.assertRaises(err, msg="(row {})".format(idx)) as ctx:
         import_ed25519_privatekey_from_file(*args, **kwargs)
@@ -420,6 +424,9 @@ class TestInterfaceFunctions(unittest.TestCase):
     with self.assertRaises(FormatError):
       import_ed25519_privatekey_from_file(fn_default, password=123456)
 
+    # Error on bad prompt format
+    with self.assertRaises(FormatError):
+      import_ed25519_privatekey_from_file(fn_default, prompt="not-a-bool")
 
 
   def test_ecdsa(self):
