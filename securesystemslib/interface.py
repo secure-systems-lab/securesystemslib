@@ -937,8 +937,11 @@ def import_ecdsa_privatekey_from_file(filepath, password=None,
 
 
 
-def import_public_keys_from_file(filepaths, key_types=None):
-  """Import multiple public keys from files.
+def import_publickeys_from_file(filepaths, key_types=None):
+  """Imports multiple public keys from files.
+
+  NOTE: Use 'import_rsa_publickey_from_file' to specify any other than the
+  default signing schemes for an RSA key.
 
   Arguments:
     filepaths: A list of paths to public key files.
@@ -949,8 +952,8 @@ def import_public_keys_from_file(filepaths, key_types=None):
 
   Raises:
     TypeError: filepaths or key_types (if passed) is not iterable.
-    securesystemslib.exceptions.FormatError: key_types is passed and does not
-        have the same length as filepaths or contains an unsupported key type.
+    FormatError: key_types is passed and does not have the same length as
+        filepaths or contains an unsupported key type.
     See import_ed25519_publickey_from_file, import_rsa_publickey_from_file and
     import_ecdsa_publickey_from_file for other exceptions.
 
@@ -959,7 +962,7 @@ def import_public_keys_from_file(filepaths, key_types=None):
 
   """
   if key_types is None:
-    key_types = [securesystemslib.KEY_TYPE_RSA] * len(filepaths)
+    key_types = [KEY_TYPE_RSA] * len(filepaths)
 
   if len(key_types) != len(filepaths):
     raise securesystemslib.exceptions.FormatError(

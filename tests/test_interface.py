@@ -69,7 +69,7 @@ from securesystemslib.interface import (
     generate_and_write_ecdsa_keypair,
     import_ecdsa_publickey_from_file,
     import_ecdsa_privatekey_from_file,
-    import_public_keys_from_file)
+    import_publickeys_from_file)
 
 
 
@@ -499,11 +499,11 @@ class TestInterfaceFunctions(unittest.TestCase):
 
 
 
-  def test_import_public_keys_from_file(self):
+  def test_import_publickeys_from_file(self):
     """Test import multiple public keys with different types. """
 
     # Successfully import key dict with one key per supported key type
-    key_dict = import_public_keys_from_file([
+    key_dict = import_publickeys_from_file([
         self.path_rsa + ".pub",
         self.path_ed25519  + ".pub",
         self.path_ecdsa  + ".pub"],
@@ -516,28 +516,28 @@ class TestInterfaceFunctions(unittest.TestCase):
       )
 
     # Successfully import default rsa key
-    key_dict = import_public_keys_from_file([self.path_rsa + ".pub"])
+    key_dict = import_publickeys_from_file([self.path_rsa + ".pub"])
     ANY_PUBKEY_DICT_SCHEMA.check_match(key_dict)
     RSAKEY_SCHEMA.check_match(
         list(key_dict.values()).pop())
 
     # Bad default rsa key type for ed25519
     with self.assertRaises(Error):
-      import_public_keys_from_file([self.path_ed25519 + ".pub"])
+      import_publickeys_from_file([self.path_ed25519 + ".pub"])
 
     # Bad ed25519 key type for rsa key
     with self.assertRaises(Error):
-      import_public_keys_from_file(
+      import_publickeys_from_file(
           [self.path_rsa + ".pub"], [KEY_TYPE_ED25519])
 
     # Unsupported key type
     with self.assertRaises(FormatError):
-      import_public_keys_from_file(
+      import_publickeys_from_file(
           [self.path_ed25519 + ".pub"], ["KEY_TYPE_UNSUPPORTED"])
 
     # Mismatching arguments lists lenghts
     with self.assertRaises(FormatError):
-      import_public_keys_from_file(
+      import_publickeys_from_file(
           [self.path_rsa + ".pub", self.path_ed25519 + ".pub"],
           [KEY_TYPE_ED25519])
 
