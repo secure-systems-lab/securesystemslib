@@ -69,7 +69,8 @@ from securesystemslib.interface import (
     generate_and_write_ecdsa_keypair,
     import_ecdsa_publickey_from_file,
     import_ecdsa_privatekey_from_file,
-    import_publickeys_from_file)
+    import_publickeys_from_file,
+    import_privatekey_from_file)
 
 
 
@@ -665,6 +666,37 @@ class TestInterfaceFunctions(unittest.TestCase):
       import_publickeys_from_file(
           [self.path_rsa + ".pub", self.path_ed25519 + ".pub"],
           [KEY_TYPE_ED25519])
+
+
+  def test_import_privatekey_from_file(self):
+    """Test generic private key import function. """
+
+    pw = "password"
+    for idx, (path, key_type, key_schema) in enumerate([
+        (self.path_rsa, None, RSAKEY_SCHEMA), # default key type
+        (self.path_rsa, KEY_TYPE_RSA, RSAKEY_SCHEMA),
+        (self.path_ed25519, KEY_TYPE_ED25519, ED25519KEY_SCHEMA),
+        (self.path_ecdsa, KEY_TYPE_ECDSA, ECDSAKEY_SCHEMA)]):
+
+      # Successfully import key per supported type, with ...
+      # ... passed password
+      key = import_privatekey_from_file(path, key_type=key_type, password=pw)
+      self.assertTrue(key_schema.matches(key), "(row {})".format(idx))
+
+      # ... entered password on mock-prompt
+      with mock.patch("securesystemslib.interface.get_password", return_value=pw):
+        key = import_privatekey_from_file(path, key_type=key_type, prompt=True)
+      self.assertTrue(key_schema.matches(key), "(row {})".format(idx))
+
+    # Error on wrong key for default key type
+    with self.assertRaises(Error):
+      import_privatekey_from_file(self.path_ed25519, password=pw)
+
+    # Error on unsupported key type
+    with self.assertRaises(FormatError):
+      import_privatekey_from_file(
+          self.path_rsa, key_type="KEY_TYPE_UNSUPPORTED", password=pw)
+
 
 
 # Run the test cases.

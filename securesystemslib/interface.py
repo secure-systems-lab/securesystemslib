@@ -732,6 +732,61 @@ def import_publickeys_from_file(filepaths, key_types=None):
   return key_dict
 
 
+
+def import_privatekey_from_file(filepath, key_type=None, password=None,
+    prompt=False):
+  """Imports private key from file.
+
+  If a password is passed or entered on the prompt, the private key is
+  decrypted, otherwise it is treated as unencrypted.
+
+  NOTE: The default signing scheme 'rsassa-pss-sha256' is assigned to RSA keys.
+  Use 'import_rsa_publickey_from_file' to specify any other than the default
+  signing scheme for an RSA key. ed25519 and ecdsa keys have the signing scheme
+  included in the custom key format (see generate functions).
+
+  Arguments:
+    filepath: The path to read the file from.
+    key_type (optional): One of KEY_TYPE_RSA, KEY_TYPE_ED25519 or
+        KEY_TYPE_ECDSA. Default is KEY_TYPE_RSA.
+    password (optional): A password to decrypt the key.
+    prompt (optional): A boolean indicating if the user should be prompted
+        for a decryption password. If the user enters an empty password, the
+        key is not decrypted.
+
+  Raises:
+    FormatError: Arguments are malformed or 'key_type' is not supported.
+    ValueError: Both a 'password' is passed and 'prompt' is true.
+    UnsupportedLibraryError: pyca/cryptography is not available.
+    StorageError: Key file cannot be read.
+    Error, CryptoError: Key cannot be parsed.
+
+  Returns:
+    A private key object conformant with one of 'ED25519KEY_SCHEMA',
+    'RSAKEY_SCHEMA' or 'ECDSAKEY_SCHEMA'.
+
+  """
+  if key_type is None:
+    key_type = KEY_TYPE_RSA
+
+  if key_type == KEY_TYPE_ED25519:
+    return import_ed25519_privatekey_from_file(
+        filepath, password=password, prompt=prompt)
+
+  elif key_type == KEY_TYPE_RSA:
+    return import_rsa_privatekey_from_file(
+        filepath, password=password, prompt=prompt)
+
+  elif key_type == KEY_TYPE_ECDSA:
+    return import_ecdsa_privatekey_from_file(
+        filepath, password=password, prompt=prompt)
+
+  else:
+    raise securesystemslib.exceptions.FormatError(
+        "Unsupported key type '{}'. Must be '{}', '{}' or '{}'.".format(
+        key_type, KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA))
+
+
 if __name__ == '__main__':
   # The interactive sessions of the documentation strings can
   # be tested by running interface.py as a standalone module:
