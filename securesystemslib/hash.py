@@ -189,9 +189,14 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
   # If so, return the digest object.
   if hash_library == 'hashlib' and hash_library in SUPPORTED_LIBRARIES:
     try:
-      return hashlib.new(algorithm)
+      if algorithm == 'blake2b-256':
+        return hashlib.new('blake2b', digest_size=32)
+      else:
+        return hashlib.new(algorithm)
 
-    except ValueError:
+    except (ValueError, TypeError):
+      # ValueError: the algorithm value was unknown
+      # TypeError: unexpected argument digest_size (on old python)
       raise securesystemslib.exceptions.UnsupportedAlgorithmError(algorithm)
 
   # Was a pyca_crypto digest object requested and is it supported?
