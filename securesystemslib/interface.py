@@ -97,9 +97,6 @@ def get_password(prompt='Password: ', confirm=False):
   <Returns>
     The password entered by the user.
   """
-
-  # Are the arguments the expected type?
-  # If not, raise 'securesystemslib.exceptions.FormatError'.
   securesystemslib.formats.TEXT_SCHEMA.check_match(prompt)
   securesystemslib.formats.BOOLEAN_SCHEMA.check_match(confirm)
 
@@ -189,6 +186,7 @@ def _get_key_file_decryption_password(password, prompt, path):
 
 
 
+
 def generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
     password=None, prompt=False):
   """
@@ -230,49 +228,34 @@ def generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
     The 'filepath' of the written key.
   """
 
-  # Does 'bits' have the correct format?
-  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match(bits)
+
   password = _get_key_file_encryption_password(password, prompt, filepath)
 
-  # Generate the public and private RSA keys.
+  # Generate private RSA key and extract public and private both in PEM
   rsa_key = securesystemslib.keys.generate_rsa_key(bits)
   public = rsa_key['keyval']['public']
   private = rsa_key['keyval']['private']
 
+  # Use passed 'filepath' or keyid as file name
   if not filepath:
     filepath = os.path.join(os.getcwd(), rsa_key['keyid'])
 
-  else:
-    logger.debug('The filepath has been specified.  Not using the key\'s'
-        ' KEYID as the default filepath.')
-
-  # Does 'filepath' have the correct format?
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
-
-  # Encrypt the private key if 'password' is set.
+  # Encrypt the private key if a 'password' was passed or entered on the prompt
   if password is not None:
     private = securesystemslib.keys.create_rsa_encrypted_pem(private, password)
 
-  else:
-    logger.debug('An empty password was given.  Not encrypting the private key.')
-
-  # If the parent directory of filepath does not exist,
-  # create it (and all its parent directories, if necessary).
+  # Create intermediate directories as required
   securesystemslib.util.ensure_parent_dir(filepath)
 
-  # Write the public key (i.e., 'public', which is in PEM format) to
-  # '<filepath>.pub'.  (1) Create a temporary file, (2) write the contents of
-  # the public key, and (3) move to final destination.
+  # Write PEM-encoded public key to <filepath>.pub
   file_object = tempfile.TemporaryFile()
   file_object.write(public.encode('utf-8'))
-  # The temporary file is closed after the final move.
   securesystemslib.util.persist_temp_file(file_object, filepath + '.pub')
 
-  # Write the private key in encrypted PEM format to '<filepath>'.
-  # Unlike the public key file, the private key does not have a file
-  # extension.
+  # Write PEM-encoded private key to <filepath>
   file_object = tempfile.TemporaryFile()
   file_object.write(private.encode('utf-8'))
   securesystemslib.util.persist_temp_file(file_object, filepath)
@@ -345,29 +328,20 @@ def import_rsa_privatekey_from_file(filepath, password=None,
     An RSA key object, conformant to 'securesystemslib.formats.RSAKEY_SCHEMA'.
 
   """
-
-  # Does 'filepath' have the correct format?
-  # Ensure the arguments have the appropriate number of objects and object
-  # types, and that all dict keys are properly named.
-  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
-
-  # Is 'scheme' properly formatted?
   securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
+
   password = _get_key_file_decryption_password(password, prompt, filepath)
 
   if storage_backend is None:
     storage_backend = securesystemslib.storage.FilesystemBackend()
 
-  # Read the contents of 'filepath' that should be a PEM formatted private key.
   with storage_backend.get(filepath) as file_object:
     pem_key = file_object.read().decode('utf-8')
 
-  # Convert 'pem_key' to 'securesystemslib.formats.RSAKEY_SCHEMA' format.
-  # Raise 'securesystemslib.exceptions.CryptoError' if 'pem_key' is invalid.
-  # If 'password' is None decryption will be omitted.
-  rsa_key = securesystemslib.keys.import_rsakey_from_private_pem(pem_key,
-      scheme, password)
+  # Optionally decrypt and convert PEM-encoded key to 'RSAKEY_SCHEMA' format
+  rsa_key = securesystemslib.keys.import_rsakey_from_private_pem(
+      pem_key, scheme, password)
 
   return rsa_key
 
@@ -408,25 +382,16 @@ def import_rsa_publickey_from_file(filepath, scheme='rsassa-pss-sha256',
   <Returns>
     An RSA key object conformant to 'securesystemslib.formats.RSAKEY_SCHEMA'.
   """
-
-  # Does 'filepath' have the correct format?
-  # Ensure the arguments have the appropriate number of objects and object
-  # types, and that all dict keys are properly named.
-  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
-
-  # Is 'scheme' properly formatted?
   securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   if storage_backend is None:
     storage_backend = securesystemslib.storage.FilesystemBackend()
 
-  # Read the contents of the key file that should be in PEM format and contains
-  # the public portion of the RSA key.
   with storage_backend.get(filepath) as file_object:
     rsa_pubkey_pem = file_object.read().decode('utf-8')
 
-  # Convert 'rsa_pubkey_pem' to 'securesystemslib.formats.RSAKEY_SCHEMA' format.
+  # Convert PEM-encoded key to 'RSAKEY_SCHEMA' format
   try:
     rsakey_dict = securesystemslib.keys.import_rsakey_from_public_pem(
         rsa_pubkey_pem, scheme)
@@ -485,58 +450,35 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None,
 
   ed25519_key = securesystemslib.keys.generate_ed25519_key()
 
+  # Use passed 'filepath' or keyid as file name
   if not filepath:
     filepath = os.path.join(os.getcwd(), ed25519_key['keyid'])
 
-  else:
-    logger.debug('The filepath has been specified.  Not using the key\'s'
-        ' KEYID as the default filepath.')
-
-  # Does 'filepath' have the correct format?
-  # Ensure the arguments have the appropriate number of objects and object
-  # types, and that all dict keys are properly named.
-  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
-  # If the parent directory of filepath does not exist,
-  # create it (and all its parent directories, if necessary).
+  # Create intermediate directories as required
   securesystemslib.util.ensure_parent_dir(filepath)
 
-  # Create a temporary file, write the contents of the public key, and move
-  # to final destination.
-  file_object = tempfile.TemporaryFile()
-
-  # Generate the ed25519 public key file contents in metadata format (i.e.,
-  # does not include the keyid portion).
+  # Use custom JSON format for ed25519 keys on-disk
   keytype = ed25519_key['keytype']
   keyval = ed25519_key['keyval']
   scheme = ed25519_key['scheme']
   ed25519key_metadata_format = securesystemslib.keys.format_keyval_to_metadata(
       keytype, scheme, keyval, private=False)
 
+  # Write public key to <filepath>.pub
+  file_object = tempfile.TemporaryFile()
   file_object.write(json.dumps(ed25519key_metadata_format).encode('utf-8'))
-
-  # Write the public key (i.e., 'public', which is in PEM format) to
-  # '<filepath>.pub'.  (1) Create a temporary file, (2) write the contents of
-  # the public key, and (3) move to final destination.
-  # The temporary file is closed after the final move.
   securesystemslib.util.persist_temp_file(file_object, filepath + '.pub')
 
-  # Write the encrypted key string, conformant to
-  # 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA', to '<filepath>'.
-  file_object = tempfile.TemporaryFile()
-
-  # Encrypt the private key if 'password' is set.
+  # Encrypt private key if we have a password, store as JSON string otherwise
   if password is not None:
     ed25519_key = securesystemslib.keys.encrypt_key(ed25519_key, password)
-
   else:
-    logger.debug('An empty password was given. '
-                 'Not encrypting the private key.')
     ed25519_key = json.dumps(ed25519_key)
 
-  # Raise 'securesystemslib.exceptions.CryptoError' if 'ed25519_key' cannot be
-  # encrypted.
+  # Write private key to <filepath>
+  file_object = tempfile.TemporaryFile()
   file_object.write(ed25519_key.encode('utf-8'))
   securesystemslib.util.persist_temp_file(file_object, filepath)
 
@@ -569,28 +511,21 @@ def import_ed25519_publickey_from_file(filepath):
     An ED25519 key object conformant to
     'securesystemslib.formats.ED25519KEY_SCHEMA'.
   """
-
-  # Does 'filepath' have the correct format?
-  # Ensure the arguments have the appropriate number of objects and object
-  # types, and that all dict keys are properly named.
-  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
-  # ED25519 key objects are saved in json and metadata format.  Return the
-  # loaded key object in securesystemslib.formats.ED25519KEY_SCHEMA' format that
-  # also includes the keyid.
+  # Load custom on-disk JSON formatted key and convert to its custom in-memory
+  # dict key representation
   ed25519_key_metadata = securesystemslib.util.load_json_file(filepath)
-  ed25519_key, junk = \
-    securesystemslib.keys.format_metadata_to_key(ed25519_key_metadata)
+  ed25519_key, junk = securesystemslib.keys.format_metadata_to_key(
+      ed25519_key_metadata)
 
-  # Raise an exception if an unexpected key type is imported.  Redundant
-  # validation of 'keytype'.  'securesystemslib.keys.format_metadata_to_key()'
-  # should have fully validated 'ed25519_key_metadata'.
+  # Check that the generic loading functions indeed loaded an ed25519 key
   if ed25519_key['keytype'] != 'ed25519':
     message = 'Invalid key type loaded: ' + repr(ed25519_key['keytype'])
     raise securesystemslib.exceptions.FormatError(message)
 
   return ed25519_key
+
 
 
 
@@ -639,24 +574,19 @@ def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False,
     An ed25519 key object of the form:
     'securesystemslib.formats.ED25519KEY_SCHEMA'.
   """
-
-  # Does 'filepath' have the correct format?
-  # Ensure the arguments have the appropriate number of objects and object
-  # types, and that all dict keys are properly named.
-  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
   password = _get_key_file_decryption_password(password, prompt, filepath)
 
   if storage_backend is None:
     storage_backend = securesystemslib.storage.FilesystemBackend()
 
-  # Finally, regardless of password, try decrypting the key, if necessary.
-  # Otherwise, load it straight from storage.
   with storage_backend.get(filepath) as file_object:
     json_str = file_object.read()
 
-  return securesystemslib.keys.\
-      import_ed25519key_from_private_json(json_str, password=password)
+    # Load custom on-disk JSON formatted key and convert to its custom
+    # in-memory dict key representation, decrypting it if password is not None
+    return securesystemslib.keys.import_ed25519key_from_private_json(
+        json_str, password=password)
 
 
 
@@ -704,56 +634,37 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None,
 
   password = _get_key_file_encryption_password(password, prompt, filepath)
 
-  # Generate a new ECDSA key object.  The 'cryptography' library is currently
-  # supported and performs the actual cryptographic operations.
   ecdsa_key = securesystemslib.keys.generate_ecdsa_key()
 
+  # Use passed 'filepath' or keyid as file name
   if not filepath:
     filepath = os.path.join(os.getcwd(), ecdsa_key['keyid'])
 
-  else:
-    logger.debug('The filepath has been specified.  Not using the key\'s'
-        ' KEYID as the default filepath.')
-
-  # Does 'filepath' have the correct format?
-  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
-  # If the parent directory of filepath does not exist,
-  # create it (and all its parent directories, if necessary).
+  # Create intermediate directories as required
   securesystemslib.util.ensure_parent_dir(filepath)
 
-  # Create a temporary file, write the contents of the public key, and move
-  # to final destination.
-  file_object = tempfile.TemporaryFile()
-
-  # Generate the ECDSA public key file contents in metadata format (i.e., does
-  # not include the keyid portion).
+  # Use custom JSON format for ecdsa keys on-disk
   keytype = ecdsa_key['keytype']
   keyval = ecdsa_key['keyval']
   scheme = ecdsa_key['scheme']
   ecdsakey_metadata_format = securesystemslib.keys.format_keyval_to_metadata(
       keytype, scheme, keyval, private=False)
 
+  # Write public key to <filepath>.pub
+  file_object = tempfile.TemporaryFile()
   file_object.write(json.dumps(ecdsakey_metadata_format).encode('utf-8'))
-
-  # Write the public key (i.e., 'public', which is in PEM format) to
-  # '<filepath>.pub'.  (1) Create a temporary file, (2) write the contents of
-  # the public key, and (3) move to final destination.
   securesystemslib.util.persist_temp_file(file_object, filepath + '.pub')
 
-  # Write the encrypted key string, conformant to
-  # 'securesystemslib.formats.ENCRYPTEDKEY_SCHEMA', to '<filepath>'.
-  file_object = tempfile.TemporaryFile()
-
+  # Encrypt private key if we have a password, store as JSON string otherwise
   if password is not None:
     ecdsa_key = securesystemslib.keys.encrypt_key(ecdsa_key, password)
-
   else:
     ecdsa_key = json.dumps(ecdsa_key)
 
-  # Raise 'securesystemslib.exceptions.CryptoError' if 'ecdsa_key' cannot be
-  # encrypted.
+  # Write private key to <filepath>
+  file_object = tempfile.TemporaryFile()
   file_object.write(ecdsa_key.encode('utf-8'))
   securesystemslib.util.persist_temp_file(file_object, filepath)
 
@@ -786,19 +697,13 @@ def import_ecdsa_publickey_from_file(filepath):
     An ECDSA key object conformant to
     'securesystemslib.formats.ECDSAKEY_SCHEMA'.
   """
-
-  # Does 'filepath' have the correct format?
-  # Ensure the arguments have the appropriate number of objects and object
-  # types, and that all dict keys are properly named.
-  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
-  # ECDSA key objects are saved in json and metadata format.  Return the
-  # loaded key object in securesystemslib.formats.ECDSAKEY_SCHEMA' format that
-  # also includes the keyid.
+  # Load custom on-disk JSON formatted key and convert to its custom in-memory
+  # dict key representation
   ecdsa_key_metadata = securesystemslib.util.load_json_file(filepath)
-  ecdsa_key, junk = \
-    securesystemslib.keys.format_metadata_to_key(ecdsa_key_metadata)
+  ecdsa_key, junk = securesystemslib.keys.format_metadata_to_key(
+      ecdsa_key_metadata)
 
   return ecdsa_key
 
@@ -843,11 +748,6 @@ def import_ecdsa_privatekey_from_file(filepath, password=None, prompt=False,
   <Returns>
     An ECDSA key object of the form: 'securesystemslib.formats.ECDSAKEY_SCHEMA'.
   """
-
-  # Does 'filepath' have the correct format?
-  # Ensure the arguments have the appropriate number of objects and object
-  # types, and that all dict keys are properly named.
-  # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
   password = _get_key_file_decryption_password(password, prompt, filepath)
@@ -855,20 +755,14 @@ def import_ecdsa_privatekey_from_file(filepath, password=None, prompt=False,
   if storage_backend is None:
     storage_backend = securesystemslib.storage.FilesystemBackend()
 
-  # Store the encrypted contents of 'filepath' prior to calling the decryption
-  # routine.
   with storage_backend.get(filepath) as file_object:
     key_data = file_object.read().decode('utf-8')
 
-  # Decrypt the loaded key file, calling the 'cryptography' library to generate
-  # the derived encryption key from 'password'.  Raise
-  # 'securesystemslib.exceptions.CryptoError' if the decryption fails.
+  # Decrypt private key if we have a password, directly load JSON otherwise
   if password is not None:
     key_object = securesystemslib.keys.decrypt_key(key_data, password)
-
   else:
     key_object = securesystemslib.util.load_json_string(key_data)
-
 
   # Raise an exception if an unexpected key type is imported.
   # NOTE: we support keytype's of ecdsa-sha2-nistp256 and ecdsa-sha2-nistp384
