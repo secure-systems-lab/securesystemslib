@@ -232,43 +232,24 @@ def verify_signature(signature_object, pubkey_info, content):
 
 
 def export_pubkey(keyid, homedir=None):
-  """
-  <Purpose>
-    Calls gpg command line utility to export the gpg public key bundle
-    identified by the passed keyid from the gpg keyring at the passed homedir
-    in a securesystemslib-style format.
+  """Exports a public key from a GnuPG keyring.
 
-    NOTE: The identified key is exported including the corresponding master
-    key and all subkeys.
+  Arguments:
+    keyid: An OpenPGP keyid in KEYID_SCHEMA format.
+    homedir (optional): A path to the GnuPG home directory. If not set the
+        default GnuPG home directory is used.
 
-    The executed base export command is defined in
-    securesystemslib.gpg.constants.GPG_EXPORT_PUBKEY_COMMAND.
+  Raises:
+    ValueError: Keyid is not a string.
+    UnsupportedLibraryError: The gpg command or pyca/cryptography are not
+        available.
+    KeyNotFoundError: No key or subkey was found for that keyid.
 
-  <Arguments>
-    keyid:
-            The GPG keyid in format: securesystemslib.formats.KEYID_SCHEMA
+  Side Effects:
+    Calls system gpg command in a subprocess.
 
-    homedir: (optional)
-            Path to the gpg keyring. If not passed the default keyring is used.
-
-  <Exceptions>
-    ValueError:
-            if the keyid does not match the required format.
-
-    securesystemslib.exceptions.UnsupportedLibraryError:
-            If the gpg command is not available, or
-            the cryptography library is not installed.
-
-    securesystemslib.gpg.execeptions.KeyNotFoundError:
-            if no key or subkey was found for that keyid.
-
-
-  <Side Effects>
-    None.
-
-  <Returns>
-    The exported public key object in the format:
-    securesystemslib.formats.GPG_PUBKEY_SCHEMA.
+  Returns:
+    An OpenPGP public key object in GPG_PUBKEY_SCHEMA format.
 
   """
   if not HAVE_GPG: # pragma: no cover
@@ -302,7 +283,7 @@ def export_pubkey(keyid, homedir=None):
 
 
 def export_pubkeys(keyids, homedir=None):
-  """Export multiple public keys from a GnuPG keyring.
+  """Exports multiple public keys from a GnuPG keyring.
 
   Arguments:
     keyids: A list of OpenPGP keyids in KEYID_SCHEMA format.
@@ -311,11 +292,18 @@ def export_pubkeys(keyids, homedir=None):
 
   Raises:
     TypeError: Keyids is not iterable.
-    See 'export_pubkey' for other exceptions.
+    ValueError: A Keyid is not a string.
+    UnsupportedLibraryError: The gpg command or pyca/cryptography are not
+        available.
+    KeyNotFoundError: No key or subkey was found for that keyid.
+
+  Side Effects:
+    Calls system gpg command in a subprocess.
 
   Returns:
-    A dict with the OpenPGP keyids passed as the keyids argument for dict keys
-    and keys in GPG_PUBKEY_SCHEMA format for values.
+    A dict of OpenPGP public key objects in GPG_PUBKEY_SCHEMA format as values,
+    and their keyids as dict keys.
+
 
   """
   public_key_dict = {}

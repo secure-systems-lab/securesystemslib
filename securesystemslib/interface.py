@@ -73,29 +73,16 @@ DEFAULT_RSA_KEY_BITS = 3072
 
 
 def get_password(prompt='Password: ', confirm=False):
-  """
-  <Purpose>
-    Return the password entered by the user.  If 'confirm' is True, the user is
-    asked to enter the previously entered password once again.  If they match,
-    the password is returned to the caller.
+  """Prompts user to enter a password.
 
-  <Arguments>
-    prompt:
-      The text of the password prompt that is displayed to the user.
+  Arguments:
+    prompt (optional): A text displayed on the prompt (stderr).
+    confirm (optional): A boolean indicating if the user needs to enter the
+        same password twice.
 
-    confirm:
-      Boolean indicating whether the user should be prompted for the password
-      a second time.  The two entered password must match, otherwise the
-      user is again prompted for a password.
+  Returns:
+    The password entered on the prompt.
 
-  <Exceptions>
-    None.
-
-  <Side Effects>
-    None.
-
-  <Returns>
-    The password entered by the user.
   """
   securesystemslib.formats.TEXT_SCHEMA.check_match(prompt)
   securesystemslib.formats.BOOLEAN_SCHEMA.check_match(confirm)
@@ -189,45 +176,41 @@ def _get_key_file_decryption_password(password, prompt, path):
 
 def generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
     password=None, prompt=False):
+  """Generates RSA key pair and writes PEM-encoded keys to disk.
+
+  If a password is passed or entered on the prompt, the private key is
+  encrypted. According to the documentation of the used pyca/cryptography
+  library encryption is performed "using the best available encryption for a
+  given key's backend", which "is a curated encryption choice and the algorithm
+  may change over time."  The private key is written in PKCS#1 and the public
+  key in X.509 SubjectPublicKeyInfo format.
+
+  NOTE: A signing scheme can be assigned on key import (see import functions).
+
+  Arguments:
+    filepath (optional): The path to write the private key to. If not passed,
+        the key is written to CWD using the keyid as filename. The public key
+        is written to the same path as the private key using the suffix '.pub'.
+    bits (optional): The number of bits of the generated RSA key.
+    password (optional): An encryption password.
+    prompt (optional): A boolean indicating if the user should be prompted
+        for an encryption password. If the user enters an empty password, the
+        key is not encrypted.
+
+  Raises:
+    UnsupportedLibraryError: pyca/cryptography is not available.
+    FormatError: Arguments are malformed.
+    ValueError: An empty string is passed as 'password', or both a 'password'
+        is passed and 'prompt' is true.
+    StorageError: Key files cannot be written.
+
+  Side Effects:
+      Writes key files to disk.
+
+  Returns:
+    The private key filepath.
+
   """
-  <Purpose>
-    Generate an RSA key pair.  The public portion of the generated RSA key is
-    saved to <'filepath'>.pub, whereas the private key portion is saved to
-    <'filepath'>.  If no password is given, the user is prompted for one.  If
-    the 'password' is an empty string, the private key is saved unencrypted to
-    <'filepath'>.  If the filepath is not given, the KEYID is used as the
-    filename and the keypair saved to the current working directory.
-
-    The best available form of encryption, for a given key's backend, is used
-    with pyca/cryptography.  According to their documentation, "it is a curated
-    encryption choice and the algorithm may change over time."
-
-  <Arguments>
-    filepath:
-      The public and private key files are saved to <filepath>.pub and
-      <filepath>, respectively.  If the filepath is not given, the public and
-      private keys are saved to the current working directory as <KEYID>.pub
-      and <KEYID>.  KEYID is the generated key's KEYID.
-
-    bits:
-      The number of bits of the generated RSA key.
-
-    password:
-      The password to encrypt 'filepath'.  If None, the user is prompted for a
-      password.  If an empty string is given, the private key is written to
-      disk unencrypted.
-
-  <Exceptions>
-    securesystemslib.exceptions.FormatError, if the arguments are improperly
-    formatted.
-
-  <Side Effects>
-    Writes key files to '<filepath>' and '<filepath>.pub'.
-
-  <Returns>
-    The 'filepath' of the written key.
-  """
-
   securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match(bits)
 
   password = _get_key_file_encryption_password(password, prompt, filepath)
@@ -268,64 +251,31 @@ def generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
 def import_rsa_privatekey_from_file(filepath, password=None,
     scheme='rsassa-pss-sha256', prompt=False,
     storage_backend=None):
-  """
-  <Purpose>
-    Import the PEM file in 'filepath' containing the private key.
+  """Imports PEM-encoded RSA private key from file storage.
 
-    If password is passed use passed password for decryption.
-    If prompt is True use entered password for decryption.
-    If no password is passed and either prompt is False or if the password
-    entered at the prompt is an empty string, omit decryption, treating the
-    key as if it is not encrypted.
-    If password is passed and prompt is True, an error is raised. (See below.)
+  The expected key format is PKCS#1. If a password is passed or entered on the
+  prompt, the private key is decrypted, otherwise it is treated as unencrypted.
 
-    The returned key is an object in the
-    'securesystemslib.formats.RSAKEY_SCHEMA' format.
+  Arguments:
+    filepath: The path to read the file from.
+    password (optional): A password to decrypt the key.
+    scheme (optional): The signing scheme assigned to the returned key object.
+        See RSA_SCHEME_SCHEMA for available signing schemes.
+    prompt (optional): A boolean indicating if the user should be prompted
+        for a decryption password. If the user enters an empty password, the
+        key is not decrypted.
+    storage_backend (optional): An object implementing StorageBackendInterface.
+        If not passed a default FilesystemBackend will be used.
 
-  <Arguments>
-    filepath:
-      <filepath> file, an RSA encrypted PEM file.  Unlike the public RSA PEM
-      key file, 'filepath' does not have an extension.
+  Raises:
+    UnsupportedLibraryError: pyca/cryptography is not available.
+    FormatError: Arguments are malformed.
+    ValueError: Both a 'password' is passed and 'prompt' is true.
+    StorageError: Key file cannot be read.
+    CryptoError: Key cannot be parsed.
 
-    password:
-      The passphrase to decrypt 'filepath'.
-
-    scheme:
-      The signature scheme used by the imported key.
-
-    prompt:
-      If True the user is prompted for a passphrase to decrypt 'filepath'.
-      Default is False.
-
-    storage_backend:
-      An object which implements
-      securesystemslib.storage.StorageBackendInterface. When no object is
-      passed a FilesystemBackend will be instantiated and used.
-
-  <Exceptions>
-    ValueError, if 'password' is passed and 'prompt' is True.
-
-    ValueError, if 'password' is passed and it is an empty string.
-
-    securesystemslib.exceptions.FormatError, if the arguments are improperly
-    formatted.
-
-    securesystemslib.exceptions.FormatError, if the entered password is
-    improperly formatted.
-
-    IOError, if 'filepath' can't be loaded.
-
-    securesystemslib.exceptions.CryptoError, if a password is available
-    and 'filepath' is not a valid key file encrypted using that password.
-
-    securesystemslib.exceptions.CryptoError, if no password is available
-    and 'filepath' is not a valid non-encrypted key file.
-
-  <Side Effects>
-    The contents of 'filepath' are read, optionally decrypted, and returned.
-
-  <Returns>
-    An RSA key object, conformant to 'securesystemslib.formats.RSAKEY_SCHEMA'.
+  Returns:
+    An RSA private key object conformant with 'RSAKEY_SCHEMA'.
 
   """
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
@@ -351,36 +301,26 @@ def import_rsa_privatekey_from_file(filepath, password=None,
 
 def import_rsa_publickey_from_file(filepath, scheme='rsassa-pss-sha256',
     storage_backend=None):
-  """
-  <Purpose>
-    Import the RSA key stored in 'filepath'.  The key object returned is in the
-    format 'securesystemslib.formats.RSAKEY_SCHEMA'.  If the RSA PEM in
-    'filepath' contains a private key, it is discarded.
+  """Imports PEM-encoded RSA public key from file storage.
 
-  <Arguments>
-    filepath:
-      <filepath>.pub file, an RSA PEM file.
+  The expected key format is X.509 SubjectPublicKeyInfo.
 
-    scheme:
-      The signature scheme used by the imported key.
+  Arguments:
+    filepath: The path to read the file from.
+    scheme (optional): The signing scheme assigned to the returned key object.
+        See RSA_SCHEME_SCHEMA for available signing schemes.
+    storage_backend (optional): An object implementing StorageBackendInterface.
+        If not passed a default FilesystemBackend will be used.
 
-    storage_backend:
-      An object which implements
-      securesystemslib.storage.StorageBackendInterface. When no object is
-      passed a FilesystemBackend will be instantiated and used.
+  Raises:
+    UnsupportedLibraryError: pyca/cryptography is not available.
+    FormatError: Arguments are malformed.
+    StorageError: Key file cannot be read.
+    Error: Public key is malformed.
 
-  <Exceptions>
-    securesystemslib.exceptions.FormatError, if 'filepath' is improperly
-    formatted.
+  Returns:
+    An RSA public key object conformant with 'RSAKEY_SCHEMA'.
 
-    securesystemslib.exceptions.Error, if a valid RSA key object cannot be
-    generated.  This may be caused by an improperly formatted PEM file.
-
-  <Side Effects>
-    'filepath' is read and its contents extracted.
-
-  <Returns>
-    An RSA key object conformant to 'securesystemslib.formats.RSAKEY_SCHEMA'.
   """
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
   securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
@@ -408,44 +348,37 @@ def import_rsa_publickey_from_file(filepath, scheme='rsassa-pss-sha256',
 
 def generate_and_write_ed25519_keypair(filepath=None, password=None,
     prompt=False):
+  """Generates ed25519 key pair and writes custom JSON-formatted keys to disk.
+
+  If a password is passed or entered on the prompt, the private key is
+  encrypted using AES-256 in CTR mode, with the password strengthened in
+  PBKDF2-HMAC-SHA256.
+
+  NOTE: The custom key format includes 'ed25519' as signing scheme.
+
+  Arguments:
+    filepath (optional): The path to write the private key to. If not passed,
+        the key is written to CWD using the keyid as filename. The public key
+        is written to the same path as the private key using the suffix '.pub'.
+    password (optional): An encryption password.
+    prompt (optional): A boolean indicating if the user should be prompted
+        for an encryption password. If the user enters an empty password, the
+        key is not encrypted.
+
+  Raises:
+    UnsupportedLibraryError: pyca/pynacl or pyca/cryptography is not available.
+    FormatError: Arguments are malformed.
+    ValueError: An empty string is passed as 'password', or both a 'password'
+        is passed and 'prompt' is true.
+    StorageError: Key files cannot be written.
+
+  Side Effects:
+    Writes key files to disk.
+
+  Returns:
+    The private key filepath.
+
   """
-  <Purpose>
-    Generate an Ed25519 keypair, where the encrypted key (using 'password' as
-    the passphrase) is saved to <'filepath'>.  The public key portion of the
-    generated Ed25519 key is saved to <'filepath'>.pub.  If the filepath is not
-    given, the KEYID is used as the filename and the keypair saved to the
-    current working directory.
-
-    The private key is encrypted according to 'cryptography's approach:
-    "Encrypt using the best available encryption for a given key's backend.
-    This is a curated encryption choice and the algorithm may change over
-    time."
-
-  <Arguments>
-    filepath:
-      The public and private key files are saved to <filepath>.pub and
-      <filepath>, respectively.  If the filepath is not given, the public and
-      private keys are saved to the current working directory as <KEYID>.pub
-      and <KEYID>.  KEYID is the generated key's KEYID.
-
-    password:
-      The password, or passphrase, to encrypt the private portion of the
-      generated Ed25519 key.  A symmetric encryption key is derived from
-      'password', so it is not directly used.
-
-  <Exceptions>
-    securesystemslib.exceptions.FormatError, if the arguments are improperly
-    formatted.
-
-    securesystemslib.exceptions.CryptoError, if 'filepath' cannot be encrypted.
-
-  <Side Effects>
-    Writes key files to '<filepath>' and '<filepath>.pub'.
-
-  <Returns>
-    The 'filepath' of the written key.
-  """
-
   password = _get_key_file_encryption_password(password, prompt, filepath)
 
   ed25519_key = securesystemslib.keys.generate_ed25519_key()
@@ -488,28 +421,21 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None,
 
 
 def import_ed25519_publickey_from_file(filepath):
-  """
-  <Purpose>
-    Load the ED25519 public key object (conformant to
-    'securesystemslib.formats.KEY_SCHEMA') stored in 'filepath'.  Return
-    'filepath' in securesystemslib.formats.ED25519KEY_SCHEMA format.
+  """Imports custom JSON-formatted ed25519 public key from disk.
 
-    If the key object in 'filepath' contains a private key, it is discarded.
+  NOTE: The signing scheme is set at key generation (see generate function).
 
-  <Arguments>
-    filepath:
-      <filepath>.pub file, a public key file.
+  Arguments:
+    filepath: The path to read the file from.
 
-  <Exceptions>
-    securesystemslib.exceptions.FormatError, if 'filepath' is improperly
-    formatted or is an unexpected key type.
+  Raises:
+    FormatError: Argument is malformed.
+    StorageError: Key file cannot be read.
+    Error: Public key is malformed.
 
-  <Side Effects>
-    The contents of 'filepath' is read and saved.
+  Returns:
+    An ed25519 public key object conformant with 'ED25519KEY_SCHEMA'.
 
-  <Returns>
-    An ED25519 key object conformant to
-    'securesystemslib.formats.ED25519KEY_SCHEMA'.
   """
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
@@ -533,46 +459,34 @@ def import_ed25519_publickey_from_file(filepath):
 
 def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False,
     storage_backend=None):
-  """
-  <Purpose>
-    Import the encrypted ed25519 key file in 'filepath', decrypt it, and return
-    the key object in 'securesystemslib.formats.ED25519KEY_SCHEMA' format.
+  """Imports custom JSON-formatted ed25519 private key from file storage.
 
-    The private key (may also contain the public part) is encrypted with AES
-    256 and CTR the mode of operation.  The password is strengthened with
-    PBKDF2-HMAC-SHA256.
+  If a password is passed or entered on the prompt, the private key is
+  decrypted, otherwise it is treated as unencrypted.
 
-  <Arguments>
-    filepath:
-      <filepath> file, an RSA encrypted key file.
+  NOTE: The signing scheme is set at key generation (see generate function).
 
-    password:
-      The password, or passphrase, to import the private key (i.e., the
-      encrypted key file 'filepath' must be decrypted before the ed25519 key
-      object can be returned.
+  Arguments:
+    filepath: The path to read the file from.
+    password (optional): A password to decrypt the key.
+    prompt (optional): A boolean indicating if the user should be prompted
+        for a decryption password. If the user enters an empty password, the
+        key is not decrypted.
+    storage_backend (optional): An object implementing StorageBackendInterface.
+        If not passed a default FilesystemBackend will be used.
 
-    prompt:
-      If True the user is prompted for a passphrase to decrypt 'filepath'.
-      Default is False.
 
-    storage_backend:
-      An object which implements
-      securesystemslib.storage.StorageBackendInterface. When no object is
-      passed a FilesystemBackend will be instantiated and used.
+  Raises:
+    UnsupportedLibraryError: pyca/cryptography is not available.
+    FormatError: Arguments are malformed.
+    ValueError: Both a 'password' is passed and 'prompt' is true.
+    StorageError: Key file cannot be read.
+    Error, CryptoError: Key cannot be parsed.
 
-  <Exceptions>
-    securesystemslib.exceptions.FormatError, if the arguments are improperly
-    formatted or the imported key object contains an invalid key type (i.e.,
-    not 'ed25519').
 
-    securesystemslib.exceptions.CryptoError, if 'filepath' cannot be decrypted.
+  Returns:
+    An ed25519 private key object conformant with 'ED25519KEY_SCHEMA'.
 
-  <Side Effects>
-    'password' is used to decrypt the 'filepath' key file.
-
-  <Returns>
-    An ed25519 key object of the form:
-    'securesystemslib.formats.ED25519KEY_SCHEMA'.
   """
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
   password = _get_key_file_decryption_password(password, prompt, filepath)
@@ -594,44 +508,37 @@ def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False,
 
 def generate_and_write_ecdsa_keypair(filepath=None, password=None,
     prompt=False):
+  """Generates ecdsa key pair and writes custom JSON-formatted keys to disk.
+
+  If a password is passed or entered on the prompt, the private key is
+  encrypted using AES-256 in CTR mode, with the password strengthened in
+  PBKDF2-HMAC-SHA256.
+
+  NOTE: The custom key format includes 'ecdsa-sha2-nistp256' as signing scheme.
+
+  Arguments:
+    filepath (optional): The path to write the private key to. If not passed,
+        the key is written to CWD using the keyid as filename. The public key
+        is written to the same path as the private key using the suffix '.pub'.
+    password (optional): An encryption password.
+    prompt (optional): A boolean indicating if the user should be prompted
+        for an encryption password. If the user enters an empty password, the
+        key is not encrypted.
+
+  Raises:
+    UnsupportedLibraryError: pyca/cryptography is not available.
+    FormatError: Arguments are malformed.
+    ValueError: An empty string is passed as 'password', or both a 'password'
+        is passed and 'prompt' is true.
+    StorageError: Key files cannot be written.
+
+  Side Effects:
+    Writes key files to disk.
+
+  Returns:
+    The private key filepath.
+
   """
-  <Purpose>
-    Generate an ECDSA keypair, where the encrypted key (using 'password' as the
-    passphrase) is saved to <'filepath'>.  The public key portion of the
-    generated ECDSA key is saved to <'filepath'>.pub.  If the filepath is not
-    given, the KEYID is used as the filename and the keypair saved to the
-    current working directory.
-
-    The 'cryptography' library is currently supported.  The private key is
-    encrypted according to 'cryptography's approach: "Encrypt using the best
-    available encryption for a given key's backend. This is a curated
-    encryption choice and the algorithm may change over time."
-
-  <Arguments>
-    filepath:
-      The public and private key files are saved to <filepath>.pub and
-      <filepath>, respectively.  If the filepath is not given, the public and
-      private keys are saved to the current working directory as <KEYID>.pub
-      and <KEYID>.  KEYID is the generated key's KEYID.
-
-    password:
-      The password, or passphrase, to encrypt the private portion of the
-      generated ECDSA key.  A symmetric encryption key is derived from
-      'password', so it is not directly used.
-
-  <Exceptions>
-    securesystemslib.exceptions.FormatError, if the arguments are improperly
-    formatted.
-
-    securesystemslib.exceptions.CryptoError, if 'filepath' cannot be encrypted.
-
-  <Side Effects>
-    Writes key files to '<filepath>' and '<filepath>.pub'.
-
-  <Returns>
-    The 'filepath' of the written key.
-  """
-
   password = _get_key_file_encryption_password(password, prompt, filepath)
 
   ecdsa_key = securesystemslib.keys.generate_ecdsa_key()
@@ -674,28 +581,21 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None,
 
 
 def import_ecdsa_publickey_from_file(filepath):
-  """
-  <Purpose>
-    Load the ECDSA public key object (conformant to
-    'securesystemslib.formats.KEY_SCHEMA') stored in 'filepath'.  Return
-    'filepath' in securesystemslib.formats.ECDSAKEY_SCHEMA format.
+  """Imports custom JSON-formatted ecdsa public key from disk.
 
-    If the key object in 'filepath' contains a private key, it is discarded.
+  NOTE: The signing scheme is set at key generation (see generate function).
 
-  <Arguments>
-    filepath:
-      <filepath>.pub file, a public key file.
+  Arguments:
+    filepath: The path to read the file from.
 
-  <Exceptions>
-    securesystemslib.exceptions.FormatError, if 'filepath' is improperly
-    formatted or is an unexpected key type.
+  Raises:
+    FormatError: Argument is malformed.
+    StorageError: Key file cannot be read.
+    Error: Public key is malformed.
 
-  <Side Effects>
-    The contents of 'filepath' is read and saved.
+  Returns:
+    An ecdsa public key object conformant with 'ECDSAKEY_SCHEMA'.
 
-  <Returns>
-    An ECDSA key object conformant to
-    'securesystemslib.formats.ECDSAKEY_SCHEMA'.
   """
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
@@ -713,40 +613,32 @@ def import_ecdsa_publickey_from_file(filepath):
 
 def import_ecdsa_privatekey_from_file(filepath, password=None, prompt=False,
     storage_backend=None):
-  """
-  <Purpose>
-    Import the encrypted ECDSA key file in 'filepath', decrypt it, and return
-    the key object in 'securesystemslib.formats.ECDSAKEY_SCHEMA' format.
+  """Imports custom JSON-formatted ecdsa private key from file storage.
 
-    The 'cryptography' library is currently supported and performs the actual
-    cryptographic routine.
+  If a password is passed or entered on the prompt, the private key is
+  decrypted, otherwise it is treated as unencrypted.
 
-  <Arguments>
-    filepath:
-      <filepath> file, an ECDSA encrypted key file.
+  NOTE: The signing scheme is set at key generation (see generate function).
 
-    password:
-      The password, or passphrase, to import the private key (i.e., the
-      encrypted key file 'filepath' must be decrypted before the ECDSA key
-      object can be returned.
+  Arguments:
+    filepath: The path to read the file from.
+    password (optional): A password to decrypt the key.
+    prompt (optional): A boolean indicating if the user should be prompted
+        for a decryption password. If the user enters an empty password, the
+        key is not decrypted.
+    storage_backend (optional): An object implementing StorageBackendInterface.
+        If not passed a default FilesystemBackend will be used.
 
-    storage_backend:
-      An object which implements
-      securesystemslib.storage.StorageBackendInterface. When no object is
-      passed a FilesystemBackend will be instantiated and used.
+  Raises:
+    UnsupportedLibraryError: pyca/cryptography is not available.
+    FormatError: Arguments are malformed.
+    ValueError: Both a 'password' is passed and 'prompt' is true.
+    StorageError: Key file cannot be read.
+    Error, CryptoError: Key cannot be parsed.
 
-  <Exceptions>
-    securesystemslib.exceptions.FormatError, if the arguments are improperly
-    formatted or the imported key object contains an invalid key type (i.e.,
-    not 'ecdsa').
+  Returns:
+    An ecdsa private key object conformant with 'ED25519KEY_SCHEMA'.
 
-    securesystemslib.exceptions.CryptoError, if 'filepath' cannot be decrypted.
-
-  <Side Effects>
-    'password' is used to decrypt the 'filepath' key file.
-
-  <Returns>
-    An ECDSA key object of the form: 'securesystemslib.formats.ECDSAKEY_SCHEMA'.
   """
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
 
@@ -786,22 +678,25 @@ def import_ecdsa_privatekey_from_file(filepath, password=None, prompt=False,
 def import_publickeys_from_file(filepaths, key_types=None):
   """Imports multiple public keys from files.
 
-  NOTE: Use 'import_rsa_publickey_from_file' to specify any other than the
-  default signing schemes for an RSA key.
+  NOTE: The default signing scheme 'rsassa-pss-sha256' is assigned to RSA keys.
+  Use 'import_rsa_publickey_from_file' to specify any other than the default
+  signing scheme for an RSA key. ed25519 and ecdsa keys have the signing scheme
+  included in the custom key format (see generate functions).
 
   Arguments:
     filepaths: A list of paths to public key files.
     key_types (optional): A list of types of keys to be imported associated
-      with filepaths by index. Must be one of KEY_TYPE_RSA, KEY_TYPE_ED25519 or
-      KEY_TYPE_ECDSA. If not specified, all keys are assumed to be
-      KEY_TYPE_RSA.
+        with filepaths by index. Must be one of KEY_TYPE_RSA, KEY_TYPE_ED25519
+        or KEY_TYPE_ECDSA. If not specified, all keys are assumed to be
+        KEY_TYPE_RSA.
 
   Raises:
-    TypeError: filepaths or key_types (if passed) is not iterable.
-    FormatError: key_types is passed and does not have the same length as
-        filepaths or contains an unsupported key type.
-    See import_ed25519_publickey_from_file, import_rsa_publickey_from_file and
-    import_ecdsa_publickey_from_file for other exceptions.
+    TypeError: filepaths or 'key_types' (if passed) is not iterable.
+    FormatError: Argument are malformed, or 'key_types' is passed and does not
+        have the same length as 'filepaths' or contains an unsupported type.
+    UnsupportedLibraryError: pyca/cryptography is not available.
+    StorageError: Key file cannot be read.
+    Error: Public key is malformed.
 
   Returns:
     A dict of public keys in KEYDICT_SCHEMA format.
