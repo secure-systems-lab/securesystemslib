@@ -1,5 +1,23 @@
 # Changelog
 
+## securesystemslib v0.17.0
+
+### Added
+* Add `interface.import_publickeys_from_file()` convenience function (#278, #285)
+* Add `gpg.export_pubkeys()` convenience function (#277)
+* Add support to `hash` module for blake2b-256 algorithm (#283)
+
+### Changed
+* Use ecdsa as keytype for ECDSA keys to better distinguish between keytype
+  and scheme (#267)
+* Bump dependencies: cffi (#266, #273), cryptography (#269, #274),
+  and colorama (#284)
+* Removed python-dateutil dependency (#268)
+* Prepare Debian downstream releases (#198)
+* Remove unused helper (`_prompt`) and global (`SUPPORTED_KEY_TYPES`) from
+  interface module (#276)
+* Refactored and extended interface tests (#279, #287)
+
 ## securesystemslib v0.16.0
 
 ### Added
