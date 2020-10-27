@@ -485,7 +485,7 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
       # This is a defensive check check..
       else:  # pragma: no cover
         raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
-            ' signature scheme is specified: ' + repr(scheme))
+            ' signature scheme is specified: ' + repr(signature_scheme))
 
       return True
 
