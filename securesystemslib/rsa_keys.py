@@ -990,8 +990,7 @@ def _encrypt(key_data, derived_key_information):
   # a decryption operation.
   symmetric_key = derived_key_information['derived_key']
   salt = derived_key_information['salt']
-  hmac_object = \
-    cryptography.hazmat.primitives.hmac.HMAC(symmetric_key, hashes.SHA256(),
+  hmac_object = hmac.HMAC(symmetric_key, hashes.SHA256(),
         backend=default_backend())
   hmac_object.update(ciphertext)
   hmac_value = binascii.hexlify(hmac_object.finalize())
@@ -1030,7 +1029,7 @@ def _decrypt(file_contents, password):
   # separating.  Raise 'securesystemslib.exceptions.CryptoError', if
   # 'file_contents' does not contains the expected data layout.
   try:
-    salt, iterations, hmac, iv, ciphertext = \
+    salt, iterations, read_hmac, iv, ciphertext = \
       file_contents.split(_ENCRYPTION_DELIMITER)
 
   except ValueError:
@@ -1053,14 +1052,13 @@ def _decrypt(file_contents, password):
   # See the encryption routine for why we use the encrypt-then-MAC approach.
   # The decryption routine may verify a ciphertext without having to perform
   # a decryption operation.
-  generated_hmac_object = \
-    cryptography.hazmat.primitives.hmac.HMAC(symmetric_key, hashes.SHA256(),
+  generated_hmac_object = hmac.HMAC(symmetric_key, hashes.SHA256(),
         backend=default_backend())
   generated_hmac_object.update(ciphertext)
   generated_hmac = binascii.hexlify(generated_hmac_object.finalize())
 
 
-  if not securesystemslib.util.digests_are_equal(generated_hmac.decode(), hmac):
+  if not securesystemslib.util.digests_are_equal(generated_hmac.decode(), read_hmac):
     raise securesystemslib.exceptions.CryptoError('Decryption failed.')
 
   # Construct a Cipher object, with the key and iv.
