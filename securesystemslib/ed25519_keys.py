@@ -229,9 +229,6 @@ def create_signature(public_key, private_key, data, scheme):
 
   # Signing the 'data' object requires a seed and public key.
   # nacl.signing.SigningKey.sign() generates the signature.
-  public = public_key
-  private = private_key
-
   signature = None
 
   # An if-clause is not strictly needed here, since 'ed25519' is the only
@@ -239,7 +236,7 @@ def create_signature(public_key, private_key, data, scheme):
   # statement to accommodate schemes that might be added in the future.
   if scheme == 'ed25519':
     try:
-      nacl_key = nacl.signing.SigningKey(private)
+      nacl_key = nacl.signing.SigningKey(private_key)
       nacl_sig = nacl_key.sign(data)
       signature = nacl_sig.signature
 
