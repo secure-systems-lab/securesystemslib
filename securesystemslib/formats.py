@@ -410,7 +410,7 @@ KEYDICT_SCHEMA = SCHEMA.DictOf(
   key_schema = KEYID_SCHEMA,
   value_schema = KEY_SCHEMA)
 
-ANY_SIGNATURE_SCHEMA = securesystemslib.schema.OneOf([SIGNATURE_SCHEMA,
+ANY_SIGNATURE_SCHEMA = SCHEMA.OneOf([SIGNATURE_SCHEMA,
     GPG_SIGNATURE_SCHEMA])
 
 # List of ANY_SIGNATURE_SCHEMA.
@@ -514,7 +514,7 @@ def unix_timestamp_to_datetime(unix_timestamp):
 
   # Is 'unix_timestamp' properly formatted?
   # Raise 'securesystemslib.exceptions.FormatError' if there is a mismatch.
-  securesystemslib.formats.UNIX_TIMESTAMP_SCHEMA.check_match(unix_timestamp)
+  UNIX_TIMESTAMP_SCHEMA.check_match(unix_timestamp)
 
   # Convert 'unix_timestamp' to a 'time.struct_time',  in UTC.  The Daylight
   # Savings Time (DST) flag is set to zero.  datetime.fromtimestamp() is not
