@@ -74,7 +74,6 @@ from __future__ import unicode_literals
 import binascii
 import calendar
 import re
-import string
 import datetime
 import time
 import six

@@ -26,18 +26,13 @@ from __future__ import division
 from __future__ import unicode_literals
 
 import os
-import shutil
 import logging
-import tempfile
-import warnings
 
 import securesystemslib.exceptions
 import securesystemslib.settings
 import securesystemslib.hash
 import securesystemslib.formats
 import securesystemslib.storage
-
-import six
 
 logger = logging.getLogger(__name__)
 

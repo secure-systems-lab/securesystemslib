@@ -59,10 +59,6 @@ from __future__ import unicode_literals
 # hexlified.
 import binascii
 
-# NOTE:  'warnings' needed to temporarily suppress user warnings raised by
-# 'pynacl' (as of version 0.2.3).
-# http://docs.python.org/2/library/warnings.html#temporarily-suppressing-warnings
-import warnings
 import logging
 
 import securesystemslib.rsa_keys

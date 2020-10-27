@@ -36,10 +36,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import unicode_literals
 
-# 'binascii' required for hexadecimal conversions.  Signatures and
-# public/private keys are hexlified.
-import binascii
-
 import logging
 
 # Import cryptography modules to support ecdsa keys and signatures.
@@ -51,7 +47,6 @@ try:
   from cryptography.hazmat.primitives.asymmetric import ec
 
   from cryptography.hazmat.primitives import serialization
-  from cryptography.hazmat.backends.interfaces import PEMSerializationBackend
 
   from cryptography.hazmat.primitives.serialization import load_pem_public_key
   from cryptography.hazmat.primitives.serialization import load_pem_private_key

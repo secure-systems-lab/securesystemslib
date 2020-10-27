@@ -68,7 +68,6 @@ try:
   # Import pyca/cryptography routines needed to generate and load cryptographic
   # keys in PEM format.
   from cryptography.hazmat.primitives import serialization
-  from cryptography.hazmat.backends.interfaces import PEMSerializationBackend
   from cryptography.hazmat.primitives.serialization import load_pem_private_key
   from cryptography.hazmat.backends import default_backend
 

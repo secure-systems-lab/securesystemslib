@@ -29,17 +29,11 @@ from __future__ import division
 from __future__ import unicode_literals
 
 import os
-import errno
 import sys
-import time
-import datetime
 import getpass
 import logging
 import tempfile
-import shutil
 import json
-import gzip
-import random
 
 import securesystemslib.formats
 import securesystemslib.settings
@@ -48,8 +42,6 @@ import securesystemslib.util
 import securesystemslib.keys
 
 from securesystemslib import KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA
-
-import six
 
 logger = logging.getLogger(__name__)
 

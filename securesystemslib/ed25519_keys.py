@@ -51,18 +51,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import unicode_literals
 
-# 'binascii' required for hexadecimal conversions.  Signatures and
-# public/private keys are hexlified.
-import binascii
-
-# TODO:  The 'warnings' module needed to temporarily suppress user warnings
-# raised by 'pynacl' (as of version 0.2.3).  Warnings temporarily suppressed
-# here to avoid confusing users with an unexpected error message that gives
-# no indication of its source.  These warnings are printed when using
-# the repository tools, including for clients that request an update.
-# http://docs.python.org/2/library/warnings.html#temporarily-suppressing-warnings
-import warnings
-
 # 'os' required to generate OS-specific randomness (os.urandom) suitable for
 # cryptographic use.
 # http://docs.python.org/2/library/os.html#miscellaneous-functions
