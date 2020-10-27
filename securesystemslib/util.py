@@ -431,7 +431,7 @@ def load_json_file(filepath, storage_backend=None):
     try:
       deserialized_object = json.loads(raw_data)
 
-    except (ValueError, TypeError) as e:
+    except (ValueError, TypeError):
       raise securesystemslib.exceptions.Error('Cannot deserialize to a'
           ' Python object: ' + filepath)
 
