@@ -26,18 +26,13 @@ from __future__ import division
 from __future__ import unicode_literals
 
 import os
-import shutil
 import logging
-import tempfile
-import warnings
 
 import securesystemslib.exceptions
 import securesystemslib.settings
 import securesystemslib.hash
 import securesystemslib.formats
 import securesystemslib.storage
-
-import six
 
 logger = logging.getLogger(__name__)
 
@@ -436,7 +431,7 @@ def load_json_file(filepath, storage_backend=None):
     try:
       deserialized_object = json.loads(raw_data)
 
-    except (ValueError, TypeError) as e:
+    except (ValueError, TypeError):
       raise securesystemslib.exceptions.Error('Cannot deserialize to a'
           ' Python object: ' + filepath)
 

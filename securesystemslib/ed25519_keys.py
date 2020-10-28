@@ -51,18 +51,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import unicode_literals
 
-# 'binascii' required for hexadecimal conversions.  Signatures and
-# public/private keys are hexlified.
-import binascii
-
-# TODO:  The 'warnings' module needed to temporarily suppress user warnings
-# raised by 'pynacl' (as of version 0.2.3).  Warnings temporarily suppressed
-# here to avoid confusing users with an unexpected error message that gives
-# no indication of its source.  These warnings are printed when using
-# the repository tools, including for clients that request an update.
-# http://docs.python.org/2/library/warnings.html#temporarily-suppressing-warnings
-import warnings
-
 # 'os' required to generate OS-specific randomness (os.urandom) suitable for
 # cryptographic use.
 # http://docs.python.org/2/library/os.html#miscellaneous-functions
@@ -241,9 +229,6 @@ def create_signature(public_key, private_key, data, scheme):
 
   # Signing the 'data' object requires a seed and public key.
   # nacl.signing.SigningKey.sign() generates the signature.
-  public = public_key
-  private = private_key
-
   signature = None
 
   # An if-clause is not strictly needed here, since 'ed25519' is the only
@@ -251,7 +236,7 @@ def create_signature(public_key, private_key, data, scheme):
   # statement to accommodate schemes that might be added in the future.
   if scheme == 'ed25519':
     try:
-      nacl_key = nacl.signing.SigningKey(private)
+      nacl_key = nacl.signing.SigningKey(private_key)
       nacl_sig = nacl_key.sign(data)
       signature = nacl_sig.signature
 
