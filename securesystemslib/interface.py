@@ -442,7 +442,7 @@ def import_ed25519_publickey_from_file(filepath):
   # Load custom on-disk JSON formatted key and convert to its custom in-memory
   # dict key representation
   ed25519_key_metadata = securesystemslib.util.load_json_file(filepath)
-  ed25519_key, junk = securesystemslib.keys.format_metadata_to_key(
+  ed25519_key, _ = securesystemslib.keys.format_metadata_to_key(
       ed25519_key_metadata)
 
   # Check that the generic loading functions indeed loaded an ed25519 key
@@ -602,7 +602,7 @@ def import_ecdsa_publickey_from_file(filepath):
   # Load custom on-disk JSON formatted key and convert to its custom in-memory
   # dict key representation
   ecdsa_key_metadata = securesystemslib.util.load_json_file(filepath)
-  ecdsa_key, junk = securesystemslib.keys.format_metadata_to_key(
+  ecdsa_key, _ = securesystemslib.keys.format_metadata_to_key(
       ecdsa_key_metadata)
 
   return ecdsa_key
@@ -741,7 +741,7 @@ def import_privatekey_from_file(filepath, key_type=None, password=None,
   decrypted, otherwise it is treated as unencrypted.
 
   NOTE: The default signing scheme 'rsassa-pss-sha256' is assigned to RSA keys.
-  Use 'import_rsa_publickey_from_file' to specify any other than the default
+  Use 'import_rsa_privatekey_from_file' to specify any other than the default
   signing scheme for an RSA key. ed25519 and ecdsa keys have the signing scheme
   included in the custom key format (see generate functions).
 
