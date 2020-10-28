@@ -1114,7 +1114,6 @@ def import_rsakey_from_pem(pem, scheme='rsassa-pss-sha256'):
   securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   public_pem = ''
-  private_pem = ''
 
   # Ensure the PEM string has a public or private header and footer.  Although
   # a simple validation of 'pem' is performed here, a fully valid PEM string is
@@ -1862,7 +1861,6 @@ def import_ecdsakey_from_pem(pem, scheme='ecdsa-sha2-nistp256'):
   securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   public_pem = ''
-  private_pem = ''
 
   # Ensure the PEM string has a public or private header and footer.  Although
   # a simple validation of 'pem' is performed here, a fully valid PEM string is
