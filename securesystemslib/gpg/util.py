@@ -198,12 +198,12 @@ def parse_packet_header(data, expected_type=None):
       raise securesystemslib.gpg.exceptions.PacketParsingError("Invalid old "
           "length")
 
-  if header_len == None or body_len == None: # pragma: no cover
+  if header_len is None or body_len is None: # pragma: no cover
     # Unreachable: One of above must have assigned lengths or raised error
     raise securesystemslib.gpg.exceptions.PacketParsingError("Could not "
         "determine packet length")
 
-  if expected_type != None and packet_type != expected_type:
+  if expected_type is not None and packet_type != expected_type:
     raise securesystemslib.gpg.exceptions.PacketParsingError("Expected packet "
         "{}, but got {} instead!".format(expected_type, packet_type))
 
