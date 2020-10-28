@@ -1,0 +1,46 @@
+on:
+  schedule:
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+
+
+jobs:
+  check-ed25519-upstream:
+    name: Open an issue if upstream ed25519 has new commits
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+    - name: Test if ed25519 upstream master HEAD is what we expect
+      id: test_ed25519
+      run: |
+        if sh securesystemslib/_vendor/test-ed25519-upstream.sh; then
+          echo "::set-output name=result::0"
+        else
+          echo "::set-output name=result::1"
+        fi
+    - name: Create issue (unless one is open already)
+      uses: actions/github-script@v3
+      if: ${{ steps.test_ed25519.outputs.result == '1' }}
+      with:
+        script: |
+          console.log("ed25519 upstream master has changed!")
+          const repo = context.repo.owner + "/" + context.repo.repo
+          const issues = await github.search.issuesAndPullRequests({
+            q: "ed25519+upstream+has+new+commits+in:title+state:open+type:issue+repo:" + repo,
+          })
+
+          if (issues.data.total_count > 0) {
+            console.log("Issue is already open, not creating.")
+          } else {
+            console.log("Creating a new issue...")
+            await github.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: "ed25519 upstream has new commits",
+              body: "It seems https://github.com/pyca/ed25519.git has new commits. " +
+                    "Please review them, update the vendored copy if needed, and then " +
+                    "update the expected hash in _vendor/test-ed25519-upstream.sh"
+            })
+          }
+
