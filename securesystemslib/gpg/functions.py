@@ -21,8 +21,8 @@ import time
 import securesystemslib.exceptions
 import securesystemslib.gpg.common
 import securesystemslib.gpg.exceptions
-from securesystemslib.gpg.constants import (GPG_EXPORT_PUBKEY_COMMAND,
-    GPG_SIGN_COMMAND, SIGNATURE_HANDLERS, FULLY_SUPPORTED_MIN_VERSION, SHA256,
+from securesystemslib.gpg.constants import (GPG_SIGN_COMMAND,
+    SIGNATURE_HANDLERS, FULLY_SUPPORTED_MIN_VERSION, SHA256,
     HAVE_GPG, NO_GPG_MSG)
 
 import securesystemslib.process

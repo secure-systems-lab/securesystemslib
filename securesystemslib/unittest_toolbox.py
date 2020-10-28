@@ -26,7 +26,6 @@ from __future__ import division
 from __future__ import unicode_literals
 
 import os
-import sys
 import shutil
 import unittest
 import tempfile
