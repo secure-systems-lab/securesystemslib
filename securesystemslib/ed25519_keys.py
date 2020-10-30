@@ -98,11 +98,8 @@ def generate_public_and_private():
   <Purpose>
     Generate a pair of ed25519 public and private keys with PyNaCl.  The public
     and private keys returned conform to
-    'securesystemslib.formats.ED25519PULIC_SCHEMA' and
-    'securesystemslib.formats.ED25519SEED_SCHEMA', respectively, and have the
-    form:
-
-    '\xa2F\x99\xe0\x86\x80%\xc8\xee\x11\xb95T\xd9\...'
+    'securesystemslib.formats.ED25519PUBLIC_SCHEMA' and
+    'securesystemslib.formats.ED25519SEED_SCHEMA', respectively.
 
     An ed25519 seed key is a random 32-byte string.  Public keys are also 32
     bytes.
