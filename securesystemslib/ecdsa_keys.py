@@ -490,8 +490,6 @@ def create_ecdsa_encrypted_pem(private_pem, passphrase):
   # Does 'passphrase' have the correct format?
   securesystemslib.formats.PASSWORD_SCHEMA.check_match(passphrase)
 
-  encrypted_pem = None
-
   private = load_pem_private_key(private_pem.encode('utf-8'), password=None,
     backend=default_backend())
 

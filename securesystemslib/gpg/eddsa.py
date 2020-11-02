@@ -17,17 +17,13 @@
 
 """
 import binascii
-import struct
 import securesystemslib.exceptions
 import securesystemslib.gpg.util
 
 CRYPTO = True
 NO_CRYPTO_MSG = 'EdDSA key support for GPG requires the cryptography library'
 try:
-  import cryptography.hazmat.primitives.asymmetric.utils as pyca_utils
   import cryptography.hazmat.primitives.asymmetric.ed25519 as pyca_ed25519
-  import cryptography.hazmat.backends as pyca_backends
-  import cryptography.hazmat.primitives.hashes as pyca_hashing
   import cryptography.exceptions
 except ImportError:
   CRYPTO = False

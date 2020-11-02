@@ -806,7 +806,6 @@ class Object(Schema):
       except KeyError:
         # If not an Optional schema, raise an exception.
         if not isinstance(schema, Optional):
-          message = 'Missing key ' + repr(key) + ' in ' + repr(self._object_name)
           raise securesystemslib.exceptions.FormatError(
               'Missing key ' + repr(key) + ' in ' + repr(self._object_name))
 

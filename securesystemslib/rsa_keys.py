@@ -454,11 +454,6 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
   # What about 'data'?
   securesystemslib.formats.DATA_SCHEMA.check_match(data)
 
-  # Verify whether the private key of 'public_key' produced 'signature'.
-  # Before returning the 'valid_signature' Boolean result, ensure 'RSASSA-PSS'
-  # was used as the signature scheme.
-  valid_signature = False
-
   # Verify the RSASSA-PSS signature with pyca/cryptography.
   try:
     public_key_object = serialization.load_pem_public_key(

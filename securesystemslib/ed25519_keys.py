@@ -326,7 +326,7 @@ def verify_signature(public_key, scheme, signature, data):
     if NACL:
       try:
         nacl_verify_key = nacl.signing.VerifyKey(public)
-        nacl_message = nacl_verify_key.verify(data, signature)
+        nacl_verify_key.verify(data, signature)
         valid_signature = True
 
       except nacl.exceptions.BadSignatureError:
@@ -341,7 +341,7 @@ def verify_signature(public_key, scheme, signature, data):
 
       # The pure Python implementation raises 'Exception' if 'signature' is
       # invalid.
-      except Exception as e:
+      except Exception:
         pass
 
   # This is a defensive check for a valid 'scheme', which should have already
