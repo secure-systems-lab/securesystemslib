@@ -25,7 +25,7 @@ private_key = seed
 public_key = ed25519.publickey_unsafe(seed)
 signature = ed25519.signature_unsafe(data, private_key, public_key)
 
-print('\nTime verify signature')
+print("\nTime verify signature")
 print(
     timeit.timeit(
         "ed25519.checkvalid(signature, data, public_key)",
