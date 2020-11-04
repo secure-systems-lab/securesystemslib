@@ -247,6 +247,109 @@ def _generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
 
 
 
+def generate_and_write_rsa_keypair(password, filepath=None,
+      bits=DEFAULT_RSA_KEY_BITS):
+  """Generates RSA key pair and writes PEM-encoded keys to disk.
+
+  The private key is encrypted using the best available encryption algorithm
+  chosen by 'pyca/cryptography', which may change over time. The private key is
+  written in PKCS#1 and the public key in X.509 SubjectPublicKeyInfo format.
+
+  NOTE: A signing scheme can be assigned on key import (see import functions).
+
+  Arguments:
+    password: An encryption password.
+    filepath (optional): The path to write the private key to. If not passed,
+        the key is written to CWD using the keyid as filename. The public key
+        is written to the same path as the private key using the suffix '.pub'.
+    bits (optional): The number of bits of the generated RSA key.
+
+  Raises:
+    UnsupportedLibraryError: pyca/cryptography is not available.
+    FormatError: Arguments are malformed.
+    ValueError: An empty string is passed as 'password'.
+    StorageError: Key files cannot be written.
+
+  Side Effects:
+    Writes key files to disk.
+
+  Returns:
+    The private key filepath.
+
+  """
+  securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+  return _generate_and_write_rsa_keypair(
+      filepath=filepath, bits=bits, password=password, prompt=False)
+
+
+
+def generate_and_write_rsa_keypair_with_prompt(filepath=None,
+      bits=DEFAULT_RSA_KEY_BITS):
+  """Generates RSA key pair and writes PEM-encoded keys to disk.
+
+  The private key is encrypted with a password entered on the prompt, using the
+  best available encryption algorithm chosen by 'pyca/cryptography', which may
+  change over time. The private key is written in PKCS#1 and the public key in
+  X.509 SubjectPublicKeyInfo format.
+
+  NOTE: A signing scheme can be assigned on key import (see import functions).
+
+  Arguments:
+    filepath (optional): The path to write the private key to. If not passed,
+        the key is written to CWD using the keyid as filename. The public key
+        is written to the same path as the private key using the suffix '.pub'.
+    bits (optional): The number of bits of the generated RSA key.
+
+  Raises:
+    UnsupportedLibraryError: pyca/cryptography is not available.
+    FormatError: Arguments are malformed.
+    StorageError: Key files cannot be written.
+
+  Side Effects:
+    Prompts user for a password.
+    Writes key files to disk.
+
+  Returns:
+    The private key filepath.
+
+  """
+  return _generate_and_write_rsa_keypair(
+      filepath=filepath, bits=bits, password=None, prompt=True)
+
+
+
+def generate_and_write_unencrypted_rsa_keypair(filepath=None,
+      bits=DEFAULT_RSA_KEY_BITS):
+  """Generates RSA key pair and writes PEM-encoded keys to disk.
+
+  The private key is written in PKCS#1 and the public key in X.509
+  SubjectPublicKeyInfo format.
+
+  NOTE: A signing scheme can be assigned on key import (see import functions).
+
+  Arguments:
+    filepath (optional): The path to write the private key to. If not passed,
+        the key is written to CWD using the keyid as filename. The public key
+        is written to the same path as the private key using the suffix '.pub'.
+    bits (optional): The number of bits of the generated RSA key.
+
+  Raises:
+    UnsupportedLibraryError: pyca/cryptography is not available.
+    FormatError: Arguments are malformed.
+    StorageError: Key files cannot be written.
+
+  Side Effects:
+    Writes unencrypted key files to disk.
+
+  Returns:
+    The private key filepath.
+
+  """
+  return _generate_and_write_rsa_keypair(
+      filepath=filepath, bits=bits, password=None, prompt=False)
+
+
+
 def import_rsa_privatekey_from_file(filepath, password=None,
     scheme='rsassa-pss-sha256', prompt=False,
     storage_backend=None):
@@ -415,6 +518,96 @@ def _generate_and_write_ed25519_keypair(filepath=None, password=None,
 
 
 
+def generate_and_write_ed25519_keypair(password, filepath=None):
+  """Generates ed25519 key pair and writes custom JSON-formatted keys to disk.
+
+  The private key is encrypted using AES-256 in CTR mode, with the passed
+  password strengthened in PBKDF2-HMAC-SHA256.
+
+  NOTE: The custom key format includes 'ed25519' as signing scheme.
+
+  Arguments:
+    password: An encryption password.
+    filepath (optional): The path to write the private key to. If not passed,
+        the key is written to CWD using the keyid as filename. The public key
+        is written to the same path as the private key using the suffix '.pub'.
+
+  Raises:
+    UnsupportedLibraryError: pyca/pynacl or pyca/cryptography is not available.
+    FormatError: Arguments are malformed.
+    ValueError: An empty string is passed as 'password'.
+    StorageError: Key files cannot be written.
+
+  Side Effects:
+    Writes key files to disk.
+
+  Returns:
+    The private key filepath.
+
+  """
+  securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+  return _generate_and_write_ed25519_keypair(
+      filepath=filepath, password=password, prompt=False)
+
+
+
+def generate_and_write_ed25519_keypair_with_prompt(filepath=None):
+  """Generates ed25519 key pair and writes custom JSON-formatted keys to disk.
+
+  The private key is encrypted using AES-256 in CTR mode, with the password
+  entered on the prompt strengthened in PBKDF2-HMAC-SHA256.
+
+  NOTE: The custom key format includes 'ed25519' as signing scheme.
+
+  Arguments:
+    filepath (optional): The path to write the private key to. If not passed,
+        the key is written to CWD using the keyid as filename. The public key
+        is written to the same path as the private key using the suffix '.pub'.
+
+  Raises:
+    UnsupportedLibraryError: pyca/pynacl or pyca/cryptography is not available.
+    FormatError: Arguments are malformed.
+    StorageError: Key files cannot be written.
+
+  Side Effects:
+    Prompts user for a password.
+    Writes key files to disk.
+
+  Returns:
+    The private key filepath.
+
+  """
+  return _generate_and_write_ed25519_keypair(
+      filepath=filepath, password=None, prompt=True)
+
+
+
+def generate_and_write_unencrypted_ed25519_keypair(filepath=None):
+  """Generates ed25519 key pair and writes custom JSON-formatted keys to disk.
+
+  NOTE: The custom key format includes 'ed25519' as signing scheme.
+
+  Arguments:
+    filepath (optional): The path to write the private key to. If not passed,
+        the key is written to CWD using the keyid as filename. The public key
+        is written to the same path as the private key using the suffix '.pub'.
+
+  Raises:
+    UnsupportedLibraryError: pyca/pynacl or pyca/cryptography is not available.
+    FormatError: Arguments are malformed.
+    StorageError: Key files cannot be written.
+
+  Side Effects:
+    Writes unencrypted key files to disk.
+
+  Returns:
+    The private key filepath.
+
+  """
+  return _generate_and_write_ed25519_keypair(
+      filepath=filepath, password=None, prompt=False)
+
+
 def import_ed25519_publickey_from_file(filepath):
   """Imports custom JSON-formatted ed25519 public key from disk.
 
@@ -567,6 +760,97 @@ def _generate_and_write_ecdsa_keypair(filepath=None, password=None,
   securesystemslib.util.persist_temp_file(file_object, filepath)
 
   return filepath
+
+
+
+def generate_and_write_ecdsa_keypair(password, filepath=None):
+  """Generates ecdsa key pair and writes custom JSON-formatted keys to disk.
+
+  The private key is encrypted using AES-256 in CTR mode, with the passed
+  password strengthened in PBKDF2-HMAC-SHA256.
+
+  NOTE: The custom key format includes 'ecdsa-sha2-nistp256' as signing scheme.
+
+  Arguments:
+    password: An encryption password.
+    filepath (optional): The path to write the private key to. If not passed,
+        the key is written to CWD using the keyid as filename. The public key
+        is written to the same path as the private key using the suffix '.pub'.
+
+  Raises:
+    UnsupportedLibraryError: pyca/cryptography is not available.
+    FormatError: Arguments are malformed.
+    ValueError: An empty string is passed as 'password'.
+    StorageError: Key files cannot be written.
+
+  Side Effects:
+    Writes key files to disk.
+
+  Returns:
+    The private key filepath.
+
+  """
+  securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+  return _generate_and_write_ecdsa_keypair(
+      filepath=filepath, password=password, prompt=False)
+
+
+
+def generate_and_write_ecdsa_keypair_with_prompt(filepath=None):
+  """Generates ecdsa key pair and writes custom JSON-formatted keys to disk.
+
+  The private key is encrypted using AES-256 in CTR mode, with the password
+  entered on the prompt strengthened in PBKDF2-HMAC-SHA256.
+
+  NOTE: The custom key format includes 'ecdsa-sha2-nistp256' as signing scheme.
+
+  Arguments:
+    filepath (optional): The path to write the private key to. If not passed,
+        the key is written to CWD using the keyid as filename. The public key
+        is written to the same path as the private key using the suffix '.pub'.
+
+  Raises:
+    UnsupportedLibraryError: pyca/cryptography is not available.
+    FormatError: Arguments are malformed.
+    StorageError: Key files cannot be written.
+
+  Side Effects:
+    Prompts user for a password.
+    Writes key files to disk.
+
+  Returns:
+    The private key filepath.
+
+  """
+  return _generate_and_write_ecdsa_keypair(
+      filepath=filepath, password=None, prompt=True)
+
+
+
+def generate_and_write_unencrypted_ecdsa_keypair(filepath=None):
+  """Generates ecdsa key pair and writes custom JSON-formatted keys to disk.
+
+  NOTE: The custom key format includes 'ecdsa-sha2-nistp256' as signing scheme.
+
+  Arguments:
+    filepath (optional): The path to write the private key to. If not passed,
+        the key is written to CWD using the keyid as filename. The public key
+        is written to the same path as the private key using the suffix '.pub'.
+
+  Raises:
+    UnsupportedLibraryError: pyca/cryptography is not available.
+    FormatError: Arguments are malformed.
+    StorageError: Key files cannot be written.
+
+  Side Effects:
+    Writes unencrypted key files to disk.
+
+  Returns:
+    The private key filepath.
+
+  """
+  return _generate_and_write_ecdsa_keypair(
+      filepath=filepath, password=None, prompt=False)
 
 
 

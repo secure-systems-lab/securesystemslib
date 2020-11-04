@@ -61,12 +61,21 @@ from securesystemslib.exceptions import Error, FormatError, CryptoError
 
 from securesystemslib.interface import (
     _generate_and_write_rsa_keypair,
+    generate_and_write_rsa_keypair,
+    generate_and_write_rsa_keypair_with_prompt,
+    generate_and_write_unencrypted_rsa_keypair,
     import_rsa_privatekey_from_file,
     import_rsa_publickey_from_file,
     _generate_and_write_ed25519_keypair,
+    generate_and_write_ed25519_keypair,
+    generate_and_write_ed25519_keypair_with_prompt,
+    generate_and_write_unencrypted_ed25519_keypair,
     import_ed25519_publickey_from_file,
     import_ed25519_privatekey_from_file,
     _generate_and_write_ecdsa_keypair,
+    generate_and_write_ecdsa_keypair,
+    generate_and_write_ecdsa_keypair_with_prompt,
+    generate_and_write_unencrypted_ecdsa_keypair,
     import_ecdsa_publickey_from_file,
     import_ecdsa_privatekey_from_file,
     import_publickeys_from_file,
@@ -622,6 +631,70 @@ class TestInterfaceFunctions(unittest.TestCase):
     # Error on bad prompt format
     with self.assertRaises(FormatError):
       import_ecdsa_privatekey_from_file(fn_default, prompt="not-a-bool")
+
+
+
+  def test_generate_keypair_wrappers(self):
+    """Basic tests for thin wrappers around _generate_and_write_*_keypair.
+    See 'test_rsa', 'test_ed25519' and 'test_ecdsa' for more thorough key
+    generation tests for each key type.
+
+    """
+    key_pw = "pw"
+    for idx, (gen, gen_prompt, gen_plain, import_priv, schema) in enumerate([
+        (
+          generate_and_write_rsa_keypair,
+          generate_and_write_rsa_keypair_with_prompt,
+          generate_and_write_unencrypted_rsa_keypair,
+          import_rsa_privatekey_from_file,
+          RSAKEY_SCHEMA
+        ),
+        (
+          generate_and_write_ed25519_keypair,
+          generate_and_write_ed25519_keypair_with_prompt,
+          generate_and_write_unencrypted_ed25519_keypair,
+          import_ed25519_privatekey_from_file,
+          ED25519KEY_SCHEMA
+        ),
+        (
+          generate_and_write_ecdsa_keypair,
+          generate_and_write_ecdsa_keypair_with_prompt,
+          generate_and_write_unencrypted_ecdsa_keypair,
+          import_ecdsa_privatekey_from_file,
+          ECDSAKEY_SCHEMA)]):
+
+      assert_msg = "(row {})".format(idx)
+      # Test generate_and_write_*_keypair creates an encrypted private key
+      fn_encrypted = gen(key_pw)
+      priv = import_priv(fn_encrypted, key_pw)
+      self.assertTrue(schema.matches(priv), assert_msg)
+
+      # Test generate_and_write_*_keypair errors if password is None or empty
+      with self.assertRaises(FormatError, msg=assert_msg):
+        fn_encrypted = gen(None)
+      with self.assertRaises(ValueError, msg=assert_msg):
+        fn_encrypted = gen("")
+
+      # Test generate_and_write_*_keypair_with_prompt creates encrypted private
+      # key
+      with mock.patch(
+          "securesystemslib.interface.get_password", return_value=key_pw):
+        fn_prompt = gen_prompt()
+      priv = import_priv(fn_prompt, key_pw)
+      self.assertTrue(schema.matches(priv), assert_msg)
+
+      # Test generate_and_write_*_keypair_with_prompt creates unencrypted
+      # private key if no password is entered
+      with mock.patch(
+          "securesystemslib.interface.get_password", return_value=""):
+        fn_empty_prompt = gen_prompt()
+      priv = import_priv(fn_empty_prompt)
+      self.assertTrue(schema.matches(priv), assert_msg)
+
+      # Test generate_and_write_unencrypted_*_keypair doesn't encrypt
+      fn_unencrypted = gen_plain()
+      priv = import_priv(fn_unencrypted)
+      self.assertTrue(schema.matches(priv), assert_msg)
 
 
 
