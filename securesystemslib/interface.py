@@ -173,7 +173,7 @@ def _get_key_file_decryption_password(password, prompt, path):
 
 
 
-def generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
+def _generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
     password=None, prompt=False):
   """Generates RSA key pair and writes PEM-encoded keys to disk.
 
@@ -341,7 +341,7 @@ def import_rsa_publickey_from_file(filepath, scheme='rsassa-pss-sha256',
 
 
 
-def generate_and_write_ed25519_keypair(filepath=None, password=None,
+def _generate_and_write_ed25519_keypair(filepath=None, password=None,
     prompt=False):
   """Generates ed25519 key pair and writes custom JSON-formatted keys to disk.
 
@@ -496,7 +496,7 @@ def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False,
 
 
 
-def generate_and_write_ecdsa_keypair(filepath=None, password=None,
+def _generate_and_write_ecdsa_keypair(filepath=None, password=None,
     prompt=False):
   """Generates ecdsa key pair and writes custom JSON-formatted keys to disk.
 

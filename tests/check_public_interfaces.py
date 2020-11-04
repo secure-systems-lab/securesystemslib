@@ -64,7 +64,7 @@ class TestPublicInterfaces(unittest.TestCase):
 
     with self.assertRaises(
           securesystemslib.exceptions.UnsupportedLibraryError):
-      securesystemslib.interface.generate_and_write_rsa_keypair(password='pw')
+      securesystemslib.interface._generate_and_write_rsa_keypair(password='pw')
 
     with self.assertRaises(
           securesystemslib.exceptions.UnsupportedLibraryError):
@@ -75,7 +75,7 @@ class TestPublicInterfaces(unittest.TestCase):
 
     with self.assertRaises(
           securesystemslib.exceptions.UnsupportedLibraryError):
-      securesystemslib.interface.generate_and_write_ed25519_keypair(
+      securesystemslib.interface._generate_and_write_ed25519_keypair(
           password='pw')
 
     with self.assertRaises(
@@ -88,7 +88,7 @@ class TestPublicInterfaces(unittest.TestCase):
 
     with self.assertRaises(
           securesystemslib.exceptions.UnsupportedLibraryError):
-      securesystemslib.interface.generate_and_write_ecdsa_keypair(
+      securesystemslib.interface._generate_and_write_ecdsa_keypair(
           password='pw')
 
     with self.assertRaises(
