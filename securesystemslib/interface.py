@@ -173,7 +173,6 @@ def _get_key_file_decryption_password(password, prompt, path):
 
 
 
-
 def generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
     password=None, prompt=False):
   """Generates RSA key pair and writes PEM-encoded keys to disk.
@@ -205,7 +204,8 @@ def generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
     StorageError: Key files cannot be written.
 
   Side Effects:
-      Writes key files to disk.
+    Prompts user for a password if 'prompt' is True.
+    Writes key files to disk.
 
   Returns:
     The private key filepath.
@@ -244,7 +244,6 @@ def generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
   securesystemslib.util.persist_temp_file(file_object, filepath)
 
   return filepath
-
 
 
 
@@ -297,8 +296,6 @@ def import_rsa_privatekey_from_file(filepath, password=None,
 
 
 
-
-
 def import_rsa_publickey_from_file(filepath, scheme='rsassa-pss-sha256',
     storage_backend=None):
   """Imports PEM-encoded RSA public key from file storage.
@@ -344,8 +341,6 @@ def import_rsa_publickey_from_file(filepath, scheme='rsassa-pss-sha256',
 
 
 
-
-
 def generate_and_write_ed25519_keypair(filepath=None, password=None,
     prompt=False):
   """Generates ed25519 key pair and writes custom JSON-formatted keys to disk.
@@ -373,6 +368,7 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None,
     StorageError: Key files cannot be written.
 
   Side Effects:
+    Prompts user for a password if 'prompt' is True.
     Writes key files to disk.
 
   Returns:
@@ -419,7 +415,6 @@ def generate_and_write_ed25519_keypair(filepath=None, password=None,
 
 
 
-
 def import_ed25519_publickey_from_file(filepath):
   """Imports custom JSON-formatted ed25519 public key from disk.
 
@@ -451,9 +446,6 @@ def import_ed25519_publickey_from_file(filepath):
     raise securesystemslib.exceptions.FormatError(message)
 
   return ed25519_key
-
-
-
 
 
 
@@ -504,8 +496,6 @@ def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False,
 
 
 
-
-
 def generate_and_write_ecdsa_keypair(filepath=None, password=None,
     prompt=False):
   """Generates ecdsa key pair and writes custom JSON-formatted keys to disk.
@@ -533,6 +523,7 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None,
     StorageError: Key files cannot be written.
 
   Side Effects:
+    Prompts user for a password if 'prompt' is True.
     Writes key files to disk.
 
   Returns:
@@ -579,7 +570,6 @@ def generate_and_write_ecdsa_keypair(filepath=None, password=None,
 
 
 
-
 def import_ecdsa_publickey_from_file(filepath):
   """Imports custom JSON-formatted ecdsa public key from disk.
 
@@ -606,8 +596,6 @@ def import_ecdsa_publickey_from_file(filepath):
       ecdsa_key_metadata)
 
   return ecdsa_key
-
-
 
 
 
@@ -785,6 +773,7 @@ def import_privatekey_from_file(filepath, key_type=None, password=None,
     raise securesystemslib.exceptions.FormatError(
         "Unsupported key type '{}'. Must be '{}', '{}' or '{}'.".format(
         key_type, KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA))
+
 
 
 if __name__ == '__main__':
