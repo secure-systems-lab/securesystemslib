@@ -122,7 +122,7 @@ def _get_key_file_encryption_password(password, prompt, path):
   if prompt:
     password = get_password("enter password to encrypt private key file "
         "'" + TERM_RED + str(path) + TERM_RESET + "' (leave empty if key "
-        "should not be encrypted): '", confirm=True)
+        "should not be encrypted): ", confirm=True)
 
     # Treat empty password as no password. A user on the prompt can only
     # indicate the desire to not encrypt by entering no password.
@@ -158,7 +158,7 @@ def _get_key_file_decryption_password(password, prompt, path):
   if prompt:
     password = get_password("enter password to decrypt private key file "
         "'" + TERM_RED + str(path) + TERM_RESET + "' "
-        "(leave empty if key not encrypted): '", confirm=False)
+        "(leave empty if key not encrypted): ", confirm=False)
 
     # Treat empty password as no password. A user on the prompt can only
     # indicate the desire to not decrypt by entering no password.
@@ -213,8 +213,6 @@ def _generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
   """
   securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match(bits)
 
-  password = _get_key_file_encryption_password(password, prompt, filepath)
-
   # Generate private RSA key and extract public and private both in PEM
   rsa_key = securesystemslib.keys.generate_rsa_key(bits)
   public = rsa_key['keyval']['public']
@@ -225,6 +223,8 @@ def _generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
     filepath = os.path.join(os.getcwd(), rsa_key['keyid'])
 
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+
+  password = _get_key_file_encryption_password(password, prompt, filepath)
 
   # Encrypt the private key if a 'password' was passed or entered on the prompt
   if password is not None:
@@ -478,8 +478,6 @@ def _generate_and_write_ed25519_keypair(filepath=None, password=None,
     The private key filepath.
 
   """
-  password = _get_key_file_encryption_password(password, prompt, filepath)
-
   ed25519_key = securesystemslib.keys.generate_ed25519_key()
 
   # Use passed 'filepath' or keyid as file name
@@ -487,6 +485,8 @@ def _generate_and_write_ed25519_keypair(filepath=None, password=None,
     filepath = os.path.join(os.getcwd(), ed25519_key['keyid'])
 
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+
+  password = _get_key_file_encryption_password(password, prompt, filepath)
 
   # Create intermediate directories as required
   securesystemslib.util.ensure_parent_dir(filepath)
@@ -723,8 +723,6 @@ def _generate_and_write_ecdsa_keypair(filepath=None, password=None,
     The private key filepath.
 
   """
-  password = _get_key_file_encryption_password(password, prompt, filepath)
-
   ecdsa_key = securesystemslib.keys.generate_ecdsa_key()
 
   # Use passed 'filepath' or keyid as file name
@@ -732,6 +730,8 @@ def _generate_and_write_ecdsa_keypair(filepath=None, password=None,
     filepath = os.path.join(os.getcwd(), ecdsa_key['keyid'])
 
   securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+
+  password = _get_key_file_encryption_password(password, prompt, filepath)
 
   # Create intermediate directories as required
   securesystemslib.util.ensure_parent_dir(filepath)
