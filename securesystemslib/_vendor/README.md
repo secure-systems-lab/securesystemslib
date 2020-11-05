@@ -12,6 +12,6 @@ git commit -a
 ```
 
 Note that this does not commit any new files (our copy does not include
-all of the upstream files). Remember to update the expected upstream
+all of the upstream files), any new implementation files will need to be
+`git add`ed before commit. Remember to update the expected upstream
 hash in `test-ed25519-upstream.sh`.
-
