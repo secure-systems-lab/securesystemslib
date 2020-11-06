@@ -105,12 +105,18 @@ def get_password(prompt='Password: ', confirm=False):
 
 
 def _get_key_file_encryption_password(password, prompt, path):
-  """Encryption password helper.
+  """Encryption password helper for `_generate_and_write_*_keypair` functions.
 
-  - Fail if 'password' is passed and 'prompt' is True (precedence unclear)
-  - Fail if empty 'password' arg is passed (encryption desire unclear)
-  - Return None on empty pw on prompt (suggests desire to not encrypt)
-
+  Combinations of 'password' and 'prompt' -> result (explanation)
+  ----------------------------------------------------------------
+  None                  False -> return None (clear non-encryption desire)
+  "<non-empty string>"  False -> return password (clear encryption desire)
+  <anything else>       False -> raise (bad pw type, unclear encryption desire)
+  <not None>            True  -> raise (unclear password/prompt precedence)
+  None                  True  -> prompt and return password if entered and None
+                                 otherwise (users on the prompt can only
+                                 indicate desire to not encrypt by entering no
+                                 password)
   """
   securesystemslib.formats.BOOLEAN_SCHEMA.check_match(prompt)
 
@@ -142,10 +148,17 @@ def _get_key_file_encryption_password(password, prompt, path):
 
 
 def _get_key_file_decryption_password(password, prompt, path):
-  """Decryption password helper.
+  """Decryption password helper for `import_*_privatekey_from_file` functions.
 
-  - Fail if 'password' is passed and 'prompt' is True (precedence unclear)
-  - Return None on empty pw on prompt (suggests desire to not decrypt)
+  Combinations of 'password' and 'prompt' -> result (explanation)
+  ----------------------------------------------------------------
+  None             False -> return None (clear non-decryption desire)
+  "<any string>"   False -> return password (clear decryption desire)
+  <anything else>  False -> raise (bad pw type, unclear decryption desire)
+  <not None>       True  -> raise (unclear password/prompt precedence)
+  None             True  -> prompt and return password if entered and None
+                            otherwise (users on the prompt can only indicate
+                            desire to not decrypt by entering no password)
 
   """
   securesystemslib.formats.BOOLEAN_SCHEMA.check_match(prompt)
@@ -179,7 +192,7 @@ def _generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
 
   If a password is passed or entered on the prompt, the private key is
   encrypted. According to the documentation of the used pyca/cryptography
-  library encryption is performed "using the best available encryption for a
+  library, encryption is performed "using the best available encryption for a
   given key's backend", which "is a curated encryption choice and the algorithm
   may change over time."  The private key is written in PKCS#1 and the public
   key in X.509 SubjectPublicKeyInfo format.
