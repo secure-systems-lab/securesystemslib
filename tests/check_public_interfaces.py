@@ -40,6 +40,10 @@ import sys
 import tempfile
 import unittest
 
+if sys.version_info >= (3, 3):
+  import unittest.mock as mock
+else:
+  import mock
 
 import securesystemslib.exceptions
 import securesystemslib.gpg.constants
@@ -64,7 +68,26 @@ class TestPublicInterfaces(unittest.TestCase):
 
     with self.assertRaises(
           securesystemslib.exceptions.UnsupportedLibraryError):
-      securesystemslib.interface.generate_and_write_rsa_keypair(password='pw')
+      securesystemslib.interface._generate_and_write_rsa_keypair(password='pw')
+
+    with self.assertRaises(
+          securesystemslib.exceptions.UnsupportedLibraryError):
+      securesystemslib.interface.generate_and_write_rsa_keypair('pw')
+
+    with self.assertRaises(
+          securesystemslib.exceptions.UnsupportedLibraryError):
+      securesystemslib.interface.generate_and_write_rsa_keypair('pw')
+
+    with self.assertRaises(
+          securesystemslib.exceptions.UnsupportedLibraryError):
+      # Mock entry on prompt which is presented before lower-level functions
+      # raise UnsupportedLibraryError
+      with mock.patch("securesystemslib.interface.get_password", return_value=""):
+        securesystemslib.interface.generate_and_write_rsa_keypair_with_prompt()
+
+    with self.assertRaises(
+          securesystemslib.exceptions.UnsupportedLibraryError):
+      securesystemslib.interface.generate_and_write_unencrypted_rsa_keypair()
 
     with self.assertRaises(
           securesystemslib.exceptions.UnsupportedLibraryError):
@@ -75,8 +98,23 @@ class TestPublicInterfaces(unittest.TestCase):
 
     with self.assertRaises(
           securesystemslib.exceptions.UnsupportedLibraryError):
-      securesystemslib.interface.generate_and_write_ed25519_keypair(
+      securesystemslib.interface._generate_and_write_ed25519_keypair(
           password='pw')
+
+    with self.assertRaises(
+          securesystemslib.exceptions.UnsupportedLibraryError):
+      securesystemslib.interface.generate_and_write_ed25519_keypair('pw')
+
+    with self.assertRaises(
+          securesystemslib.exceptions.UnsupportedLibraryError):
+      # Mock entry on prompt which is presented before lower-level functions
+      # raise UnsupportedLibraryError
+      with mock.patch("securesystemslib.interface.get_password", return_value=""):
+        securesystemslib.interface.generate_and_write_ed25519_keypair_with_prompt()
+
+    with self.assertRaises(
+          securesystemslib.exceptions.UnsupportedLibraryError):
+      securesystemslib.interface.generate_and_write_unencrypted_ed25519_keypair()
 
     with self.assertRaises(
           securesystemslib.exceptions.UnsupportedLibraryError):
@@ -88,16 +126,29 @@ class TestPublicInterfaces(unittest.TestCase):
 
     with self.assertRaises(
           securesystemslib.exceptions.UnsupportedLibraryError):
-      securesystemslib.interface.generate_and_write_ecdsa_keypair(
+      securesystemslib.interface._generate_and_write_ecdsa_keypair(
           password='pw')
+
+    with self.assertRaises(
+          securesystemslib.exceptions.UnsupportedLibraryError):
+      securesystemslib.interface.generate_and_write_ecdsa_keypair('pw')
+
+    with self.assertRaises(
+          securesystemslib.exceptions.UnsupportedLibraryError):
+      # Mock entry on prompt which is presented before lower-level functions
+      # raise UnsupportedLibraryError
+      with mock.patch("securesystemslib.interface.get_password", return_value=""):
+        securesystemslib.interface.generate_and_write_ecdsa_keypair_with_prompt()
+
+    with self.assertRaises(
+          securesystemslib.exceptions.UnsupportedLibraryError):
+      securesystemslib.interface.generate_and_write_unencrypted_ecdsa_keypair()
 
     with self.assertRaises(
           securesystemslib.exceptions.UnsupportedLibraryError):
       path = os.path.join(self.temp_dir, 'ecddsa.priv')
       with open(path, 'a') as f:
         f.write('{}')
-        # TODO: this is the only none generate_and_write_ function
-        # that prompts for a password when password == None
         securesystemslib.interface.import_ecdsa_privatekey_from_file(
             path, password='pw')
 

@@ -83,9 +83,9 @@ text without prepended symbols is the output of a command.
 
     # If the key length is unspecified, it defaults to 3072 bits. A length of
     # less than 2048 bits raises an exception. A password may be supplied as an
-    # argument, otherwise a user prompt is presented.  If the password is an
-    # empty string, the private key is saved unencrypted.
-    >>> generate_and_write_rsa_keypair("rsa_key2")
+    # argument like above, or on the prompt. If no password is passed or
+    # entered the private key is saved unencrypted.
+    >>> generate_and_write_rsa_keypair("rsa_key2", prompt=True)
     Enter a password for the RSA key:
     Confirm:
 
@@ -134,10 +134,10 @@ Create and Import Ed25519 Keys
 
     # Continuing from the previous section . . .
 
-    # Generate and write an Ed25519 key pair.  The private key is saved
-    # encrypted.  A 'password' argument may be supplied, otherwise a prompt is
-    # presented.
-    >>> generate_and_write_ed25519_keypair('ed25519_key')
+    # Generate and write an Ed25519 key pair.  A password may be supplied as an
+    # argument, or on the prompt. If no password is passed or entered the
+    # private key is saved unencrypted.
+    >>> generate_and_write_ed25519_keypair('ed25519_key', prompt=True)
     Enter a password for the Ed25519 key:
     Confirm:
 
@@ -145,7 +145,7 @@ Create and Import Ed25519 Keys
     >>> public_ed25519_key = import_ed25519_publickey_from_file('ed25519_key.pub')
 
     # and its corresponding private key.
-    >>> private_ed25519_key = import_ed25519_privatekey_from_file('ed25519_key')
+    >>> private_ed25519_key = import_ed25519_privatekey_from_file('ed25519_key', prompt=True)
     Enter a password for the encrypted Ed25519 key:
 
 
@@ -156,12 +156,12 @@ Create and Import ECDSA Keys
 
     # continuing from the previous sections . . .
 
-    >>> generate_and_write_ecdsa_keypair('ecdsa_key')
+    >>> generate_and_write_ecdsa_keypair('ecdsa_key', prompt=True)
     Enter a password for the ECDSA key:
     Confirm:
 
     >>> public_ecdsa_key = import_ecdsa_publickey_from_file('ecdsa_key.pub')
-    >>> private_ecdsa_key = import_ecdsa_privatekey_from_file('ecdsa_key')
+    >>> private_ecdsa_key = import_ecdsa_privatekey_from_file('ecdsa_key', prompt=True)
     Enter a password for the encrypted ECDSA key:
 
 
