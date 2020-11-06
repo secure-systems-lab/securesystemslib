@@ -100,3 +100,15 @@ class TestStorage(unittest.TestCase):
         fi.write(leaf.encode('utf-8'))
     found_leaves = self.storage_backend.list_folder(folder)
     self.assertListEqual(leaves, sorted(found_leaves))
+
+
+  def test_singleton(self):
+    # There should only ever be a single instance of FilesystemBackend.
+    # An object's id is unique and constant for the object during its
+    # lifetime. Therefore create more than one instance of FilesystemBackend
+    # and compare their id's
+    fb1 = securesystemslib.storage.FilesystemBackend()
+    fb2 = securesystemslib.storage.FilesystemBackend()
+    self.assertEqual(id(fb1), id(fb2))
+    self.assertEqual(id(self.storage_backend), id(fb1))
+    self.assertEqual(id(fb2), id(self.storage_backend))
