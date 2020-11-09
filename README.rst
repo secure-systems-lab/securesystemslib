@@ -79,14 +79,16 @@ text without prepended symbols is the output of a command.
     # the current working directory).  A full directory path may be specified
     # instead of saving keys to the current working directory.  If specified
     # directories do not exist, they will be created.
-    >>> generate_and_write_rsa_keypair("rsa_key1", bits=2048, password="password")
+    >>> generate_and_write_rsa_keypair(
+            password="password", filepath="rsa_key1", bits=2048)
 
     # If the key length is unspecified, it defaults to 3072 bits. A length of
-    # less than 2048 bits raises an exception. A password may be supplied as an
-    # argument like above, or on the prompt. If no password is passed or
-    # entered the private key is saved unencrypted.
-    >>> generate_and_write_rsa_keypair("rsa_key2", prompt=True)
-    Enter a password for the RSA key:
+    # less than 2048 bits raises an exception. A similar function is available
+    # to supply a password on the prompt. If an empty password is entered, the
+    # private key is saved unencrypted.
+    >>> generate_and_write_rsa_keypair_with_prompt("rsa_key2")
+    enter password to encrypt private key file '/path/to/rsa_key2'
+    (leave empty if key should not be encrypted):
     Confirm:
 
 
@@ -110,10 +112,11 @@ Import RSA Keys
     # Import an existing private key.  If your private key is encrypted,
     # which it should be, you either have to pass a 'password' or enter one
     # on the prompt.
-    >>> private_rsa_key1 = import_rsa_privatekey_from_file("rsa_key1", password='some passphrase")
-    OR:
+    >>> private_rsa_key1 = import_rsa_privatekey_from_file("rsa_key1", password="some passphrase")
+    # OR:
     >>> private_rsa_key1 = import_rsa_privatekey_from_file("rsa_key1", prompt=True)
-    Enter a password for the encrypted RSA key:
+    enter password to decrypt private key file '/path/to/rsa_key1'
+    (leave empty if key not encrypted):
 
 **import_rsa_privatekey_from_file()** raises a
 *securesystemslib.exceptions.CryptoError* exception if the key / password is
@@ -134,11 +137,10 @@ Create and Import Ed25519 Keys
 
     # Continuing from the previous section . . .
 
-    # Generate and write an Ed25519 key pair.  A password may be supplied as an
-    # argument, or on the prompt. If no password is passed or entered the
-    # private key is saved unencrypted.
-    >>> generate_and_write_ed25519_keypair('ed25519_key', prompt=True)
-    Enter a password for the Ed25519 key:
+    # The same generation and import functions as for rsa keys exist for ed25519
+    >>> generate_and_write_ed25519_keypair_with_prompt('ed25519_key')
+    enter password to encrypt private key file '/path/to/ed25519_key'
+    (leave empty if key should not be encrypted):
     Confirm:
 
     # Import the Ed25519 public key just created . . .
@@ -146,24 +148,24 @@ Create and Import Ed25519 Keys
 
     # and its corresponding private key.
     >>> private_ed25519_key = import_ed25519_privatekey_from_file('ed25519_key', prompt=True)
-    Enter a password for the encrypted Ed25519 key:
-
+    enter password to decrypt private key file '/path/to/ed25519_key'
+    (leave empty if key should not be encrypted):
 
 Create and Import ECDSA Keys
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
-    # continuing from the previous sections . . .
-
-    >>> generate_and_write_ecdsa_keypair('ecdsa_key', prompt=True)
-    Enter a password for the ECDSA key:
-    Confirm:
+    # The same generation and import functions as for rsa and ed25519 keys
+    # exist for ecdsa
+    >>> generate_and_write_ecdsa_keypair_with_prompt('ecdsa_key')
+    enter password to decrypt private key file '/path/to/ecdsa_key'
+    (leave empty if key should not be encrypted):
 
     >>> public_ecdsa_key = import_ecdsa_publickey_from_file('ecdsa_key.pub')
     >>> private_ecdsa_key = import_ecdsa_privatekey_from_file('ecdsa_key', prompt=True)
-    Enter a password for the encrypted ECDSA key:
-
+    enter password to decrypt private key file '/path/to/ecdsa_key'
+    (leave empty if key should not be encrypted):
 
 Generate ECDSA, Ed25519, and RSA Signatures
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
