@@ -1,8 +1,8 @@
 ed25519
 =======
 
-.. image:: https://travis-ci.org/pyca/ed25519.png?branch=master
-   :target: https://travis-ci.org/pyca/ed25519
+.. image:: https://github.com/pyca/ed25519/workflows/CI/badge.svg
+   :target: https://github.com/pyca/ed25519/actions?query=workflow%3ACI
 
 `Ed25519 <http://ed25519.cr.yp.to/>`_ is a high-speed public-key
 signature system.  ``ed25519.py`` is based on the original Python
