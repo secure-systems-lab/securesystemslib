@@ -1,5 +1,26 @@
 # Changelog
 
+## securesystemslib v0.18.0
+
+### Added
+* `interface.generate_and_write_unencrypted_{rsa,ed25519,ecdsa}_keypair` (#288)
+* `interface.generate_and_write_{rsa,ed25519,ecdsa}_keypair_with_prompt` (#288)
+* `interface.import_privatekey_from_file`(#288)
+* GitHub Action to auto-check upstream changes for vendored ed25519 (#294)
+
+### Changed
+* `interface.generate_and_write_{rsa,ed25519,ecdsa}_keypair` require a password
+  as first positional argument (#288)
+* `interface.import_{rsa,ed25519,ecdsa}_privatekey_from_file` do not error on
+  empty password, but pass it on to lower level decryption routines (#288)
+* `interface.import_ecdsa_privatekey_from_file` supports loading unencrypted
+  private keys (#288)
+* Revise `interface` and `gpg.functions` docstrings, and example snippets, and
+  use Sphinx compatible Google Style docstring format (#288, #300)
+* Linter-flagged cosmetic changes (#292, #295, #296)
+* Bump dependencies: cryptography (#291, #293)
+* Bump vendor copy of ed25519 (#299)
+
 ## securesystemslib v0.17.0
 
 ### Added
