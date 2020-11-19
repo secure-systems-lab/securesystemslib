@@ -878,7 +878,7 @@ class Struct(Schema):
     False
   """
 
-  def __init__(self, sub_schemas, optional_schemas=[], allow_more=False,
+  def __init__(self, sub_schemas, optional_schemas=None, allow_more=False,
                struct_name='list'):
     """
     <Purpose>
@@ -886,10 +886,13 @@ class Struct(Schema):
 
     <Arguments>
       sub_schemas: The sub-schemas recognized.
-      optional_schemas: The optional list of schemas.
+      optional_schemas: Optional list. If none is given, it will be "[]".
       allow_more: Specifies that an optional list of types is allowed.
       struct_name: A string identifier for the Struct object.
     """
+
+    if optional_schemas is None:
+      optional_schemas = []
 
     # Ensure each item of the list contains the expected object type.
     if not isinstance(sub_schemas, (list, tuple)):
