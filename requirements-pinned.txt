@@ -1,4 +1,4 @@
-cffi==1.14.3              # via cryptography, pynacl
+cffi==1.14.4              # via cryptography, pynacl
 colorama==0.4.4
 cryptography==3.2.1
 enum34==1.1.6             ; python_version < "3" # via cryptography
