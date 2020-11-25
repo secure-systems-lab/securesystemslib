@@ -188,6 +188,20 @@ class FilesystemBackend(StorageBackendInterface):
     local filesystems using Python standard library functions.
   """
 
+  # As FilesystemBackend is effectively a stateless wrapper around various
+  # standard library operations, we only ever need a single instance of it.
+  # That single instance is safe to be (re-)used by all callers. Therefore
+  # implement the singleton pattern to avoid uneccesarily creating multiple
+  # objects.
+  _instance = None
+
+  def __new__(cls, *args, **kwargs):
+    if cls._instance is None:
+      cls._instance = object.__new__(cls, *args, **kwargs)
+    return cls._instance
+
+
+
   class GetFile(object):
     # Implementing get() as a function with the @contextmanager decorator
     # doesn't allow us to cleanly capture exceptions thrown by the underlying
