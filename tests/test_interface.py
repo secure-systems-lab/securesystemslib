@@ -633,6 +633,7 @@ class TestInterfaceFunctions(unittest.TestCase):
 
     """
     key_pw = "pw"
+    expected_priv_mode = stat.S_IFREG|stat.S_IRUSR|stat.S_IWUSR
     for idx, (gen, gen_prompt, gen_plain, import_priv, schema) in enumerate([
         (
           generate_and_write_rsa_keypair,
@@ -661,6 +662,10 @@ class TestInterfaceFunctions(unittest.TestCase):
       priv = import_priv(fn_encrypted, key_pw)
       self.assertTrue(schema.matches(priv), assert_msg)
 
+      # Test that encrypted private key is generated with read and write
+      # permissions for user only
+      self.assertEqual(os.stat(fn_encrypted).st_mode, expected_priv_mode)
+
       # Test generate_and_write_*_keypair errors if password is None or empty
       with self.assertRaises(FormatError, msg=assert_msg):
         fn_encrypted = gen(None)
@@ -688,6 +693,9 @@ class TestInterfaceFunctions(unittest.TestCase):
       priv = import_priv(fn_unencrypted)
       self.assertTrue(schema.matches(priv), assert_msg)
 
+      # Test that unencrypted private key is generated with read and write
+      # permissions for user only
+      self.assertEqual(os.stat(fn_unencrypted).st_mode, expected_priv_mode)
 
 
   def test_import_publickeys_from_file(self):
