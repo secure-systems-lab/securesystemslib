@@ -1,3 +1,17 @@
+python-securesystemslib (0.18.0-1) unstable; urgency=medium
+
+  * New upstream release includes among other things:
+    - an enhanced key generation, export and import interface,
+    - updated documentation of interface functions,
+    - and more and better tests.
+
+  * Update d/control to:
+    - remove obsolete python-dateutil dependency,
+    - bump standards version to 4.5.1,
+    - and compat to 13.
+
+ -- Lukas Puehringer <lukas.puehringer@nyu.edu>  Wed, 09 Dec 2020 08:44:34 +0200
+
 python-securesystemslib (0.16.0-1) unstable; urgency=medium
 
   * New upstream release that includes i.a.:
