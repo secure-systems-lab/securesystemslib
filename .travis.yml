@@ -12,14 +12,14 @@ matrix:
       env: TOXENV=py27-no-gpg
       before_install:
         - sudo apt-get remove -y --allow-remove-essential gnupg gnupg2
-    - python: "3.5"
-      env: TOXENV=py35
     - python: "3.6"
       env: TOXENV=py36
     - python: "3.7"
       env: TOXENV=py37
     - python: "3.8"
       env: TOXENV=py38
+    - python: "3.9"
+      env: TOXENV=py39
     - python: "3.8"
       env: TOXENV=purepy38
     - python: "3.8"
