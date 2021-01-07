@@ -16,6 +16,7 @@
   handling
 """
 import logging
+import os
 
 import securesystemslib.gpg.rsa as rsa
 import securesystemslib.gpg.dsa as dsa
@@ -25,9 +26,10 @@ import securesystemslib.process as process
 
 log = logging.getLogger(__name__)
 
-# By default, we assume and test that gpg2 exists. Otherwise, we assume gpg
+# By default, we allow providing GPG client through the environment
+# assuming gpg2 as default value and test if exists. Otherwise, we assume gpg
 # exists.
-GPG_COMMAND = "gpg2"
+GPG_COMMAND = os.environ.get('GNUPG', "gpg2")
 GPG_VERSION_COMMAND = GPG_COMMAND + " --version"
 FULLY_SUPPORTED_MIN_VERSION = "2.1.0"
 
