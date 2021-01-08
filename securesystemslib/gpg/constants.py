@@ -26,31 +26,39 @@ import securesystemslib.process as process
 
 log = logging.getLogger(__name__)
 
+
+def is_available_gnupg(gnupg):
+  gpg_version_cmd = gnupg + " --version"
+  try:
+    process.run(gpg_version_cmd, stdout=process.PIPE, stderr=process.PIPE)
+    return True
+  except OSError:
+    return False
+
+
 # By default, we allow providing GPG client through the environment
 # assuming gpg2 as default value and test if exists. Otherwise, we assume gpg
 # exists.
-GPG_COMMAND = os.environ.get('GNUPG', "gpg2")
+HAVE_GPG = True
+
+GPG_ENV_COMMAND = os.environ.get('GNUPG')
+GPG2_COMMAND = "gpg2"
+GPG1_COMMAND = "gpg"
+
+if GPG_ENV_COMMAND and is_available_gnupg(GPG_ENV_COMMAND):
+  GPG_COMMAND = GPG_ENV_COMMAND
+elif is_available_gnupg(GPG2_COMMAND):
+  GPG_COMMAND = GPG2_COMMAND
+elif is_available_gnupg(GPG1_COMMAND):
+  GPG_COMMAND = GPG1_COMMAND
+else:
+  GPG_COMMAND = ""
+  HAVE_GPG = False
+
 GPG_VERSION_COMMAND = GPG_COMMAND + " --version"
 FULLY_SUPPORTED_MIN_VERSION = "2.1.0"
-
-HAVE_GPG = True
-NO_GPG_MSG = "GPG support requires a GPG command, {} version {} or newer is" \
-  " fully supported.".format(GPG_COMMAND, FULLY_SUPPORTED_MIN_VERSION)
-
-try:
-  proc = process.run(GPG_VERSION_COMMAND, stdout=process.PIPE,
-    stderr=process.PIPE)
-
-except OSError: # pragma: no cover
-  GPG_COMMAND = "gpg"
-  GPG_VERSION_COMMAND = GPG_COMMAND + " --version"
-
-  try:
-    proc = process.run(GPG_VERSION_COMMAND, stdout=process.PIPE,
-      stderr=process.PIPE)
-
-  except OSError:
-    HAVE_GPG = False
+NO_GPG_MSG = "GPG support requires a GPG client. 'gpg2' or 'gpg' with version {} or newer is" \
+  " fully supported.".format(FULLY_SUPPORTED_MIN_VERSION)
 
 GPG_SIGN_COMMAND = GPG_COMMAND + \
                    " --detach-sign --digest-algo SHA256 {keyarg} {homearg}"
