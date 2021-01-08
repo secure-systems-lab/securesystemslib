@@ -36,24 +36,26 @@ def is_available_gnupg(gnupg):
     return False
 
 
-# By default, we allow providing GPG client through the environment
-# assuming gpg2 as default value and test if exists. Otherwise, we assume gpg
-# exists.
-HAVE_GPG = True
+GPG_COMMAND = ""
+HAVE_GPG = False
 
 GPG_ENV_COMMAND = os.environ.get('GNUPG')
 GPG2_COMMAND = "gpg2"
 GPG1_COMMAND = "gpg"
 
-if GPG_ENV_COMMAND and is_available_gnupg(GPG_ENV_COMMAND):
-  GPG_COMMAND = GPG_ENV_COMMAND
+# By default, we allow providing GPG client through the environment
+# assuming gpg2 as default value and test if exists. Otherwise, we assume gpg
+# exists.
+if GPG_ENV_COMMAND:
+  if is_available_gnupg(GPG_ENV_COMMAND):
+    GPG_COMMAND = GPG_ENV_COMMAND
 elif is_available_gnupg(GPG2_COMMAND):
   GPG_COMMAND = GPG2_COMMAND
 elif is_available_gnupg(GPG1_COMMAND):
   GPG_COMMAND = GPG1_COMMAND
-else:
-  GPG_COMMAND = ""
-  HAVE_GPG = False
+
+if GPG_COMMAND:
+  HAVE_GPG = True
 
 GPG_VERSION_COMMAND = GPG_COMMAND + " --version"
 FULLY_SUPPORTED_MIN_VERSION = "2.1.0"
