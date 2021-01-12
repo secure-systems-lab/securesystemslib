@@ -346,12 +346,13 @@ GnuPG interface
 
 Signature creation and public key export requires installation of the `gpg` or
 `gpg2` command line tool, which may be downloaded from
-`https://gnupg.org/download <https://gnupg.org/>`_. It is
-is also needed to generate the supported RSA or DSA signing keys (see `gpg` man
+`https://gnupg.org/download <https://gnupg.org/>`_.
+It is also needed to generate the supported RSA or DSA signing keys (see `gpg` man
 pages for detailed instructions). Sample keys are available in a test keyring
 at `tests/gpg_keyrings/rsa`, which may be passed to the signing and export
 functions using the `homedir` argument (if not passed the default keyring is
-used).
+used). The GPG client to use can be also specified with the help of environment
+variable `GNUPG`.
 
 ::
 
@@ -367,7 +368,7 @@ used).
 
     >>> gpg.verify_signature(signature, public_key, data)
     True
-    
+
 Testing
 ++++++++++++
 
