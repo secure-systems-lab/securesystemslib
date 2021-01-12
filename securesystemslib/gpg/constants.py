@@ -55,6 +55,7 @@ elif is_available_gnupg(GPG1_COMMAND):
   GPG_COMMAND = GPG1_COMMAND
 
 if GPG_COMMAND:
+  # Use bool to skip tests or fail early and gracefully if no gpg is available
   HAVE_GPG = True
 
 GPG_VERSION_COMMAND = GPG_COMMAND + " --version"
