@@ -37,7 +37,7 @@ else: # pragma: no cover
   import subprocess
 
 from securesystemslib import formats
-import securesystemslib.settings
+from securesystemslib import settings
 
 DEVNULL = subprocess.DEVNULL
 PIPE = subprocess.PIPE
@@ -48,7 +48,7 @@ def _default_timeout():
   """Helper to use securesystemslib.settings.SUBPROCESS_TIMEOUT as default
   argument, and still be able to modify it after the function definitions are
   evaluated. """
-  return securesystemslib.settings.SUBPROCESS_TIMEOUT
+  return settings.SUBPROCESS_TIMEOUT
 
 
 

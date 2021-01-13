@@ -66,8 +66,8 @@ from securesystemslib import ed25519_keys
 from securesystemslib import exceptions
 from securesystemslib import formats
 from securesystemslib import rsa_keys
+from securesystemslib import settings
 from securesystemslib.hash import digest
-
 
 
 # The hash algorithm to use in the generation of keyids.
@@ -198,7 +198,7 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-sha256'):
   rsakey_dict['keytype'] = keytype
   rsakey_dict['scheme'] = scheme
   rsakey_dict['keyid'] = keyid
-  rsakey_dict['keyid_hash_algorithms'] = securesystemslib.settings.HASH_ALGORITHMS
+  rsakey_dict['keyid_hash_algorithms'] = settings.HASH_ALGORITHMS
   rsakey_dict['keyval'] = key_value
 
   return rsakey_dict
@@ -282,8 +282,7 @@ def generate_ecdsa_key(scheme='ecdsa-sha2-nistp256'):
 
   # Add "keyid_hash_algorithms" so that equal ECDSA keys with different keyids
   # can be associated using supported keyid_hash_algorithms.
-  ecdsa_key['keyid_hash_algorithms'] = \
-      securesystemslib.settings.HASH_ALGORITHMS
+  ecdsa_key['keyid_hash_algorithms'] = settings.HASH_ALGORITHMS
 
   return ecdsa_key
 
@@ -360,7 +359,7 @@ def generate_ed25519_key(scheme='ed25519'):
   ed25519_key['keytype'] = keytype
   ed25519_key['scheme'] = scheme
   ed25519_key['keyid'] = keyid
-  ed25519_key['keyid_hash_algorithms'] = securesystemslib.settings.HASH_ALGORITHMS
+  ed25519_key['keyid_hash_algorithms'] = settings.HASH_ALGORITHMS
   ed25519_key['keyval'] = key_value
 
   return ed25519_key
@@ -458,7 +457,7 @@ def format_keyval_to_metadata(keytype, scheme, key_value, private=False):
 
     return {'keytype': keytype,
             'scheme': scheme,
-            'keyid_hash_algorithms': securesystemslib.settings.HASH_ALGORITHMS,
+            'keyid_hash_algorithms': settings.HASH_ALGORITHMS,
             'keyval': public_key_value}
 
 
@@ -550,7 +549,7 @@ def format_metadata_to_key(key_metadata, default_keyid=None,
   keyids.add(default_keyid)
 
   if keyid_hash_algorithms is None:
-    keyid_hash_algorithms = securesystemslib.settings.HASH_ALGORITHMS
+    keyid_hash_algorithms = settings.HASH_ALGORITHMS
 
   for hash_algorithm in keyid_hash_algorithms:
     keyid = _get_keyid(keytype, scheme, key_value, hash_algorithm)
@@ -1058,8 +1057,7 @@ def import_rsakey_from_public_pem(pem, scheme='rsassa-pss-sha256'):
 
   # Add "keyid_hash_algorithms" so that equal RSA keys with different keyids
   # can be associated using supported keyid_hash_algorithms.
-  rsakey_dict['keyid_hash_algorithms'] = \
-      securesystemslib.settings.HASH_ALGORITHMS
+  rsakey_dict['keyid_hash_algorithms'] = settings.HASH_ALGORITHMS
 
   return rsakey_dict
 
@@ -1141,8 +1139,7 @@ def import_rsakey_from_pem(pem, scheme='rsassa-pss-sha256'):
 
   # Add "keyid_hash_algorithms" so that equal RSA keys with
   # different keyids can be associated using supported keyid_hash_algorithms.
-  rsakey_dict['keyid_hash_algorithms'] = \
-      securesystemslib.settings.HASH_ALGORITHMS
+  rsakey_dict['keyid_hash_algorithms'] = settings.HASH_ALGORITHMS
 
   return rsakey_dict
 
@@ -1603,8 +1600,7 @@ def import_ed25519key_from_private_json(json_str, password=None):
 
   # Add "keyid_hash_algorithms" so that equal ed25519 keys with
   # different keyids can be associated using supported keyid_hash_algorithms.
-  key_object['keyid_hash_algorithms'] = \
-      securesystemslib.settings.HASH_ALGORITHMS
+  key_object['keyid_hash_algorithms'] = settings.HASH_ALGORITHMS
 
   return key_object
 
@@ -1706,8 +1702,7 @@ def import_ecdsakey_from_private_pem(pem, scheme='ecdsa-sha2-nistp256', password
 
   # Add "keyid_hash_algorithms" so equal ECDSA keys with
   # different keyids can be associated using supported keyid_hash_algorithms
-  ecdsakey_dict['keyid_hash_algorithms'] = \
-    securesystemslib.settings.HASH_ALGORITHMS
+  ecdsakey_dict['keyid_hash_algorithms'] = settings.HASH_ALGORITHMS
 
   return ecdsakey_dict
 
@@ -1801,8 +1796,7 @@ def import_ecdsakey_from_public_pem(pem, scheme='ecdsa-sha2-nistp256'):
 
   # Add "keyid_hash_algorithms" so that equal ECDSA keys with different keyids
   # can be associated using supported keyid_hash_algorithms.
-  ecdsakey_dict['keyid_hash_algorithms'] = \
-      securesystemslib.settings.HASH_ALGORITHMS
+  ecdsakey_dict['keyid_hash_algorithms'] = settings.HASH_ALGORITHMS
 
   return ecdsakey_dict
 

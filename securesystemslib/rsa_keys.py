@@ -122,11 +122,10 @@ except ImportError:
 
 from securesystemslib import exceptions
 from securesystemslib import formats
+from securesystemslib import settings
 from securesystemslib.hash import digest_from_rsa_scheme
 import securesystemslib.util
 
-# Extract/reference the cryptography library settings.
-import securesystemslib.settings
 
 # Recommended RSA key sizes:
 # http://www.emc.com/emc-plus/rsa-labs/historical/twirl-and-rsa-key-size.htm#table1
@@ -158,7 +157,7 @@ _SALT_SIZE = 16
 # derived key+PBDKF2 combination if the key is loaded and re-saved, overriding
 # any previous iteration setting used by the old '<keyid>.key'.
 # https://en.wikipedia.org/wiki/PBKDF2
-_PBKDF2_ITERATIONS = securesystemslib.settings.PBKDF2_ITERATIONS
+_PBKDF2_ITERATIONS = settings.PBKDF2_ITERATIONS
 
 
 

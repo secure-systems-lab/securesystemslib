@@ -31,7 +31,6 @@ import logging
 from securesystemslib import exceptions
 from securesystemslib import formats
 from securesystemslib.hash import digest_fileobject
-import securesystemslib.settings
 import securesystemslib.storage
 
 logger = logging.getLogger(__name__)

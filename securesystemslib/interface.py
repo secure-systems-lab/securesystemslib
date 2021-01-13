@@ -38,7 +38,7 @@ import json
 from securesystemslib import exceptions
 from securesystemslib import formats
 from securesystemslib import keys
-import securesystemslib.settings
+from securesystemslib import settings
 import securesystemslib.storage
 import securesystemslib.util
 
@@ -942,8 +942,7 @@ def import_ecdsa_privatekey_from_file(filepath, password=None, prompt=False,
 
   # Add "keyid_hash_algorithms" so that equal ecdsa keys with different keyids
   # can be associated using supported keyid_hash_algorithms.
-  key_object['keyid_hash_algorithms'] = \
-      securesystemslib.settings.HASH_ALGORITHMS
+  key_object['keyid_hash_algorithms'] = settings.HASH_ALGORITHMS
 
   return key_object
 
