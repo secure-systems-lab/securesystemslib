@@ -61,12 +61,12 @@ import binascii
 
 import logging
 
+from securesystemslib import ecdsa_keys
+from securesystemslib import ed25519_keys
 from securesystemslib import exceptions
 from securesystemslib import formats
+from securesystemslib import rsa_keys
 from securesystemslib.hash import digest
-import securesystemslib.rsa_keys
-import securesystemslib.ed25519_keys
-import securesystemslib.ecdsa_keys
 
 
 
@@ -175,7 +175,7 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-sha256'):
   # used to generate the actual key.  Raise 'ValueError' if 'bits' is less than
   # 1024, although a 2048-bit minimum is enforced by
   # securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match().
-  public, private = securesystemslib.rsa_keys.generate_rsa_public_and_private(bits)
+  public, private = rsa_keys.generate_rsa_public_and_private(bits)
 
   # When loading in PEM keys, extract_pem() is called, which strips any
   # leading or trailing new line characters. Do the same here before generating
@@ -259,8 +259,7 @@ def generate_ecdsa_key(scheme='ecdsa-sha2-nistp256'):
 
   # Generate the public and private ECDSA keys with one of the supported
   # libraries.
-  public, private = \
-    securesystemslib.ecdsa_keys.generate_public_and_private(scheme)
+  public, private = ecdsa_keys.generate_public_and_private(scheme)
 
   # Generate the keyid of the Ed25519 key.  'key_value' corresponds to the
   # 'keyval' entry of the 'Ed25519KEY_SCHEMA' dictionary.  The private key
@@ -345,8 +344,7 @@ def generate_ed25519_key(scheme='ed25519'):
   # optimized, pure python implementation provided by PyCA.  Ed25519 should
   # always be generated with a backend like libsodium to prevent side-channel
   # attacks.
-  public, private = \
-    securesystemslib.ed25519_keys.generate_public_and_private()
+  public, private = ed25519_keys.generate_public_and_private()
 
   # Generate the keyid of the Ed25519 key.  'key_value' corresponds to the
   # 'keyval' entry of the 'Ed25519KEY_SCHEMA' dictionary.  The private key
@@ -697,8 +695,7 @@ def create_signature(key_dict, data):
   if keytype == 'rsa':
     if scheme in RSA_SIGNATURE_SCHEMES:
       private = private.replace('\r\n', '\n')
-      sig, scheme = securesystemslib.rsa_keys.create_rsa_signature(
-          private, data, scheme)
+      sig, scheme = rsa_keys.create_rsa_signature(private, data, scheme)
 
     else:
       raise exceptions.UnsupportedAlgorithmError('Unsupported'
@@ -707,14 +704,12 @@ def create_signature(key_dict, data):
   elif keytype == 'ed25519':
     public = binascii.unhexlify(public.encode('utf-8'))
     private = binascii.unhexlify(private.encode('utf-8'))
-    sig, scheme = securesystemslib.ed25519_keys.create_signature(
-        public, private, data, scheme)
+    sig, scheme = ed25519_keys.create_signature(public, private, data, scheme)
 
   # Continue to support keytypes of ecdsa-sha2-nistp256 and ecdsa-sha2-nistp384
   # for backwards compatibility with older securesystemslib releases
   elif keytype in ['ecdsa', 'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384']:
-    sig, scheme = securesystemslib.ecdsa_keys.create_signature(
-        public, private, data, scheme)
+    sig, scheme = ecdsa_keys.create_signature(public, private, data, scheme)
 
   # 'securesystemslib.formats.ANYKEY_SCHEMA' should have detected invalid key
   # types.  This is a defensive check against an invalid key type.
@@ -839,7 +834,7 @@ def verify_signature(key_dict, signature, data):
 
   if keytype == 'rsa':
     if scheme in RSA_SIGNATURE_SCHEMES:
-      valid_signature = securesystemslib.rsa_keys.verify_rsa_signature(sig,
+      valid_signature = rsa_keys.verify_rsa_signature(sig,
         scheme, public, data)
 
     else:
@@ -849,7 +844,7 @@ def verify_signature(key_dict, signature, data):
   elif keytype == 'ed25519':
     if scheme == 'ed25519':
       public = binascii.unhexlify(public.encode('utf-8'))
-      valid_signature = securesystemslib.ed25519_keys.verify_signature(public,
+      valid_signature = ed25519_keys.verify_signature(public,
           scheme, sig, data)
 
     else:
@@ -858,8 +853,7 @@ def verify_signature(key_dict, signature, data):
 
   elif keytype in ['ecdsa', 'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384']:
     if scheme in ['ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384']:
-      valid_signature = securesystemslib.ecdsa_keys.verify_signature(public,
-        scheme, sig, data)
+      valid_signature = ecdsa_keys.verify_signature(public, scheme, sig, data)
 
     else:
       raise exceptions.UnsupportedAlgorithmError('Unsupported'
@@ -955,8 +949,7 @@ def import_rsakey_from_private_pem(pem, scheme='rsassa-pss-sha256', password=Non
   # Generate the public and private RSA keys.  The pyca/cryptography library
   # performs the actual crypto operations.
   public, private = \
-    securesystemslib.rsa_keys.create_rsa_public_and_private_from_pem(
-    pem, password)
+    rsa_keys.create_rsa_public_and_private_from_pem(pem, password)
 
   public =  extract_pem(public, private_pem=False)
   private = extract_pem(private, private_pem=True)
@@ -1310,7 +1303,7 @@ def encrypt_key(key_object, password):
 
   # Generate an encrypted string of 'key_object' using AES-256-CTR-Mode, where
   # 'password' is strengthened with PBKDF2-HMAC-SHA256.
-  encrypted_key = securesystemslib.rsa_keys.encrypt_key(key_object, password)
+  encrypted_key = rsa_keys.encrypt_key(key_object, password)
 
   return encrypted_key
 
@@ -1386,8 +1379,7 @@ def decrypt_key(encrypted_key, passphrase):
   # Decrypt 'encrypted_key' so that the original key object is restored.
   # encrypt_key() generates an encrypted string of the key object using
   # AES-256-CTR-Mode, where 'password' is strengthened with PBKDF2-HMAC-SHA256.
-  key_object = \
-    securesystemslib.rsa_keys.decrypt_key(encrypted_key, passphrase)
+  key_object = rsa_keys.decrypt_key(encrypted_key, passphrase)
 
   # The corresponding encrypt_key() encrypts and stores key objects in
   # non-metadata format (i.e., original format of key object argument to
@@ -1457,8 +1449,7 @@ def create_rsa_encrypted_pem(private_key, passphrase):
   # Generate the public and private RSA keys. A 2048-bit minimum is enforced by
   # create_rsa_encrypted_pem() via a
   # securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match().
-  encrypted_pem = securesystemslib.rsa_keys.create_rsa_encrypted_pem(
-      private_key, passphrase)
+  encrypted_pem = rsa_keys.create_rsa_encrypted_pem(private_key, passphrase)
 
   return encrypted_pem
 
@@ -1590,8 +1581,7 @@ def import_ed25519key_from_private_json(json_str, password=None):
     # Decrypt the loaded key file, calling the 'cryptography' library to
     # generate the derived encryption key from 'password'.  Raise
     # 'securesystemslib.exceptions.CryptoError' if the decryption fails.
-    key_object = securesystemslib.keys.\
-                 decrypt_key(json_str.decode('utf-8'), password)
+    key_object = decrypt_key(json_str.decode('utf-8'), password)
 
   else:
     logger.debug('No password was given. Attempting to import an'
@@ -1694,8 +1684,7 @@ def import_ecdsakey_from_private_pem(pem, scheme='ecdsa-sha2-nistp256', password
   private = None
 
   public, private = \
-      securesystemslib.ecdsa_keys.create_ecdsa_public_and_private_from_pem(pem,
-      password)
+      ecdsa_keys.create_ecdsa_public_and_private_from_pem(pem, password)
 
   # Generate the keyid of the ECDSA key.  'key_value' corresponds to the
   # 'keyval' entry of the 'ECDSAKEY_SCHEMA' dictionary.  The private key

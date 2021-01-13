@@ -37,10 +37,10 @@ import json
 
 from securesystemslib import exceptions
 from securesystemslib import formats
+from securesystemslib import keys
 import securesystemslib.settings
 import securesystemslib.storage
 import securesystemslib.util
-import securesystemslib.keys
 
 from securesystemslib import KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA
 
@@ -220,7 +220,7 @@ def _generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
   formats.RSAKEYBITS_SCHEMA.check_match(bits)
 
   # Generate private RSA key and extract public and private both in PEM
-  rsa_key = securesystemslib.keys.generate_rsa_key(bits)
+  rsa_key = keys.generate_rsa_key(bits)
   public = rsa_key['keyval']['public']
   private = rsa_key['keyval']['private']
 
@@ -234,7 +234,7 @@ def _generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
 
   # Encrypt the private key if a 'password' was passed or entered on the prompt
   if password is not None:
-    private = securesystemslib.keys.create_rsa_encrypted_pem(private, password)
+    private = keys.create_rsa_encrypted_pem(private, password)
 
   # Create intermediate directories as required
   securesystemslib.util.ensure_parent_dir(filepath)
@@ -398,8 +398,7 @@ def import_rsa_privatekey_from_file(filepath, password=None,
     pem_key = file_object.read().decode('utf-8')
 
   # Optionally decrypt and convert PEM-encoded key to 'RSAKEY_SCHEMA' format
-  rsa_key = securesystemslib.keys.import_rsakey_from_private_pem(
-      pem_key, scheme, password)
+  rsa_key = keys.import_rsakey_from_private_pem(pem_key, scheme, password)
 
   return rsa_key
 
@@ -439,8 +438,7 @@ def import_rsa_publickey_from_file(filepath, scheme='rsassa-pss-sha256',
 
   # Convert PEM-encoded key to 'RSAKEY_SCHEMA' format
   try:
-    rsakey_dict = securesystemslib.keys.import_rsakey_from_public_pem(
-        rsa_pubkey_pem, scheme)
+    rsakey_dict = keys.import_rsakey_from_public_pem(rsa_pubkey_pem, scheme)
 
   except exceptions.FormatError as e:
     raise exceptions.Error('Cannot import improperly formatted'
@@ -484,7 +482,7 @@ def _generate_and_write_ed25519_keypair(filepath=None, password=None,
     The private key filepath.
 
   """
-  ed25519_key = securesystemslib.keys.generate_ed25519_key()
+  ed25519_key = keys.generate_ed25519_key()
 
   # Use passed 'filepath' or keyid as file name
   if not filepath:
@@ -501,7 +499,7 @@ def _generate_and_write_ed25519_keypair(filepath=None, password=None,
   keytype = ed25519_key['keytype']
   keyval = ed25519_key['keyval']
   scheme = ed25519_key['scheme']
-  ed25519key_metadata_format = securesystemslib.keys.format_keyval_to_metadata(
+  ed25519key_metadata_format = keys.format_keyval_to_metadata(
       keytype, scheme, keyval, private=False)
 
   # Write public key to <filepath>.pub
@@ -511,7 +509,7 @@ def _generate_and_write_ed25519_keypair(filepath=None, password=None,
 
   # Encrypt private key if we have a password, store as JSON string otherwise
   if password is not None:
-    ed25519_key = securesystemslib.keys.encrypt_key(ed25519_key, password)
+    ed25519_key = keys.encrypt_key(ed25519_key, password)
   else:
     ed25519_key = json.dumps(ed25519_key)
 
@@ -636,8 +634,7 @@ def import_ed25519_publickey_from_file(filepath):
   # Load custom on-disk JSON formatted key and convert to its custom in-memory
   # dict key representation
   ed25519_key_metadata = securesystemslib.util.load_json_file(filepath)
-  ed25519_key, _ = securesystemslib.keys.format_metadata_to_key(
-      ed25519_key_metadata)
+  ed25519_key, _ = keys.format_metadata_to_key(ed25519_key_metadata)
 
   # Check that the generic loading functions indeed loaded an ed25519 key
   if ed25519_key['keytype'] != 'ed25519':
@@ -690,7 +687,7 @@ def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False,
 
     # Load custom on-disk JSON formatted key and convert to its custom
     # in-memory dict key representation, decrypting it if password is not None
-    return securesystemslib.keys.import_ed25519key_from_private_json(
+    return keys.import_ed25519key_from_private_json(
         json_str, password=password)
 
 
@@ -729,7 +726,7 @@ def _generate_and_write_ecdsa_keypair(filepath=None, password=None,
     The private key filepath.
 
   """
-  ecdsa_key = securesystemslib.keys.generate_ecdsa_key()
+  ecdsa_key = keys.generate_ecdsa_key()
 
   # Use passed 'filepath' or keyid as file name
   if not filepath:
@@ -746,7 +743,7 @@ def _generate_and_write_ecdsa_keypair(filepath=None, password=None,
   keytype = ecdsa_key['keytype']
   keyval = ecdsa_key['keyval']
   scheme = ecdsa_key['scheme']
-  ecdsakey_metadata_format = securesystemslib.keys.format_keyval_to_metadata(
+  ecdsakey_metadata_format = keys.format_keyval_to_metadata(
       keytype, scheme, keyval, private=False)
 
   # Write public key to <filepath>.pub
@@ -756,7 +753,7 @@ def _generate_and_write_ecdsa_keypair(filepath=None, password=None,
 
   # Encrypt private key if we have a password, store as JSON string otherwise
   if password is not None:
-    ecdsa_key = securesystemslib.keys.encrypt_key(ecdsa_key, password)
+    ecdsa_key = keys.encrypt_key(ecdsa_key, password)
   else:
     ecdsa_key = json.dumps(ecdsa_key)
 
@@ -882,8 +879,7 @@ def import_ecdsa_publickey_from_file(filepath):
   # Load custom on-disk JSON formatted key and convert to its custom in-memory
   # dict key representation
   ecdsa_key_metadata = securesystemslib.util.load_json_file(filepath)
-  ecdsa_key, _ = securesystemslib.keys.format_metadata_to_key(
-      ecdsa_key_metadata)
+  ecdsa_key, _ = keys.format_metadata_to_key(ecdsa_key_metadata)
 
   return ecdsa_key
 
@@ -930,7 +926,7 @@ def import_ecdsa_privatekey_from_file(filepath, password=None, prompt=False,
 
   # Decrypt private key if we have a password, directly load JSON otherwise
   if password is not None:
-    key_object = securesystemslib.keys.decrypt_key(key_data, password)
+    key_object = keys.decrypt_key(key_data, password)
   else:
     key_object = securesystemslib.util.load_json_string(key_data)
 
