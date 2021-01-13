@@ -18,7 +18,7 @@
 import logging
 import time
 
-import securesystemslib.exceptions
+from securesystemslib import exceptions
 import securesystemslib.gpg.common
 import securesystemslib.gpg.exceptions
 from securesystemslib.gpg.constants import (GPG_SIGN_COMMAND,
@@ -92,10 +92,10 @@ def create_signature(content, keyid=None, homedir=None):
 
   """
   if not HAVE_GPG: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_GPG_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_GPG_MSG)
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   keyarg = ""
   if keyid:
@@ -204,7 +204,7 @@ def verify_signature(signature_object, pubkey_info, content):
 
   """
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   securesystemslib.formats.GPG_PUBKEY_SCHEMA.check_match(pubkey_info)
   securesystemslib.formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
@@ -253,10 +253,10 @@ def export_pubkey(keyid, homedir=None):
 
   """
   if not HAVE_GPG: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_GPG_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_GPG_MSG)
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   if not securesystemslib.formats.KEYID_SCHEMA.matches(keyid):
     # FIXME: probably needs smarter parsing of what a valid keyid is so as to

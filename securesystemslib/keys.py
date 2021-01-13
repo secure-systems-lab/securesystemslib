@@ -61,11 +61,10 @@ import binascii
 
 import logging
 
+from securesystemslib import exceptions
 import securesystemslib.rsa_keys
 import securesystemslib.ed25519_keys
 import securesystemslib.ecdsa_keys
-
-import securesystemslib.exceptions
 
 # Digest objects needed to generate hashes.
 import securesystemslib.hash
@@ -452,7 +451,7 @@ def format_keyval_to_metadata(keytype, scheme, key_value, private=False):
     # present in 'key_val' (a private key is optional for 'KEYVAL_SCHEMA'
     # dicts).
     if 'private' not in key_value:
-      raise securesystemslib.exceptions.FormatError('The required private key'
+      raise exceptions.FormatError('The required private key'
         ' is missing from: ' + repr(key_value))
 
     else:
@@ -704,7 +703,7 @@ def create_signature(key_dict, data):
           private, data, scheme)
 
     else:
-      raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
+      raise exceptions.UnsupportedAlgorithmError('Unsupported'
         ' RSA signature scheme specified: ' + repr(scheme))
 
   elif keytype == 'ed25519':
@@ -821,7 +820,7 @@ def verify_signature(key_dict, signature, data):
   # Verify that the KEYID in 'key_dict' matches the KEYID listed in the
   # 'signature'.
   if key_dict['keyid'] != signature['keyid']:
-    raise securesystemslib.exceptions.CryptoError('The KEYID ('
+    raise exceptions.CryptoError('The KEYID ('
         ' ' + repr(key_dict['keyid']) + ' ) in the given key does not match'
         ' the KEYID ( ' + repr(signature['keyid']) + ' ) in the signature.')
 
@@ -846,7 +845,7 @@ def verify_signature(key_dict, signature, data):
         scheme, public, data)
 
     else:
-      raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
+      raise exceptions.UnsupportedAlgorithmError('Unsupported'
           ' signature scheme is specified: ' + repr(scheme))
 
   elif keytype == 'ed25519':
@@ -856,7 +855,7 @@ def verify_signature(key_dict, signature, data):
           scheme, sig, data)
 
     else:
-      raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
+      raise exceptions.UnsupportedAlgorithmError('Unsupported'
           ' signature scheme is specified: ' + repr(scheme))
 
   elif keytype in ['ecdsa', 'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384']:
@@ -865,7 +864,7 @@ def verify_signature(key_dict, signature, data):
         scheme, sig, data)
 
     else:
-      raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
+      raise exceptions.UnsupportedAlgorithmError('Unsupported'
           ' signature scheme is specified: ' + repr(scheme))
 
   # 'securesystemslib.formats.ANYKEY_SCHEMA' should have detected invalid key
@@ -1046,8 +1045,7 @@ def import_rsakey_from_public_pem(pem, scheme='rsassa-pss-sha256'):
     public_pem = extract_pem(pem, private_pem=False)
 
   else:
-    raise securesystemslib.exceptions.FormatError('Invalid public'
-        ' pem: ' + repr(pem))
+    raise exceptions.FormatError('Invalid public pem: ' + repr(pem))
 
   # Begin building the RSA key dictionary.
   rsakey_dict = {}
@@ -1127,7 +1125,7 @@ def import_rsakey_from_pem(pem, scheme='rsassa-pss-sha256'):
     return import_rsakey_from_private_pem(pem, scheme, password=None)
 
   else:
-    raise securesystemslib.exceptions.FormatError('PEM contains neither a'
+    raise exceptions.FormatError('PEM contains neither a'
       ' public nor private key: ' + repr(pem))
 
   # Begin building the RSA key dictionary.
@@ -1217,12 +1215,12 @@ def extract_pem(pem, private_pem=False):
   except ValueError:
     # Be careful not to print private key material in exception message.
     if not private_pem:
-      raise securesystemslib.exceptions.FormatError('Required PEM'
+      raise exceptions.FormatError('Required PEM'
         ' header ' + repr(pem_header) + '\n not found in PEM'
         ' string: ' + repr(pem))
 
     else:
-      raise securesystemslib.exceptions.FormatError('Required PEM'
+      raise exceptions.FormatError('Required PEM'
         ' header ' + repr(pem_header) + '\n not found in private PEM string.')
 
   try:
@@ -1232,12 +1230,12 @@ def extract_pem(pem, private_pem=False):
   except ValueError:
     # Be careful not to print private key material in exception message.
     if not private_pem:
-      raise securesystemslib.exceptions.FormatError('Required PEM'
+      raise exceptions.FormatError('Required PEM'
         ' footer ' + repr(pem_footer) + '\n not found in PEM'
         ' string ' + repr(pem))
 
     else:
-      raise securesystemslib.exceptions.FormatError('Required PEM'
+      raise exceptions.FormatError('Required PEM'
         ' footer ' + repr(pem_footer) + '\n not found in private PEM string.')
 
   # Extract only the public portion of 'pem'.  Leading or trailing whitespace
@@ -1568,7 +1566,7 @@ def is_pem_private(pem, keytype='rsa'):
     pem_footer = '-----END EC PRIVATE KEY-----'
 
   else:
-    raise securesystemslib.exceptions.FormatError('Unsupported key'
+    raise exceptions.FormatError('Unsupported key'
       ' type: ' + repr(keytype) + '.  Supported keytypes: ["rsa", "ec"]')
 
   try:
@@ -1605,16 +1603,15 @@ def import_ed25519key_from_private_json(json_str, password=None):
                securesystemslib.util.load_json_string(json_str.decode('utf-8'))
     # If the JSON could not be decoded, it is very likely, but not necessarily,
     # due to a non-empty password.
-    except securesystemslib.exceptions.Error:
-      raise securesystemslib.exceptions\
-            .CryptoError('Malformed Ed25519 key JSON, '
-                         'possibly due to encryption, '
-                         'but no password provided?')
+    except exceptions.Error:
+      raise exceptions.CryptoError('Malformed Ed25519 key JSON, '
+                                   'possibly due to encryption, '
+                                   'but no password provided?')
 
   # Raise an exception if an unexpected key type is imported.
   if key_object['keytype'] != 'ed25519':
     message = 'Invalid key type loaded: ' + repr(key_object['keytype'])
-    raise securesystemslib.exceptions.FormatError(message)
+    raise exceptions.FormatError(message)
 
   # Add "keyid_hash_algorithms" so that equal ed25519 keys with
   # different keyids can be associated using supported keyid_hash_algorithms.
@@ -1794,7 +1791,7 @@ def import_ecdsakey_from_public_pem(pem, scheme='ecdsa-sha2-nistp256'):
     public_pem = extract_pem(pem, private_pem=False)
 
   else:
-    raise securesystemslib.exceptions.FormatError('Invalid public'
+    raise exceptions.FormatError('Invalid public'
         ' pem: ' + repr(pem))
 
   # Begin building the ECDSA key dictionary.
@@ -1874,7 +1871,7 @@ def import_ecdsakey_from_pem(pem, scheme='ecdsa-sha2-nistp256'):
     return import_ecdsakey_from_private_pem(pem, password=None)
 
   else:
-    raise securesystemslib.exceptions.FormatError('PEM contains neither a public'
+    raise exceptions.FormatError('PEM contains neither a public'
       ' nor private key: ' + repr(pem))
 
   # Begin building the ECDSA key dictionary.

@@ -35,6 +35,7 @@ import logging
 import tempfile
 import json
 
+from securesystemslib import exceptions
 import securesystemslib.formats
 import securesystemslib.settings
 import securesystemslib.storage
@@ -441,8 +442,8 @@ def import_rsa_publickey_from_file(filepath, scheme='rsassa-pss-sha256',
     rsakey_dict = securesystemslib.keys.import_rsakey_from_public_pem(
         rsa_pubkey_pem, scheme)
 
-  except securesystemslib.exceptions.FormatError as e:
-    raise securesystemslib.exceptions.Error('Cannot import improperly formatted'
+  except exceptions.FormatError as e:
+    raise exceptions.Error('Cannot import improperly formatted'
       ' PEM file.' + repr(str(e)))
 
   return rsakey_dict
@@ -641,7 +642,7 @@ def import_ed25519_publickey_from_file(filepath):
   # Check that the generic loading functions indeed loaded an ed25519 key
   if ed25519_key['keytype'] != 'ed25519':
     message = 'Invalid key type loaded: ' + repr(ed25519_key['keytype'])
-    raise securesystemslib.exceptions.FormatError(message)
+    raise exceptions.FormatError(message)
 
   return ed25519_key
 
@@ -941,7 +942,7 @@ def import_ecdsa_privatekey_from_file(filepath, password=None, prompt=False,
   if key_object['keytype'] not in['ecdsa', 'ecdsa-sha2-nistp256',
       'ecdsa-sha2-nistp384']:
     message = 'Invalid key type loaded: ' + repr(key_object['keytype'])
-    raise securesystemslib.exceptions.FormatError(message)
+    raise exceptions.FormatError(message)
 
   # Add "keyid_hash_algorithms" so that equal ecdsa keys with different keyids
   # can be associated using supported keyid_hash_algorithms.
@@ -983,7 +984,7 @@ def import_publickeys_from_file(filepaths, key_types=None):
     key_types = [KEY_TYPE_RSA] * len(filepaths)
 
   if len(key_types) != len(filepaths):
-    raise securesystemslib.exceptions.FormatError(
+    raise exceptions.FormatError(
         "Pass equal amount of 'filepaths' (got {}) and 'key_types (got {}), "
         "or no 'key_types' at all to default to '{}'.".format(
         len(filepaths), len(key_types), KEY_TYPE_RSA))
@@ -1000,7 +1001,7 @@ def import_publickeys_from_file(filepaths, key_types=None):
       key = import_ecdsa_publickey_from_file(filepath)
 
     else:
-      raise securesystemslib.exceptions.FormatError(
+      raise exceptions.FormatError(
           "Unsupported key type '{}'. Must be '{}', '{}' or '{}'.".format(
           key_types[idx], KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA))
 
@@ -1059,7 +1060,7 @@ def import_privatekey_from_file(filepath, key_type=None, password=None,
         filepath, password=password, prompt=prompt)
 
   else:
-    raise securesystemslib.exceptions.FormatError(
+    raise exceptions.FormatError(
         "Unsupported key type '{}'. Must be '{}', '{}' or '{}'.".format(
         key_type, KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA))
 

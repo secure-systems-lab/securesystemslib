@@ -26,9 +26,9 @@ try:
 except ImportError:
   CRYPTO = False
 
+from securesystemslib import exceptions
 import securesystemslib.gpg.util
 import securesystemslib.gpg.exceptions
-import securesystemslib.exceptions
 import securesystemslib.formats
 
 
@@ -56,7 +56,7 @@ def create_pubkey(pubkey_info):
 
   """
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   securesystemslib.formats.GPG_DSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
@@ -160,7 +160,7 @@ def get_signature_params(data):
     The decoded signature buffer
   """
   if not CRYPTO: # pragma: no cover
-    return securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    return exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   ptr = 0
   r_length = securesystemslib.gpg.util.get_mpi_length(data[ptr:ptr+2])
@@ -228,7 +228,7 @@ def verify_signature(signature_object, pubkey_info, content,
 
   """
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   securesystemslib.formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
   securesystemslib.formats.GPG_DSA_PUBKEY_SCHEMA.check_match(pubkey_info)

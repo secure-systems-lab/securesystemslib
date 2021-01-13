@@ -82,8 +82,8 @@ except ImportError:
 # 'securesystemslib.exceptions.UnsupportedLibraryError' exception is raised.
 import securesystemslib._vendor.ed25519.ed25519
 
+from securesystemslib import exceptions
 import securesystemslib.formats
-import securesystemslib.exceptions
 
 # Supported ed25519 signing schemes: 'ed25519'.  The pure Python implementation
 # (i.e., ed25519') and PyNaCl (i.e., 'nacl', libsodium + Python bindings)
@@ -130,7 +130,7 @@ def generate_public_and_private():
   """
 
   if not NACL: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_NACL_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_NACL_MSG)
 
   # Generate ed25519's seed key by calling os.urandom().  The random bytes
   # returned should be suitable for cryptographic use and is OS-specific.
@@ -210,7 +210,7 @@ def create_signature(public_key, private_key, data, scheme):
   """
 
   if not NACL: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_NACL_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_NACL_MSG)
 
   # Does 'public_key' have the correct format?
   # This check will ensure 'public_key' conforms to
@@ -238,13 +238,13 @@ def create_signature(public_key, private_key, data, scheme):
       signature = nacl_sig.signature
 
     except (ValueError, TypeError, nacl.exceptions.CryptoError) as e:
-      raise securesystemslib.exceptions.CryptoError('An "ed25519" signature'
+      raise exceptions.CryptoError('An "ed25519" signature'
           ' could not be created with PyNaCl.' + str(e))
 
   # This is a defensive check for a valid 'scheme', which should have already
   # been validated in the check_match() above.
   else: #pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
+    raise exceptions.UnsupportedAlgorithmError('Unsupported'
       ' signature scheme is specified: ' + repr(scheme))
 
   return signature, scheme
@@ -349,7 +349,7 @@ def verify_signature(public_key, scheme, signature, data):
   else: #pragma: no cover
     message = 'Unsupported ed25519 signature scheme: ' + repr(scheme) + '.\n' + \
       'Supported schemes: ' + repr(_SUPPORTED_ED25519_SIGNING_SCHEMES) + '.'
-    raise securesystemslib.exceptions.UnsupportedAlgorithmError(message)
+    raise exceptions.UnsupportedAlgorithmError(message)
 
   return valid_signature
 

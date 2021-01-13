@@ -34,7 +34,7 @@ import hashlib
 
 import six
 
-import securesystemslib.exceptions
+from securesystemslib import exceptions
 import securesystemslib.formats
 import securesystemslib.storage
 
@@ -197,7 +197,7 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
     except (ValueError, TypeError):
       # ValueError: the algorithm value was unknown
       # TypeError: unexpected argument digest_size (on old python)
-      raise securesystemslib.exceptions.UnsupportedAlgorithmError(algorithm)
+      raise exceptions.UnsupportedAlgorithmError(algorithm)
 
   # Was a pyca_crypto digest object requested and is it supported?
   elif hash_library == 'pyca_crypto' and hash_library in SUPPORTED_LIBRARIES:
@@ -208,11 +208,11 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
             cryptography.hazmat.backends.default_backend()))
 
     except KeyError:
-      raise securesystemslib.exceptions.UnsupportedAlgorithmError(algorithm)
+      raise exceptions.UnsupportedAlgorithmError(algorithm)
 
   # The requested hash library is not supported.
   else:
-    raise securesystemslib.exceptions.UnsupportedLibraryError('Unsupported'
+    raise exceptions.UnsupportedLibraryError('Unsupported'
         ' library requested.  Supported hash'
         ' libraries: ' + repr(SUPPORTED_LIBRARIES))
 

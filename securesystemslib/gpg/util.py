@@ -29,7 +29,7 @@ try:
 except ImportError:
   CRYPTO = False
 
-import securesystemslib.exceptions
+from securesystemslib import exceptions
 import securesystemslib.gpg.exceptions
 import securesystemslib.process
 import securesystemslib.gpg.constants
@@ -89,7 +89,7 @@ def hash_object(headers, algorithm, content):
     The RFC4880-compliant hashed buffer
   """
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # As per RFC4880 Section 5.2.4., we need to hash the content,
   # signature headers and add a very opinionated trailing header
@@ -229,7 +229,7 @@ def compute_keyid(pubkey_packet_data):
     The RFC4880-compliant hashed buffer
   """
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   hasher = hashing.Hash(hashing.SHA1(), backend=backends.default_backend())
   hasher.update(b'\x99')
@@ -318,7 +318,7 @@ def get_version():
 
   """
   if not securesystemslib.gpg.constants.HAVE_GPG: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(
+    raise exceptions.UnsupportedLibraryError(
         securesystemslib.gpg.constants.NO_GPG_MSG)
 
   command = securesystemslib.gpg.constants.GPG_VERSION_COMMAND

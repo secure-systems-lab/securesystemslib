@@ -62,8 +62,8 @@ except ImportError:
   CRYPTO = False
 
 # Perform object format-checking and add ability to handle/raise exceptions.
+from securesystemslib import exceptions
 import securesystemslib.formats
-import securesystemslib.exceptions
 
 _SUPPORTED_ECDSA_SCHEMES = ['ecdsa-sha2-nistp256']
 
@@ -131,7 +131,7 @@ def generate_public_and_private(scheme='ecdsa-sha2-nistp256'):
   """
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Does 'scheme' have the correct format?
   # Verify that 'scheme' is of the correct type, and that it's one of the
@@ -153,7 +153,7 @@ def generate_public_and_private(scheme='ecdsa-sha2-nistp256'):
   # The ECDSA_SCHEME_SCHEMA.check_match() above should have detected any
   # invalid 'scheme'.  This is a defensive check.
   else: #pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedAlgorithmError('An unsupported'
+    raise exceptions.UnsupportedAlgorithmError('An unsupported'
       ' scheme specified: ' + repr(scheme) + '.\n  Supported'
       ' algorithms: ' + repr(_SUPPORTED_ECDSA_SCHEMES))
 
@@ -220,7 +220,7 @@ def create_signature(public_key, private_key, data, scheme='ecdsa-sha2-nistp256'
   """
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Do 'public_key' and 'private_key' have the correct format?
   # This check will ensure that the arguments conform to
@@ -246,13 +246,13 @@ def create_signature(public_key, private_key, data, scheme='ecdsa-sha2-nistp256'
       signature = private_key.sign(data, ec.ECDSA(hashes.SHA256()))
 
     except TypeError as e:
-      raise securesystemslib.exceptions.CryptoError('Could not create'
+      raise exceptions.CryptoError('Could not create'
         ' signature: ' + str(e))
 
   # A defensive check for an invalid 'scheme'.  The
   # ECDSA_SCHEME_SCHEMA.check_match() above should have already validated it.
   else: #pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
+    raise exceptions.UnsupportedAlgorithmError('Unsupported'
       ' signature scheme is specified: ' + repr(scheme))
 
   return signature, scheme
@@ -311,7 +311,7 @@ def verify_signature(public_key, scheme, signature, data):
   """
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Are the arguments properly formatted?
   # If not, raise 'securesystemslib.exceptions.FormatError'.
@@ -323,7 +323,7 @@ def verify_signature(public_key, scheme, signature, data):
       backend=default_backend())
 
   if not isinstance(ecdsa_key, ec.EllipticCurvePublicKey):
-    raise securesystemslib.exceptions.FormatError('Invalid ECDSA public'
+    raise exceptions.FormatError('Invalid ECDSA public'
       ' key: ' + repr(public_key))
 
   else:
@@ -394,7 +394,7 @@ def create_ecdsa_public_and_private_from_pem(pem, password=None):
   """
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Does 'pem' have the correct format?
   # This check will ensure 'pem' conforms to
@@ -419,7 +419,7 @@ def create_ecdsa_public_and_private_from_pem(pem, password=None):
       backend=default_backend())
 
   except (ValueError, cryptography.exceptions.UnsupportedAlgorithm) as e:
-    raise securesystemslib.exceptions.CryptoError('Could not import private'
+    raise exceptions.CryptoError('Could not import private'
       ' PEM.\n' + str(e))
 
   public = private.public_key()
@@ -481,7 +481,7 @@ def create_ecdsa_encrypted_pem(private_pem, passphrase):
   """
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Does 'private_key' have the correct format?
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.

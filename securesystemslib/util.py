@@ -28,7 +28,7 @@ from __future__ import unicode_literals
 import os
 import logging
 
-import securesystemslib.exceptions
+from securesystemslib import exceptions
 import securesystemslib.settings
 import securesystemslib.hash
 import securesystemslib.formats
@@ -377,11 +377,11 @@ def load_json_string(data):
 
   except TypeError:
     message = 'Invalid JSON string: ' + repr(data)
-    raise securesystemslib.exceptions.Error(message)
+    raise exceptions.Error(message)
 
   except ValueError:
     message = 'Cannot deserialize to a Python object: ' + repr(data)
-    raise securesystemslib.exceptions.Error(message)
+    raise exceptions.Error(message)
 
   else:
     return deserialized_object
@@ -432,7 +432,7 @@ def load_json_file(filepath, storage_backend=None):
       deserialized_object = json.loads(raw_data)
 
     except (ValueError, TypeError):
-      raise securesystemslib.exceptions.Error('Cannot deserialize to a'
+      raise exceptions.Error('Cannot deserialize to a'
           ' Python object: ' + filepath)
 
     else:
