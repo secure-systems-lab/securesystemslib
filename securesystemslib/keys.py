@@ -63,12 +63,11 @@ import logging
 
 from securesystemslib import exceptions
 from securesystemslib import formats
+from securesystemslib.hash import digest
 import securesystemslib.rsa_keys
 import securesystemslib.ed25519_keys
 import securesystemslib.ecdsa_keys
 
-# Digest objects needed to generate hashes.
-import securesystemslib.hash
 
 
 # The hash algorithm to use in the generation of keyids.
@@ -585,7 +584,7 @@ def _get_keyid(keytype, scheme, key_value, hash_algorithm = 'sha256'):
 
   # Create a digest object and call update(), using the JSON
   # canonical format of 'rskey_meta' as the update data.
-  digest_object = securesystemslib.hash.digest(hash_algorithm)
+  digest_object = digest(hash_algorithm)
   digest_object.update(key_update_data.encode('utf-8'))
 
   # 'keyid' becomes the hexadecimal representation of the hash.

@@ -30,8 +30,8 @@ import logging
 
 from securesystemslib import exceptions
 from securesystemslib import formats
+from securesystemslib.hash import digest_fileobject
 import securesystemslib.settings
-import securesystemslib.hash
 import securesystemslib.storage
 
 logger = logging.getLogger(__name__)
@@ -127,7 +127,7 @@ def get_file_hashes(filepath, hash_algorithms=['sha256'],
   with storage_backend.get(filepath) as fileobj:
     # Obtaining hash of the file.
     for algorithm in hash_algorithms:
-      digest_object = securesystemslib.hash.digest_fileobject(fileobj, algorithm)
+      digest_object = digest_fileobject(fileobj, algorithm)
       file_hashes.update({algorithm: digest_object.hexdigest()})
 
   # Performing a format check to ensure 'file_hash' corresponds HASHDICT_SCHEMA.

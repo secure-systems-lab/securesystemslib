@@ -122,7 +122,7 @@ except ImportError:
 
 from securesystemslib import exceptions
 from securesystemslib import formats
-import securesystemslib.hash
+from securesystemslib.hash import digest_from_rsa_scheme
 import securesystemslib.util
 
 # Extract/reference the cryptography library settings.
@@ -329,8 +329,7 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
     private_key_object = load_pem_private_key(private_key.encode('utf-8'),
         password=None, backend=default_backend())
 
-    digest_obj = securesystemslib.hash.digest_from_rsa_scheme(scheme,
-        'pyca_crypto')
+    digest_obj = digest_from_rsa_scheme(scheme, 'pyca_crypto')
 
     if scheme.startswith('rsassa-pss'):
       # Generate an RSSA-PSS signature.  Raise
@@ -459,8 +458,7 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
     public_key_object = serialization.load_pem_public_key(
         public_key.encode('utf-8'), backend=default_backend())
 
-    digest_obj = securesystemslib.hash.digest_from_rsa_scheme(signature_scheme,
-        'pyca_crypto')
+    digest_obj = digest_from_rsa_scheme(signature_scheme, 'pyca_crypto')
 
     # verify() raises 'cryptography.exceptions.InvalidSignature' if the
     # signature is invalid. 'salt_length' is set to the digest size of the
