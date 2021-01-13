@@ -63,7 +63,7 @@ except ImportError:
 
 # Perform object format-checking and add ability to handle/raise exceptions.
 from securesystemslib import exceptions
-import securesystemslib.formats
+from securesystemslib import formats
 
 _SUPPORTED_ECDSA_SCHEMES = ['ecdsa-sha2-nistp256']
 
@@ -138,7 +138,7 @@ def generate_public_and_private(scheme='ecdsa-sha2-nistp256'):
   # supported ECDSA .  It must conform to
   # 'securesystemslib.formats.ECDSA_SCHEME_SCHEMA'.  Raise
   # 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
+  formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   public_key = None
   private_key = None
@@ -226,13 +226,13 @@ def create_signature(public_key, private_key, data, scheme='ecdsa-sha2-nistp256'
   # This check will ensure that the arguments conform to
   # 'securesystemslib.formats.PEMECDSA_SCHEMA'.  Raise
   # 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.PEMECDSA_SCHEMA.check_match(public_key)
+  formats.PEMECDSA_SCHEMA.check_match(public_key)
 
   # Is 'private_key' properly formatted?
-  securesystemslib.formats.PEMECDSA_SCHEMA.check_match(private_key)
+  formats.PEMECDSA_SCHEMA.check_match(private_key)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
+  formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   # 'ecdsa-sha2-nistp256' is the only currently supported ECDSA scheme, so this
   # if-clause isn't strictly needed.  Nevertheless, the conditional statement
@@ -315,9 +315,9 @@ def verify_signature(public_key, scheme, signature, data):
 
   # Are the arguments properly formatted?
   # If not, raise 'securesystemslib.exceptions.FormatError'.
-  securesystemslib.formats.PEMECDSA_SCHEMA.check_match(public_key)
-  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
-  securesystemslib.formats.ECDSASIGNATURE_SCHEMA.check_match(signature)
+  formats.PEMECDSA_SCHEMA.check_match(public_key)
+  formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
+  formats.ECDSASIGNATURE_SCHEMA.check_match(signature)
 
   ecdsa_key = load_pem_public_key(public_key.encode('utf-8'),
       backend=default_backend())
@@ -399,10 +399,10 @@ def create_ecdsa_public_and_private_from_pem(pem, password=None):
   # Does 'pem' have the correct format?
   # This check will ensure 'pem' conforms to
   # 'securesystemslib.formats.ECDSARSA_SCHEMA'.
-  securesystemslib.formats.PEMECDSA_SCHEMA.check_match(pem)
+  formats.PEMECDSA_SCHEMA.check_match(pem)
 
   if password is not None:
-    securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+    formats.PASSWORD_SCHEMA.check_match(password)
     password = password.encode('utf-8')
 
   else:
@@ -485,10 +485,10 @@ def create_ecdsa_encrypted_pem(private_pem, passphrase):
 
   # Does 'private_key' have the correct format?
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.PEMRSA_SCHEMA.check_match(private_pem)
+  formats.PEMRSA_SCHEMA.check_match(private_pem)
 
   # Does 'passphrase' have the correct format?
-  securesystemslib.formats.PASSWORD_SCHEMA.check_match(passphrase)
+  formats.PASSWORD_SCHEMA.check_match(passphrase)
 
   private = load_pem_private_key(private_pem.encode('utf-8'), password=None,
     backend=default_backend())

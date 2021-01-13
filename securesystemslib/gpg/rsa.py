@@ -28,9 +28,9 @@ except ImportError:
   CRYPTO = False
 
 from securesystemslib import exceptions
+from securesystemslib import formats
 import securesystemslib.gpg.util
 import securesystemslib.gpg.exceptions
-import securesystemslib.formats
 
 
 def create_pubkey(pubkey_info):
@@ -59,7 +59,7 @@ def create_pubkey(pubkey_info):
   if not CRYPTO: # pragma: no cover
     raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
-  securesystemslib.formats.GPG_RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
+  formats.GPG_RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
   e = int(pubkey_info['keyval']['public']['e'], 16)
   n = int(pubkey_info['keyval']['public']['n'], 16)
@@ -191,8 +191,8 @@ def verify_signature(signature_object, pubkey_info, content,
   if not CRYPTO: # pragma: no cover
     raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
-  securesystemslib.formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
-  securesystemslib.formats.GPG_RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
+  formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
+  formats.GPG_RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
   hasher = securesystemslib.gpg.util.get_hashing_class(hash_algorithm_id)
 

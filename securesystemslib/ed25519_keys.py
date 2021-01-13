@@ -83,7 +83,7 @@ except ImportError:
 import securesystemslib._vendor.ed25519.ed25519
 
 from securesystemslib import exceptions
-import securesystemslib.formats
+from securesystemslib import formats
 
 # Supported ed25519 signing schemes: 'ed25519'.  The pure Python implementation
 # (i.e., ed25519') and PyNaCl (i.e., 'nacl', libsodium + Python bindings)
@@ -216,13 +216,13 @@ def create_signature(public_key, private_key, data, scheme):
   # This check will ensure 'public_key' conforms to
   # 'securesystemslib.formats.ED25519PUBLIC_SCHEMA', which must have length 32
   # bytes.  Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.ED25519PUBLIC_SCHEMA.check_match(public_key)
+  formats.ED25519PUBLIC_SCHEMA.check_match(public_key)
 
   # Is 'private_key' properly formatted?
-  securesystemslib.formats.ED25519SEED_SCHEMA.check_match(private_key)
+  formats.ED25519SEED_SCHEMA.check_match(private_key)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.ED25519_SIG_SCHEMA.check_match(scheme)
+  formats.ED25519_SIG_SCHEMA.check_match(scheme)
 
   # Signing the 'data' object requires a seed and public key.
   # nacl.signing.SigningKey.sign() generates the signature.
@@ -309,13 +309,13 @@ def verify_signature(public_key, scheme, signature, data):
   # This check will ensure 'public_key' conforms to
   # 'securesystemslib.formats.ED25519PUBLIC_SCHEMA', which must have length 32
   # bytes.  Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.ED25519PUBLIC_SCHEMA.check_match(public_key)
+  formats.ED25519PUBLIC_SCHEMA.check_match(public_key)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.ED25519_SIG_SCHEMA.check_match(scheme)
+  formats.ED25519_SIG_SCHEMA.check_match(scheme)
 
   # Is 'signature' properly formatted?
-  securesystemslib.formats.ED25519SIGNATURE_SCHEMA.check_match(signature)
+  formats.ED25519SIGNATURE_SCHEMA.check_match(signature)
 
   # Verify 'signature'.  Before returning the Boolean result, ensure 'ed25519'
   # was used as the signature scheme.

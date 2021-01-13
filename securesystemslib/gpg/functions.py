@@ -19,6 +19,7 @@ import logging
 import time
 
 from securesystemslib import exceptions
+from securesystemslib import formats
 import securesystemslib.gpg.common
 import securesystemslib.gpg.exceptions
 from securesystemslib.gpg.constants import (GPG_SIGN_COMMAND,
@@ -26,7 +27,6 @@ from securesystemslib.gpg.constants import (GPG_SIGN_COMMAND,
     HAVE_GPG, NO_GPG_MSG)
 
 import securesystemslib.process
-import securesystemslib.formats
 from securesystemslib.gpg.rsa import CRYPTO
 
 log = logging.getLogger(__name__)
@@ -99,7 +99,7 @@ def create_signature(content, keyid=None, homedir=None):
 
   keyarg = ""
   if keyid:
-    securesystemslib.formats.KEYID_SCHEMA.check_match(keyid)
+    formats.KEYID_SCHEMA.check_match(keyid)
     keyarg = "--local-user {}".format(keyid)
 
   homearg = ""
@@ -206,8 +206,8 @@ def verify_signature(signature_object, pubkey_info, content):
   if not CRYPTO: # pragma: no cover
     raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
-  securesystemslib.formats.GPG_PUBKEY_SCHEMA.check_match(pubkey_info)
-  securesystemslib.formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
+  formats.GPG_PUBKEY_SCHEMA.check_match(pubkey_info)
+  formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
 
   handler = SIGNATURE_HANDLERS[pubkey_info['type']]
   sig_keyid = signature_object["keyid"]
@@ -258,7 +258,7 @@ def export_pubkey(keyid, homedir=None):
   if not CRYPTO: # pragma: no cover
     raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
-  if not securesystemslib.formats.KEYID_SCHEMA.matches(keyid):
+  if not formats.KEYID_SCHEMA.matches(keyid):
     # FIXME: probably needs smarter parsing of what a valid keyid is so as to
     # not export more than one pubkey packet.
     raise ValueError("we need to export an individual key. Please provide a "

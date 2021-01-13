@@ -36,7 +36,7 @@ from securesystemslib.gpg.constants import (
     SHA1,SHA256, SHA512, KEY_EXPIRATION_SUBPACKET, PRIMARY_USERID_SUBPACKET,
     SIG_CREATION_SUBPACKET)
 
-import securesystemslib.formats
+from securesystemslib import formats
 
 log = logging.getLogger(__name__)
 
@@ -123,7 +123,7 @@ def parse_pubkey_payload(data):
   return {
     "method": keyinfo['method'],
     "type": keyinfo['type'],
-    "hashes": [securesystemslib.formats.GPG_HASH_ALGORITHM_STRING],
+    "hashes": [formats.GPG_HASH_ALGORITHM_STRING],
     "creation_time": time_of_creation[0],
     "keyid": keyinfo['keyid'],
     "keyval" : {
@@ -527,7 +527,7 @@ def get_pubkey_bundle(data, keyid):
     optional subkeys.
 
   """
-  securesystemslib.formats.KEYID_SCHEMA.check_match(keyid)
+  formats.KEYID_SCHEMA.check_match(keyid)
   if not data:
     raise KeyNotFoundError("Could not find gpg key '{}' in empty exported key "
         "data.".format(keyid))

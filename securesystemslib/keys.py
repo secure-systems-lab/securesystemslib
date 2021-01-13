@@ -62,6 +62,7 @@ import binascii
 import logging
 
 from securesystemslib import exceptions
+from securesystemslib import formats
 import securesystemslib.rsa_keys
 import securesystemslib.ed25519_keys
 import securesystemslib.ecdsa_keys
@@ -69,8 +70,6 @@ import securesystemslib.ecdsa_keys
 # Digest objects needed to generate hashes.
 import securesystemslib.hash
 
-# Perform format checks of argument objects.
-import securesystemslib.formats
 
 # The hash algorithm to use in the generation of keyids.
 _KEY_ID_HASH_ALGORITHM = 'sha256'
@@ -164,8 +163,8 @@ def generate_rsa_key(bits=_DEFAULT_RSA_KEY_BITS, scheme='rsassa-pss-sha256'):
   # conforms to 'securesystemslib.formats.RSAKEYBITS_SCHEMA'.  'bits' must be
   # an integer object, with a minimum value of 2048.  Raise
   # 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match(bits)
-  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
+  formats.RSAKEYBITS_SCHEMA.check_match(bits)
+  formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   # Begin building the RSA key dictionary.
   rsakey_dict = {}
@@ -251,7 +250,7 @@ def generate_ecdsa_key(scheme='ecdsa-sha2-nistp256'):
   # This check will ensure 'scheme' is properly formatted and is a supported
   # ECDSA signature scheme.  Raise 'securesystemslib.exceptions.FormatError' if
   # the check fails.
-  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
+  formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   # Begin building the ECDSA key dictionary.
   ecdsa_key = {}
@@ -334,7 +333,7 @@ def generate_ed25519_key(scheme='ed25519'):
 
   # Are the arguments properly formatted?  If not, raise an
   # 'securesystemslib.exceptions.FormatError' exceptions.
-  securesystemslib.formats.ED25519_SIG_SCHEMA.check_match(scheme)
+  formats.ED25519_SIG_SCHEMA.check_match(scheme)
 
   # Begin building the Ed25519 key dictionary.
   ed25519_key = {}
@@ -437,13 +436,13 @@ def format_keyval_to_metadata(keytype, scheme, key_value, private=False):
   # This check will ensure 'keytype' has the appropriate number
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.KEYTYPE_SCHEMA.check_match(keytype)
+  formats.KEYTYPE_SCHEMA.check_match(keytype)
 
   # Does 'scheme' have the correct format?
-  securesystemslib.formats.SCHEME_SCHEMA.check_match(scheme)
+  formats.SCHEME_SCHEMA.check_match(scheme)
 
   # Does 'key_value' have the correct format?
-  securesystemslib.formats.KEYVAL_SCHEMA.check_match(key_value)
+  formats.KEYVAL_SCHEMA.check_match(key_value)
 
   if private is True:
     # If the caller requests (via the 'private' argument) to include a private
@@ -538,7 +537,7 @@ def format_metadata_to_key(key_metadata, default_keyid=None,
   # This check will ensure 'key_metadata' has the appropriate number
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.KEY_SCHEMA.check_match(key_metadata)
+  formats.KEY_SCHEMA.check_match(key_metadata)
 
   # Construct the dictionary to be returned.
   key_dict = {}
@@ -582,7 +581,7 @@ def _get_keyid(keytype, scheme, key_value, hash_algorithm = 'sha256'):
 
   # Convert the key to JSON Canonical format, suitable for adding
   # to digest objects.
-  key_update_data = securesystemslib.formats.encode_canonical(key_meta)
+  key_update_data = formats.encode_canonical(key_meta)
 
   # Create a digest object and call update(), using the JSON
   # canonical format of 'rskey_meta' as the update data.
@@ -679,7 +678,7 @@ def create_signature(key_dict, data):
   # and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
   # The key type of 'key_dict' must be either 'rsa' or 'ed25519'.
-  securesystemslib.formats.ANYKEY_SCHEMA.check_match(key_dict)
+  formats.ANYKEY_SCHEMA.check_match(key_dict)
 
   # Signing the 'data' object requires a private key. Signing schemes that are
   # currently supported are: 'ed25519', 'ecdsa-sha2-nistp256',
@@ -812,10 +811,10 @@ def verify_signature(key_dict, signature, data):
   # This check will ensure 'key_dict' has the appropriate number
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.ANYKEY_SCHEMA.check_match(key_dict)
+  formats.ANYKEY_SCHEMA.check_match(key_dict)
 
   # Does 'signature' have the correct format?
-  securesystemslib.formats.SIGNATURE_SCHEMA.check_match(signature)
+  formats.SIGNATURE_SCHEMA.check_match(signature)
 
   # Verify that the KEYID in 'key_dict' matches the KEYID listed in the
   # 'signature'.
@@ -936,13 +935,13 @@ def import_rsakey_from_private_pem(pem, scheme='rsassa-pss-sha256', password=Non
   # Does 'pem' have the correct format?
   # This check will ensure 'pem' conforms to
   # 'securesystemslib.formats.PEMRSA_SCHEMA'.
-  securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
+  formats.PEMRSA_SCHEMA.check_match(pem)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
+  formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   if password is not None:
-    securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+    formats.PASSWORD_SCHEMA.check_match(password)
 
   else:
     logger.debug('The password/passphrase is unset.  The PEM is expected'
@@ -1031,10 +1030,10 @@ def import_rsakey_from_public_pem(pem, scheme='rsassa-pss-sha256'):
   # This check will ensure arguments has the appropriate number
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
+  formats.PEMRSA_SCHEMA.check_match(pem)
 
   # Does 'scheme' have the correct format?
-  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
+  formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   # Ensure the PEM string has a public header and footer.  Although a simple
   # validation of 'pem' is performed here, a fully valid PEM string is needed
@@ -1106,10 +1105,10 @@ def import_rsakey_from_pem(pem, scheme='rsassa-pss-sha256'):
   # This check will ensure arguments has the appropriate number
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
+  formats.PEMRSA_SCHEMA.check_match(pem)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
+  formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   public_pem = ''
 
@@ -1301,10 +1300,10 @@ def encrypt_key(key_object, password):
   # This check will ensure 'key_object' has the appropriate number
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.ANYKEY_SCHEMA.check_match(key_object)
+  formats.ANYKEY_SCHEMA.check_match(key_object)
 
   # Does 'password' have the correct format?
-  securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+  formats.PASSWORD_SCHEMA.check_match(password)
 
   # Encrypted string of 'key_object'.  The encrypted string may be safely saved
   # to a file and stored offline.
@@ -1377,10 +1376,10 @@ def decrypt_key(encrypted_key, passphrase):
   # This check ensures 'encrypted_key' has the appropriate number
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.ENCRYPTEDKEY_SCHEMA.check_match(encrypted_key)
+  formats.ENCRYPTEDKEY_SCHEMA.check_match(encrypted_key)
 
   # Does 'passphrase' have the correct format?
-  securesystemslib.formats.PASSWORD_SCHEMA.check_match(passphrase)
+  formats.PASSWORD_SCHEMA.check_match(passphrase)
 
   # Store and return the decrypted key object.
   key_object = None
@@ -1449,10 +1448,10 @@ def create_rsa_encrypted_pem(private_key, passphrase):
   # This check will ensure 'private_key' has the appropriate number
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.PEMRSA_SCHEMA.check_match(private_key)
+  formats.PEMRSA_SCHEMA.check_match(private_key)
 
   # Does 'passphrase' have the correct format?
-  securesystemslib.formats.PASSWORD_SCHEMA.check_match(passphrase)
+  formats.PASSWORD_SCHEMA.check_match(passphrase)
 
   encrypted_pem = None
 
@@ -1501,7 +1500,7 @@ def is_pem_public(pem):
   # This check will ensure arguments have the appropriate number
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
+  formats.PEMRSA_SCHEMA.check_match(pem)
 
   pem_header = '-----BEGIN PUBLIC KEY-----'
   pem_footer = '-----END PUBLIC KEY-----'
@@ -1554,8 +1553,8 @@ def is_pem_private(pem, keytype='rsa'):
   # This check will ensure arguments have the appropriate number
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.PEMRSA_SCHEMA.check_match(pem)
-  securesystemslib.formats.NAME_SCHEMA.check_match(keytype)
+  formats.PEMRSA_SCHEMA.check_match(pem)
+  formats.NAME_SCHEMA.check_match(keytype)
 
   if keytype == 'rsa':
     pem_header = '-----BEGIN RSA PRIVATE KEY-----'
@@ -1587,7 +1586,7 @@ def import_ed25519key_from_private_json(json_str, password=None):
     # This check will not fail, because a mal-formatted passed password fails
     # above and an entered password will always be a string (see get_password)
     # However, we include it in case PASSWORD_SCHEMA or get_password changes.
-    securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+    formats.PASSWORD_SCHEMA.check_match(password)
 
     # Decrypt the loaded key file, calling the 'cryptography' library to
     # generate the derived encryption key from 'password'.  Raise
@@ -1677,13 +1676,13 @@ def import_ecdsakey_from_private_pem(pem, scheme='ecdsa-sha2-nistp256', password
   # Does 'pem' have the correct format?
   # This check will ensure 'pem' conforms to
   # 'securesystemslib.formats.ECDSARSA_SCHEMA'.
-  securesystemslib.formats.PEMECDSA_SCHEMA.check_match(pem)
+  formats.PEMECDSA_SCHEMA.check_match(pem)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
+  formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   if password is not None:
-    securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+    formats.PASSWORD_SCHEMA.check_match(password)
 
   else:
     logger.debug('The password/passphrase is unset.  The PEM is expected'
@@ -1777,10 +1776,10 @@ def import_ecdsakey_from_public_pem(pem, scheme='ecdsa-sha2-nistp256'):
   # This check will ensure arguments has the appropriate number
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.PEMECDSA_SCHEMA.check_match(pem)
+  formats.PEMECDSA_SCHEMA.check_match(pem)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
+  formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   # Ensure the PEM string has a public header and footer.  Although a simple
   # validation of 'pem' is performed here, a fully valid PEM string is needed
@@ -1852,10 +1851,10 @@ def import_ecdsakey_from_pem(pem, scheme='ecdsa-sha2-nistp256'):
   # This check will ensure arguments has the appropriate number
   # of objects and object types, and that all dict keys are properly named.
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.PEMECDSA_SCHEMA.check_match(pem)
+  formats.PEMECDSA_SCHEMA.check_match(pem)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
+  formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   public_pem = ''
 

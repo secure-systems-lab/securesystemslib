@@ -36,7 +36,7 @@ if six.PY2:
 else: # pragma: no cover
   import subprocess
 
-import securesystemslib.formats
+from securesystemslib import formats
 import securesystemslib.settings
 
 DEVNULL = subprocess.DEVNULL
@@ -114,7 +114,7 @@ def run(cmd, check=True, timeout=_default_timeout(), **kwargs):
   if isinstance(cmd, six.string_types):
     cmd = shlex.split(cmd)
   else:
-    securesystemslib.formats.LIST_OF_ANY_STRING_SCHEMA.check_match(cmd)
+    formats.LIST_OF_ANY_STRING_SCHEMA.check_match(cmd)
 
   # NOTE: The CPython implementation would raise a ValueError here, we just
   # don't pass on `stdin` if the user passes `input` and `stdin`
@@ -173,7 +173,7 @@ def run_duplicate_streams(cmd, timeout=_default_timeout()):
   if isinstance(cmd, six.string_types):
     cmd = shlex.split(cmd)
   else:
-    securesystemslib.formats.LIST_OF_ANY_STRING_SCHEMA.check_match(cmd)
+    formats.LIST_OF_ANY_STRING_SCHEMA.check_match(cmd)
 
   # Use temporary files as targets for child process standard stream redirects
   # They seem to work better (i.e. do not hang) than pipes, when using

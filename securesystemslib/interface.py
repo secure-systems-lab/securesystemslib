@@ -36,7 +36,7 @@ import tempfile
 import json
 
 from securesystemslib import exceptions
-import securesystemslib.formats
+from securesystemslib import formats
 import securesystemslib.settings
 import securesystemslib.storage
 import securesystemslib.util
@@ -77,8 +77,8 @@ def get_password(prompt='Password: ', confirm=False):
     The password entered on the prompt.
 
   """
-  securesystemslib.formats.TEXT_SCHEMA.check_match(prompt)
-  securesystemslib.formats.BOOLEAN_SCHEMA.check_match(confirm)
+  formats.TEXT_SCHEMA.check_match(prompt)
+  formats.BOOLEAN_SCHEMA.check_match(confirm)
 
   while True:
     # getpass() prompts the user for a password without echoing
@@ -111,7 +111,7 @@ def _get_key_file_encryption_password(password, prompt, path):
                                  indicate desire to not encrypt by entering no
                                  password)
   """
-  securesystemslib.formats.BOOLEAN_SCHEMA.check_match(prompt)
+  formats.BOOLEAN_SCHEMA.check_match(prompt)
 
   # We don't want to decide which takes precedence so we fail
   if password is not None and prompt:
@@ -129,7 +129,7 @@ def _get_key_file_encryption_password(password, prompt, path):
       return None
 
   if password is not None:
-    securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+    formats.PASSWORD_SCHEMA.check_match(password)
 
     # Fail on empty passed password. A caller should pass None to indicate the
     # desire to not encrypt.
@@ -154,7 +154,7 @@ def _get_key_file_decryption_password(password, prompt, path):
                             desire to not decrypt by entering no password)
 
   """
-  securesystemslib.formats.BOOLEAN_SCHEMA.check_match(prompt)
+  formats.BOOLEAN_SCHEMA.check_match(prompt)
 
   # We don't want to decide which takes precedence so we fail
   if password is not None and prompt:
@@ -172,7 +172,7 @@ def _get_key_file_decryption_password(password, prompt, path):
       return None
 
   if password is not None:
-    securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+    formats.PASSWORD_SCHEMA.check_match(password)
     # No additional vetting needed. Decryption will show if it was correct.
 
   return password
@@ -217,7 +217,7 @@ def _generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
     The private key filepath.
 
   """
-  securesystemslib.formats.RSAKEYBITS_SCHEMA.check_match(bits)
+  formats.RSAKEYBITS_SCHEMA.check_match(bits)
 
   # Generate private RSA key and extract public and private both in PEM
   rsa_key = securesystemslib.keys.generate_rsa_key(bits)
@@ -228,7 +228,7 @@ def _generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
   if not filepath:
     filepath = os.path.join(os.getcwd(), rsa_key['keyid'])
 
-  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+  formats.PATH_SCHEMA.check_match(filepath)
 
   password = _get_key_file_encryption_password(password, prompt, filepath)
 
@@ -283,7 +283,7 @@ def generate_and_write_rsa_keypair(password, filepath=None,
     The private key filepath.
 
   """
-  securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+  formats.PASSWORD_SCHEMA.check_match(password)
   return _generate_and_write_rsa_keypair(
       filepath=filepath, bits=bits, password=password, prompt=False)
 
@@ -386,8 +386,8 @@ def import_rsa_privatekey_from_file(filepath, password=None,
     An RSA private key object conformant with 'RSAKEY_SCHEMA'.
 
   """
-  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
-  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
+  formats.PATH_SCHEMA.check_match(filepath)
+  formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   password = _get_key_file_decryption_password(password, prompt, filepath)
 
@@ -428,8 +428,8 @@ def import_rsa_publickey_from_file(filepath, scheme='rsassa-pss-sha256',
     An RSA public key object conformant with 'RSAKEY_SCHEMA'.
 
   """
-  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
-  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
+  formats.PATH_SCHEMA.check_match(filepath)
+  formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   if storage_backend is None:
     storage_backend = securesystemslib.storage.FilesystemBackend()
@@ -490,7 +490,7 @@ def _generate_and_write_ed25519_keypair(filepath=None, password=None,
   if not filepath:
     filepath = os.path.join(os.getcwd(), ed25519_key['keyid'])
 
-  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+  formats.PATH_SCHEMA.check_match(filepath)
 
   password = _get_key_file_encryption_password(password, prompt, filepath)
 
@@ -551,7 +551,7 @@ def generate_and_write_ed25519_keypair(password, filepath=None):
     The private key filepath.
 
   """
-  securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+  formats.PASSWORD_SCHEMA.check_match(password)
   return _generate_and_write_ed25519_keypair(
       filepath=filepath, password=password, prompt=False)
 
@@ -631,7 +631,7 @@ def import_ed25519_publickey_from_file(filepath):
     An ed25519 public key object conformant with 'ED25519KEY_SCHEMA'.
 
   """
-  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+  formats.PATH_SCHEMA.check_match(filepath)
 
   # Load custom on-disk JSON formatted key and convert to its custom in-memory
   # dict key representation
@@ -679,7 +679,7 @@ def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False,
     An ed25519 private key object conformant with 'ED25519KEY_SCHEMA'.
 
   """
-  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+  formats.PATH_SCHEMA.check_match(filepath)
   password = _get_key_file_decryption_password(password, prompt, filepath)
 
   if storage_backend is None:
@@ -735,7 +735,7 @@ def _generate_and_write_ecdsa_keypair(filepath=None, password=None,
   if not filepath:
     filepath = os.path.join(os.getcwd(), ecdsa_key['keyid'])
 
-  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+  formats.PATH_SCHEMA.check_match(filepath)
 
   password = _get_key_file_encryption_password(password, prompt, filepath)
 
@@ -796,7 +796,7 @@ def generate_and_write_ecdsa_keypair(password, filepath=None):
     The private key filepath.
 
   """
-  securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+  formats.PASSWORD_SCHEMA.check_match(password)
   return _generate_and_write_ecdsa_keypair(
       filepath=filepath, password=password, prompt=False)
 
@@ -877,7 +877,7 @@ def import_ecdsa_publickey_from_file(filepath):
     An ecdsa public key object conformant with 'ECDSAKEY_SCHEMA'.
 
   """
-  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+  formats.PATH_SCHEMA.check_match(filepath)
 
   # Load custom on-disk JSON formatted key and convert to its custom in-memory
   # dict key representation
@@ -918,7 +918,7 @@ def import_ecdsa_privatekey_from_file(filepath, password=None, prompt=False,
     An ecdsa private key object conformant with 'ED25519KEY_SCHEMA'.
 
   """
-  securesystemslib.formats.PATH_SCHEMA.check_match(filepath)
+  formats.PATH_SCHEMA.check_match(filepath)
 
   password = _get_key_file_decryption_password(password, prompt, filepath)
 

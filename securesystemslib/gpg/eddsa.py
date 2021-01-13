@@ -19,6 +19,7 @@
 import binascii
 
 from securesystemslib import exceptions
+from securesystemslib import formats
 import securesystemslib.gpg.util
 
 CRYPTO = True
@@ -168,7 +169,7 @@ def create_pubkey(pubkey_info):
   if not CRYPTO: # pragma: no cover
     raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
-  securesystemslib.formats.GPG_ED25519_PUBKEY_SCHEMA.check_match(pubkey_info)
+  formats.GPG_ED25519_PUBKEY_SCHEMA.check_match(pubkey_info)
 
   public_bytes = binascii.unhexlify(pubkey_info["keyval"]["public"]["q"])
   public_key = pyca_ed25519.Ed25519PublicKey.from_public_bytes(public_bytes)
@@ -221,8 +222,8 @@ def verify_signature(signature_object, pubkey_info, content,
   if not CRYPTO: # pragma: no cover
     raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
-  securesystemslib.formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
-  securesystemslib.formats.GPG_ED25519_PUBKEY_SCHEMA.check_match(pubkey_info)
+  formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
+  formats.GPG_ED25519_PUBKEY_SCHEMA.check_match(pubkey_info)
 
   hasher = securesystemslib.gpg.util.get_hashing_class(hash_algorithm_id)
 

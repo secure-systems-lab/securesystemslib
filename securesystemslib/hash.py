@@ -35,7 +35,7 @@ import hashlib
 import six
 
 from securesystemslib import exceptions
-import securesystemslib.formats
+from securesystemslib import formats
 import securesystemslib.storage
 
 
@@ -182,8 +182,8 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
 
   # Are the arguments properly formatted?  If not, raise
   # 'securesystemslib.exceptions.FormatError'.
-  securesystemslib.formats.NAME_SCHEMA.check_match(algorithm)
-  securesystemslib.formats.NAME_SCHEMA.check_match(hash_library)
+  formats.NAME_SCHEMA.check_match(algorithm)
+  formats.NAME_SCHEMA.check_match(hash_library)
 
   # Was a hashlib digest object requested and is it supported?
   # If so, return the digest object.
@@ -270,8 +270,8 @@ def digest_fileobject(file_object, algorithm=DEFAULT_HASH_ALGORITHM,
 
   # Are the arguments properly formatted?  If not, raise
   # 'securesystemslib.exceptions.FormatError'.
-  securesystemslib.formats.NAME_SCHEMA.check_match(algorithm)
-  securesystemslib.formats.NAME_SCHEMA.check_match(hash_library)
+  formats.NAME_SCHEMA.check_match(algorithm)
+  formats.NAME_SCHEMA.check_match(hash_library)
 
   # Digest object returned whose hash will be updated using 'file_object'.
   # digest() raises:
@@ -367,9 +367,9 @@ def digest_filename(filename, algorithm=DEFAULT_HASH_ALGORITHM,
   """
   # Are the arguments properly formatted?  If not, raise
   # 'securesystemslib.exceptions.FormatError'.
-  securesystemslib.formats.PATH_SCHEMA.check_match(filename)
-  securesystemslib.formats.NAME_SCHEMA.check_match(algorithm)
-  securesystemslib.formats.NAME_SCHEMA.check_match(hash_library)
+  formats.PATH_SCHEMA.check_match(filename)
+  formats.NAME_SCHEMA.check_match(algorithm)
+  formats.NAME_SCHEMA.check_match(hash_library)
 
   digest_object = None
 
@@ -428,7 +428,7 @@ def digest_from_rsa_scheme(scheme, hash_library=DEFAULT_HASH_LIBRARY):
   """
   # Are the arguments properly formatted?  If not, raise
   # 'securesystemslib.exceptions.FormatError'.
-  securesystemslib.formats.RSA_SCHEME_SCHEMA.check_match(scheme)
+  formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   # Get hash algorithm from rsa scheme (hash algorithm id is specified after
   # the last dash; e.g. rsassa-pss-sha256 -> sha256)
