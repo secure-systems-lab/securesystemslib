@@ -26,8 +26,8 @@ from securesystemslib.gpg.exceptions import PacketParsingError
 CRYPTO = True
 NO_CRYPTO_MSG = 'EdDSA key support for GPG requires the cryptography library'
 try:
-  import cryptography.hazmat.primitives.asymmetric.ed25519 as pyca_ed25519
-  import cryptography.exceptions
+  from cryptography.hazmat.primitives.asymmetric import ed25519 as pyca_ed25519
+  from cryptography.exceptions import InvalidSignature
 except ImportError:
   CRYPTO = False
 
@@ -242,5 +242,5 @@ def verify_signature(signature_object, pubkey_info, content,
     )
     return True
 
-  except cryptography.exceptions.InvalidSignature:
+  except InvalidSignature:
     return False

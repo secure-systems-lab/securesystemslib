@@ -19,11 +19,11 @@ import binascii
 CRYPTO = True
 NO_CRYPTO_MSG = 'RSA key support for GPG requires the cryptography library'
 try:
-  import cryptography.hazmat.primitives.asymmetric.rsa as rsa
-  import cryptography.hazmat.backends as backends
-  import cryptography.hazmat.primitives.asymmetric.padding as padding
-  import cryptography.hazmat.primitives.asymmetric.utils as utils
-  import cryptography.exceptions
+  from cryptography.hazmat.primitives.asymmetric import rsa
+  from cryptography.hazmat import backends
+  from cryptography.hazmat.primitives.asymmetric import padding
+  from cryptography.hazmat.primitives.asymmetric import utils
+  from cryptography.exceptions import InvalidSignature
 except ImportError:
   CRYPTO = False
 
@@ -218,5 +218,5 @@ def verify_signature(signature_object, pubkey_info, content,
       utils.Prehashed(hasher())
     )
     return True
-  except cryptography.exceptions.InvalidSignature:
+  except InvalidSignature:
     return False

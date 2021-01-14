@@ -24,8 +24,8 @@ from distutils.version import StrictVersion # pylint: disable=no-name-in-module,
 CRYPTO = True
 NO_CRYPTO_MSG = 'gpg.utils requires the cryptography library'
 try:
-  import cryptography.hazmat.backends as backends
-  import cryptography.hazmat.primitives.hashes as hashing
+  from cryptography.hazmat import backends
+  from cryptography.hazmat.primitives import hashes as hashing
 except ImportError:
   CRYPTO = False
 

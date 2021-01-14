@@ -72,8 +72,10 @@ import os
 NACL = True
 NO_NACL_MSG = "ed25519 key support requires the nacl library"
 try:
-  import nacl.signing
-  import nacl.encoding
+  from nacl.encoding import RawEncoder
+  from nacl.signing import (SigningKey, VerifyKey)
+  # avoid conflicts with own exceptions of same name
+  from nacl import exceptions as nacl_exceptions
 except ImportError:
     NACL = False
 
@@ -142,8 +144,8 @@ def generate_public_and_private():
 
   # Generate the public key.  PyNaCl (i.e., 'nacl' module) performs the actual
   # key generation.
-  nacl_key = nacl.signing.SigningKey(seed)
-  public = nacl_key.verify_key.encode(encoder=nacl.encoding.RawEncoder())
+  nacl_key = SigningKey(seed)
+  public = nacl_key.verify_key.encode(encoder=RawEncoder())
 
   return public, seed
 
@@ -233,11 +235,11 @@ def create_signature(public_key, private_key, data, scheme):
   # statement to accommodate schemes that might be added in the future.
   if scheme == 'ed25519':
     try:
-      nacl_key = nacl.signing.SigningKey(private_key)
+      nacl_key = SigningKey(private_key)
       nacl_sig = nacl_key.sign(data)
       signature = nacl_sig.signature
 
-    except (ValueError, TypeError, nacl.exceptions.CryptoError) as e:
+    except (ValueError, TypeError, nacl_exceptions.CryptoError) as e:
       raise exceptions.CryptoError('An "ed25519" signature'
           ' could not be created with PyNaCl.' + str(e))
 
@@ -325,11 +327,11 @@ def verify_signature(public_key, scheme, signature, data):
   if scheme in _SUPPORTED_ED25519_SIGNING_SCHEMES:
     if NACL:
       try:
-        nacl_verify_key = nacl.signing.VerifyKey(public)
+        nacl_verify_key = VerifyKey(public)
         nacl_verify_key.verify(data, signature)
         valid_signature = True
 
-      except nacl.exceptions.BadSignatureError:
+      except nacl_exceptions.BadSignatureError:
         pass
 
     # Verify 'ed25519' signature with the pure Python implementation.

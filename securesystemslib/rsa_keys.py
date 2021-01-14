@@ -72,7 +72,8 @@ try:
   from cryptography.hazmat.backends import default_backend
 
   # Import Exception classes need to catch pyca/cryptography exceptions.
-  import cryptography.exceptions
+  from cryptography.exceptions import (
+      InvalidSignature, UnsupportedAlgorithm)
 
   # 'cryptography.hazmat.primitives.asymmetric' (i.e., pyca/cryptography's
   # public-key cryptography modules) supports algorithms like the Digital
@@ -369,7 +370,7 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
   # serialized key is of a type that is not supported by the backend, or if
   # the key is encrypted with a symmetric cipher that is not supported by
   # the backend.
-  except cryptography.exceptions.UnsupportedAlgorithm:  # pragma: no cover
+  except UnsupportedAlgorithm:  # pragma: no cover
     raise exceptions.CryptoError('The private key is'
         ' encrypted with an unsupported algorithm.')
 
@@ -481,11 +482,11 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
 
       return True
 
-    except cryptography.exceptions.InvalidSignature:
+    except InvalidSignature:
       return False
 
   # Raised by load_pem_public_key().
-  except (ValueError, cryptography.exceptions.UnsupportedAlgorithm) as e:
+  except (ValueError, UnsupportedAlgorithm) as e:
     raise exceptions.CryptoError('The PEM could not be'
         ' decoded successfully, or contained an unsupported key type: ' + str(e))
 
@@ -670,7 +671,7 @@ def create_rsa_public_and_private_from_pem(pem, passphrase=None):
   # Or if the key was encrypted but no password was supplied.
   # UnsupportedAlgorithm: If the private key (or if the key is encrypted with
   # an unsupported symmetric cipher) is not supported by the backend.
-  except (ValueError, TypeError, cryptography.exceptions.UnsupportedAlgorithm) as e:
+  except (ValueError, TypeError, UnsupportedAlgorithm) as e:
     # Raise 'securesystemslib.exceptions.CryptoError' and pyca/cryptography's
     # exception message.  Avoid propogating pyca/cryptography's exception trace
     # to avoid revealing sensitive error.

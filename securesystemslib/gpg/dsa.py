@@ -19,10 +19,10 @@ import binascii
 CRYPTO = True
 NO_CRYPTO_MSG = 'DSA key support for GPG requires the cryptography library'
 try:
-  import cryptography.hazmat.primitives.asymmetric.dsa as dsa
-  import cryptography.hazmat.backends as backends
-  import cryptography.hazmat.primitives.asymmetric.utils as dsautils
-  import cryptography.exceptions
+  from cryptography.exceptions import InvalidSignature
+  from cryptography.hazmat import backends
+  from cryptography.hazmat.primitives.asymmetric import dsa
+  from cryptography.hazmat.primitives.asymmetric import utils as dsautils
 except ImportError:
   CRYPTO = False
 
@@ -240,5 +240,5 @@ def verify_signature(signature_object, pubkey_info, content,
       dsautils.Prehashed(hasher())
     )
     return True
-  except cryptography.exceptions.InvalidSignature:
+  except InvalidSignature:
     return False

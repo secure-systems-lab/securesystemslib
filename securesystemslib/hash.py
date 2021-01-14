@@ -47,9 +47,8 @@ SUPPORTED_LIBRARIES = ['hashlib']
 
 # If `pyca_crypto` is installed, add it to supported libraries
 try:
-  import cryptography.exceptions
-  import cryptography.hazmat.backends
-  import cryptography.hazmat.primitives.hashes as _pyca_hashes
+  from cryptography.hazmat.backends import default_backend
+  from cryptography.hazmat.primitives import hashes as _pyca_hashes
   import binascii
 
   # Dictionary of `pyca/cryptography` supported hash algorithms.
@@ -204,8 +203,7 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
     try:
       hash_algorithm = PYCA_DIGEST_OBJECTS_CACHE[algorithm]()
       return PycaDiggestWrapper(
-        cryptography.hazmat.primitives.hashes.Hash(hash_algorithm,
-            cryptography.hazmat.backends.default_backend()))
+        _pyca_hashes.Hash(hash_algorithm, default_backend()))
 
     except KeyError:
       raise exceptions.UnsupportedAlgorithmError(algorithm)

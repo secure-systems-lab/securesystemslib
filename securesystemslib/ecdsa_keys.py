@@ -51,7 +51,7 @@ try:
   from cryptography.hazmat.primitives.serialization import load_pem_public_key
   from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
-  import cryptography.exceptions
+  from cryptography.exceptions import (InvalidSignature, UnsupportedAlgorithm)
 
   _SCHEME_HASHER = {
     'ecdsa-sha2-nistp256': ec.ECDSA(hashes.SHA256()),
@@ -335,7 +335,7 @@ def verify_signature(public_key, scheme, signature, data):
     ecdsa_key.verify(signature, data, _SCHEME_HASHER[scheme])
     return True
 
-  except (TypeError, cryptography.exceptions.InvalidSignature):
+  except (TypeError, InvalidSignature):
     return False
 
 
@@ -418,7 +418,7 @@ def create_ecdsa_public_and_private_from_pem(pem, password=None):
     private = load_pem_private_key(pem.encode('utf-8'), password=password,
       backend=default_backend())
 
-  except (ValueError, cryptography.exceptions.UnsupportedAlgorithm) as e:
+  except (ValueError, UnsupportedAlgorithm) as e:
     raise exceptions.CryptoError('Could not import private'
       ' PEM.\n' + str(e))
 
