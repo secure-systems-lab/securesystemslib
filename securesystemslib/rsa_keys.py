@@ -123,8 +123,8 @@ except ImportError:
 from securesystemslib import exceptions
 from securesystemslib import formats
 from securesystemslib import settings
+from securesystemslib import util
 from securesystemslib.hash import digest_from_rsa_scheme
-import securesystemslib.util
 
 
 # Recommended RSA key sizes:
@@ -887,7 +887,7 @@ def decrypt_key(encrypted_key, password):
   # Raise 'securesystemslib.exceptions.Error' if 'json_data' cannot be
   # deserialized to a valid 'securesystemslib.formats.ANYKEY_SCHEMA' key
   # object.
-  key_object = securesystemslib.util.load_json_string(json_data.decode())
+  key_object = util.load_json_string(json_data.decode())
 
   return key_object
 
@@ -1049,7 +1049,7 @@ def _decrypt(file_contents, password):
   generated_hmac = binascii.hexlify(generated_hmac_object.finalize())
 
 
-  if not securesystemslib.util.digests_are_equal(generated_hmac.decode(), read_hmac):
+  if not util.digests_are_equal(generated_hmac.decode(), read_hmac):
     raise exceptions.CryptoError('Decryption failed.')
 
   # Construct a Cipher object, with the key and iv.

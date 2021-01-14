@@ -39,8 +39,8 @@ from securesystemslib import exceptions
 from securesystemslib import formats
 from securesystemslib import keys
 from securesystemslib import settings
+from securesystemslib import util
 from securesystemslib.storage import FilesystemBackend
-import securesystemslib.util
 
 from securesystemslib import KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA
 
@@ -237,17 +237,17 @@ def _generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
     private = keys.create_rsa_encrypted_pem(private, password)
 
   # Create intermediate directories as required
-  securesystemslib.util.ensure_parent_dir(filepath)
+  util.ensure_parent_dir(filepath)
 
   # Write PEM-encoded public key to <filepath>.pub
   file_object = tempfile.TemporaryFile()
   file_object.write(public.encode('utf-8'))
-  securesystemslib.util.persist_temp_file(file_object, filepath + '.pub')
+  util.persist_temp_file(file_object, filepath + '.pub')
 
   # Write PEM-encoded private key to <filepath>
   file_object = tempfile.TemporaryFile()
   file_object.write(private.encode('utf-8'))
-  securesystemslib.util.persist_temp_file(file_object, filepath)
+  util.persist_temp_file(file_object, filepath)
 
   return filepath
 
@@ -493,7 +493,7 @@ def _generate_and_write_ed25519_keypair(filepath=None, password=None,
   password = _get_key_file_encryption_password(password, prompt, filepath)
 
   # Create intermediate directories as required
-  securesystemslib.util.ensure_parent_dir(filepath)
+  util.ensure_parent_dir(filepath)
 
   # Use custom JSON format for ed25519 keys on-disk
   keytype = ed25519_key['keytype']
@@ -505,7 +505,7 @@ def _generate_and_write_ed25519_keypair(filepath=None, password=None,
   # Write public key to <filepath>.pub
   file_object = tempfile.TemporaryFile()
   file_object.write(json.dumps(ed25519key_metadata_format).encode('utf-8'))
-  securesystemslib.util.persist_temp_file(file_object, filepath + '.pub')
+  util.persist_temp_file(file_object, filepath + '.pub')
 
   # Encrypt private key if we have a password, store as JSON string otherwise
   if password is not None:
@@ -516,7 +516,7 @@ def _generate_and_write_ed25519_keypair(filepath=None, password=None,
   # Write private key to <filepath>
   file_object = tempfile.TemporaryFile()
   file_object.write(ed25519_key.encode('utf-8'))
-  securesystemslib.util.persist_temp_file(file_object, filepath)
+  util.persist_temp_file(file_object, filepath)
 
   return filepath
 
@@ -633,7 +633,7 @@ def import_ed25519_publickey_from_file(filepath):
 
   # Load custom on-disk JSON formatted key and convert to its custom in-memory
   # dict key representation
-  ed25519_key_metadata = securesystemslib.util.load_json_file(filepath)
+  ed25519_key_metadata = util.load_json_file(filepath)
   ed25519_key, _ = keys.format_metadata_to_key(ed25519_key_metadata)
 
   # Check that the generic loading functions indeed loaded an ed25519 key
@@ -737,7 +737,7 @@ def _generate_and_write_ecdsa_keypair(filepath=None, password=None,
   password = _get_key_file_encryption_password(password, prompt, filepath)
 
   # Create intermediate directories as required
-  securesystemslib.util.ensure_parent_dir(filepath)
+  util.ensure_parent_dir(filepath)
 
   # Use custom JSON format for ecdsa keys on-disk
   keytype = ecdsa_key['keytype']
@@ -749,7 +749,7 @@ def _generate_and_write_ecdsa_keypair(filepath=None, password=None,
   # Write public key to <filepath>.pub
   file_object = tempfile.TemporaryFile()
   file_object.write(json.dumps(ecdsakey_metadata_format).encode('utf-8'))
-  securesystemslib.util.persist_temp_file(file_object, filepath + '.pub')
+  util.persist_temp_file(file_object, filepath + '.pub')
 
   # Encrypt private key if we have a password, store as JSON string otherwise
   if password is not None:
@@ -760,7 +760,7 @@ def _generate_and_write_ecdsa_keypair(filepath=None, password=None,
   # Write private key to <filepath>
   file_object = tempfile.TemporaryFile()
   file_object.write(ecdsa_key.encode('utf-8'))
-  securesystemslib.util.persist_temp_file(file_object, filepath)
+  util.persist_temp_file(file_object, filepath)
 
   return filepath
 
@@ -878,7 +878,7 @@ def import_ecdsa_publickey_from_file(filepath):
 
   # Load custom on-disk JSON formatted key and convert to its custom in-memory
   # dict key representation
-  ecdsa_key_metadata = securesystemslib.util.load_json_file(filepath)
+  ecdsa_key_metadata = util.load_json_file(filepath)
   ecdsa_key, _ = keys.format_metadata_to_key(ecdsa_key_metadata)
 
   return ecdsa_key
@@ -928,7 +928,7 @@ def import_ecdsa_privatekey_from_file(filepath, password=None, prompt=False,
   if password is not None:
     key_object = keys.decrypt_key(key_data, password)
   else:
-    key_object = securesystemslib.util.load_json_string(key_data)
+    key_object = util.load_json_string(key_data)
 
   # Raise an exception if an unexpected key type is imported.
   # NOTE: we support keytype's of ecdsa-sha2-nistp256 and ecdsa-sha2-nistp384

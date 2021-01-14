@@ -67,6 +67,7 @@ from securesystemslib import exceptions
 from securesystemslib import formats
 from securesystemslib import rsa_keys
 from securesystemslib import settings
+from securesystemslib import util
 from securesystemslib.hash import digest
 
 
@@ -1584,8 +1585,7 @@ def import_ed25519key_from_private_json(json_str, password=None):
     logger.debug('No password was given. Attempting to import an'
         ' unencrypted file.')
     try:
-      key_object = \
-               securesystemslib.util.load_json_string(json_str.decode('utf-8'))
+      key_object = util.load_json_string(json_str.decode('utf-8'))
     # If the JSON could not be decoded, it is very likely, but not necessarily,
     # due to a non-empty password.
     except exceptions.Error:
