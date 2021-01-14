@@ -19,9 +19,9 @@ import logging
 import os
 
 from securesystemslib import process
-import securesystemslib.gpg.rsa as rsa
-import securesystemslib.gpg.dsa as dsa
-import securesystemslib.gpg.eddsa as eddsa
+from securesystemslib.gpg import rsa
+from securesystemslib.gpg import dsa
+from securesystemslib.gpg import eddsa
 
 log = logging.getLogger(__name__)
 
