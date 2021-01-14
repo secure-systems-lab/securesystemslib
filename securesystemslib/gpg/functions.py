@@ -26,7 +26,7 @@ from securesystemslib.gpg.constants import (GPG_SIGN_COMMAND,
     SIGNATURE_HANDLERS, FULLY_SUPPORTED_MIN_VERSION, SHA256,
     HAVE_GPG, NO_GPG_MSG)
 
-import securesystemslib.process
+from securesystemslib import process
 from securesystemslib.gpg.rsa import CRYPTO
 
 log = logging.getLogger(__name__)
@@ -108,9 +108,8 @@ def create_signature(content, keyid=None, homedir=None):
 
   command = GPG_SIGN_COMMAND.format(keyarg=keyarg, homearg=homearg)
 
-  gpg_process = securesystemslib.process.run(command, input=content, check=False,
-      stdout=securesystemslib.process.PIPE,
-      stderr=securesystemslib.process.PIPE)
+  gpg_process = process.run(command, input=content, check=False,
+      stdout=process.PIPE, stderr=process.PIPE)
 
   # TODO: It's suggested to take a look at `--status-fd` for proper error
   # reporting, as there is no clear distinction between the return codes
@@ -272,9 +271,7 @@ def export_pubkey(keyid, homedir=None):
   # above, e.g. in a common 'run gpg command' utility function
   command = securesystemslib.gpg.constants.GPG_EXPORT_PUBKEY_COMMAND.format(
       keyid=keyid, homearg=homearg)
-  gpg_process = securesystemslib.process.run(command,
-      stdout=securesystemslib.process.PIPE,
-      stderr=securesystemslib.process.PIPE)
+  gpg_process = process.run(command, stdout=process.PIPE, stderr=process.PIPE)
 
   key_packet = gpg_process.stdout
   key_bundle = securesystemslib.gpg.common.get_pubkey_bundle(key_packet, keyid)

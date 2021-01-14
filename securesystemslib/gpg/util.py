@@ -30,8 +30,8 @@ except ImportError:
   CRYPTO = False
 
 from securesystemslib import exceptions
+from securesystemslib import process
 import securesystemslib.gpg.exceptions
-import securesystemslib.process
 import securesystemslib.gpg.constants
 
 log = logging.getLogger(__name__)
@@ -322,9 +322,8 @@ def get_version():
         securesystemslib.gpg.constants.NO_GPG_MSG)
 
   command = securesystemslib.gpg.constants.GPG_VERSION_COMMAND
-  gpg_process = securesystemslib.process.run(command,
-      stdout=securesystemslib.process.PIPE,
-      stderr=securesystemslib.process.PIPE, universal_newlines=True)
+  gpg_process = process.run(command, stdout=process.PIPE,
+      stderr=process.PIPE, universal_newlines=True)
 
   full_version_info = gpg_process.stdout
   version_string = re.search(r'(\d\.\d\.\d+)', full_version_info).group(1)

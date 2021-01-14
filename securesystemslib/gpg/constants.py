@@ -18,11 +18,10 @@
 import logging
 import os
 
+from securesystemslib import process
 import securesystemslib.gpg.rsa as rsa
 import securesystemslib.gpg.dsa as dsa
 import securesystemslib.gpg.eddsa as eddsa
-
-import securesystemslib.process as process
 
 log = logging.getLogger(__name__)
 
