@@ -20,7 +20,7 @@ import binascii
 
 from securesystemslib import exceptions
 from securesystemslib import formats
-import securesystemslib.gpg.util
+from securesystemslib.gpg import util as gpg_util
 
 CRYPTO = True
 NO_CRYPTO_MSG = 'EdDSA key support for GPG requires the cryptography library'
@@ -80,7 +80,7 @@ def get_pubkey_params(data):
         curve_oid, ED25519_PUBLIC_KEY_OID))
 
   # See 13.3. EdDSA Point Format
-  public_key_len = securesystemslib.gpg.util.get_mpi_length(data[ptr:ptr + 2])
+  public_key_len = gpg_util.get_mpi_length(data[ptr:ptr + 2])
   ptr += 2
 
   if public_key_len != ED25519_PUBLIC_KEY_LENGTH:
@@ -129,13 +129,13 @@ def get_signature_params(data):
 
   """
   ptr = 0
-  r_length = securesystemslib.gpg.util.get_mpi_length(data[ptr:ptr + 2])
+  r_length = gpg_util.get_mpi_length(data[ptr:ptr + 2])
 
   ptr += 2
   r = data[ptr:ptr + r_length]
   ptr += r_length
 
-  s_length = securesystemslib.gpg.util.get_mpi_length(data[ptr:ptr + 2])
+  s_length = gpg_util.get_mpi_length(data[ptr:ptr + 2])
   ptr += 2
   s = data[ptr:ptr + s_length]
 
@@ -225,12 +225,12 @@ def verify_signature(signature_object, pubkey_info, content,
   formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
   formats.GPG_ED25519_PUBKEY_SCHEMA.check_match(pubkey_info)
 
-  hasher = securesystemslib.gpg.util.get_hashing_class(hash_algorithm_id)
+  hasher = gpg_util.get_hashing_class(hash_algorithm_id)
 
   pubkey_object = create_pubkey(pubkey_info)
 
   # See RFC4880-bis8 14.8. EdDSA and 5.2.4 "Computing Signatures"
-  digest = securesystemslib.gpg.util.hash_object(
+  digest = gpg_util.hash_object(
       binascii.unhexlify(signature_object["other_headers"]),
       hasher(), content)
 

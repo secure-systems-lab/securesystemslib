@@ -28,7 +28,7 @@ except ImportError:
 
 from securesystemslib import exceptions
 from securesystemslib import formats
-import securesystemslib.gpg.util
+from securesystemslib.gpg import util as gpg_util
 import securesystemslib.gpg.exceptions
 
 
@@ -95,7 +95,7 @@ def get_pubkey_params(data):
   """
   ptr = 0
 
-  prime_p_length = securesystemslib.gpg.util.get_mpi_length(data[ptr: ptr + 2])
+  prime_p_length = gpg_util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   prime_p = data[ptr:ptr + prime_p_length]
   if len(prime_p) != prime_p_length: # pragma: no cover
@@ -103,8 +103,7 @@ def get_pubkey_params(data):
         "This MPI was truncated!")
   ptr += prime_p_length
 
-  group_order_q_length = securesystemslib.gpg.util.get_mpi_length(
-      data[ptr: ptr + 2])
+  group_order_q_length = gpg_util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   group_order_q = data[ptr:ptr + group_order_q_length]
   if len(group_order_q) != group_order_q_length: # pragma: no cover
@@ -112,8 +111,7 @@ def get_pubkey_params(data):
         "This MPI has been truncated!")
   ptr += group_order_q_length
 
-  generator_length = securesystemslib.gpg.util.get_mpi_length(
-      data[ptr: ptr + 2])
+  generator_length = gpg_util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   generator = data[ptr:ptr + generator_length]
   if len(generator) != generator_length: # pragma: no cover
@@ -121,7 +119,7 @@ def get_pubkey_params(data):
         "This MPI has been truncated!")
   ptr += generator_length
 
-  value_y_length = securesystemslib.gpg.util.get_mpi_length(data[ptr: ptr + 2])
+  value_y_length = gpg_util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   value_y = data[ptr:ptr + value_y_length]
   if len(value_y) != value_y_length: # pragma: no cover
@@ -163,7 +161,7 @@ def get_signature_params(data):
     return exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   ptr = 0
-  r_length = securesystemslib.gpg.util.get_mpi_length(data[ptr:ptr+2])
+  r_length = gpg_util.get_mpi_length(data[ptr:ptr+2])
   ptr += 2
   r = data[ptr:ptr + r_length]
   if len(r) != r_length: # pragma: no cover
@@ -171,7 +169,7 @@ def get_signature_params(data):
         "r-value truncated in signature")
   ptr += r_length
 
-  s_length = securesystemslib.gpg.util.get_mpi_length(data[ptr: ptr+2])
+  s_length = gpg_util.get_mpi_length(data[ptr: ptr+2])
   ptr += 2
   s = data[ptr: ptr + s_length]
   if len(s) != s_length: # pragma: no cover
@@ -233,11 +231,11 @@ def verify_signature(signature_object, pubkey_info, content,
   formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
   formats.GPG_DSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
-  hasher = securesystemslib.gpg.util.get_hashing_class(hash_algorithm_id)
+  hasher = gpg_util.get_hashing_class(hash_algorithm_id)
 
   pubkey_object = create_pubkey(pubkey_info)
 
-  digest = securesystemslib.gpg.util.hash_object(
+  digest = gpg_util.hash_object(
       binascii.unhexlify(signature_object['other_headers']),
       hasher(), content)
 

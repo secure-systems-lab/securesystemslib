@@ -29,7 +29,7 @@ except ImportError:
 
 from securesystemslib import exceptions
 from securesystemslib import formats
-import securesystemslib.gpg.util
+from securesystemslib.gpg import util as gpg_util
 import securesystemslib.gpg.exceptions
 
 
@@ -92,7 +92,7 @@ def get_pubkey_params(data):
   """
   ptr = 0
 
-  modulus_length = securesystemslib.gpg.util.get_mpi_length(data[ptr: ptr + 2])
+  modulus_length = gpg_util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   modulus = data[ptr:ptr + modulus_length]
   if len(modulus) != modulus_length: # pragma: no cover
@@ -100,8 +100,7 @@ def get_pubkey_params(data):
         "This modulus MPI was truncated!")
   ptr += modulus_length
 
-  exponent_e_length = securesystemslib.gpg.util.get_mpi_length(
-      data[ptr: ptr + 2])
+  exponent_e_length = gpg_util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   exponent_e = data[ptr:ptr + exponent_e_length]
   if len(exponent_e) != exponent_e_length: # pragma: no cover
@@ -136,7 +135,7 @@ def get_signature_params(data):
   """
 
   ptr = 0
-  signature_length = securesystemslib.gpg.util.get_mpi_length(data[ptr:ptr+2])
+  signature_length = gpg_util.get_mpi_length(data[ptr:ptr+2])
   ptr += 2
   signature = data[ptr:ptr + signature_length]
   if len(signature) != signature_length: # pragma: no cover
@@ -194,7 +193,7 @@ def verify_signature(signature_object, pubkey_info, content,
   formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
   formats.GPG_RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
-  hasher = securesystemslib.gpg.util.get_hashing_class(hash_algorithm_id)
+  hasher = gpg_util.get_hashing_class(hash_algorithm_id)
 
   pubkey_object = create_pubkey(pubkey_info)
 
@@ -210,7 +209,7 @@ def verify_signature(signature_object, pubkey_info, content,
     signature_object['signature'] = "{}{}".format(zero_pad,
         signature_object['signature'])
 
-  digest = securesystemslib.gpg.util.hash_object(
+  digest = gpg_util.hash_object(
       binascii.unhexlify(signature_object['other_headers']),
       hasher(), content)
 
