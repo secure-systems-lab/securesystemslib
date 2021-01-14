@@ -20,7 +20,8 @@ import time
 
 from securesystemslib import exceptions
 from securesystemslib import formats
-import securesystemslib.gpg.common
+from securesystemslib.gpg.common import (
+    get_pubkey_bundle, parse_signature_packet)
 from securesystemslib.gpg.exceptions import (
     CommandError, KeyExpirationError)
 from securesystemslib.gpg.constants import (
@@ -126,8 +127,7 @@ def create_signature(content, keyid=None, homedir=None):
         gpg_process.returncode, gpg_process.stderr.decode()))
 
   signature_data = gpg_process.stdout
-  signature = securesystemslib.gpg.common.parse_signature_packet(
-      signature_data)
+  signature = parse_signature_packet(signature_data)
 
   # On GPG < 2.1 we cannot derive the full keyid from the signature data.
   # Instead we try to compute the keyid from the public part of the signing
@@ -279,7 +279,7 @@ def export_pubkey(keyid, homedir=None):
   gpg_process = process.run(command, stdout=process.PIPE, stderr=process.PIPE)
 
   key_packet = gpg_process.stdout
-  key_bundle = securesystemslib.gpg.common.get_pubkey_bundle(key_packet, keyid)
+  key_bundle = get_pubkey_bundle(key_packet, keyid)
 
   return key_bundle
 
