@@ -80,7 +80,7 @@ except ImportError:
 # The optimized pure Python implementation of Ed25519.  If
 # PyNaCl cannot be imported and an attempt to use is made in this module, a
 # 'securesystemslib.exceptions.UnsupportedLibraryError' exception is raised.
-import securesystemslib._vendor.ed25519.ed25519
+from securesystemslib._vendor.ed25519 import ed25519 as python_ed25519
 
 from securesystemslib import exceptions
 from securesystemslib import formats
@@ -335,8 +335,7 @@ def verify_signature(public_key, scheme, signature, data):
     # Verify 'ed25519' signature with the pure Python implementation.
     else:
       try:
-        securesystemslib._vendor.ed25519.ed25519.checkvalid(signature,
-            data, public)
+        python_ed25519.checkvalid(signature, data, public)
         valid_signature = True
 
       # The pure Python implementation raises 'Exception' if 'signature' is
