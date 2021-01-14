@@ -36,7 +36,7 @@ import six
 
 from securesystemslib import exceptions
 from securesystemslib import formats
-import securesystemslib.storage
+from securesystemslib.storage import FilesystemBackend
 
 
 DEFAULT_CHUNK_SIZE = 4096
@@ -374,7 +374,7 @@ def digest_filename(filename, algorithm=DEFAULT_HASH_ALGORITHM,
   digest_object = None
 
   if storage_backend is None:
-    storage_backend = securesystemslib.storage.FilesystemBackend()
+    storage_backend = FilesystemBackend()
 
   # Open 'filename' in read+binary mode.
   with storage_backend.get(filename) as file_object:

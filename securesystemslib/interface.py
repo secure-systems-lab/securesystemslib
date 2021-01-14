@@ -39,7 +39,7 @@ from securesystemslib import exceptions
 from securesystemslib import formats
 from securesystemslib import keys
 from securesystemslib import settings
-import securesystemslib.storage
+from securesystemslib.storage import FilesystemBackend
 import securesystemslib.util
 
 from securesystemslib import KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA
@@ -392,7 +392,7 @@ def import_rsa_privatekey_from_file(filepath, password=None,
   password = _get_key_file_decryption_password(password, prompt, filepath)
 
   if storage_backend is None:
-    storage_backend = securesystemslib.storage.FilesystemBackend()
+    storage_backend = FilesystemBackend()
 
   with storage_backend.get(filepath) as file_object:
     pem_key = file_object.read().decode('utf-8')
@@ -431,7 +431,7 @@ def import_rsa_publickey_from_file(filepath, scheme='rsassa-pss-sha256',
   formats.RSA_SCHEME_SCHEMA.check_match(scheme)
 
   if storage_backend is None:
-    storage_backend = securesystemslib.storage.FilesystemBackend()
+    storage_backend = FilesystemBackend()
 
   with storage_backend.get(filepath) as file_object:
     rsa_pubkey_pem = file_object.read().decode('utf-8')
@@ -680,7 +680,7 @@ def import_ed25519_privatekey_from_file(filepath, password=None, prompt=False,
   password = _get_key_file_decryption_password(password, prompt, filepath)
 
   if storage_backend is None:
-    storage_backend = securesystemslib.storage.FilesystemBackend()
+    storage_backend = FilesystemBackend()
 
   with storage_backend.get(filepath) as file_object:
     json_str = file_object.read()
@@ -919,7 +919,7 @@ def import_ecdsa_privatekey_from_file(filepath, password=None, prompt=False,
   password = _get_key_file_decryption_password(password, prompt, filepath)
 
   if storage_backend is None:
-    storage_backend = securesystemslib.storage.FilesystemBackend()
+    storage_backend = FilesystemBackend()
 
   with storage_backend.get(filepath) as file_object:
     key_data = file_object.read().decode('utf-8')

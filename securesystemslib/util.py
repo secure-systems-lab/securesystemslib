@@ -31,7 +31,7 @@ import logging
 from securesystemslib import exceptions
 from securesystemslib import formats
 from securesystemslib.hash import digest_fileobject
-import securesystemslib.storage
+from securesystemslib.storage import FilesystemBackend
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ def get_file_details(filepath, hash_algorithms=['sha256'],
   formats.HASHALGORITHMS_SCHEMA.check_match(hash_algorithms)
 
   if storage_backend is None:
-    storage_backend = securesystemslib.storage.FilesystemBackend()
+    storage_backend = FilesystemBackend()
 
   file_length = get_file_length(filepath, storage_backend)
   file_hashes = get_file_hashes(filepath, hash_algorithms, storage_backend)
@@ -119,7 +119,7 @@ def get_file_hashes(filepath, hash_algorithms=['sha256'],
   formats.HASHALGORITHMS_SCHEMA.check_match(hash_algorithms)
 
   if storage_backend is None:
-    storage_backend = securesystemslib.storage.FilesystemBackend()
+    storage_backend = FilesystemBackend()
 
   file_hashes = {}
 
@@ -163,7 +163,7 @@ def get_file_length(filepath, storage_backend=None):
   formats.PATH_SCHEMA.check_match(filepath)
 
   if storage_backend is None:
-      storage_backend = securesystemslib.storage.FilesystemBackend()
+      storage_backend = FilesystemBackend()
 
   return storage_backend.getsize(filepath)
 
@@ -200,7 +200,7 @@ def persist_temp_file(temp_file, persist_path, storage_backend=None,
   """
 
   if storage_backend is None:
-    storage_backend = securesystemslib.storage.FilesystemBackend()
+    storage_backend = FilesystemBackend()
 
   storage_backend.put(temp_file, persist_path)
 
@@ -243,7 +243,7 @@ def ensure_parent_dir(filename, storage_backend=None):
   formats.PATH_SCHEMA.check_match(filename)
 
   if storage_backend is None:
-    storage_backend = securesystemslib.storage.FilesystemBackend()
+    storage_backend = FilesystemBackend()
 
   # Split 'filename' into head and tail, check if head exists.
   directory = os.path.split(filename)[0]
@@ -421,7 +421,7 @@ def load_json_file(filepath, storage_backend=None):
   formats.PATH_SCHEMA.check_match(filepath)
 
   if storage_backend is None:
-    storage_backend = securesystemslib.storage.FilesystemBackend()
+    storage_backend = FilesystemBackend()
 
   deserialized_object = None
   with storage_backend.get(filepath) as file_obj:
