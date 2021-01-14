@@ -21,7 +21,8 @@ import time
 from securesystemslib import exceptions
 from securesystemslib import formats
 import securesystemslib.gpg.common
-import securesystemslib.gpg.exceptions
+from securesystemslib.gpg.exceptions import (
+    CommandError, KeyExpirationError)
 from securesystemslib.gpg.constants import (GPG_SIGN_COMMAND,
     SIGNATURE_HANDLERS, FULLY_SUPPORTED_MIN_VERSION, SHA256,
     HAVE_GPG, NO_GPG_MSG)
@@ -115,7 +116,7 @@ def create_signature(content, keyid=None, homedir=None):
   # reporting, as there is no clear distinction between the return codes
   # https://lists.gnupg.org/pipermail/gnupg-devel/2005-December/022559.html
   if gpg_process.returncode != 0:
-    raise securesystemslib.gpg.exceptions.CommandError("Command '{}' returned "
+    raise CommandError("Command '{}' returned "
         "non-zero exit status '{}', stderr was:\n{}.".format(gpg_process.args,
         gpg_process.returncode, gpg_process.stderr.decode()))
 
@@ -224,7 +225,7 @@ def verify_signature(signature_object, pubkey_info, content):
 
   if creation_time and validity_period and \
       creation_time + validity_period < time.time():
-    raise securesystemslib.gpg.exceptions.KeyExpirationError(verification_key)
+    raise KeyExpirationError(verification_key)
 
   return handler.verify_signature(
       signature_object, verification_key, content, SHA256)

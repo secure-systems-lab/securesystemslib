@@ -21,6 +21,7 @@ import binascii
 from securesystemslib import exceptions
 from securesystemslib import formats
 from securesystemslib.gpg import util as gpg_util
+from securesystemslib.gpg.exceptions import PacketParsingError
 
 CRYPTO = True
 NO_CRYPTO_MSG = 'EdDSA key support for GPG requires the cryptography library'
@@ -75,7 +76,7 @@ def get_pubkey_params(data):
 
   # See 9.2. ECC Curve OID
   if curve_oid != ED25519_PUBLIC_KEY_OID:
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
+    raise PacketParsingError(
         "bad ed25519 curve OID '{}', expected {}'".format(
         curve_oid, ED25519_PUBLIC_KEY_OID))
 
@@ -84,7 +85,7 @@ def get_pubkey_params(data):
   ptr += 2
 
   if public_key_len != ED25519_PUBLIC_KEY_LENGTH:
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
+    raise PacketParsingError(
         "bad ed25519 MPI length '{}', expected {}'".format(
         public_key_len, ED25519_PUBLIC_KEY_LENGTH))
 
@@ -92,7 +93,7 @@ def get_pubkey_params(data):
   ptr += 1
 
   if public_key_prefix != ED25519_PUBLIC_KEY_PREFIX:
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
+    raise PacketParsingError(
         "bad ed25519 MPI prefix '{}', expected '{}'".format(
         public_key_prefix, ED25519_PUBLIC_KEY_PREFIX))
 

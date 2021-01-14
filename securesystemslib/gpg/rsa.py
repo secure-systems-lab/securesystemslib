@@ -30,7 +30,7 @@ except ImportError:
 from securesystemslib import exceptions
 from securesystemslib import formats
 from securesystemslib.gpg import util as gpg_util
-import securesystemslib.gpg.exceptions
+from securesystemslib.gpg.exceptions import PacketParsingError
 
 
 def create_pubkey(pubkey_info):
@@ -96,16 +96,14 @@ def get_pubkey_params(data):
   ptr += 2
   modulus = data[ptr:ptr + modulus_length]
   if len(modulus) != modulus_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
-        "This modulus MPI was truncated!")
+    raise PacketParsingError("This modulus MPI was truncated!")
   ptr += modulus_length
 
   exponent_e_length = gpg_util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   exponent_e = data[ptr:ptr + exponent_e_length]
   if len(exponent_e) != exponent_e_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
-        "This e MPI has been truncated!")
+    raise PacketParsingError("This e MPI has been truncated!")
 
   return {
     "e": binascii.hexlify(exponent_e).decode('ascii'),
@@ -139,8 +137,7 @@ def get_signature_params(data):
   ptr += 2
   signature = data[ptr:ptr + signature_length]
   if len(signature) != signature_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
-        "This signature was truncated!")
+    raise PacketParsingError("This signature was truncated!")
 
   return signature
 

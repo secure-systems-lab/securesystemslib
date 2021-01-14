@@ -31,7 +31,7 @@ except ImportError:
 
 from securesystemslib import exceptions
 from securesystemslib import process
-import securesystemslib.gpg.exceptions
+from securesystemslib.gpg.exceptions import PacketParsingError
 import securesystemslib.gpg.constants
 
 log = logging.getLogger(__name__)
@@ -157,7 +157,7 @@ def parse_packet_header(data, expected_type=None):
       body_len = (data[1] - 192 << 8) + data[2] + 192
 
     elif data[1] >= 224 and data[1] < 255:
-      raise securesystemslib.gpg.exceptions.PacketParsingError("New length "
+      raise PacketParsingError("New length "
           "format packets of partial body lengths are not supported")
 
     elif data[1] == 255:
@@ -166,8 +166,7 @@ def parse_packet_header(data, expected_type=None):
 
     else: # pragma: no cover
       # Unreachable: octet must be between 0 and 255
-      raise securesystemslib.gpg.exceptions.PacketParsingError("Invalid new "
-          "length")
+      raise PacketParsingError("Invalid new length")
 
   else:
     # In old format packet lengths the packet type is encoded in Bits 5-2 of
@@ -190,21 +189,19 @@ def parse_packet_header(data, expected_type=None):
       body_len = struct.unpack(">I", data[1:header_len])[0]
 
     elif length_type == 3:
-      raise securesystemslib.gpg.exceptions.PacketParsingError("Old length "
+      raise PacketParsingError("Old length "
           "format packets of indeterminate length are not supported")
 
     else: # pragma: no cover (unreachable)
       # Unreachable: bits 1-0 must be one of 0 to 3
-      raise securesystemslib.gpg.exceptions.PacketParsingError("Invalid old "
-          "length")
+      raise PacketParsingError("Invalid old length")
 
   if header_len is None or body_len is None: # pragma: no cover
     # Unreachable: One of above must have assigned lengths or raised error
-    raise securesystemslib.gpg.exceptions.PacketParsingError("Could not "
-        "determine packet length")
+    raise PacketParsingError("Could not determine packet length")
 
   if expected_type is not None and packet_type != expected_type:
-    raise securesystemslib.gpg.exceptions.PacketParsingError("Expected packet "
+    raise PacketParsingError("Expected packet "
         "{}, but got {} instead!".format(expected_type, packet_type))
 
   return packet_type, header_len, body_len, header_len + body_len
@@ -260,8 +257,7 @@ def parse_subpacket_header(data):
     length = struct.unpack(">I", data[1:length_len])[0]
 
   else: # pragma: no cover (unreachable)
-    raise securesystemslib.gpg.exceptions.PacketParsingError("Invalid "
-        "subpacket header")
+    raise PacketParsingError("Invalid subpacket header")
 
   return data[length_len], length_len + 1, length - 1, length_len + length
 

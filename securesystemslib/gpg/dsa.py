@@ -28,8 +28,8 @@ except ImportError:
 
 from securesystemslib import exceptions
 from securesystemslib import formats
+from securesystemslib.gpg.exceptions import PacketParsingError
 from securesystemslib.gpg import util as gpg_util
-import securesystemslib.gpg.exceptions
 
 
 def create_pubkey(pubkey_info):
@@ -99,32 +99,28 @@ def get_pubkey_params(data):
   ptr += 2
   prime_p = data[ptr:ptr + prime_p_length]
   if len(prime_p) != prime_p_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
-        "This MPI was truncated!")
+    raise PacketParsingError("This MPI was truncated!")
   ptr += prime_p_length
 
   group_order_q_length = gpg_util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   group_order_q = data[ptr:ptr + group_order_q_length]
   if len(group_order_q) != group_order_q_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
-        "This MPI has been truncated!")
+    raise PacketParsingError("This MPI has been truncated!")
   ptr += group_order_q_length
 
   generator_length = gpg_util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   generator = data[ptr:ptr + generator_length]
   if len(generator) != generator_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
-        "This MPI has been truncated!")
+    raise PacketParsingError("This MPI has been truncated!")
   ptr += generator_length
 
   value_y_length = gpg_util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   value_y = data[ptr:ptr + value_y_length]
   if len(value_y) != value_y_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
-        "This MPI has been truncated!")
+    raise PacketParsingError("This MPI has been truncated!")
 
   return {
     "y": binascii.hexlify(value_y).decode('ascii'),
@@ -165,16 +161,14 @@ def get_signature_params(data):
   ptr += 2
   r = data[ptr:ptr + r_length]
   if len(r) != r_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
-        "r-value truncated in signature")
+    raise PacketParsingError("r-value truncated in signature")
   ptr += r_length
 
   s_length = gpg_util.get_mpi_length(data[ptr: ptr+2])
   ptr += 2
   s = data[ptr: ptr + s_length]
   if len(s) != s_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
-        "s-value truncated in signature")
+    raise PacketParsingError("s-value truncated in signature")
 
   s = int(binascii.hexlify(s), 16)
   r = int(binascii.hexlify(r), 16)
