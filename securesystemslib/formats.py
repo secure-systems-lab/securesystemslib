@@ -79,7 +79,7 @@ import time
 import six
 
 from securesystemslib import exceptions
-import securesystemslib.schema as SCHEMA
+from securesystemslib import schema as SCHEMA
 
 # Note that in the schema definitions below, the 'SCHEMA.Object' types allow
 # additional keys which are not defined. Thus, any additions to them will be
