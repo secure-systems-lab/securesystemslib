@@ -31,8 +31,8 @@ except ImportError:
 
 from securesystemslib import exceptions
 from securesystemslib import process
+from securesystemslib.gpg import constants
 from securesystemslib.gpg.exceptions import PacketParsingError
-import securesystemslib.gpg.constants
 
 log = logging.getLogger(__name__)
 
@@ -313,11 +313,10 @@ def get_version():
     Version number string, e.g. "2.1.22"
 
   """
-  if not securesystemslib.gpg.constants.HAVE_GPG: # pragma: no cover
-    raise exceptions.UnsupportedLibraryError(
-        securesystemslib.gpg.constants.NO_GPG_MSG)
+  if not constants.HAVE_GPG: # pragma: no cover
+    raise exceptions.UnsupportedLibraryError(constants.NO_GPG_MSG)
 
-  command = securesystemslib.gpg.constants.GPG_VERSION_COMMAND
+  command = constants.GPG_VERSION_COMMAND
   gpg_process = process.run(command, stdout=process.PIPE,
       stderr=process.PIPE, universal_newlines=True)
 
@@ -342,7 +341,7 @@ def is_version_fully_supported():
   installed_version = get_version()
   # Excluded so that coverage does not vary in different test environments
   if (StrictVersion(installed_version) >=
-      StrictVersion(securesystemslib.gpg.constants.FULLY_SUPPORTED_MIN_VERSION)): # pragma: no cover
+      StrictVersion(constants.FULLY_SUPPORTED_MIN_VERSION)): # pragma: no cover
     return True
 
   else: # pragma: no cover
@@ -367,9 +366,8 @@ def get_hashing_class(hash_algorithm_id):
     A pyca/cryptography hashing class
 
   """
-  supported_hashing_algorithms = [securesystemslib.gpg.constants.SHA1,
-      securesystemslib.gpg.constants.SHA256,
-      securesystemslib.gpg.constants.SHA512]
+  supported_hashing_algorithms = [constants.SHA1, constants.SHA256,
+      constants.SHA512]
   corresponding_hashing_classes = [hashing.SHA1, hashing.SHA256,
       hashing.SHA512]
 

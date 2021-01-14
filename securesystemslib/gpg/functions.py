@@ -23,9 +23,14 @@ from securesystemslib import formats
 import securesystemslib.gpg.common
 from securesystemslib.gpg.exceptions import (
     CommandError, KeyExpirationError)
-from securesystemslib.gpg.constants import (GPG_SIGN_COMMAND,
-    SIGNATURE_HANDLERS, FULLY_SUPPORTED_MIN_VERSION, SHA256,
-    HAVE_GPG, NO_GPG_MSG)
+from securesystemslib.gpg.constants import (
+    FULLY_SUPPORTED_MIN_VERSION,
+    GPG_EXPORT_PUBKEY_COMMAND,
+    GPG_SIGN_COMMAND,
+    HAVE_GPG,
+    NO_GPG_MSG,
+    SHA256,
+    SIGNATURE_HANDLERS)
 
 from securesystemslib import process
 from securesystemslib.gpg.rsa import CRYPTO
@@ -270,8 +275,7 @@ def export_pubkey(keyid, homedir=None):
 
   # TODO: Consider adopting command error handling from `create_signature`
   # above, e.g. in a common 'run gpg command' utility function
-  command = securesystemslib.gpg.constants.GPG_EXPORT_PUBKEY_COMMAND.format(
-      keyid=keyid, homearg=homearg)
+  command = GPG_EXPORT_PUBKEY_COMMAND.format(keyid=keyid, homearg=homearg)
   gpg_process = process.run(command, stdout=process.PIPE, stderr=process.PIPE)
 
   key_packet = gpg_process.stdout
