@@ -322,11 +322,11 @@ def get_version():
         securesystemslib.gpg.constants.NO_GPG_MSG)
 
   command = securesystemslib.gpg.constants.GPG_VERSION_COMMAND
-  process = securesystemslib.process.run(command,
+  gpg_process = securesystemslib.process.run(command,
       stdout=securesystemslib.process.PIPE,
       stderr=securesystemslib.process.PIPE, universal_newlines=True)
 
-  full_version_info = process.stdout
+  full_version_info = gpg_process.stdout
   version_string = re.search(r'(\d\.\d\.\d+)', full_version_info).group(1)
 
   return version_string

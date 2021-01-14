@@ -108,19 +108,19 @@ def create_signature(content, keyid=None, homedir=None):
 
   command = GPG_SIGN_COMMAND.format(keyarg=keyarg, homearg=homearg)
 
-  process = securesystemslib.process.run(command, input=content, check=False,
+  gpg_process = securesystemslib.process.run(command, input=content, check=False,
       stdout=securesystemslib.process.PIPE,
       stderr=securesystemslib.process.PIPE)
 
   # TODO: It's suggested to take a look at `--status-fd` for proper error
   # reporting, as there is no clear distinction between the return codes
   # https://lists.gnupg.org/pipermail/gnupg-devel/2005-December/022559.html
-  if process.returncode != 0:
+  if gpg_process.returncode != 0:
     raise securesystemslib.gpg.exceptions.CommandError("Command '{}' returned "
-        "non-zero exit status '{}', stderr was:\n{}.".format(process.args,
-        process.returncode, process.stderr.decode()))
+        "non-zero exit status '{}', stderr was:\n{}.".format(gpg_process.args,
+        gpg_process.returncode, gpg_process.stderr.decode()))
 
-  signature_data = process.stdout
+  signature_data = gpg_process.stdout
   signature = securesystemslib.gpg.common.parse_signature_packet(
       signature_data)
 
@@ -272,11 +272,11 @@ def export_pubkey(keyid, homedir=None):
   # above, e.g. in a common 'run gpg command' utility function
   command = securesystemslib.gpg.constants.GPG_EXPORT_PUBKEY_COMMAND.format(
       keyid=keyid, homearg=homearg)
-  process = securesystemslib.process.run(command,
+  gpg_process = securesystemslib.process.run(command,
       stdout=securesystemslib.process.PIPE,
       stderr=securesystemslib.process.PIPE)
 
-  key_packet = process.stdout
+  key_packet = gpg_process.stdout
   key_bundle = securesystemslib.gpg.common.get_pubkey_bundle(key_packet, keyid)
 
   return key_bundle
