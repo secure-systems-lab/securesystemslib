@@ -30,7 +30,8 @@ from securesystemslib.gpg.constants import (
     GPG_SIGN_COMMAND,
     HAVE_GPG,
     NO_GPG_MSG,
-    SHA256,
+    SHA256)
+from securesystemslib.gpg.handlers import (
     SIGNATURE_HANDLERS)
 
 from securesystemslib import process

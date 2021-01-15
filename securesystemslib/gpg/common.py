@@ -22,21 +22,21 @@ import binascii
 import logging
 import collections
 
+from securesystemslib import formats
 from securesystemslib.gpg import util as gpg_util
 from securesystemslib.gpg.exceptions import (PacketVersionNotSupportedError,
     SignatureAlgorithmNotSupportedError, KeyNotFoundError, PacketParsingError)
-
 from securesystemslib.gpg.constants import (
     PACKET_TYPE_PRIMARY_KEY, PACKET_TYPE_USER_ID, PACKET_TYPE_USER_ATTR,
     PACKET_TYPE_SUB_KEY, PACKET_TYPE_SIGNATURE,
     SUPPORTED_PUBKEY_PACKET_VERSIONS, SIGNATURE_TYPE_BINARY,
     SIGNATURE_TYPE_CERTIFICATES, SIGNATURE_TYPE_SUB_KEY_BINDING,
-    SUPPORTED_SIGNATURE_PACKET_VERSIONS, SUPPORTED_SIGNATURE_ALGORITHMS,
-    SIGNATURE_HANDLERS, FULL_KEYID_SUBPACKET, PARTIAL_KEYID_SUBPACKET,
+    SUPPORTED_SIGNATURE_PACKET_VERSIONS,
+    FULL_KEYID_SUBPACKET, PARTIAL_KEYID_SUBPACKET,
     SHA1,SHA256, SHA512, KEY_EXPIRATION_SUBPACKET, PRIMARY_USERID_SUBPACKET,
     SIG_CREATION_SUBPACKET)
-
-from securesystemslib import formats
+from securesystemslib.gpg.handlers import (
+    SIGNATURE_HANDLERS, SUPPORTED_SIGNATURE_ALGORITHMS)
 
 log = logging.getLogger(__name__)
 
