@@ -9,17 +9,16 @@ Uploaders:
  Justin Cappos <jcappos@nyu.edu>,
 Build-Depends:
  dh-python,
- debhelper-compat (= 12),
+ debhelper-compat (= 13),
  python3-all,
  python3-setuptools,
  python3-nacl,
  python3-cryptography,
  python3-colorama,
  python3-mock,
- python3-dateutil,
  python3-six,
  gnupg2,
-Standards-Version: 4.5.0
+Standards-Version: 4.5.1
 Rules-Requires-Root: no
 Homepage: https://ssl.engineering.nyu.edu
 Vcs-Git: https://github.com/secure-systems-lab/securesystemslib.git
