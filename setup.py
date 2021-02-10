@@ -107,7 +107,8 @@ setup(
   install_requires = ['six>=1.11.0', 'subprocess32; python_version < "3"'],
   extras_require = {
       'colors': ['colorama>=0.3.9'],
-      'crypto': ['cryptography>=2.6'],
+      'crypto:python_version < "3"': ['cryptography>=2.6,<3.4'],
+      'crypto:python_version >= "3"': ['cryptography>=2.6'],
       'pynacl': ['pynacl>1.2.0']},
   tests_require = 'mock; python_version < "3.3"',
   packages = find_packages(exclude=['tests', 'debian']),
