@@ -13,7 +13,19 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         toxenv: [py]
 
-        # TODO add special cases: purepy27, purepy38, py27-no-gpg, py38-no-gpg
+        include:
+          - python-version: 2.7
+            os: ubuntu-latest
+            toxenv: purepy27
+          - python-version: 2.7
+            os: ubuntu-latest
+            toxenv: py27-no-gpg
+          - python-version: 3.8
+            os: ubuntu-latest
+            toxenv: purepy38
+          - python-version: 3.8
+            os: ubuntu-latest
+            toxenv: py38-no-gpg
 
     runs-on: ${{ matrix.os }}
 
