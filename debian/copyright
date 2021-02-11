@@ -1,11 +1,10 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: securesystemslib
+Upstream-Contact: NYU Secure Systems Lab <securesystemslib-dev@googlegroups.com>
 Source: https://github.com/secure-systems-lab/securesystemslib
 
 Files: *
-Copyright: 2015-2017 New York University 
-License: MIT
-
+Copyright: 2016 New York University
 License: MIT
  .
  The MIT License (MIT)

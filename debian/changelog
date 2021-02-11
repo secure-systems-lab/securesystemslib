@@ -1,3 +1,28 @@
+python-securesystemslib (0.18.0-2) unstable; urgency=medium
+
+  Fix misc lintian warnings and other Debian metadata changes:
+
+  * d/watch:
+    - update to latest version 4 (fix older-debian-watch-file-standard)
+    - add missing trailing newline
+  * d/patches/01_use_python3_interpreter_in_tests.diff:
+    - add "Forwarded: not-needed" header field for downstream-only patch
+      (fix patch-not-forwarded-upstream)
+  * d/control:
+    - specify upstream tracking branch for downstream-related changes
+    - use correct section according to package name, i.e. "python"
+      (fix wrong-section-according-to-package-name)
+  * d/upstream/metadata:
+    - add basic metadata file (fix upstream-metadata-file-is-missing)
+  * d/copyright:
+    - add Upstream-Contact field
+    - remove duplicate License field
+    - use lower-maintenance first publication date instead of date range
+  * d/changelog:
+    - amend 0.18.0-1 entry to mention upstream signing key change
+
+ -- Lukas Puehringer <lukas.puehringer@nyu.edu>  Tue, 02 Feb 2021 10:55:52 +0200
+
 python-securesystemslib (0.18.0-1) unstable; urgency=medium
 
   * New upstream release includes among other things:
@@ -9,6 +34,8 @@ python-securesystemslib (0.18.0-1) unstable; urgency=medium
     - remove obsolete python-dateutil dependency,
     - bump standards version to 4.5.1,
     - and compat to 13.
+
+  * Update d/upstream/signing-key.asc
 
  -- Lukas Puehringer <lukas.puehringer@nyu.edu>  Wed, 09 Dec 2020 08:44:34 +0200
 

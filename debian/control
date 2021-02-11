@@ -1,5 +1,5 @@
 Source: python-securesystemslib
-Section: utils
+Section: python
 Priority: optional
 Maintainer: NYU Secure Systems Lab <securesystemslib-dev@googlegroups.com>
 Uploaders:
@@ -21,7 +21,7 @@ Build-Depends:
 Standards-Version: 4.5.1
 Rules-Requires-Root: no
 Homepage: https://ssl.engineering.nyu.edu
-Vcs-Git: https://github.com/secure-systems-lab/securesystemslib.git
+Vcs-Git: https://github.com/secure-systems-lab/securesystemslib.git -b debian
 Vcs-Browser: https://github.com/secure-systems-lab/securesystemslib/
 
 Package: python3-securesystemslib
