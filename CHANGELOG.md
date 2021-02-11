@@ -1,5 +1,25 @@
 # Changelog
 
+## securesystemslib v0.19.0
+
+### Added
+* Enable setting which GPG client to use through an environment variable (#315)
+
+### Changed
+* Dropped support for EOL Python 3.5 and add support for Python 3.9 (#314)
+* Converted the default local storage backend, FilesystemBackend, to be a
+  singleton (#302)
+* Migrated CI from travis-ci.org to travis-ci.com (#303) then later to GitHub
+  Actions (#324)
+* Bump dependencies: cffi (#306, 329), cryptography (#322, #333)
+* Updated Debian packaging metadata (#313 & #318)
+* Improved messaging for issues automatically filed on upstream changes to our
+  vendored ed25519 dependency (#317)
+* Updated the ed25519 tracking script for upstream's branch name change (#331)
+
+### Fixed
+* Empty lists should not be used as the default argument for a function (#304)
+
 ## securesystemslib v0.18.0
 
 ### Added
