@@ -4,9 +4,6 @@ Secure Systems Library
 .. image:: https://github.com/secure-systems-lab/securesystemslib/workflows/Run%20Securesystemslib%20tests/badge.svg
    :target: https://github.com/secure-systems-lab/securesystemslib/actions?query=workflow%3A%22Run+TUF+tests%22+branch%3Amaster
 
-.. image:: https://coveralls.io/repos/github/secure-systems-lab/securesystemslib/badge.svg?branch=master
-   :target: https://coveralls.io/github/secure-systems-lab/securesystemslib?branch=master
-
 .. image:: https://api.dependabot.com/badges/status?host=github&repo=secure-systems-lab/securesystemslib
    :target: https://api.dependabot.com/badges/status?host=github&repo=secure-systems-lab/securesystemslib
 
