@@ -11,7 +11,9 @@
   singleton (#302)
 * Migrated CI from travis-ci.org to travis-ci.com (#303) then later to GitHub
   Actions (#324)
-* Bump dependencies: cffi (#306, 329), cryptography (#322, #333)
+* Bump dependencies: cffi (#306, #329), cryptography (#322, #333). NOTE: the
+  latest version of cryptography is no longer used on Python 2, as that is not
+  supported.
 * Updated Debian packaging metadata (#313 & #318)
 * Improved messaging for issues automatically filed on upstream changes to our
   vendored ed25519 dependency (#317)
