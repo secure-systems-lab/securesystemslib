@@ -19,17 +19,17 @@ import binascii
 CRYPTO = True
 NO_CRYPTO_MSG = 'DSA key support for GPG requires the cryptography library'
 try:
-  import cryptography.hazmat.primitives.asymmetric.dsa as dsa
-  import cryptography.hazmat.backends as backends
-  import cryptography.hazmat.primitives.asymmetric.utils as dsautils
-  import cryptography.exceptions
+  from cryptography.exceptions import InvalidSignature
+  from cryptography.hazmat import backends
+  from cryptography.hazmat.primitives.asymmetric import dsa
+  from cryptography.hazmat.primitives.asymmetric import utils as dsautils
 except ImportError:
   CRYPTO = False
 
-import securesystemslib.gpg.util
-import securesystemslib.gpg.exceptions
-import securesystemslib.exceptions
-import securesystemslib.formats
+from securesystemslib import exceptions
+from securesystemslib import formats
+from securesystemslib.gpg.exceptions import PacketParsingError
+from securesystemslib.gpg import util as gpg_util
 
 
 def create_pubkey(pubkey_info):
@@ -56,9 +56,9 @@ def create_pubkey(pubkey_info):
 
   """
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
-  securesystemslib.formats.GPG_DSA_PUBKEY_SCHEMA.check_match(pubkey_info)
+  formats.GPG_DSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
   y = int(pubkey_info['keyval']['public']['y'], 16)
   g = int(pubkey_info['keyval']['public']['g'], 16)
@@ -95,38 +95,32 @@ def get_pubkey_params(data):
   """
   ptr = 0
 
-  prime_p_length = securesystemslib.gpg.util.get_mpi_length(data[ptr: ptr + 2])
+  prime_p_length = gpg_util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   prime_p = data[ptr:ptr + prime_p_length]
   if len(prime_p) != prime_p_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
-        "This MPI was truncated!")
+    raise PacketParsingError("This MPI was truncated!")
   ptr += prime_p_length
 
-  group_order_q_length = securesystemslib.gpg.util.get_mpi_length(
-      data[ptr: ptr + 2])
+  group_order_q_length = gpg_util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   group_order_q = data[ptr:ptr + group_order_q_length]
   if len(group_order_q) != group_order_q_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
-        "This MPI has been truncated!")
+    raise PacketParsingError("This MPI has been truncated!")
   ptr += group_order_q_length
 
-  generator_length = securesystemslib.gpg.util.get_mpi_length(
-      data[ptr: ptr + 2])
+  generator_length = gpg_util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   generator = data[ptr:ptr + generator_length]
   if len(generator) != generator_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
-        "This MPI has been truncated!")
+    raise PacketParsingError("This MPI has been truncated!")
   ptr += generator_length
 
-  value_y_length = securesystemslib.gpg.util.get_mpi_length(data[ptr: ptr + 2])
+  value_y_length = gpg_util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   value_y = data[ptr:ptr + value_y_length]
   if len(value_y) != value_y_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
-        "This MPI has been truncated!")
+    raise PacketParsingError("This MPI has been truncated!")
 
   return {
     "y": binascii.hexlify(value_y).decode('ascii'),
@@ -160,23 +154,21 @@ def get_signature_params(data):
     The decoded signature buffer
   """
   if not CRYPTO: # pragma: no cover
-    return securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    return exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   ptr = 0
-  r_length = securesystemslib.gpg.util.get_mpi_length(data[ptr:ptr+2])
+  r_length = gpg_util.get_mpi_length(data[ptr:ptr+2])
   ptr += 2
   r = data[ptr:ptr + r_length]
   if len(r) != r_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
-        "r-value truncated in signature")
+    raise PacketParsingError("r-value truncated in signature")
   ptr += r_length
 
-  s_length = securesystemslib.gpg.util.get_mpi_length(data[ptr: ptr+2])
+  s_length = gpg_util.get_mpi_length(data[ptr: ptr+2])
   ptr += 2
   s = data[ptr: ptr + s_length]
   if len(s) != s_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
-        "s-value truncated in signature")
+    raise PacketParsingError("s-value truncated in signature")
 
   s = int(binascii.hexlify(s), 16)
   r = int(binascii.hexlify(r), 16)
@@ -228,16 +220,16 @@ def verify_signature(signature_object, pubkey_info, content,
 
   """
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
-  securesystemslib.formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
-  securesystemslib.formats.GPG_DSA_PUBKEY_SCHEMA.check_match(pubkey_info)
+  formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
+  formats.GPG_DSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
-  hasher = securesystemslib.gpg.util.get_hashing_class(hash_algorithm_id)
+  hasher = gpg_util.get_hashing_class(hash_algorithm_id)
 
   pubkey_object = create_pubkey(pubkey_info)
 
-  digest = securesystemslib.gpg.util.hash_object(
+  digest = gpg_util.hash_object(
       binascii.unhexlify(signature_object['other_headers']),
       hasher(), content)
 
@@ -248,5 +240,5 @@ def verify_signature(signature_object, pubkey_info, content,
       dsautils.Prehashed(hasher())
     )
     return True
-  except cryptography.exceptions.InvalidSignature:
+  except InvalidSignature:
     return False

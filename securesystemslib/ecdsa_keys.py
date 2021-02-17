@@ -51,7 +51,7 @@ try:
   from cryptography.hazmat.primitives.serialization import load_pem_public_key
   from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
-  import cryptography.exceptions
+  from cryptography.exceptions import (InvalidSignature, UnsupportedAlgorithm)
 
   _SCHEME_HASHER = {
     'ecdsa-sha2-nistp256': ec.ECDSA(hashes.SHA256()),
@@ -62,8 +62,8 @@ except ImportError:
   CRYPTO = False
 
 # Perform object format-checking and add ability to handle/raise exceptions.
-import securesystemslib.formats
-import securesystemslib.exceptions
+from securesystemslib import exceptions
+from securesystemslib import formats
 
 _SUPPORTED_ECDSA_SCHEMES = ['ecdsa-sha2-nistp256']
 
@@ -131,14 +131,14 @@ def generate_public_and_private(scheme='ecdsa-sha2-nistp256'):
   """
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Does 'scheme' have the correct format?
   # Verify that 'scheme' is of the correct type, and that it's one of the
   # supported ECDSA .  It must conform to
   # 'securesystemslib.formats.ECDSA_SCHEME_SCHEMA'.  Raise
   # 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
+  formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   public_key = None
   private_key = None
@@ -153,7 +153,7 @@ def generate_public_and_private(scheme='ecdsa-sha2-nistp256'):
   # The ECDSA_SCHEME_SCHEMA.check_match() above should have detected any
   # invalid 'scheme'.  This is a defensive check.
   else: #pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedAlgorithmError('An unsupported'
+    raise exceptions.UnsupportedAlgorithmError('An unsupported'
       ' scheme specified: ' + repr(scheme) + '.\n  Supported'
       ' algorithms: ' + repr(_SUPPORTED_ECDSA_SCHEMES))
 
@@ -220,19 +220,19 @@ def create_signature(public_key, private_key, data, scheme='ecdsa-sha2-nistp256'
   """
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Do 'public_key' and 'private_key' have the correct format?
   # This check will ensure that the arguments conform to
   # 'securesystemslib.formats.PEMECDSA_SCHEMA'.  Raise
   # 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.PEMECDSA_SCHEMA.check_match(public_key)
+  formats.PEMECDSA_SCHEMA.check_match(public_key)
 
   # Is 'private_key' properly formatted?
-  securesystemslib.formats.PEMECDSA_SCHEMA.check_match(private_key)
+  formats.PEMECDSA_SCHEMA.check_match(private_key)
 
   # Is 'scheme' properly formatted?
-  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
+  formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
 
   # 'ecdsa-sha2-nistp256' is the only currently supported ECDSA scheme, so this
   # if-clause isn't strictly needed.  Nevertheless, the conditional statement
@@ -246,13 +246,13 @@ def create_signature(public_key, private_key, data, scheme='ecdsa-sha2-nistp256'
       signature = private_key.sign(data, ec.ECDSA(hashes.SHA256()))
 
     except TypeError as e:
-      raise securesystemslib.exceptions.CryptoError('Could not create'
+      raise exceptions.CryptoError('Could not create'
         ' signature: ' + str(e))
 
   # A defensive check for an invalid 'scheme'.  The
   # ECDSA_SCHEME_SCHEMA.check_match() above should have already validated it.
   else: #pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedAlgorithmError('Unsupported'
+    raise exceptions.UnsupportedAlgorithmError('Unsupported'
       ' signature scheme is specified: ' + repr(scheme))
 
   return signature, scheme
@@ -311,19 +311,19 @@ def verify_signature(public_key, scheme, signature, data):
   """
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Are the arguments properly formatted?
   # If not, raise 'securesystemslib.exceptions.FormatError'.
-  securesystemslib.formats.PEMECDSA_SCHEMA.check_match(public_key)
-  securesystemslib.formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
-  securesystemslib.formats.ECDSASIGNATURE_SCHEMA.check_match(signature)
+  formats.PEMECDSA_SCHEMA.check_match(public_key)
+  formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
+  formats.ECDSASIGNATURE_SCHEMA.check_match(signature)
 
   ecdsa_key = load_pem_public_key(public_key.encode('utf-8'),
       backend=default_backend())
 
   if not isinstance(ecdsa_key, ec.EllipticCurvePublicKey):
-    raise securesystemslib.exceptions.FormatError('Invalid ECDSA public'
+    raise exceptions.FormatError('Invalid ECDSA public'
       ' key: ' + repr(public_key))
 
   else:
@@ -335,7 +335,7 @@ def verify_signature(public_key, scheme, signature, data):
     ecdsa_key.verify(signature, data, _SCHEME_HASHER[scheme])
     return True
 
-  except (TypeError, cryptography.exceptions.InvalidSignature):
+  except (TypeError, InvalidSignature):
     return False
 
 
@@ -394,15 +394,15 @@ def create_ecdsa_public_and_private_from_pem(pem, password=None):
   """
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Does 'pem' have the correct format?
   # This check will ensure 'pem' conforms to
   # 'securesystemslib.formats.ECDSARSA_SCHEMA'.
-  securesystemslib.formats.PEMECDSA_SCHEMA.check_match(pem)
+  formats.PEMECDSA_SCHEMA.check_match(pem)
 
   if password is not None:
-    securesystemslib.formats.PASSWORD_SCHEMA.check_match(password)
+    formats.PASSWORD_SCHEMA.check_match(password)
     password = password.encode('utf-8')
 
   else:
@@ -418,8 +418,8 @@ def create_ecdsa_public_and_private_from_pem(pem, password=None):
     private = load_pem_private_key(pem.encode('utf-8'), password=password,
       backend=default_backend())
 
-  except (ValueError, cryptography.exceptions.UnsupportedAlgorithm) as e:
-    raise securesystemslib.exceptions.CryptoError('Could not import private'
+  except (ValueError, UnsupportedAlgorithm) as e:
+    raise exceptions.CryptoError('Could not import private'
       ' PEM.\n' + str(e))
 
   public = private.public_key()
@@ -481,14 +481,14 @@ def create_ecdsa_encrypted_pem(private_pem, passphrase):
   """
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # Does 'private_key' have the correct format?
   # Raise 'securesystemslib.exceptions.FormatError' if the check fails.
-  securesystemslib.formats.PEMRSA_SCHEMA.check_match(private_pem)
+  formats.PEMRSA_SCHEMA.check_match(private_pem)
 
   # Does 'passphrase' have the correct format?
-  securesystemslib.formats.PASSWORD_SCHEMA.check_match(passphrase)
+  formats.PASSWORD_SCHEMA.check_match(passphrase)
 
   private = load_pem_private_key(private_pem.encode('utf-8'), password=None,
     backend=default_backend())

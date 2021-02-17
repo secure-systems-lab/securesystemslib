@@ -24,15 +24,15 @@ from distutils.version import StrictVersion # pylint: disable=no-name-in-module,
 CRYPTO = True
 NO_CRYPTO_MSG = 'gpg.utils requires the cryptography library'
 try:
-  import cryptography.hazmat.backends as backends
-  import cryptography.hazmat.primitives.hashes as hashing
+  from cryptography.hazmat import backends
+  from cryptography.hazmat.primitives import hashes as hashing
 except ImportError:
   CRYPTO = False
 
-import securesystemslib.exceptions
-import securesystemslib.gpg.exceptions
-import securesystemslib.process
-import securesystemslib.gpg.constants
+from securesystemslib import exceptions
+from securesystemslib import process
+from securesystemslib.gpg import constants
+from securesystemslib.gpg.exceptions import PacketParsingError
 
 log = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ def hash_object(headers, algorithm, content):
     The RFC4880-compliant hashed buffer
   """
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   # As per RFC4880 Section 5.2.4., we need to hash the content,
   # signature headers and add a very opinionated trailing header
@@ -157,7 +157,7 @@ def parse_packet_header(data, expected_type=None):
       body_len = (data[1] - 192 << 8) + data[2] + 192
 
     elif data[1] >= 224 and data[1] < 255:
-      raise securesystemslib.gpg.exceptions.PacketParsingError("New length "
+      raise PacketParsingError("New length "
           "format packets of partial body lengths are not supported")
 
     elif data[1] == 255:
@@ -166,8 +166,7 @@ def parse_packet_header(data, expected_type=None):
 
     else: # pragma: no cover
       # Unreachable: octet must be between 0 and 255
-      raise securesystemslib.gpg.exceptions.PacketParsingError("Invalid new "
-          "length")
+      raise PacketParsingError("Invalid new length")
 
   else:
     # In old format packet lengths the packet type is encoded in Bits 5-2 of
@@ -190,21 +189,19 @@ def parse_packet_header(data, expected_type=None):
       body_len = struct.unpack(">I", data[1:header_len])[0]
 
     elif length_type == 3:
-      raise securesystemslib.gpg.exceptions.PacketParsingError("Old length "
+      raise PacketParsingError("Old length "
           "format packets of indeterminate length are not supported")
 
     else: # pragma: no cover (unreachable)
       # Unreachable: bits 1-0 must be one of 0 to 3
-      raise securesystemslib.gpg.exceptions.PacketParsingError("Invalid old "
-          "length")
+      raise PacketParsingError("Invalid old length")
 
   if header_len is None or body_len is None: # pragma: no cover
     # Unreachable: One of above must have assigned lengths or raised error
-    raise securesystemslib.gpg.exceptions.PacketParsingError("Could not "
-        "determine packet length")
+    raise PacketParsingError("Could not determine packet length")
 
   if expected_type is not None and packet_type != expected_type:
-    raise securesystemslib.gpg.exceptions.PacketParsingError("Expected packet "
+    raise PacketParsingError("Expected packet "
         "{}, but got {} instead!".format(expected_type, packet_type))
 
   return packet_type, header_len, body_len, header_len + body_len
@@ -229,7 +226,7 @@ def compute_keyid(pubkey_packet_data):
     The RFC4880-compliant hashed buffer
   """
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   hasher = hashing.Hash(hashing.SHA1(), backend=backends.default_backend())
   hasher.update(b'\x99')
@@ -260,8 +257,7 @@ def parse_subpacket_header(data):
     length = struct.unpack(">I", data[1:length_len])[0]
 
   else: # pragma: no cover (unreachable)
-    raise securesystemslib.gpg.exceptions.PacketParsingError("Invalid "
-        "subpacket header")
+    raise PacketParsingError("Invalid subpacket header")
 
   return data[length_len], length_len + 1, length - 1, length_len + length
 
@@ -317,16 +313,14 @@ def get_version():
     Version number string, e.g. "2.1.22"
 
   """
-  if not securesystemslib.gpg.constants.HAVE_GPG: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(
-        securesystemslib.gpg.constants.NO_GPG_MSG)
+  if not constants.HAVE_GPG: # pragma: no cover
+    raise exceptions.UnsupportedLibraryError(constants.NO_GPG_MSG)
 
-  command = securesystemslib.gpg.constants.GPG_VERSION_COMMAND
-  process = securesystemslib.process.run(command,
-      stdout=securesystemslib.process.PIPE,
-      stderr=securesystemslib.process.PIPE, universal_newlines=True)
+  command = constants.GPG_VERSION_COMMAND
+  gpg_process = process.run(command, stdout=process.PIPE,
+      stderr=process.PIPE, universal_newlines=True)
 
-  full_version_info = process.stdout
+  full_version_info = gpg_process.stdout
   version_string = re.search(r'(\d\.\d\.\d+)', full_version_info).group(1)
 
   return version_string
@@ -347,7 +341,7 @@ def is_version_fully_supported():
   installed_version = get_version()
   # Excluded so that coverage does not vary in different test environments
   if (StrictVersion(installed_version) >=
-      StrictVersion(securesystemslib.gpg.constants.FULLY_SUPPORTED_MIN_VERSION)): # pragma: no cover
+      StrictVersion(constants.FULLY_SUPPORTED_MIN_VERSION)): # pragma: no cover
     return True
 
   else: # pragma: no cover
@@ -372,9 +366,8 @@ def get_hashing_class(hash_algorithm_id):
     A pyca/cryptography hashing class
 
   """
-  supported_hashing_algorithms = [securesystemslib.gpg.constants.SHA1,
-      securesystemslib.gpg.constants.SHA256,
-      securesystemslib.gpg.constants.SHA512]
+  supported_hashing_algorithms = [constants.SHA1, constants.SHA256,
+      constants.SHA512]
   corresponding_hashing_classes = [hashing.SHA1, hashing.SHA256,
       hashing.SHA512]
 

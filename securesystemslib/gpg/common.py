@@ -22,21 +22,21 @@ import binascii
 import logging
 import collections
 
-import securesystemslib.gpg.util
+from securesystemslib import formats
+from securesystemslib.gpg import util as gpg_util
 from securesystemslib.gpg.exceptions import (PacketVersionNotSupportedError,
     SignatureAlgorithmNotSupportedError, KeyNotFoundError, PacketParsingError)
-
 from securesystemslib.gpg.constants import (
     PACKET_TYPE_PRIMARY_KEY, PACKET_TYPE_USER_ID, PACKET_TYPE_USER_ATTR,
     PACKET_TYPE_SUB_KEY, PACKET_TYPE_SIGNATURE,
     SUPPORTED_PUBKEY_PACKET_VERSIONS, SIGNATURE_TYPE_BINARY,
     SIGNATURE_TYPE_CERTIFICATES, SIGNATURE_TYPE_SUB_KEY_BINDING,
-    SUPPORTED_SIGNATURE_PACKET_VERSIONS, SUPPORTED_SIGNATURE_ALGORITHMS,
-    SIGNATURE_HANDLERS, FULL_KEYID_SUBPACKET, PARTIAL_KEYID_SUBPACKET,
+    SUPPORTED_SIGNATURE_PACKET_VERSIONS,
+    FULL_KEYID_SUBPACKET, PARTIAL_KEYID_SUBPACKET,
     SHA1,SHA256, SHA512, KEY_EXPIRATION_SUBPACKET, PRIMARY_USERID_SUBPACKET,
     SIG_CREATION_SUBPACKET)
-
-import securesystemslib.formats
+from securesystemslib.gpg.handlers import (
+    SIGNATURE_HANDLERS, SUPPORTED_SIGNATURE_ALGORITHMS)
 
 log = logging.getLogger(__name__)
 
@@ -117,13 +117,13 @@ def parse_pubkey_payload(data):
   keyinfo['type'] = SUPPORTED_SIGNATURE_ALGORITHMS[algorithm]['type']
   keyinfo['method'] = SUPPORTED_SIGNATURE_ALGORITHMS[algorithm]['method']
   handler = SIGNATURE_HANDLERS[keyinfo['type']]
-  keyinfo['keyid'] = securesystemslib.gpg.util.compute_keyid(data)
+  keyinfo['keyid'] = gpg_util.compute_keyid(data)
   key_params = handler.get_pubkey_params(data[ptr:])
 
   return {
     "method": keyinfo['method'],
     "type": keyinfo['type'],
-    "hashes": [securesystemslib.formats.GPG_HASH_ALGORITHM_STRING],
+    "hashes": [formats.GPG_HASH_ALGORITHM_STRING],
     "creation_time": time_of_creation[0],
     "keyid": keyinfo['keyid'],
     "keyval" : {
@@ -182,7 +182,7 @@ def parse_pubkey_bundle(data):
   while position < len(data):
     try:
       packet_type, header_len, body_len, packet_length = \
-          securesystemslib.gpg.util.parse_packet_header(data[position:])
+          gpg_util.parse_packet_header(data[position:])
 
       packet = data[position:position+packet_length]
       payload = packet[header_len:]
@@ -527,7 +527,7 @@ def get_pubkey_bundle(data, keyid):
     optional subkeys.
 
   """
-  securesystemslib.formats.KEYID_SCHEMA.check_match(keyid)
+  formats.KEYID_SCHEMA.check_match(keyid)
   if not data:
     raise KeyNotFoundError("Could not find gpg key '{}' in empty exported key "
         "data.".format(keyid))
@@ -617,7 +617,7 @@ def parse_signature_packet(data, supported_signature_types=None,
   if not supported_hash_algorithms:
     supported_hash_algorithms = {SHA256}
 
-  _, header_len, _, packet_len = securesystemslib.gpg.util.parse_packet_header(
+  _, header_len, _, packet_len = gpg_util.parse_packet_header(
       data, PACKET_TYPE_SIGNATURE)
 
   data = bytearray(data[header_len:packet_len])
@@ -668,8 +668,7 @@ def parse_signature_packet(data, supported_signature_types=None,
   hashed_octet_count = struct.unpack(">H", data[ptr:ptr+2])[0]
   ptr += 2
   hashed_subpackets = data[ptr:ptr+hashed_octet_count]
-  hashed_subpacket_info = securesystemslib.gpg.util.parse_subpackets(
-      hashed_subpackets)
+  hashed_subpacket_info = gpg_util.parse_subpackets(hashed_subpackets)
 
   # Check whether we were actually able to read this much hashed octets
   if len(hashed_subpackets) != hashed_octet_count: # pragma: no cover
@@ -683,8 +682,7 @@ def parse_signature_packet(data, supported_signature_types=None,
   ptr += 2
 
   unhashed_subpackets = data[ptr:ptr+unhashed_octet_count]
-  unhashed_subpacket_info = securesystemslib.gpg.util.parse_subpackets(
-      unhashed_subpackets)
+  unhashed_subpacket_info = gpg_util.parse_subpackets(unhashed_subpackets)
 
   ptr += unhashed_octet_count
 

@@ -18,15 +18,23 @@
 import logging
 import time
 
-import securesystemslib.exceptions
-import securesystemslib.gpg.common
-import securesystemslib.gpg.exceptions
-from securesystemslib.gpg.constants import (GPG_SIGN_COMMAND,
-    SIGNATURE_HANDLERS, FULLY_SUPPORTED_MIN_VERSION, SHA256,
-    HAVE_GPG, NO_GPG_MSG)
+from securesystemslib import exceptions
+from securesystemslib import formats
+from securesystemslib.gpg.common import (
+    get_pubkey_bundle, parse_signature_packet)
+from securesystemslib.gpg.exceptions import (
+    CommandError, KeyExpirationError)
+from securesystemslib.gpg.constants import (
+    FULLY_SUPPORTED_MIN_VERSION,
+    GPG_EXPORT_PUBKEY_COMMAND,
+    GPG_SIGN_COMMAND,
+    HAVE_GPG,
+    NO_GPG_MSG,
+    SHA256)
+from securesystemslib.gpg.handlers import (
+    SIGNATURE_HANDLERS)
 
-import securesystemslib.process
-import securesystemslib.formats
+from securesystemslib import process
 from securesystemslib.gpg.rsa import CRYPTO
 
 log = logging.getLogger(__name__)
@@ -92,14 +100,14 @@ def create_signature(content, keyid=None, homedir=None):
 
   """
   if not HAVE_GPG: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_GPG_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_GPG_MSG)
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
   keyarg = ""
   if keyid:
-    securesystemslib.formats.KEYID_SCHEMA.check_match(keyid)
+    formats.KEYID_SCHEMA.check_match(keyid)
     keyarg = "--local-user {}".format(keyid)
 
   homearg = ""
@@ -108,21 +116,19 @@ def create_signature(content, keyid=None, homedir=None):
 
   command = GPG_SIGN_COMMAND.format(keyarg=keyarg, homearg=homearg)
 
-  process = securesystemslib.process.run(command, input=content, check=False,
-      stdout=securesystemslib.process.PIPE,
-      stderr=securesystemslib.process.PIPE)
+  gpg_process = process.run(command, input=content, check=False,
+      stdout=process.PIPE, stderr=process.PIPE)
 
   # TODO: It's suggested to take a look at `--status-fd` for proper error
   # reporting, as there is no clear distinction between the return codes
   # https://lists.gnupg.org/pipermail/gnupg-devel/2005-December/022559.html
-  if process.returncode != 0:
-    raise securesystemslib.gpg.exceptions.CommandError("Command '{}' returned "
-        "non-zero exit status '{}', stderr was:\n{}.".format(process.args,
-        process.returncode, process.stderr.decode()))
+  if gpg_process.returncode != 0:
+    raise CommandError("Command '{}' returned "
+        "non-zero exit status '{}', stderr was:\n{}.".format(gpg_process.args,
+        gpg_process.returncode, gpg_process.stderr.decode()))
 
-  signature_data = process.stdout
-  signature = securesystemslib.gpg.common.parse_signature_packet(
-      signature_data)
+  signature_data = gpg_process.stdout
+  signature = parse_signature_packet(signature_data)
 
   # On GPG < 2.1 we cannot derive the full keyid from the signature data.
   # Instead we try to compute the keyid from the public part of the signing
@@ -204,10 +210,10 @@ def verify_signature(signature_object, pubkey_info, content):
 
   """
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
-  securesystemslib.formats.GPG_PUBKEY_SCHEMA.check_match(pubkey_info)
-  securesystemslib.formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
+  formats.GPG_PUBKEY_SCHEMA.check_match(pubkey_info)
+  formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
 
   handler = SIGNATURE_HANDLERS[pubkey_info['type']]
   sig_keyid = signature_object["keyid"]
@@ -225,7 +231,7 @@ def verify_signature(signature_object, pubkey_info, content):
 
   if creation_time and validity_period and \
       creation_time + validity_period < time.time():
-    raise securesystemslib.gpg.exceptions.KeyExpirationError(verification_key)
+    raise KeyExpirationError(verification_key)
 
   return handler.verify_signature(
       signature_object, verification_key, content, SHA256)
@@ -253,12 +259,12 @@ def export_pubkey(keyid, homedir=None):
 
   """
   if not HAVE_GPG: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_GPG_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_GPG_MSG)
 
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
-  if not securesystemslib.formats.KEYID_SCHEMA.matches(keyid):
+  if not formats.KEYID_SCHEMA.matches(keyid):
     # FIXME: probably needs smarter parsing of what a valid keyid is so as to
     # not export more than one pubkey packet.
     raise ValueError("we need to export an individual key. Please provide a "
@@ -270,14 +276,11 @@ def export_pubkey(keyid, homedir=None):
 
   # TODO: Consider adopting command error handling from `create_signature`
   # above, e.g. in a common 'run gpg command' utility function
-  command = securesystemslib.gpg.constants.GPG_EXPORT_PUBKEY_COMMAND.format(
-      keyid=keyid, homearg=homearg)
-  process = securesystemslib.process.run(command,
-      stdout=securesystemslib.process.PIPE,
-      stderr=securesystemslib.process.PIPE)
+  command = GPG_EXPORT_PUBKEY_COMMAND.format(keyid=keyid, homearg=homearg)
+  gpg_process = process.run(command, stdout=process.PIPE, stderr=process.PIPE)
 
-  key_packet = process.stdout
-  key_bundle = securesystemslib.gpg.common.get_pubkey_bundle(key_packet, keyid)
+  key_packet = gpg_process.stdout
+  key_bundle = get_pubkey_bundle(key_packet, keyid)
 
   return key_bundle
 

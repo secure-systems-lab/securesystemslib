@@ -19,18 +19,18 @@ import binascii
 CRYPTO = True
 NO_CRYPTO_MSG = 'RSA key support for GPG requires the cryptography library'
 try:
-  import cryptography.hazmat.primitives.asymmetric.rsa as rsa
-  import cryptography.hazmat.backends as backends
-  import cryptography.hazmat.primitives.asymmetric.padding as padding
-  import cryptography.hazmat.primitives.asymmetric.utils as utils
-  import cryptography.exceptions
+  from cryptography.hazmat.primitives.asymmetric import rsa
+  from cryptography.hazmat import backends
+  from cryptography.hazmat.primitives.asymmetric import padding
+  from cryptography.hazmat.primitives.asymmetric import utils
+  from cryptography.exceptions import InvalidSignature
 except ImportError:
   CRYPTO = False
 
-import securesystemslib.gpg.util
-import securesystemslib.gpg.exceptions
-import securesystemslib.exceptions
-import securesystemslib.formats
+from securesystemslib import exceptions
+from securesystemslib import formats
+from securesystemslib.gpg import util as gpg_util
+from securesystemslib.gpg.exceptions import PacketParsingError
 
 
 def create_pubkey(pubkey_info):
@@ -57,9 +57,9 @@ def create_pubkey(pubkey_info):
 
   """
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
-  securesystemslib.formats.GPG_RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
+  formats.GPG_RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
   e = int(pubkey_info['keyval']['public']['e'], 16)
   n = int(pubkey_info['keyval']['public']['n'], 16)
@@ -92,21 +92,18 @@ def get_pubkey_params(data):
   """
   ptr = 0
 
-  modulus_length = securesystemslib.gpg.util.get_mpi_length(data[ptr: ptr + 2])
+  modulus_length = gpg_util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   modulus = data[ptr:ptr + modulus_length]
   if len(modulus) != modulus_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
-        "This modulus MPI was truncated!")
+    raise PacketParsingError("This modulus MPI was truncated!")
   ptr += modulus_length
 
-  exponent_e_length = securesystemslib.gpg.util.get_mpi_length(
-      data[ptr: ptr + 2])
+  exponent_e_length = gpg_util.get_mpi_length(data[ptr: ptr + 2])
   ptr += 2
   exponent_e = data[ptr:ptr + exponent_e_length]
   if len(exponent_e) != exponent_e_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
-        "This e MPI has been truncated!")
+    raise PacketParsingError("This e MPI has been truncated!")
 
   return {
     "e": binascii.hexlify(exponent_e).decode('ascii'),
@@ -136,12 +133,11 @@ def get_signature_params(data):
   """
 
   ptr = 0
-  signature_length = securesystemslib.gpg.util.get_mpi_length(data[ptr:ptr+2])
+  signature_length = gpg_util.get_mpi_length(data[ptr:ptr+2])
   ptr += 2
   signature = data[ptr:ptr + signature_length]
   if len(signature) != signature_length: # pragma: no cover
-    raise securesystemslib.gpg.exceptions.PacketParsingError(
-        "This signature was truncated!")
+    raise PacketParsingError("This signature was truncated!")
 
   return signature
 
@@ -189,12 +185,12 @@ def verify_signature(signature_object, pubkey_info, content,
 
   """
   if not CRYPTO: # pragma: no cover
-    raise securesystemslib.exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
-  securesystemslib.formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
-  securesystemslib.formats.GPG_RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
+  formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
+  formats.GPG_RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
-  hasher = securesystemslib.gpg.util.get_hashing_class(hash_algorithm_id)
+  hasher = gpg_util.get_hashing_class(hash_algorithm_id)
 
   pubkey_object = create_pubkey(pubkey_info)
 
@@ -210,7 +206,7 @@ def verify_signature(signature_object, pubkey_info, content,
     signature_object['signature'] = "{}{}".format(zero_pad,
         signature_object['signature'])
 
-  digest = securesystemslib.gpg.util.hash_object(
+  digest = gpg_util.hash_object(
       binascii.unhexlify(signature_object['other_headers']),
       hasher(), content)
 
@@ -222,5 +218,5 @@ def verify_signature(signature_object, pubkey_info, content,
       utils.Prehashed(hasher())
     )
     return True
-  except cryptography.exceptions.InvalidSignature:
+  except InvalidSignature:
     return False
