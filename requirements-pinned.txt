@@ -1,7 +1,7 @@
 cffi==1.14.5              # via cryptography, pynacl
 colorama==0.4.4
 cryptography==3.3.2       ; python_version < "3" # cryptography < 3.4 for python2 compat
-cryptography==3.4.5       ; python_version >= "3"
+cryptography==3.4.6       ; python_version >= "3"
 enum34==1.1.10            ; python_version < "3" # via cryptography
 ipaddress==1.0.23         ; python_version < "3" # via cryptography
 pycparser==2.20           # via cffi
