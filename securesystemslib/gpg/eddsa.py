@@ -37,6 +37,8 @@ ED25519_PUBLIC_KEY_OID = bytearray.fromhex("2B 06 01 04 01 DA 47 0F 01")
 # EdDSA Point Format (see RFC4880-bis8 13.3.)
 ED25519_PUBLIC_KEY_LENGTH = 33
 ED25519_PUBLIC_KEY_PREFIX = 0x40
+# EdDSA signature byte length (see RFC 8032 5.1.6. (6))
+ED25519_SIG_LENGTH = 64
 
 
 
