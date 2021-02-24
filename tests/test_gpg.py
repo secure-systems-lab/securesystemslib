@@ -46,6 +46,7 @@ from securesystemslib.gpg.util import (get_version, is_version_fully_supported,
 from securesystemslib.gpg.rsa import create_pubkey as rsa_create_pubkey
 from securesystemslib.gpg.dsa import create_pubkey as dsa_create_pubkey
 from securesystemslib.gpg.eddsa import create_pubkey as eddsa_create_pubkey
+from securesystemslib.gpg.eddsa import ED25519_SIG_LENGTH
 from securesystemslib.gpg.common import (parse_pubkey_payload,
     parse_pubkey_bundle, get_pubkey_bundle, _assign_certified_key_info,
     _get_verified_subkeys, parse_signature_packet)
@@ -776,6 +777,26 @@ class TestGPGEdDSA(unittest.TestCase):
 
     self.assertTrue(verify_signature(signature, key_data, test_data))
     self.assertFalse(verify_signature(signature, key_data, wrong_data))
+
+
+  def test_verify_short_signature(self):
+    """Correctly verify a special-crafted short signature. """
+
+    test_data = b"hello"
+    signature_path = os.path.join(self.gnupg_home, "short.sig")
+
+    # Read special-crafted raw gpg signature that is one byte too short
+    with open(signature_path, "rb") as f:
+      signature_data = f.read()
+
+    # Check that the signature is padded upon parsing
+    # NOTE: The returned signature is a hex string and thus twice as long
+    signature = parse_signature_packet(signature_data)
+    self.assertTrue(len(signature["signature"]) == (ED25519_SIG_LENGTH * 2))
+
+    # Check that the signature can be successfully verified
+    key = export_pubkey(self.default_keyid, homedir=self.gnupg_home)
+    self.assertTrue(verify_signature(signature, key, test_data))
 
 
 if __name__ == "__main__":
