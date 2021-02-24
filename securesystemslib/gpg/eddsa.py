@@ -142,6 +142,12 @@ def get_signature_params(data):
   ptr += 2
   s = data[ptr:ptr + s_length]
 
+  # Left-zero-pad 'r' and 's' values that are shorter than required by RFC 8032
+  # (5.1.6.), to make up for omitted leading zeros in RFC 4880 (3.2.) MPIs.
+  # This is especially important for 's', which is little-endian.
+  r = r.rjust(ED25519_SIG_LENGTH // 2, b"\x00")
+  s = s.rjust(ED25519_SIG_LENGTH // 2, b"\x00")
+
   return r + s
 
 
