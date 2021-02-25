@@ -37,6 +37,8 @@ ED25519_PUBLIC_KEY_OID = bytearray.fromhex("2B 06 01 04 01 DA 47 0F 01")
 # EdDSA Point Format (see RFC4880-bis8 13.3.)
 ED25519_PUBLIC_KEY_LENGTH = 33
 ED25519_PUBLIC_KEY_PREFIX = 0x40
+# EdDSA signature byte length (see RFC 8032 5.1.6. (6))
+ED25519_SIG_LENGTH = 64
 
 
 
@@ -139,6 +141,12 @@ def get_signature_params(data):
   s_length = gpg_util.get_mpi_length(data[ptr:ptr + 2])
   ptr += 2
   s = data[ptr:ptr + s_length]
+
+  # Left-zero-pad 'r' and 's' values that are shorter than required by RFC 8032
+  # (5.1.6.), to make up for omitted leading zeros in RFC 4880 (3.2.) MPIs.
+  # This is especially important for 's', which is little-endian.
+  r = r.rjust(ED25519_SIG_LENGTH // 2, b"\x00")
+  s = s.rjust(ED25519_SIG_LENGTH // 2, b"\x00")
 
   return r + s
 
