@@ -259,7 +259,7 @@ class GPGSigner(Signer):
 
             ValueError: the gpg command failed to create a valid signature.
             OSError: the gpg command is not present or non-executable.
-            securesystemslib.exceptions.UnsupportedLibraryError: thehe gpg
+            securesystemslib.exceptions.UnsupportedLibraryError: the gpg
                 command is not available, or the cryptography library is
                 not installed.
             securesystemslib.gpg.exceptions.CommandError: the gpg command
