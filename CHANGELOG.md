@@ -1,5 +1,19 @@
 # Changelog
 
+## securesystemslib v0.20.0
+
+### Added
+* Add signing abstraction to facilitate custom implementations (#319)
+
+### Changed
+* Refactor imports to allow vendoring for pip (#316)
+* Limit GitHub Actions to avoid duplicate Dependabot builds (#335)
+* Enhance GitHub Action reporting for ed25519 upstream check (#338)
+* Bump dependencies: cryptography (#336)
+
+### Fixed
+* Pad OpenPGP EdDSA signatures to avoid sporadic verification failures (#340)
+
 ## securesystemslib v0.19.0
 
 ### Added
