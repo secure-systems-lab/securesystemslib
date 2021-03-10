@@ -1,3 +1,12 @@
+python-securesystemslib (0.20.0-1) unstable; urgency=medium
+
+  * New upstream release includes among other things:
+    - a new signing abstraction to facilitate custom implementations,
+    - and a fix for a GnuPG/OpenSSL compatibility issue with OpenPGP EdDSA
+      signatures.
+
+ -- Lukas Puehringer <lukas.puehringer@nyu.edu>  Fri, 26 Feb 2021 13:58:03 +0200
+
 python-securesystemslib (0.18.0-2) unstable; urgency=medium
 
   Fix misc lintian warnings and other Debian metadata changes:
