@@ -66,7 +66,7 @@ class Signer:
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def sign(payload: bytes) -> "Signature":
+    def sign(self, payload: bytes) -> "Signature":
         """Signs a given payload by the key assigned to the Signer instance.
 
         Arguments:
