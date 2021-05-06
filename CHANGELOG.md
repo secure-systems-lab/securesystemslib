@@ -1,5 +1,23 @@
 # Changelog
 
+## securesystemslib v0.20.1
+**NOTE**: this will be the final release of securesystemslib that supports
+Python 2.7.
+This is because Python 2.7 was marked [end-of-life](
+https://www.python.org/dev/peps/pep-0373/) in January of 2020, and
+since then several of securesystemslib's direct and transitive dependencies
+have stopped supporting Python 2.7. securesystemslib's major users, the Python
+implementations of tuf (v0.167.0) and in-toto (v1.1.0), have already dropped
+support for Python 2.7.
+
+### Changed
+* Switched to GitHub-native Dependabot (#349)
+* Updated Debian packaging metadata (#343)
+* Bump cryptography dependency (#346)
+
+### Fixed
+* Fix the Signer abstract base class's method signature to include self (#348)
+
 ## securesystemslib v0.20.0
 
 ### Added
