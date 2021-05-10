@@ -102,13 +102,11 @@ setup(
     'Issues': 'https://github.com/secure-systems-lab/securesystemslib/issues',
   },
   python_requires = "~=3.6",
-  install_requires = ['six>=1.11.0', 'subprocess32; python_version < "3"'],
+  install_requires = ['six>=1.11.0'],
   extras_require = {
       'colors': ['colorama>=0.3.9'],
-      'crypto:python_version < "3"': ['cryptography>=3.3.2,<3.5'],
-      'crypto:python_version >= "3"': ['cryptography>=3.3.2'],
+      'crypto': ['cryptography>=3.3.2'],
       'pynacl': ['pynacl>1.2.0']},
-  tests_require = 'mock; python_version < "3.3"',
   packages = find_packages(exclude=['tests', 'debian']),
   scripts = []
 )

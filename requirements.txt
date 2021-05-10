@@ -32,8 +32,6 @@
 #    `rm requirements-?.?.txt`
 #
 cryptography >= 3.3.2; python_version >= '3'
-cryptography >= 3.3.2, < 3.4; python_version < '3'
 pynacl
 colorama
 six
-subprocess32; python_version < '3'

@@ -1,3 +1,2 @@
 # Minimal runtime requirements (see 'install_requires' in setup.py)
 six
-subprocess32; python_version < '3'
