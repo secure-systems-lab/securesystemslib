@@ -12,7 +12,7 @@ set -eu
 # This commit matches our securesystemslib/_vendor/ed25519/ content.
 # If upstream changes, we should review the changes, vendor them,
 # and update the hash here
-pyca_ed25519_expected="6105b8e5d41e4677d5c7d7ab80e25a5313e4aee6"
+pyca_ed25519_expected="48599ab0bff20f2c9b9755cfc0348961cc872abf"
 pyca_ed25519_git_url="https://github.com/pyca/ed25519.git"
 
 pyca_ed25519_main_head=$(git ls-remote "$pyca_ed25519_git_url" main | cut -f1)
