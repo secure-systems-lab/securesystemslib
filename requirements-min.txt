@@ -1,2 +1,0 @@
-# Minimal runtime requirements (see 'install_requires' in setup.py)
-six

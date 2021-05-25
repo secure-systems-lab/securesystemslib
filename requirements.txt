@@ -34,4 +34,3 @@
 cryptography >= 3.3.2; python_version >= '3'
 pynacl
 colorama
-six
