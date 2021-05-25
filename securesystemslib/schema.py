@@ -45,8 +45,6 @@
 import re
 import sys
 
-import six
-
 from securesystemslib import exceptions
 
 
@@ -143,7 +141,7 @@ class String(Schema):
   """
 
   def __init__(self, string):
-    if not isinstance(string, six.string_types):
+    if not isinstance(string, str):
       raise exceptions.FormatError('Expected a string but'
           ' got ' + repr(string))
 
@@ -192,7 +190,7 @@ class AnyString(Schema):
 
 
   def check_match(self, object):
-    if not isinstance(object, six.string_types):
+    if not isinstance(object, str):
       raise exceptions.FormatError('Expected a string'
           ' but got ' + repr(object))
 
@@ -270,7 +268,7 @@ class AnyBytes(Schema):
 
 
   def check_match(self, object):
-    if not isinstance(object, six.binary_type):
+    if not isinstance(object, bytes):
       raise exceptions.FormatError('Expected a byte string'
           ' but got ' + repr(object))
 
@@ -299,7 +297,7 @@ class LengthString(Schema):
   """
 
   def __init__(self, length):
-    if isinstance(length, bool) or not isinstance(length, six.integer_types):
+    if isinstance(length, bool) or not isinstance(length, int):
       # We need to check for bool as a special case, since bool
       # is for historical reasons a subtype of int.
       raise exceptions.FormatError(
@@ -309,7 +307,7 @@ class LengthString(Schema):
 
 
   def check_match(self, object):
-    if not isinstance(object, six.string_types):
+    if not isinstance(object, str):
       raise exceptions.FormatError('Expected a string but'
           ' got ' + repr(object))
 
@@ -343,7 +341,7 @@ class LengthBytes(Schema):
   """
 
   def __init__(self, length):
-    if isinstance(length, bool) or not isinstance(length, six.integer_types):
+    if isinstance(length, bool) or not isinstance(length, int):
       # We need to check for bool as a special case, since bool
       # is for historical reasons a subtype of int.
       raise exceptions.FormatError(
@@ -353,7 +351,7 @@ class LengthBytes(Schema):
 
 
   def check_match(self, object):
-    if not isinstance(object, six.binary_type):
+    if not isinstance(object, bytes):
       raise exceptions.FormatError('Expected a byte but'
           ' got ' + repr(object))
 
@@ -620,7 +618,7 @@ class Integer(Schema):
 
 
   def check_match(self, object):
-    if isinstance(object, bool) or not isinstance(object, six.integer_types):
+    if isinstance(object, bool) or not isinstance(object, int):
       # We need to check for bool as a special case, since bool
       # is for historical reasons a subtype of int.
       raise exceptions.FormatError(
@@ -689,7 +687,7 @@ class DictOf(Schema):
       raise exceptions.FormatError('Expected a dict but'
           ' got ' + repr(object))
 
-    for key, value in six.iteritems(object):
+    for key, value in object.items():
       self._key_schema.check_match(key)
       self._value_schema.check_match(value)
 
@@ -774,7 +772,7 @@ class Object(Schema):
     """
 
     # Ensure valid arguments.
-    for key, schema in six.iteritems(required):
+    for key, schema in required.items():
       if not isinstance(schema, Schema):
         raise exceptions.FormatError('Expected Schema but'
             ' got ' + repr(schema))
@@ -967,7 +965,7 @@ class RegularExpression(Schema):
       re_name: Identifier for the regular expression object.
     """
 
-    if not isinstance(pattern, six.string_types):
+    if not isinstance(pattern, str):
       if pattern is not None:
         raise exceptions.FormatError(
             repr(pattern) + ' is not a string.')
@@ -992,7 +990,7 @@ class RegularExpression(Schema):
 
 
   def check_match(self, object):
-    if not isinstance(object, six.string_types) or not self._re_object.match(object):
+    if not isinstance(object, str) or not self._re_object.match(object):
       raise exceptions.FormatError(
           repr(object) + ' did not match ' + repr(self._re_name))
 

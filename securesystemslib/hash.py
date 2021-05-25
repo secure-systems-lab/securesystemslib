@@ -24,8 +24,6 @@
 
 import hashlib
 
-import six
-
 from securesystemslib import exceptions
 from securesystemslib import formats
 from securesystemslib.storage import FilesystemBackend
@@ -297,7 +295,7 @@ def digest_fileobject(file_object, algorithm=DEFAULT_HASH_ALGORITHM,
           .replace(b'\r', b'\n')
       )
 
-    if not isinstance(data, six.binary_type):
+    if not isinstance(data, bytes):
       digest_object.update(data.encode('utf-8'))
 
     else:

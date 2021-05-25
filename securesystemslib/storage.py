@@ -21,15 +21,9 @@ import logging
 import os
 import shutil
 
-import six
-
 from securesystemslib import exceptions
 
 logger = logging.getLogger(__name__)
-
-if six.PY2:
-  FileNotFoundError = OSError # pragma: no cover
-
 
 
 class StorageBackendInterface():

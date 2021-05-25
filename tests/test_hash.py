@@ -18,6 +18,7 @@
   Unit test for 'hash.py'.
 """
 
+import io
 import os
 import logging
 import sys
@@ -26,8 +27,6 @@ import unittest
 
 import securesystemslib.exceptions
 import securesystemslib.hash
-
-import six
 
 logger = logging.getLogger(__name__)
 
@@ -251,7 +250,7 @@ class TestHash(unittest.TestCase):
 
   def _do_update_file_obj(self, library, algorithm):
     data = 'abcdefgh' * 4096
-    file_obj = six.StringIO()
+    file_obj = io.StringIO()
     file_obj.write(data)
     digest_object_truth = securesystemslib.hash.digest(algorithm, library)
     digest_object_truth.update(data.encode('utf-8'))

@@ -23,8 +23,6 @@ import unittest
 import securesystemslib.exceptions
 import securesystemslib.storage
 
-import six
-
 
 class TestStorage(unittest.TestCase):
   def setUp(self):
