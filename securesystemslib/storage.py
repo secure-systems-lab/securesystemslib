@@ -15,9 +15,6 @@
   Provides an interface for filesystem interactions, StorageBackendInterface.
 """
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import abc
 import errno
 import logging

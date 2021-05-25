@@ -23,6 +23,7 @@
   run when explicitly invoked.
 
 """
+
 import unittest
 from securesystemslib.gpg.constants import HAVE_GPG, NO_GPG_MSG
 from securesystemslib.gpg.util import get_version
