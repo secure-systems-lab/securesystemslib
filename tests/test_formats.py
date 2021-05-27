@@ -17,21 +17,11 @@
   Unit test for 'formats.py'
 """
 
-# Help with Python 3 compatibility, where the print statement is a function, an
-# implicit relative import is invalid, and the '/' operator performs true
-# division.  Example:  print 'hello world' raises a 'SyntaxError' exception.
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import unicode_literals
-
 import unittest
 import datetime
 
 import securesystemslib.formats
 import securesystemslib.schema
-
-import six
 
 
 class TestFormats(unittest.TestCase):
@@ -178,7 +168,7 @@ class TestFormats(unittest.TestCase):
 
     # Iterate 'valid_schemas', ensuring each 'valid_schema' correctly matches
     # its respective 'schema_type'.
-    for schema_name, (schema_type, valid_schema) in six.iteritems(valid_schemas):
+    for schema_name, (schema_type, valid_schema) in valid_schemas.items():
       if not schema_type.matches(valid_schema):
         print('bad schema: ' + repr(valid_schema))
 
@@ -187,7 +177,7 @@ class TestFormats(unittest.TestCase):
     # Test conditions for invalid schemas.
     # Set the 'valid_schema' of 'valid_schemas' to an invalid
     # value and test that it does not match 'schema_type'.
-    for schema_name, (schema_type, valid_schema) in six.iteritems(valid_schemas):
+    for schema_name, (schema_type, valid_schema) in valid_schemas.items():
       invalid_schema = 0xBAD
 
       if isinstance(schema_type, securesystemslib.schema.Integer):
@@ -242,7 +232,7 @@ class TestFormats(unittest.TestCase):
     self.assertEqual('dXBkYXRlZnJhbWV3b3Jr',
         securesystemslib.formats.format_base64(data))
     self.assertTrue(isinstance(securesystemslib.formats.format_base64(data),
-        six.string_types))
+        str))
 
     # Test conditions for invalid arguments.
     self.assertRaises(securesystemslib.exceptions.FormatError,
@@ -259,7 +249,7 @@ class TestFormats(unittest.TestCase):
     self.assertEqual(b'updateframework',
         securesystemslib.formats.parse_base64(base64))
     self.assertTrue(isinstance(securesystemslib.formats.parse_base64(base64),
-        six.binary_type))
+        bytes))
 
     # Test conditions for invalid arguments.
     self.assertRaises(securesystemslib.exceptions.FormatError,

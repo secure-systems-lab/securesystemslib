@@ -63,20 +63,11 @@
   signable_object = make_signable(unsigned_object)
 """
 
-# Help with Python 3 compatibility, where the print statement is a function, an
-# implicit relative import is invalid, and the '/' operator performs true
-# division.  Example:  print 'hello world' raises a 'SyntaxError' exception.
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import unicode_literals
-
 import binascii
 import calendar
 import re
 import datetime
 import time
-import six
 
 from securesystemslib import exceptions
 from securesystemslib import schema as SCHEMA
@@ -581,7 +572,7 @@ def parse_base64(base64_string):
     'base64_string'.
   """
 
-  if not isinstance(base64_string, six.string_types):
+  if not isinstance(base64_string, str):
     message = 'Invalid argument: '+repr(base64_string)
     raise exceptions.FormatError(message)
 
@@ -628,7 +619,7 @@ def _encode_canonical(object, output_function):
   # Helper for encode_canonical.  Older versions of json.encoder don't
   # even let us replace the separators.
 
-  if isinstance(object, six.string_types):
+  if isinstance(object, str):
     output_function(_canonical_string_encoder(object))
   elif object is True:
     output_function("true")
@@ -636,7 +627,7 @@ def _encode_canonical(object, output_function):
     output_function("false")
   elif object is None:
     output_function("null")
-  elif isinstance(object, six.integer_types):
+  elif isinstance(object, int):
     output_function(str(object))
   elif isinstance(object, (tuple, list)):
     output_function("[")
@@ -649,7 +640,7 @@ def _encode_canonical(object, output_function):
   elif isinstance(object, dict):
     output_function("{")
     if len(object):
-      items = sorted(six.iteritems(object))
+      items = sorted(object.items())
       for key, value in items[:-1]:
         output_function(_canonical_string_encoder(key))
         output_function(":")

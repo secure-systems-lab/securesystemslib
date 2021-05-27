@@ -16,7 +16,6 @@
 <Purpose>
   Provide a common interface for Python's subprocess module to:
 
-  - require the Py3 subprocess backport `subprocess32` on Python2,
   - namespace subprocess constants (DEVNULL, PIPE) and
   - provide a custom `subprocess.run` wrapper
   - provide a special `run_duplicate_streams` function
@@ -29,12 +28,7 @@ import tempfile
 import logging
 import time
 import shlex
-import six
-
-if six.PY2:
-  import subprocess32 as subprocess # pragma: no cover pylint: disable=import-error
-else: # pragma: no cover
-  import subprocess
+import subprocess
 
 from securesystemslib import formats
 from securesystemslib import settings
@@ -111,7 +105,7 @@ def run(cmd, check=True, timeout=_default_timeout(), **kwargs):
 
   """
   # Make list of command passed as string for convenience
-  if isinstance(cmd, six.string_types):
+  if isinstance(cmd, str):
     cmd = shlex.split(cmd)
   else:
     formats.LIST_OF_ANY_STRING_SCHEMA.check_match(cmd)
@@ -170,7 +164,7 @@ def run_duplicate_streams(cmd, timeout=_default_timeout()):
     contents.
 
   """
-  if isinstance(cmd, six.string_types):
+  if isinstance(cmd, str):
     cmd = shlex.split(cmd)
   else:
     formats.LIST_OF_ANY_STRING_SCHEMA.check_match(cmd)

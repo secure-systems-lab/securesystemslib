@@ -30,7 +30,6 @@ if sys.version_info >= (3, 3):
 else:
   from mock import patch # pylint: disable=import-error
 
-from six import string_types
 from copy import deepcopy
 from collections import OrderedDict
 
@@ -65,7 +64,7 @@ class TestUtil(unittest.TestCase):
   """Test util functions. """
   def test_version_utils_return_types(self):
     """Run dummy tests for coverage. """
-    self.assertTrue(isinstance(get_version(), string_types))
+    self.assertTrue(isinstance(get_version(), str))
     self.assertTrue(isinstance(is_version_fully_supported(), bool))
 
   def test_get_hashing_class(self):

@@ -15,24 +15,15 @@
   Provides an interface for filesystem interactions, StorageBackendInterface.
 """
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import abc
 import errno
 import logging
 import os
 import shutil
 
-import six
-
 from securesystemslib import exceptions
 
 logger = logging.getLogger(__name__)
-
-if six.PY2:
-  FileNotFoundError = OSError # pragma: no cover
-
 
 
 class StorageBackendInterface():

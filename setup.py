@@ -102,7 +102,6 @@ setup(
     'Issues': 'https://github.com/secure-systems-lab/securesystemslib/issues',
   },
   python_requires = "~=3.6",
-  install_requires = ['six>=1.11.0'],
   extras_require = {
       'colors': ['colorama>=0.3.9'],
       'crypto': ['cryptography>=3.3.2'],

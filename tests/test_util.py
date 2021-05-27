@@ -17,14 +17,6 @@
   Unit test for 'util.py'
 """
 
-# Help with Python 3 compatibility, where the print statement is a function, an
-# implicit relative import is invalid, and the '/' operator performs true
-# division.  Example:  print 'hello world' raises a 'SyntaxError' exception.
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import unicode_literals
-
 import os
 import sys
 import shutil
@@ -37,8 +29,6 @@ import securesystemslib.settings
 import securesystemslib.hash
 import securesystemslib.util
 import securesystemslib.unittest_toolbox as unittest_toolbox
-
-import six
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +66,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
         {'a': 'b'}, None]
 
     for bogus_input in bogus_inputs:
-      if isinstance(bogus_input, six.string_types):
+      if isinstance(bogus_input, str):
         self.assertRaises(securesystemslib.exceptions.Error,
             securesystemslib.util.get_file_details, bogus_input)
       else:
@@ -104,7 +94,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
         {'a': 'b'}, None]
 
     for bogus_input in bogus_inputs:
-      if isinstance(bogus_input, six.string_types):
+      if isinstance(bogus_input, str):
         self.assertRaises(securesystemslib.exceptions.Error,
             securesystemslib.util.get_file_hashes, bogus_input)
       else:
@@ -131,7 +121,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
         {'a': 'b'}, None]
 
     for bogus_input in bogus_inputs:
-      if isinstance(bogus_input, six.string_types):
+      if isinstance(bogus_input, str):
         self.assertRaises(securesystemslib.exceptions.Error,
             securesystemslib.util.get_file_length, bogus_input)
       else:
@@ -145,7 +135,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     non_existing_parent_dir = os.path.join(existing_parent_dir, 'a', 'b')
 
     for parent_dir in [existing_parent_dir, non_existing_parent_dir, 12, [3]]:
-      if isinstance(parent_dir, six.string_types):
+      if isinstance(parent_dir, str):
         securesystemslib.util.ensure_parent_dir(os.path.join(parent_dir, 'a.txt'))
         self.assertTrue(os.path.isdir(parent_dir))
 

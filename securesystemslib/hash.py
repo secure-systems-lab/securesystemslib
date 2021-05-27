@@ -22,17 +22,7 @@
   pyca/cryptography support will be added in the future.
 """
 
-# Help with Python 3 compatibility, where the print statement is a function, an
-# implicit relative import is invalid, and the '/' operator performs true
-# division.  Example:  print 'hello world' raises a 'SyntaxError' exception.
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import unicode_literals
-
 import hashlib
-
-import six
 
 from securesystemslib import exceptions
 from securesystemslib import formats
@@ -305,7 +295,7 @@ def digest_fileobject(file_object, algorithm=DEFAULT_HASH_ALGORITHM,
           .replace(b'\r', b'\n')
       )
 
-    if not isinstance(data, six.binary_type):
+    if not isinstance(data, bytes):
       digest_object.update(data.encode('utf-8'))
 
     else:
