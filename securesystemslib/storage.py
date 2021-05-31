@@ -200,7 +200,7 @@ class FilesystemBackend(StorageBackendInterface):
     try:
       file_object = open(filepath, 'rb')
       yield file_object
-    except (FileNotFoundError, IOError):
+    except OSError:
       raise exceptions.StorageError(
           "Can't open %s" % filepath)
     finally:
@@ -221,7 +221,7 @@ class FilesystemBackend(StorageBackendInterface):
         # and the operating system's buffers.  os.fsync() should follow flush().
         destination_file.flush()
         os.fsync(destination_file.fileno())
-    except (OSError, IOError):
+    except OSError:
       raise exceptions.StorageError(
           "Can't write file %s" % filepath)
 
