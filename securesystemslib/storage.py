@@ -20,7 +20,7 @@ import errno
 import logging
 import os
 import shutil
-
+from contextlib import contextmanager
 from securesystemslib import exceptions
 
 logger = logging.getLogger(__name__)
@@ -192,36 +192,18 @@ class FilesystemBackend(StorageBackendInterface):
     return cls._instance
 
 
-
-  class GetFile(object):
-    # Implementing get() as a function with the @contextmanager decorator
-    # doesn't allow us to cleanly capture exceptions thrown by the underlying
-    # implementation and bubble up our generic
-    # securesystemslib.exceptions.StorageError, therefore we implement get as
-    # a class and also assign the class to the 'get' attribute of the parent
-    # FilesystemBackend class.
-
-    def __init__(self, filepath):
-      self.filepath = filepath
-
-
-    def __enter__(self):
-      try:
-        self.file_object = open(self.filepath, 'rb')
-        return self.file_object
-      except (FileNotFoundError, IOError):
-        raise exceptions.StorageError(
-            "Can't open %s" % self.filepath)
-
-
-    def __exit__(self, exc_type, exc_val, traceback):
-      self.file_object.close()
-
-
-
-  # Map our class ContextManager implementation to the function expected of the
-  # securesystemslib.storage.StorageBackendInterface.get definition
-  get = GetFile
+  @contextmanager
+  def get(self, filepath):
+    file_object = None
+    try:
+      file_object = open(filepath, 'rb')
+      yield file_object
+    except (FileNotFoundError, IOError):
+      raise exceptions.StorageError(
+          "Can't open %s" % filepath)
+    finally:
+      if file_object is not None:
+        file_object.close()
 
 
   def put(self, fileobj, filepath):
