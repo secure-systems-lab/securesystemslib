@@ -17,6 +17,7 @@
   that tries to import a working json module, load_json_* functions, etc.
 """
 
+import json
 import os
 import logging
 
@@ -315,51 +316,6 @@ def file_in_confined_directories(
 
   return False
 
-
-
-
-
-_json_module = None
-
-def import_json():
-  """
-  <Purpose>
-    Tries to import json module. We used to fall back to the simplejson module,
-    but we have dropped support for that module. We are keeping this interface
-    intact for backwards compatibility.
-
-  <Arguments>
-    None.
-
-  <Exceptions>
-    ImportError: on failure to import the json module.
-
-  <Side Effects>
-    None.
-
-  <Return>
-    json module
-  """
-
-  global _json_module
-
-  if _json_module is not None:
-    return _json_module
-
-  else:
-    # TODO: Drop Python < 2.6 case handling
-    try:
-      module = __import__('json')
-    # The 'json' module is available in Python > 2.6, and thus this exception
-    # should not occur in all supported Python installations (> 2.6).
-    except ImportError: #pragma: no cover
-      raise ImportError('Could not import the json module')
-
-    else:
-      _json_module = module
-      return module
-
-json = import_json()
 
 json_str = Union[str, bytes, bytearray]
 

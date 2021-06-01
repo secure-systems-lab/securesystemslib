@@ -183,16 +183,6 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     self.assertTrue(in_confined_directory('a/b/c/..', ['a/']))
 
 
-  def test_B6_import_json(self):
-    self.assertTrue('json' in sys.modules)
-    json_module = securesystemslib.util.import_json()
-    self.assertTrue(json_module is not None)
-
-    # Test import_json() when 'util._json_moduel' is non-None.
-    securesystemslib.util._json_module = 'junk_module'
-    self.assertEqual(securesystemslib.util.import_json(), 'junk_module')
-
-
 
   def  test_B7_load_json_string(self):
     # Test normal case.
