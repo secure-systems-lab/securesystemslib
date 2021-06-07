@@ -317,9 +317,7 @@ def file_in_confined_directories(
   return False
 
 
-json_str = Union[str, bytes, bytearray]
-
-def load_json_string(data: json_str) -> Any:
+def load_json_string(data: Union[str, bytes]) -> Any:
   """
   <Purpose>
     Deserialize 'data' (JSON string) to a Python object.
