@@ -22,7 +22,7 @@ import os
 import shutil
 from contextlib import contextmanager
 from securesystemslib import exceptions
-from typing import BinaryIO, Generator, IO, List
+from typing import BinaryIO, IO, Iterator, List
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ class StorageBackendInterface():
 
   @abc.abstractmethod
   @contextmanager
-  def get(self, filepath: str) -> Generator[BinaryIO, None, None]:
+  def get(self, filepath: str) -> Iterator[BinaryIO]:
     """
     <Purpose>
       A context manager for 'with' statements that is used for retrieving files
@@ -195,7 +195,7 @@ class FilesystemBackend(StorageBackendInterface):
 
 
   @contextmanager
-  def get(self, filepath:str) -> Generator[BinaryIO, None, None]:
+  def get(self, filepath:str) -> Iterator[BinaryIO]:
     file_object = None
     try:
       file_object = open(filepath, 'rb')
