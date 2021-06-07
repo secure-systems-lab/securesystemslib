@@ -17,19 +17,25 @@
   that tries to import a working json module, load_json_* functions, etc.
 """
 
+import json
 import os
 import logging
 
 from securesystemslib import exceptions
 from securesystemslib import formats
 from securesystemslib.hash import digest_fileobject
-from securesystemslib.storage import FilesystemBackend
+from securesystemslib.storage import FilesystemBackend, StorageBackendInterface
+
+from typing import Any, Dict, IO, List, Optional, Sequence, Tuple, Union
 
 logger = logging.getLogger(__name__)
 
 
-def get_file_details(filepath, hash_algorithms=['sha256'],
-    storage_backend=None):
+def get_file_details(
+    filepath: str,
+    hash_algorithms: List[str] = ['sha256'],
+    storage_backend: Optional[StorageBackendInterface] = None
+) -> Tuple[int, Dict[str, str]]:
   """
   <Purpose>
     To get file's length and hash information.  The hash is computed using the
@@ -73,8 +79,11 @@ def get_file_details(filepath, hash_algorithms=['sha256'],
   return file_length, file_hashes
 
 
-def get_file_hashes(filepath, hash_algorithms=['sha256'],
-    storage_backend=None):
+def get_file_hashes(
+    filepath: str,
+    hash_algorithms: List[str] = ['sha256'],
+    storage_backend: Optional[StorageBackendInterface] = None
+) -> Dict[str, str]:
   """
   <Purpose>
     Compute hash(es) of the file at filepath using each of the specified
@@ -129,7 +138,10 @@ def get_file_hashes(filepath, hash_algorithms=['sha256'],
 
 
 
-def get_file_length(filepath, storage_backend=None):
+def get_file_length(
+    filepath: str,
+    storage_backend: Optional[StorageBackendInterface] = None
+) -> int:
   """
   <Purpose>
     To get file's length information.
@@ -160,8 +172,12 @@ def get_file_length(filepath, storage_backend=None):
   return storage_backend.getsize(filepath)
 
 
-def persist_temp_file(temp_file, persist_path, storage_backend=None,
-    should_close=True):
+def persist_temp_file(
+    temp_file: IO,
+    persist_path: str,
+    storage_backend: Optional[StorageBackendInterface] = None,
+    should_close: bool = True
+) -> None:
   """
   <Purpose>
     Copies 'temp_file' (a file like object) to a newly created non-temp file at
@@ -200,7 +216,10 @@ def persist_temp_file(temp_file, persist_path, storage_backend=None,
     temp_file.close()
 
 
-def ensure_parent_dir(filename, storage_backend=None):
+def ensure_parent_dir(
+    filename: str,
+    storage_backend: Optional[StorageBackendInterface] = None
+) -> None:
   """
   <Purpose>
     To ensure existence of the parent directory of 'filename'.  If the parent
@@ -246,7 +265,10 @@ def ensure_parent_dir(filename, storage_backend=None):
     storage_backend.create_folder(directory)
 
 
-def file_in_confined_directories(filepath, confined_directories):
+def file_in_confined_directories(
+    filepath: str,
+    confined_directories: Sequence[str]
+) -> bool:
   """
   <Purpose>
     Check if the directory containing 'filepath' is in the list/tuple of
@@ -258,7 +280,7 @@ def file_in_confined_directories(filepath, confined_directories):
       strings are viewed as files and not directories: 'a/b/c', 'a/b/c.txt'.
 
     confined_directories:
-      A list, or a tuple, of directory strings.
+      A sequence (such as list, or tuple) of directory strings.
 
   <Exceptions>
    securesystemslib.exceptions.FormatError: On incorrect format of the input.
@@ -295,53 +317,7 @@ def file_in_confined_directories(filepath, confined_directories):
   return False
 
 
-
-
-
-_json_module = None
-
-def import_json():
-  """
-  <Purpose>
-    Tries to import json module. We used to fall back to the simplejson module,
-    but we have dropped support for that module. We are keeping this interface
-    intact for backwards compatibility.
-
-  <Arguments>
-    None.
-
-  <Exceptions>
-    ImportError: on failure to import the json module.
-
-  <Side Effects>
-    None.
-
-  <Return>
-    json module
-  """
-
-  global _json_module
-
-  if _json_module is not None:
-    return _json_module
-
-  else:
-    # TODO: Drop Python < 2.6 case handling
-    try:
-      module = __import__('json')
-    # The 'json' module is available in Python > 2.6, and thus this exception
-    # should not occur in all supported Python installations (> 2.6).
-    except ImportError: #pragma: no cover
-      raise ImportError('Could not import the json module')
-
-    else:
-      _json_module = module
-      return module
-
-json = import_json()
-
-
-def load_json_string(data):
+def load_json_string(data: Union[str, bytes]) -> Any:
   """
   <Purpose>
     Deserialize 'data' (JSON string) to a Python object.
@@ -378,7 +354,10 @@ def load_json_string(data):
     return deserialized_object
 
 
-def load_json_file(filepath, storage_backend=None):
+def load_json_file(
+    filepath: str,
+    storage_backend: Optional[StorageBackendInterface] = None
+) -> Any:
   """
   <Purpose>
     Deserialize a JSON object from a file containing the object.
@@ -430,7 +409,7 @@ def load_json_file(filepath, storage_backend=None):
       return deserialized_object
 
 
-def digests_are_equal(digest1, digest2):
+def digests_are_equal(digest1: str, digest2: str) -> bool:
   """
   <Purpose>
     While protecting against timing attacks, compare the hexadecimal arguments
