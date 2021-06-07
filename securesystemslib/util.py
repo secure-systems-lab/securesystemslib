@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 def get_file_details(
     filepath: str,
-    hash_algorithms: List[str] =['sha256'],
+    hash_algorithms: List[str] = ['sha256'],
     storage_backend: Optional[StorageBackendInterface] = None
 ) -> Tuple[int, Dict[str, str]]:
   """
@@ -81,7 +81,7 @@ def get_file_details(
 
 def get_file_hashes(
     filepath: str,
-    hash_algorithms: List[str] =['sha256'],
+    hash_algorithms: List[str] = ['sha256'],
     storage_backend: Optional[StorageBackendInterface] = None
 ) -> Dict[str, str]:
   """
@@ -140,7 +140,7 @@ def get_file_hashes(
 
 def get_file_length(
     filepath: str,
-    storage_backend: Optional[StorageBackendInterface]=None
+    storage_backend: Optional[StorageBackendInterface] = None
 ) -> int:
   """
   <Purpose>
@@ -175,8 +175,8 @@ def get_file_length(
 def persist_temp_file(
     temp_file: IO,
     persist_path: str,
-    storage_backend: Optional[StorageBackendInterface]=None,
-    should_close: bool=True
+    storage_backend: Optional[StorageBackendInterface] = None,
+    should_close: bool = True
 ) -> None:
   """
   <Purpose>
@@ -218,7 +218,7 @@ def persist_temp_file(
 
 def ensure_parent_dir(
     filename: str,
-    storage_backend: Optional[StorageBackendInterface]=None
+    storage_backend: Optional[StorageBackendInterface] = None
 ) -> None:
   """
   <Purpose>
@@ -358,7 +358,7 @@ def load_json_string(data: json_str) -> Any:
 
 def load_json_file(
     filepath: str,
-    storage_backend: Optional[StorageBackendInterface]=None
+    storage_backend: Optional[StorageBackendInterface] = None
 ) -> Any:
   """
   <Purpose>
