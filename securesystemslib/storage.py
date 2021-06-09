@@ -20,8 +20,9 @@ import errno
 import logging
 import os
 import shutil
-
+from contextlib import contextmanager
 from securesystemslib import exceptions
+from typing import BinaryIO, IO, Iterator, List
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,8 @@ class StorageBackendInterface():
 
 
   @abc.abstractmethod
-  def get(self, filepath):
+  @contextmanager
+  def get(self, filepath: str) -> Iterator[BinaryIO]:
     """
     <Purpose>
       A context manager for 'with' statements that is used for retrieving files
@@ -63,7 +65,7 @@ class StorageBackendInterface():
 
 
   @abc.abstractmethod
-  def put(self, fileobj, filepath):
+  def put(self, fileobj: IO, filepath: str) -> None:
     """
     <Purpose>
       Store a file-like object in the storage backend.
@@ -87,7 +89,7 @@ class StorageBackendInterface():
 
 
   @abc.abstractmethod
-  def remove(self, filepath):
+  def remove(self, filepath: str) -> None:
     """
     <Purpose>
       Remove the file at 'filepath' from the storage.
@@ -106,7 +108,7 @@ class StorageBackendInterface():
 
 
   @abc.abstractmethod
-  def getsize(self, filepath):
+  def getsize(self, filepath: str) -> int:
     """
     <Purpose>
       Retrieve the size, in bytes, of the file at 'filepath'.
@@ -126,7 +128,7 @@ class StorageBackendInterface():
 
 
   @abc.abstractmethod
-  def create_folder(self, filepath):
+  def create_folder(self, filepath: str) -> None:
     """
     <Purpose>
       Create a folder at filepath and ensure all intermediate components of the
@@ -149,7 +151,7 @@ class StorageBackendInterface():
 
 
   @abc.abstractmethod
-  def list_folder(self, filepath):
+  def list_folder(self, filepath: str) -> List[str]:
     """
     <Purpose>
       List the contents of the folder at 'filepath'.
@@ -192,39 +194,21 @@ class FilesystemBackend(StorageBackendInterface):
     return cls._instance
 
 
-
-  class GetFile(object):
-    # Implementing get() as a function with the @contextmanager decorator
-    # doesn't allow us to cleanly capture exceptions thrown by the underlying
-    # implementation and bubble up our generic
-    # securesystemslib.exceptions.StorageError, therefore we implement get as
-    # a class and also assign the class to the 'get' attribute of the parent
-    # FilesystemBackend class.
-
-    def __init__(self, filepath):
-      self.filepath = filepath
-
-
-    def __enter__(self):
-      try:
-        self.file_object = open(self.filepath, 'rb')
-        return self.file_object
-      except (FileNotFoundError, IOError):
-        raise exceptions.StorageError(
-            "Can't open %s" % self.filepath)
+  @contextmanager
+  def get(self, filepath:str) -> Iterator[BinaryIO]:
+    file_object = None
+    try:
+      file_object = open(filepath, 'rb')
+      yield file_object
+    except OSError:
+      raise exceptions.StorageError(
+          "Can't open %s" % filepath)
+    finally:
+      if file_object is not None:
+        file_object.close()
 
 
-    def __exit__(self, exc_type, exc_val, traceback):
-      self.file_object.close()
-
-
-
-  # Map our class ContextManager implementation to the function expected of the
-  # securesystemslib.storage.StorageBackendInterface.get definition
-  get = GetFile
-
-
-  def put(self, fileobj, filepath):
+  def put(self, fileobj: IO, filepath: str) -> None:
     # If we are passed an open file, seek to the beginning such that we are
     # copying the entire contents
     if not fileobj.closed:
@@ -237,12 +221,12 @@ class FilesystemBackend(StorageBackendInterface):
         # and the operating system's buffers.  os.fsync() should follow flush().
         destination_file.flush()
         os.fsync(destination_file.fileno())
-    except (OSError, IOError):
+    except OSError:
       raise exceptions.StorageError(
           "Can't write file %s" % filepath)
 
 
-  def remove(self, filepath):
+  def remove(self, filepath: str) -> None:
     try:
       os.remove(filepath)
     except (FileNotFoundError, PermissionError, OSError):  # pragma: no cover
@@ -250,7 +234,7 @@ class FilesystemBackend(StorageBackendInterface):
           "Can't remove file %s" % filepath)
 
 
-  def getsize(self, filepath):
+  def getsize(self, filepath: str) -> int:
     try:
       return os.path.getsize(filepath)
     except OSError:
@@ -258,7 +242,7 @@ class FilesystemBackend(StorageBackendInterface):
           "Can't access file %s" % filepath)
 
 
-  def create_folder(self, filepath):
+  def create_folder(self, filepath: str) -> None:
     try:
       os.makedirs(filepath)
     except OSError as e:
@@ -275,7 +259,7 @@ class FilesystemBackend(StorageBackendInterface):
             "Can't create folder at %s" % filepath)
 
 
-  def list_folder(self, filepath):
+  def list_folder(self, filepath: str) -> List[str]:
     try:
       return os.listdir(filepath)
     except FileNotFoundError:
