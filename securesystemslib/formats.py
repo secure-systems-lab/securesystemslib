@@ -12,6 +12,9 @@
   Refactored April 30, 2012. -vladimir.v.diaz
 
 <Copyright>
+  2008-2011 The Tor Project, Inc
+  2012-2016 New York University and the TUF contributors
+  2016-2021 Securesystemslib contributors
   See LICENSE for licensing information.
 
 <Purpose>
