@@ -1,5 +1,26 @@
 # Changelog
 
+## securesystemslib v0.21.0
+**NOTE**: This is the first release of securesystemslib to require Python 3.6
+or newer.
+
+### Fixed
+* Clarified licensing and copyright notices with regards to code that is
+  derived from Thandy (#366)
+
+### Added
+* Added machinery for static type checking with mypy, including type annotation
+  of the util module (#361)
+* Added type annotations to storage module (#362)
+
+### Changed
+* Bumped dependencies: six (#350), cffi (#364), ed25519 (#356),
+  cryptography (#369)
+
+### Removed
+* Removed support for Python 2.7 (#352) and the use of future and six modules
+  which were required to support code running on both Python 2 and 3 (#359)
+
 ## securesystemslib v0.20.1
 **NOTE**: this will be the final release of securesystemslib that supports
 Python 2.7.

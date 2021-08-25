@@ -68,7 +68,7 @@ with open('README.rst') as file_object:
 
 setup(
   name = 'securesystemslib',
-  version = '0.20.1',
+  version = '0.21.0',
   description = 'A library that provides cryptographic and general-purpose'
       ' routines for Secure Systems Lab projects at NYU',
   license = 'MIT',
@@ -87,7 +87,6 @@ setup(
     'Operating System :: POSIX :: Linux',
     'Operating System :: MacOS :: MacOS X',
     'Operating System :: Microsoft :: Windows',
-    'Programming Language :: Python',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: 3.7',
