@@ -4,8 +4,6 @@ Secure Systems Library
 .. image:: https://github.com/secure-systems-lab/securesystemslib/workflows/Run%20Securesystemslib%20tests/badge.svg
    :target: https://github.com/secure-systems-lab/securesystemslib/actions?query=workflow%3A%22Run+Securesystemslib+tests%22+branch%3Amaster
 
-.. image:: https://api.dependabot.com/badges/status?host=github&repo=secure-systems-lab/securesystemslib
-   :target: https://api.dependabot.com/badges/status?host=github&repo=secure-systems-lab/securesystemslib
 
 
 A library that provides cryptographic and general-purpose functions for Secure
