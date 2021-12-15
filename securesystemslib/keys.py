@@ -651,6 +651,9 @@ def create_signature(key_dict, data):
     securesystemslib.exceptions.UnsupportedAlgorithmError, if 'key_dict'
     specifies an unsupported key type or signing scheme.
 
+    securesystemslib.exceptions.CryptoError, if the signature cannot be
+    generated.
+
     TypeError, if 'key_dict' contains an invalid keytype.
 
   <Side Effects>
