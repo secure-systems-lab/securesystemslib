@@ -201,7 +201,7 @@ def persist_temp_file(
       persisted. Default is True, the file is closed.
 
   <Exceptions>
-    None.
+    securesystemslib.exceptions.StorageError: If file cannot be written.
 
   <Return>
     None.
