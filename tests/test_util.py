@@ -29,6 +29,7 @@ import securesystemslib.settings
 import securesystemslib.hash
 import securesystemslib.util
 import securesystemslib.unittest_toolbox as unittest_toolbox
+import securesystemslib.exceptions as exceptions
 
 logger = logging.getLogger(__name__)
 
@@ -246,8 +247,12 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     securesystemslib.util.persist_temp_file(tmpfile, dest_path2,
         should_close=False)
     self.assertFalse(tmpfile.closed)
-    tmpfile.close()
 
+    # Test persisting a file with an empty filename
+    with self.assertRaises(exceptions.StorageError):
+      securesystemslib.util.persist_temp_file(tmpfile, "")
+
+    tmpfile.close()
 
 
   def test_C5_unittest_toolbox_make_temp_directory(self):
