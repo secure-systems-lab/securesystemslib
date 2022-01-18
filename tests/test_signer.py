@@ -2,6 +2,7 @@
 
 """Test cases for "signer.py". """
 
+import copy
 import sys
 import unittest
 
@@ -76,6 +77,30 @@ class TestSSlibSigner(unittest.TestCase):
         sig_obj = Signature.from_dict(signature_dict)
 
         self.assertDictEqual(signature_dict, sig_obj.to_dict())
+
+
+    def test_signature_eq_(self):
+        signature_dict = {
+            "sig": "30460221009342e4566528fcecf6a7a5d53ebacdb1df151e242f55f8775883469cb01dbc6602210086b426cc826709acfa2c3f9214610cb0a832db94bbd266fd7c5939a48064a851",
+            "keyid": "11fa391a0ed7a447cbfeb4b2667e286fc248f64d5e6d0eeed2e5e23f97f9f714"
+        }
+        sig_obj = Signature.from_dict(signature_dict)
+        sig_obj_2 = copy.deepcopy(sig_obj)
+
+        self.assertEqual(sig_obj, sig_obj_2)
+
+        # Assert that changing the keyid will make the objects not equal.
+        sig_obj_2.keyid = None
+        self.assertNotEqual(sig_obj, sig_obj_2)
+        sig_obj_2.keyid = sig_obj.keyid
+
+        # Assert that changing the signature will make the objects not equal.
+        sig_obj_2.signature = None
+        self.assertNotEqual(sig_obj, sig_obj_2)
+
+        # Assert that making sig_obj_2 None will make the objects not equal.
+        sig_obj_2 = None
+        self.assertNotEqual(sig_obj, sig_obj_2)
 
 
 # Run the unit tests.

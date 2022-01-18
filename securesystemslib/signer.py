@@ -7,7 +7,7 @@ signing implementations and a couple of example implementations.
 
 import abc
 import securesystemslib.keys as sslib_keys
-from typing import Dict
+from typing import Any, Dict
 
 
 class Signature:
@@ -27,6 +27,13 @@ class Signature:
     def __init__(self, keyid: str, sig: str):
         self.keyid = keyid
         self.signature = sig
+
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Signature):
+            return False
+
+        return self.keyid == other.keyid and self.signature == other.signature
 
 
     @classmethod
