@@ -59,7 +59,8 @@ def get_file_details(
     securesystemslib.exceptions.FormatError: If hash of the file does not match
     HASHDICT_SCHEMA.
 
-    securesystemslib.exceptions.Error: If 'filepath' does not exist.
+    securesystemslib.exceptions.StorageError: The file at "filepath" cannot be
+    opened or found.
 
   <Returns>
     A tuple (length, hashes) describing 'filepath'.
@@ -107,7 +108,8 @@ def get_file_hashes(
     securesystemslib.exceptions.FormatError: If hash of the file does not match
     HASHDICT_SCHEMA.
 
-    securesystemslib.exceptions.Error: If 'filepath' does not exist.
+    securesystemslib.exceptions.StorageError: The file at "filepath" cannot be
+    opened or found.
 
   <Returns>
     A dictionary conforming to securesystemslib.formats.HASHDICT_SCHEMA
@@ -156,7 +158,8 @@ def get_file_length(
       passed a FilesystemBackend will be instantiated and used.
 
   <Exceptions>
-    securesystemslib.exceptions.Error: If 'filepath' does not exist.
+    securesystemslib.exceptions.StorageError: The file at "filepath" cannot be
+    opened or found.
 
   <Returns>
     The length, in bytes, of the file at 'filepath'.
@@ -240,6 +243,7 @@ def ensure_parent_dir(
   <Exceptions>
     securesystemslib.exceptions.FormatError: If 'filename' is improperly
     formatted.
+    securesystemslib.exceptions.StorageError: When folder cannot be created.
 
   <Side Effects>
     A directory is created whenever the parent directory of 'filename' does not
@@ -377,6 +381,8 @@ def load_json_file(
 
     securesystemslib.exceptions.Error: If 'filepath' cannot be deserialized to
     a Python object.
+
+    securesystemslib.exceptions.StorageError: If file cannot be loaded.
 
     IOError in case of runtime IO exceptions.
 

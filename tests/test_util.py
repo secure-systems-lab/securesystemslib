@@ -68,7 +68,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
     for bogus_input in bogus_inputs:
       if isinstance(bogus_input, str):
-        self.assertRaises(securesystemslib.exceptions.Error,
+        self.assertRaises(securesystemslib.exceptions.StorageError,
             securesystemslib.util.get_file_details, bogus_input)
       else:
         self.assertRaises(securesystemslib.exceptions.FormatError,
@@ -96,7 +96,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
     for bogus_input in bogus_inputs:
       if isinstance(bogus_input, str):
-        self.assertRaises(securesystemslib.exceptions.Error,
+        self.assertRaises(securesystemslib.exceptions.StorageError,
             securesystemslib.util.get_file_hashes, bogus_input)
       else:
         self.assertRaises(securesystemslib.exceptions.FormatError,
@@ -123,7 +123,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
     for bogus_input in bogus_inputs:
       if isinstance(bogus_input, str):
-        self.assertRaises(securesystemslib.exceptions.Error,
+        self.assertRaises(securesystemslib.exceptions.StorageError,
             securesystemslib.util.get_file_length, bogus_input)
       else:
         self.assertRaises(securesystemslib.exceptions.FormatError,
@@ -143,6 +143,10 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
       else:
         self.assertRaises(securesystemslib.exceptions.FormatError,
             securesystemslib.util.ensure_parent_dir, parent_dir)
+
+    # Check that when a folder cannot be created a StorageError is thrown
+    with self.assertRaises(securesystemslib.exceptions.StorageError):
+      securesystemslib.util.ensure_parent_dir("/a/file.txt")
 
     # When we call ensure_parent_dir with filepath arg like "a.txt",
     # then the directory of that filepath will be an empty string.

@@ -343,6 +343,8 @@ def digest_filename(filename, algorithm=DEFAULT_HASH_ALGORITHM,
     securesystemslib.exceptions.UnsupportedLibraryError, if the given
     'hash_library' is unsupported.
 
+    securesystemslib.exceptions.StorageError, if the file cannot be opened.
+
   <Side Effects>
     None.
 
