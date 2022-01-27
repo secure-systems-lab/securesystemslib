@@ -88,7 +88,6 @@ setup(
     'Operating System :: MacOS :: MacOS X',
     'Operating System :: Microsoft :: Windows',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
@@ -101,7 +100,7 @@ setup(
     'Source': 'https://github.com/secure-systems-lab/securesystemslib',
     'Issues': 'https://github.com/secure-systems-lab/securesystemslib/issues',
   },
-  python_requires = "~=3.6",
+  python_requires = "~=3.7",
   extras_require = {
       'colors': ['colorama>=0.3.9'],
       'crypto': ['cryptography>=3.3.2'],
