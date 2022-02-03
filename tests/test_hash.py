@@ -45,9 +45,6 @@ class TestHash(unittest.TestCase):
     if algorithm in blake_algos:
       if library == 'pyca_crypto':
         return False
-      # hashlib does not support blake2* if < 3.6
-      elif library == 'hashlib' and sys.version_info[:2] < (3, 6):
-        return False
     return True
 
 

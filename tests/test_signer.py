@@ -9,18 +9,7 @@ import unittest
 import securesystemslib.formats
 import securesystemslib.keys as KEYS
 from securesystemslib.exceptions import FormatError, UnsupportedAlgorithmError
-
-# TODO: Remove case handling when fully dropping support for versions < 3.6
-IS_PY_VERSION_SUPPORTED = sys.version_info >= (3, 6)
-
-# Use setUpModule to tell unittest runner to skip this test module gracefully.
-def setUpModule():
-    if not IS_PY_VERSION_SUPPORTED:
-        raise unittest.SkipTest("requires Python 3.6 or higher")
-
-# Since setUpModule is called after imports we need to import conditionally.
-if IS_PY_VERSION_SUPPORTED:
-    from securesystemslib.signer import Signature, SSlibSigner
+from securesystemslib.signer import Signature, SSlibSigner
 
 
 class TestSSlibSigner(unittest.TestCase):
