@@ -7,7 +7,7 @@ signing implementations and a couple of example implementations.
 
 import abc
 import securesystemslib.keys as sslib_keys
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Mapping
 
 
 class Signature:
@@ -22,18 +22,30 @@ class Signature:
     Attributes:
         keyid: HEX string used as a unique identifier of the key.
         signature: HEX string representing the signature.
+        unrecognized_fields: Dictionary of all attributes that are not managed
+            by securesystemslib.
 
     """
-    def __init__(self, keyid: str, sig: str):
+    def __init__(
+        self,
+        keyid: str,
+        sig: str,
+        unrecognized_fields: Optional[Mapping[str, Any]] = None
+    ):
         self.keyid = keyid
         self.signature = sig
+        self.unrecognized_fields: Mapping[str, Any] = unrecognized_fields or {}
 
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Signature):
             return False
 
-        return self.keyid == other.keyid and self.signature == other.signature
+        return (
+            self.keyid == other.keyid
+            and self.signature == other.signature
+            and self.unrecognized_fields == other.unrecognized_fields
+        )
 
 
     @classmethod
@@ -50,11 +62,19 @@ class Signature:
             KeyError: If any of the "keyid" and "sig" fields are missing from
                 the signature_dict.
 
+        Side Effect:
+            Destroys the metadata dict passed by reference.
+
         Returns:
             A "Signature" instance.
         """
 
-        return cls(signature_dict["keyid"], signature_dict["sig"])
+        keyid = signature_dict.pop("keyid")
+        sig = signature_dict.pop("sig")
+        # All fields left in the signature_dict are unrecognized.
+        return cls(
+            keyid, sig, signature_dict
+        )
 
 
     def to_dict(self) -> Dict:
@@ -62,7 +82,8 @@ class Signature:
 
         return {
             "keyid": self.keyid,
-            "sig": self.signature
+            "sig": self.signature,
+            **self.unrecognized_fields,
         }
 
 
