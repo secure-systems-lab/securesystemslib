@@ -57,8 +57,8 @@ else:
 
 
 b = 256
-q = 2 ** 255 - 19
-l = 2 ** 252 + 27742317777372353535851937790883648493
+q = 2**255 - 19
+l = 2**252 + 27742317777372353535851937790883648493
 
 
 def H(m):
@@ -230,14 +230,14 @@ def publickey_unsafe(sk):
     See module docstring.  This function should be used for testing only.
     """
     h = H(sk)
-    a = 2 ** (b - 2) + sum(2 ** i * bit(h, i) for i in range(3, b - 2))
+    a = 2 ** (b - 2) + sum(2**i * bit(h, i) for i in range(3, b - 2))
     A = scalarmult_B(a)
     return encodepoint(A)
 
 
 def Hint(m):
     h = H(m)
-    return sum(2 ** i * bit(h, i) for i in range(2 * b))
+    return sum(2**i * bit(h, i) for i in range(2 * b))
 
 
 def signature_unsafe(m, sk, pk):
@@ -247,7 +247,7 @@ def signature_unsafe(m, sk, pk):
     See module docstring.  This function should be used for testing only.
     """
     h = H(sk)
-    a = 2 ** (b - 2) + sum(2 ** i * bit(h, i) for i in range(3, b - 2))
+    a = 2 ** (b - 2) + sum(2**i * bit(h, i) for i in range(3, b - 2))
     r = Hint(
         intlist2bytes([indexbytes(h, j) for j in range(b // 8, b // 4)]) + m
     )
@@ -266,11 +266,11 @@ def isoncurve(P):
 
 
 def decodeint(s):
-    return sum(2 ** i * bit(s, i) for i in range(0, b))
+    return sum(2**i * bit(s, i) for i in range(0, b))
 
 
 def decodepoint(s):
-    y = sum(2 ** i * bit(s, i) for i in range(0, b - 1))
+    y = sum(2**i * bit(s, i) for i in range(0, b - 1))
     x = xrecover(y)
     if x & 1 != bit(s, b - 1):
         x = q - x
