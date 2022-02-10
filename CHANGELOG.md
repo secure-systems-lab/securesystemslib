@@ -1,5 +1,24 @@
 # Changelog
 
+## securesystemslib v0.22.0
+
+### Fixed
+* Removed broken Dependabot badge in README (#377)
+
+### Added
+* Python 3.10 support (#380)
+* `__eq__` method for Signature objects (#383)
+* `unrecognized_fields` attribute for Signature objects (#387)
+
+### Changed
+* Bumped dependencies: cffi (#373), cryptography (#376, #379), ed25519 (#378,
+  #390), pycparser (#375), pynacl (#382)
+* Misc docstring improvements (#380, #381, #384)
+
+### Removed
+- Python 3.6 support (#385)
+
+
 ## securesystemslib v0.21.0
 **NOTE**: This is the first release of securesystemslib to require Python 3.6
 or newer.
