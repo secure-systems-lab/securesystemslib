@@ -311,8 +311,11 @@ def verify_signature(public_key, scheme, signature, data):
   formats.ECDSA_SCHEME_SCHEMA.check_match(scheme)
   formats.ECDSASIGNATURE_SCHEMA.check_match(signature)
 
-  ecdsa_key = load_pem_public_key(public_key.encode('utf-8'),
-      backend=default_backend())
+  try:
+    ecdsa_key = load_pem_public_key(public_key.encode('utf-8'),
+        backend=default_backend())
+  except ValueError as e:
+    raise exceptions.FormatError(f'Failed to load PEM key {public_key}') from e
 
   if not isinstance(ecdsa_key, ec.EllipticCurvePublicKey):
     raise exceptions.FormatError('Invalid ECDSA public'

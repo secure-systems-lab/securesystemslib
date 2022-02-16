@@ -379,6 +379,13 @@ class TestKeys(unittest.TestCase):
         ed25519_signature, DATA)
     self.assertTrue(verified, "Incorrect signature.")
 
+    # Verify ecdsa key with HEX encoded keyval instead of PEM encoded keyval
+    ecdsa_key = KEYS.generate_ecdsa_key()
+    ecdsa_key['keyval']['public'] = 'abcd'
+    # sig is not important as long as keyid is the same as the one in ecdsa_key
+    sig = {'keyid': ecdsa_key['keyid'], 'sig': 'bb'}
+    with self.assertRaises(securesystemslib.exceptions.FormatError):
+        KEYS.verify_signature(ecdsa_key, sig, b'data')
 
 
   def test_create_rsa_encrypted_pem(self):
