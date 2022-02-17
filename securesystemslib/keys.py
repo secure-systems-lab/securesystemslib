@@ -838,7 +838,12 @@ def verify_signature(key_dict, signature, data):
 
   elif keytype == 'ed25519':
     if scheme == 'ed25519':
-      public = binascii.unhexlify(public.encode('utf-8'))
+      try:
+        public = binascii.unhexlify(public.encode('utf-8'))
+      except binascii.Error as e:
+        raise exceptions.FormatError(
+          f'Failed to parse key {public} as hex'
+        ) from e
       valid_signature = ed25519_keys.verify_signature(public,
           scheme, sig, data)
 
