@@ -1,3 +1,16 @@
+python-securesystemslib (0.22.0-1) unstable; urgency=medium
+
+  * New upstream release includes among other things:
+    - bug fix in the Signer abstract base class (#348)
+    - machinery for static type checking with mypy (#361)
+    - type annotations for a few modules (progress tracked in #358)
+    - enhancements in the Signature class (#383, #387)
+
+  * d/control:
+    - bump standards version to 4.6.0.1
+
+ -- Lukas Puehringer <lukas.puehringer@nyu.edu>  Mon, 21 Feb 2022 12:52:17 +0100
+
 python-securesystemslib (0.20.0-1) unstable; urgency=medium
 
   * New upstream release includes among other things:

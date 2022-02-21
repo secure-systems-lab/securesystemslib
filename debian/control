@@ -17,7 +17,7 @@ Build-Depends:
  python3-colorama,
  python3-mock,
  gnupg2,
-Standards-Version: 4.5.1
+Standards-Version: 4.6.0.1
 Rules-Requires-Root: no
 Homepage: https://ssl.engineering.nyu.edu
 Vcs-Git: https://github.com/secure-systems-lab/securesystemslib.git -b debian
