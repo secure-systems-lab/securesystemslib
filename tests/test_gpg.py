@@ -59,6 +59,17 @@ from securesystemslib.formats import (GPG_PUBKEY_SCHEMA,
     ANY_PUBKEY_DICT_SCHEMA)
 
 
+class GPGTestUtils:
+    """GPG Test utility class"""
+
+    @staticmethod
+    def ignore_not_found_error(function, path, exc_info):
+        """Callback that ignores FileNotFoundError"""
+        _, error, _ = exc_info
+        if not isinstance(error, FileNotFoundError):
+            raise error
+
+
 @unittest.skipIf(not HAVE_GPG, "gpg not found")
 class TestUtil(unittest.TestCase):
   """Test util functions. """
@@ -503,7 +514,7 @@ class TestGPGRSA(unittest.TestCase):
   def tearDownClass(self):
     """Change back to initial working dir and remove temp test directory. """
     os.chdir(self.working_dir)
-    shutil.rmtree(self.test_dir)
+    shutil.rmtree(self.test_dir, onerror=GPGTestUtils.ignore_not_found_error)
 
   def test_export_pubkey_error(self):
     """Test correct error is raised if function called incorrectly. """
@@ -664,7 +675,7 @@ class TestGPGDSA(unittest.TestCase):
   def tearDownClass(self):
     """Change back to initial working dir and remove temp test directory. """
     os.chdir(self.working_dir)
-    shutil.rmtree(self.test_dir)
+    shutil.rmtree(self.test_dir, onerror=GPGTestUtils.ignore_not_found_error)
 
   def test_export_pubkey(self):
     """ export a public key and make sure the parameters are the right ones:
@@ -749,7 +760,7 @@ class TestGPGEdDSA(unittest.TestCase):
   def tearDownClass(self):
     """Change back to initial working dir and remove temp test directory. """
     os.chdir(self.working_dir)
-    shutil.rmtree(self.test_dir)
+    shutil.rmtree(self.test_dir, onerror=GPGTestUtils.ignore_not_found_error)
 
   def test_gpg_sign_and_verify_object_with_default_key(self):
     """Create a signature using the default key on the keyring """
