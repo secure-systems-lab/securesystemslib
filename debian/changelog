@@ -1,3 +1,10 @@
+python-securesystemslib (0.23.0-1) unstable; urgency=medium
+
+  * New upstream release includes among other things:
+    - fix race condition in gpg test cleanup function (Closes: #1008349)
+
+ -- Lukas Puehringer <lukas.puehringer@nyu.edu>  Tue, 26 Apr 2022 12:19:30 +0200
+
 python-securesystemslib (0.22.0-1) unstable; urgency=medium
 
   * New upstream release includes among other things:
