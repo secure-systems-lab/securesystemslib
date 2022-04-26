@@ -1,5 +1,16 @@
 # Changelog
 
+## securesystemslib v0.23.0
+
+### Fixed
+* Race condition in gpg test cleanup function (#397)
+
+### Changed
+* Consistently raise custom `FormatError` in `keys.verify_signature()` (#391)
+* Bumped dependencies: cryptography (#396), ed25519 (#394, #398)
+* Updated Debian packaging metadata (#392)
+
+
 ## securesystemslib v0.22.0
 
 ### Fixed
