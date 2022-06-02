@@ -48,6 +48,7 @@ import securesystemslib.gpg.functions
 import securesystemslib.gpg.util
 import securesystemslib.interface
 import securesystemslib.keys
+import securesystemslib.signer
 
 
 
@@ -187,8 +188,10 @@ class TestPublicInterfaces(unittest.TestCase):
 
     keydict['keytype'] = 'ecdsa'
     keydict['scheme'] = 'ecdsa-sha2-nistp256'
-    sig = {'keyid': 'f00',
-           'sig': 'cfbce8e23eef478975a4339036de2335002d57c7b1632dd01e526a3bc52a5b261508ad50b9e25f1b819d61017e7347e912db1af019bf47ee298cc58bbdef9703'}
+    sig = securesystemslib.signer.Signature(
+      keyid='f00',
+      sig='cfbce8e23eef478975a4339036de2335002d57c7b1632dd01e526a3bc52a5b261508ad50b9e25f1b819d61017e7347e912db1af019bf47ee298cc58bbdef9703'
+    )
     # NOTE: we don't test ed25519 keys as they can be verified in pure python
     with self.assertRaises(
           securesystemslib.exceptions.UnsupportedLibraryError):
