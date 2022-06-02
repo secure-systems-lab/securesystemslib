@@ -24,6 +24,7 @@ import securesystemslib.exceptions
 import securesystemslib.formats
 import securesystemslib.keys
 import securesystemslib.ecdsa_keys
+import securesystemslib.signer
 
 KEYS = securesystemslib.keys
 FORMAT_ERROR_MSG = 'securesystemslib.exceptions.FormatError was raised!' + \
@@ -238,12 +239,8 @@ class TestKeys(unittest.TestCase):
     ed25519_signature = KEYS.create_signature(self.ed25519key_dict, DATA)
 
     # Check format of output.
-    self.assertEqual(None,
-        securesystemslib.formats.SIGNATURE_SCHEMA.check_match(rsa_signature),
-        FORMAT_ERROR_MSG)
-    self.assertEqual(None,
-        securesystemslib.formats.SIGNATURE_SCHEMA.check_match(ed25519_signature),
-        FORMAT_ERROR_MSG)
+    self.assertIsInstance(rsa_signature, securesystemslib.signer.Signature)
+    self.assertIsInstance(ed25519_signature, securesystemslib.signer.Signature)
 
     # Test for invalid signature scheme.
     args = (self.rsakey_dict, DATA)
@@ -270,9 +267,7 @@ class TestKeys(unittest.TestCase):
     ecdsa_signature = KEYS.create_signature(self.ecdsakey_dict, DATA)
 
     # Check format of output.
-    self.assertEqual(None,
-        securesystemslib.formats.SIGNATURE_SCHEMA.check_match(ecdsa_signature),
-        FORMAT_ERROR_MSG)
+    self.assertIsInstance(ecdsa_signature, securesystemslib.signer.Signature)
 
     # Removing private key from 'ecdsakey_dict' - should raise a TypeError.
     private = self.ecdsakey_dict['keyval']['private']
@@ -383,7 +378,7 @@ class TestKeys(unittest.TestCase):
     ecdsa_key = KEYS.generate_ecdsa_key()
     ecdsa_key['keyval']['public'] = 'abcd'
     # sig is not important as long as keyid is the same as the one in ecdsa_key
-    sig = {'keyid': ecdsa_key['keyid'], 'sig': 'bb'}
+    sig = securesystemslib.signer.Signature(keyid=ecdsa_key['keyid'], sig='bb')
     with self.assertRaises(securesystemslib.exceptions.FormatError):
         KEYS.verify_signature(ecdsa_key, sig, b'data')
 
@@ -392,7 +387,7 @@ class TestKeys(unittest.TestCase):
     ed25519['keyval']['public'] = \
         '-----BEGIN PUBLIC KEY-----\nfoo\n-----END PUBLIC KEY-----\n'
     # sig is not important as long as keyid is the same as the one in ed25519
-    sig = {'keyid': ed25519['keyid'], 'sig': 'bb'}
+    sig = securesystemslib.signer.Signature(keyid=ed25519['keyid'], sig='bb')
     with self.assertRaises(securesystemslib.exceptions.FormatError):
         KEYS.verify_signature(ed25519, sig, b'data')
 

@@ -59,6 +59,7 @@ from securesystemslib import exceptions
 from securesystemslib import formats
 from securesystemslib import rsa_keys
 from securesystemslib import settings
+from securesystemslib import signer
 from securesystemslib import util
 from securesystemslib.hash import digest
 
@@ -679,7 +680,6 @@ def create_signature(key_dict, data):
   # RSASSA-PSS and RSA-PKCS1v15 keys and signatures can be generated and
   # verified by rsa_keys.py, and Ed25519 keys by PyNaCl and PyCA's
   # optimized, pure python implementation of Ed25519.
-  signature = {}
   keytype = key_dict['keytype']
   scheme = key_dict['scheme']
   public = key_dict['keyval']['public']
@@ -713,9 +713,7 @@ def create_signature(key_dict, data):
 
   # Build the signature dictionary to be returned.
   # The hexadecimal representation of 'sig' is stored in the signature.
-  signature['keyid'] = keyid
-  signature['sig'] = binascii.hexlify(sig).decode()
-
+  signature = signer.Signature(keyid=keyid, sig=binascii.hexlify(sig).decode())
   return signature
 
 
@@ -803,14 +801,15 @@ def verify_signature(key_dict, signature, data):
   formats.ANYKEY_SCHEMA.check_match(key_dict)
 
   # Does 'signature' have the correct format?
-  formats.SIGNATURE_SCHEMA.check_match(signature)
+  if not isinstance(signature, signer.Signature):
+    raise exceptions.FormatError("Wanted a Signature object.")
 
   # Verify that the KEYID in 'key_dict' matches the KEYID listed in the
   # 'signature'.
-  if key_dict['keyid'] != signature['keyid']:
+  if key_dict['keyid'] != signature.keyid:
     raise exceptions.CryptoError('The KEYID ('
         ' ' + repr(key_dict['keyid']) + ' ) in the given key does not match'
-        ' the KEYID ( ' + repr(signature['keyid']) + ' ) in the signature.')
+        ' the KEYID ( ' + repr(signature.keyid) + ' ) in the signature.')
 
   else:
     logger.debug('The KEYIDs of key_dict and the signature match.')
@@ -819,8 +818,7 @@ def verify_signature(key_dict, signature, data):
   # (i.e., rsakey_dict['keyval']['public']), verify whether 'signature'
   # was produced by key_dict's corresponding private key
   # key_dict['keyval']['private'].
-  sig = signature['sig']
-  sig = binascii.unhexlify(sig.encode('utf-8'))
+  sig = binascii.unhexlify(signature.signature.encode('utf-8'))
   public = key_dict['keyval']['public']
   keytype = key_dict['keytype']
   scheme = key_dict['scheme']

@@ -33,7 +33,7 @@ class TestSSlibSigner(unittest.TestCase):
             sig_obj = sslib_signer.sign(self.DATA)
 
             # Verify signature
-            verified = KEYS.verify_signature(scheme_dict, sig_obj.to_dict(),
+            verified = KEYS.verify_signature(scheme_dict, sig_obj,
                     self.DATA)
             self.assertTrue(verified, "Incorrect signature.")
 

@@ -158,5 +158,5 @@ class SSlibSigner(Signer):
             Returns a "Signature" class instance.
         """
 
-        sig_dict = sslib_keys.create_signature(self.key_dict, payload)
-        return Signature(**sig_dict)
+        signature = sslib_keys.create_signature(self.key_dict, payload)
+        return signature
