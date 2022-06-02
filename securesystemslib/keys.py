@@ -613,17 +613,17 @@ def create_signature(key_dict, data):
     >>> ed25519_key = generate_ed25519_key()
     >>> data = 'The quick brown fox jumps over the lazy dog'
     >>> signature = create_signature(ed25519_key, data)
-    >>> securesystemslib.formats.SIGNATURE_SCHEMA.matches(signature)
+    >>> isinstance(signature, securesystemslib.signer.Signature)
     True
     >>> len(signature['sig'])
     128
     >>> rsa_key = generate_rsa_key(2048)
     >>> signature = create_signature(rsa_key, data)
-    >>> securesystemslib.formats.SIGNATURE_SCHEMA.matches(signature)
+    >>> isinstance(signature, securesystemslib.signer.Signature)
     True
     >>> ecdsa_key = generate_ecdsa_key()
     >>> signature = create_signature(ecdsa_key, data)
-    >>> securesystemslib.formats.SIGNATURE_SCHEMA.matches(signature)
+    >>> isinstance(signature, securesystemslib.signer.Signature)
     True
 
   <Arguments>
@@ -662,8 +662,7 @@ def create_signature(key_dict, data):
     actual signing routine.
 
   <Returns>
-    A signature dictionary conformant to
-    'securesystemslib_format.SIGNATURE_SCHEMA'.
+    A "securesystemslib.singer.Signature" class instance.
   """
 
   # Does 'key_dict' have the correct format?
@@ -762,11 +761,12 @@ def verify_signature(key_dict, signature, data):
       The public and private keys are strings in PEM format.
 
     signature:
-      The signature dictionary produced by one of the key generation functions.
-      'signature' has the form:
+      The securesystemslib.signer.Signature class instance produced by one
+      of the key generation functions.
+      'signature' has two attributes:
 
-      {'keyid': 'f30a0870d026980100c0573bd557394f8c1bbd6...',
-       'sig': sig}.
+      keyid = 'f30a0870d026980100c0573bd557394f8c1bbd6...',
+      sig = sig
 
       Conformant to 'securesystemslib.formats.SIGNATURE_SCHEMA'.
 
