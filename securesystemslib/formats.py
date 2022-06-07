@@ -68,7 +68,6 @@
 
 import binascii
 import calendar
-import re
 import datetime
 import time
 
@@ -613,7 +612,7 @@ def _canonical_string_encoder(string):
     A string with the canonical-encoded 'string' embedded.
   """
 
-  string = '"%s"' % re.sub(r'(["\\])', r'\\\1', string)
+  string = '"%s"' % string.replace('\\', '\\\\').replace('"', '\\"')
 
   return string
 
