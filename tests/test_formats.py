@@ -283,6 +283,11 @@ class TestFormats(unittest.TestCase):
 
     self.assertEqual('{"x":3,"y":null}', encode({"x": 3, "y": None}))
 
+    # Test condition with escaping " and \
+    self.assertEqual('"\\""', encode("\""))
+    self.assertEqual('"\\\\"', encode("\\"))
+    self.assertEqual('"\\\\\\""', encode("\\\""))
+
     # Condition where 'encode()' sends the result to the callable
     # 'output'.
     self.assertEqual(None, encode([1, 2, 3], output))
