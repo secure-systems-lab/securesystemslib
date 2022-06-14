@@ -1,12 +1,12 @@
 """Dead Simple Signing Envelope
 """
 
-import base64
 from typing import Any, List
 
 from securesystemslib import exceptions
 from securesystemslib import formats
 from securesystemslib.signer import Signature
+from securesystemslib.util import b64dec, b64enc
 
 
 class Envelope:
@@ -53,7 +53,8 @@ class Envelope:
         Returns:
             A "Envelope" instance.
         """
-        payload = base64.b64decode(data['payload'].encode())
+
+        payload = b64dec(data['payload'])
         payloadType = data['payloadType']
 
         signatures = []
@@ -69,11 +70,11 @@ class Envelope:
 
         return cls(payload, payloadType, signatures)
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Returns the JSON-serializable dictionary representation of self."""
 
         return {
-            "payload": base64.b64encode(self.payload).decode(),
+            "payload": b64enc(self.payload),
             "payloadType": self.payloadType,
             "signatures": [
                 signature.to_dict() for signature in self.signatures

@@ -17,6 +17,8 @@
   that tries to import a working json module, load_json_* functions, etc.
 """
 
+import base64
+import binascii
 import json
 import logging
 import os
@@ -457,3 +459,51 @@ def digests_are_equal(digest1: str, digest2: str) -> bool:
             are_equal = False
 
     return are_equal
+
+
+def b64enc(data: bytes) -> str:
+    """
+    <Purpose>
+      To encode byte sequence into base64 string
+
+    <Arguments>
+      data:
+        Byte sequence to encode
+
+    <Exceptions>
+      TypeError: If "data" is not byte sequence
+
+    <Side Effects>
+      None.
+
+    <Return>
+      base64 string
+    """
+
+    return base64.standard_b64encode(data).decode("utf-8")
+
+
+def b64dec(string: str) -> bytes:
+    """
+    <Purpose>
+      To decode byte sequence from base64 string
+
+    <Arguments>
+      string:
+        base64 string to decode
+
+    <Exceptions>
+      binascii.Error: If invalid base64-encoded string
+
+    <Side Effects>
+      None.
+
+    <Return>
+      A byte sequence
+    """
+
+    data = string.encode("utf-8")
+    try:
+        return base64.b64decode(data, validate=True)
+    except binascii.Error:
+        return base64.b64decode(data, altchars="-_", validate=True)
