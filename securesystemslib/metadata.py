@@ -86,3 +86,10 @@ class Envelope:
                 signature.to_dict() for signature in self.signatures
             ],
         }
+
+    def pae(self) -> bytes:
+        """Returns the Pre-Auth-Encoding byte sequence of the self."""
+
+        return b'DSSEv1 %d %b %d %b' % (
+            len(self.payload_type), self.payload_type.encode('utf-8'),
+            len(self.payload), self.payload)
