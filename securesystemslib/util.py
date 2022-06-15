@@ -506,4 +506,5 @@ def b64dec(string: str) -> bytes:
     try:
         return base64.b64decode(data, validate=True)
     except binascii.Error:
-        return base64.b64decode(data, altchars="-_", validate=True)
+        # altchars for urlsafe encoded base64 - instead of + and _ instead of /
+        return base64.b64decode(data, altchars=b"-_", validate=True)

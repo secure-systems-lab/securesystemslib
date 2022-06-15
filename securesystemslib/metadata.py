@@ -3,29 +3,36 @@
 
 from typing import Any, List
 
-from securesystemslib import exceptions
-from securesystemslib import formats
+from securesystemslib import exceptions, formats
 from securesystemslib.signer import Signature
 from securesystemslib.util import b64dec, b64enc
 
 
 class Envelope:
-    """DSSE Envelope.
+    """
+    DSSE Envelope to provide interface for signing arbitrary data.
 
     Attributes:
-        payload: Arbitrary byte sequence of Serialized Body
-        payloadType: string that identifies how to interpret payload
+        payload: Arbitrary byte sequence of serialized body
+        payload_type: string that identifies how to interpret payload
         signatures: List of Signature and GPG Signature
+
+    Methods:
+        from_dict(cls, data):
+            Creates a Signature object from its JSON/dict representation.
+
+        to_dict(self):
+            Returns the JSON-serializable dictionary representation of self.
 
     """
 
     payload: bytes
-    payloadType: str
+    payload_type: str
     signatures: List[Signature]
 
-    def __init__(self, payload, payloadType, signatures):
+    def __init__(self, payload, payload_type, signatures):
         self.payload = payload
-        self.payloadType = payloadType
+        self.payload_type = payload_type
         self.signatures = signatures
 
     def __eq__(self, other: Any) -> bool:
@@ -34,17 +41,16 @@ class Envelope:
 
         return (
             self.payload == other.payload
-            and self.payloadType == other.payloadType
+            and self.payload_type == other.payload_type
             and self.signatures == other.signatures
         )
 
     @classmethod
     def from_dict(cls, data: dict) -> "Envelope":
         """Creates a Signature object from its JSON/dict representation.
-        
+
         Arguments:
-            data:
-                A dict containing a valid payload, payloadType and signatures
+            data: A dict containing a valid payload, payloadType and signatures
 
         Raises:
             KeyError: If any of the "payload", "payloadType" and "signatures"
@@ -54,11 +60,11 @@ class Envelope:
             A "Envelope" instance.
         """
 
-        payload = b64dec(data['payload'])
-        payloadType = data['payloadType']
+        payload = b64dec(data["payload"])
+        payload_type = data["payloadType"]
 
         signatures = []
-        for signature in data['signatures']:
+        for signature in data["signatures"]:
             if formats.SIGNATURE_SCHEMA.matches(signature):
                 signatures.append(Signature.from_dict(signature))
 
@@ -66,16 +72,16 @@ class Envelope:
                 raise NotImplementedError
 
             else:
-                raise exceptions.FormatError('Invalid signature')
+                raise exceptions.FormatError("Invalid signature")
 
-        return cls(payload, payloadType, signatures)
+        return cls(payload, payload_type, signatures)
 
     def to_dict(self) -> dict:
         """Returns the JSON-serializable dictionary representation of self."""
 
         return {
             "payload": b64enc(self.payload),
-            "payloadType": self.payloadType,
+            "payloadType": self.payload_type,
             "signatures": [
                 signature.to_dict() for signature in self.signatures
             ],
