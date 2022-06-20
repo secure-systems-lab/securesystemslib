@@ -3,9 +3,9 @@
 """Test cases for "metadata.py". """
 
 import copy
-from typing import Type
 import unittest
 
+from securesystemslib import exceptions
 from securesystemslib.metadata import Envelope
 from securesystemslib.signer import Signature
 
@@ -39,7 +39,7 @@ class TestEnvelope(unittest.TestCase):
 
         # Assert TypeError on invalid signature
         envelope_dict["signatures"] = [""]
-        self.assertRaises(TypeError, Envelope.from_dict, envelope_dict)
+        self.assertRaises(exceptions.FormatError, Envelope.from_dict, envelope_dict)
 
     def test_envelope_eq_(self):
         """Test envelope equality"""

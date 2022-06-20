@@ -3,7 +3,7 @@
 
 from typing import Any, List
 
-from securesystemslib import formats
+from securesystemslib import exceptions, formats
 from securesystemslib.signer import Signature
 from securesystemslib.util import b64dec, b64enc
 
@@ -56,7 +56,7 @@ class Envelope:
             KeyError: If any of the "payload", "payloadType" and "signatures"
                 fields are missing from the "data".
 
-            TypeError: If type of any signature in "signatures" is incorrect.
+            FormatError: If signature in "signatures" is incorrect.
 
         Returns:
             A "Envelope" instance.
@@ -74,9 +74,7 @@ class Envelope:
                 signatures.append(Signature.from_dict(signature))
 
             else:
-                raise TypeError(
-                    f"expected type 'Signature', got {type(signature).__name__}"
-                )
+                raise exceptions.FormatError("Wanted a 'Signature'.")
 
         return cls(payload, payload_type, signatures)
 
