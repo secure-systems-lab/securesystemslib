@@ -462,44 +462,32 @@ def digests_are_equal(digest1: str, digest2: str) -> bool:
 
 
 def b64enc(data: bytes) -> str:
-    """
-    <Purpose>
-      To encode byte sequence into base64 string
+    """To encode byte sequence into base64 string
 
-    <Arguments>
-      data:
-        Byte sequence to encode
+    Arguments:
+        data: Byte sequence to encode
 
-    <Exceptions>
-      TypeError: If "data" is not byte sequence
+    Exceptions:
+        TypeError: If "data" is not byte sequence
 
-    <Side Effects>
-      None.
-
-    <Return>
-      base64 string
+    Returns:
+        base64 string
     """
 
     return base64.standard_b64encode(data).decode("utf-8")
 
 
 def b64dec(string: str) -> bytes:
-    """
-    <Purpose>
-      To decode byte sequence from base64 string
+    """To decode byte sequence from base64 string
 
-    <Arguments>
-      string:
-        base64 string to decode
+    Arguments:
+        string: base64 string to decode
 
-    <Exceptions>
-      binascii.Error: If invalid base64-encoded string
+    Raises:
+        binascii.Error: If invalid base64-encoded string
 
-    <Side Effects>
-      None.
-
-    <Return>
-      A byte sequence
+    Returns:
+        A byte sequence
     """
 
     data = string.encode("utf-8")

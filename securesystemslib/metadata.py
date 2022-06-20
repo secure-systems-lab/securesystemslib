@@ -3,7 +3,7 @@
 
 from typing import Any, List
 
-from securesystemslib import exceptions, formats
+from securesystemslib import formats
 from securesystemslib.signer import Signature
 from securesystemslib.util import b64dec, b64enc
 
@@ -56,6 +56,8 @@ class Envelope:
             KeyError: If any of the "payload", "payloadType" and "signatures"
                 fields are missing from the "data".
 
+            TypeError: If type of any signature in "signatures" is incorrect.
+
         Returns:
             A "Envelope" instance.
         """
@@ -65,14 +67,16 @@ class Envelope:
 
         signatures = []
         for signature in data["signatures"]:
+            if formats.GPG_SIGNATURE_SCHEMA.matches(signature):
+                raise NotImplementedError
+
             if formats.SIGNATURE_SCHEMA.matches(signature):
                 signatures.append(Signature.from_dict(signature))
 
-            elif formats.GPG_SIGNATURE_SCHEMA.matches(signature):
-                raise NotImplementedError
-
             else:
-                raise exceptions.FormatError("Invalid signature")
+                raise TypeError(
+                    f"expected type 'Signature', got {type(signature).__name__}"
+                )
 
         return cls(payload, payload_type, signatures)
 
@@ -87,9 +91,13 @@ class Envelope:
             ],
         }
 
+    @property
     def pae(self) -> bytes:
-        """Returns the Pre-Auth-Encoding byte sequence of the self."""
+        """Pre-Auth-Encoding byte sequence of self."""
 
-        return b'DSSEv1 %d %b %d %b' % (
-            len(self.payload_type), self.payload_type.encode('utf-8'),
-            len(self.payload), self.payload)
+        return b"DSSEv1 %d %b %d %b" % (
+            len(self.payload_type),
+            self.payload_type.encode("utf-8"),
+            len(self.payload),
+            self.payload,
+        )

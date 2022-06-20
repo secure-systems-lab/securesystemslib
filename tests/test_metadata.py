@@ -3,6 +3,7 @@
 """Test cases for "metadata.py". """
 
 import copy
+from typing import Type
 import unittest
 
 from securesystemslib.metadata import Envelope
@@ -28,11 +29,17 @@ class TestEnvelope(unittest.TestCase):
     def test_envelope_from_to_dict(self):
         """Test envelope to_dict and from_dict methods"""
 
+        envelope_dict = copy.deepcopy(self.envelope_dict)
+
         # create envelope object from its dict.
-        envelope_obj = Envelope.from_dict(copy.deepcopy(self.envelope_dict))
+        envelope_obj = Envelope.from_dict(envelope_dict)
 
         # Assert envelope dict created by to_dict will be equal.
         self.assertDictEqual(self.envelope_dict, envelope_obj.to_dict())
+
+        # Assert TypeError on invalid signature
+        envelope_dict["signatures"] = [""]
+        self.assertRaises(TypeError, Envelope.from_dict, envelope_dict)
 
     def test_envelope_eq_(self):
         """Test envelope equality"""
@@ -64,10 +71,10 @@ class TestEnvelope(unittest.TestCase):
     def test_preauthencoding(self):
         """Test envelope Pre-Auth-Encoding"""
 
-        envelope_obj = Envelope.from_dict(self.envelope_dict)
+        envelope_obj = Envelope.from_dict(copy.deepcopy(self.envelope_dict))
 
         # Checking for Pre-Auth-Encoding generated is correct.
-        self.assertEqual(self.pae, envelope_obj.pae())
+        self.assertEqual(self.pae, envelope_obj.pae)
 
 
 # Run the unit tests.
