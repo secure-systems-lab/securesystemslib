@@ -1,4 +1,4 @@
-cffi==1.15.0              # via cryptography, pynacl
+cffi==1.15.1              # via cryptography, pynacl
 colorama==0.4.5
 cryptography==37.0.3
 pycparser==2.21           # via cffi
