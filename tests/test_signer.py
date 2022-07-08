@@ -3,14 +3,20 @@
 """Test cases for "signer.py". """
 
 import copy
-import sys
+import os
 import unittest
+import tempfile
+import shutil
 
-import unittest
 import securesystemslib.formats
 import securesystemslib.keys as KEYS
 from securesystemslib.exceptions import FormatError, UnsupportedAlgorithmError
-from securesystemslib.signer import Signature, SSlibSigner
+from securesystemslib.signer import Signature, SSlibSigner, GPGSigner
+from securesystemslib.gpg.constants import HAVE_GPG
+from securesystemslib.gpg.functions import (
+    export_pubkey,
+    verify_signature as verify_sig
+)
 
 
 class TestSSlibSigner(unittest.TestCase):
@@ -94,6 +100,63 @@ class TestSSlibSigner(unittest.TestCase):
         # Assert that making sig_obj_2 None will make the objects not equal.
         sig_obj_2 = None
         self.assertNotEqual(sig_obj, sig_obj_2)
+
+@unittest.skipIf(not HAVE_GPG, "gpg not found")
+class TestGPGRSA(unittest.TestCase):
+    """Test RSA gpg signature creation and verification."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.default_keyid = "8465A1E2E0FB2B40ADB2478E18FB3F537E0C8A17"
+        cls.signing_subkey_keyid = "C5A0ABE6EC19D0D65F85E2C39BE9DF5131D924E9"
+
+        # Create directory to run the tests without having everything blow up.
+        cls.working_dir = os.getcwd()
+        cls.test_data = b'test_data'
+        cls.wrong_data = b'something malicious'
+
+        # Find demo files.
+        gpg_keyring_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "gpg_keyrings", "rsa")
+
+        cls.test_dir = os.path.realpath(tempfile.mkdtemp())
+        cls.gnupg_home = os.path.join(cls.test_dir, "rsa")
+        shutil.copytree(gpg_keyring_path, cls.gnupg_home)
+        os.chdir(cls.test_dir)
+
+
+    @classmethod
+    def tearDownClass(cls):
+        """Change back to initial working dir and remove temp test directory."""
+
+        os.chdir(cls.working_dir)
+        shutil.rmtree(cls.test_dir)
+
+
+    def test_gpg_sign_and_verify_object_with_default_key(self):
+        """Create a signature using the default key on the keyring. """
+
+        signer = GPGSigner(homedir=self.gnupg_home)
+        signature = signer.sign(self.test_data)
+
+        signature_dict = signature.to_dict()
+        key_data = export_pubkey(self.default_keyid, self.gnupg_home)
+
+        self.assertTrue(verify_sig(signature_dict, key_data, self.test_data))
+        self.assertFalse(verify_sig(signature_dict, key_data, self.wrong_data))
+
+
+    def test_gpg_sign_and_verify_object(self):
+        """Create a signature using a specific key on the keyring. """
+
+        signer = GPGSigner(self.signing_subkey_keyid, self.gnupg_home)
+        signature = signer.sign(self.test_data)
+
+        signature_dict = signature.to_dict()
+        key_data = export_pubkey(self.signing_subkey_keyid, self.gnupg_home)
+
+        self.assertTrue(verify_sig(signature_dict, key_data, self.test_data))
+        self.assertFalse(verify_sig(signature_dict, key_data, self.wrong_data))
 
 
 # Run the unit tests.

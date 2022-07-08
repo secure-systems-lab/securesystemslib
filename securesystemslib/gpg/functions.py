@@ -50,7 +50,7 @@ def create_signature(content, keyid=None, homedir=None):
     identified by the passed keyid from the gpg keyring at the passed homedir.
 
     The executed base command is defined in
-    securesystemslib.gpgp.constants.GPG_SIGN_COMMAND.
+    securesystemslib.gpg.constants.GPG_SIGN_COMMAND.
 
     NOTE: On not fully supported versions of GPG, i.e. versions below
     securesystemslib.gpg.constants.FULLY_SUPPORTED_MIN_VERSION the returned

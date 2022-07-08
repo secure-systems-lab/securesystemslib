@@ -7,6 +7,7 @@ signing implementations and a couple of example implementations.
 
 import abc
 import securesystemslib.keys as sslib_keys
+import securesystemslib.gpg.functions as gpg
 from typing import Any, Dict, Optional, Mapping
 
 
@@ -88,6 +89,60 @@ class Signature:
 
 
 
+class GPGSignature(Signature):
+    """A container class containing information about a gpg signature.
+
+    Besides the signature, it also contains other meta information
+    needed to uniquely identify the key used to generate the signature.
+
+    Attributes:
+        keyid: HEX string used as a unique identifier of the key.
+        signature: HEX string representing the signature.
+        other_headers: HEX representation of additional GPG headers.
+    """
+    def __init__(
+        self,
+        keyid: str,
+        signature: str,
+        other_headers: str,
+    ):
+        super().__init__(keyid, signature)
+        self.other_headers = other_headers
+
+
+    @classmethod
+    def from_dict(cls, signature_dict: Dict) -> "Signature":
+        """Creates a GPGSignature object from its JSON/dict representation.
+
+        Args:
+            signature_dict: Dict containing valid "keyid", "signature" and
+                "other_fields" fields.
+
+        Raises:
+            KeyError: If any of the "keyid", "sig" or "other_headers" fields
+                are missing from the signature_dict.
+
+        Returns:
+            GPGSignature instance.
+        """
+
+        return cls(
+            signature_dict["keyid"],
+            signature_dict["sig"],
+            signature_dict["other_headers"]
+        )
+
+
+    def to_dict(self) -> Dict:
+        """Returns the JSON-serializable dictionary representation of self."""
+        return {
+            "keyid": self.keyid,
+            "signature": self.signature,
+            "other_headers": self.other_headers
+        }
+
+
+
 class Signer:
     """Signer interface created to support multiple signing implementations."""
 
@@ -160,3 +215,62 @@ class SSlibSigner(Signer):
 
         sig_dict = sslib_keys.create_signature(self.key_dict, payload)
         return Signature(**sig_dict)
+
+
+
+class GPGSigner(Signer):
+    """A securesystemslib gpg implementation of the "Signer" interface.
+
+    Provides a sign method to generate a cryptographic signature with gpg, using
+    an RSA, DSA or EdDSA private key identified by the keyid on the instance.
+
+    Args:
+        keyid: The keyid of the gpg signing keyid. If not passed the default
+              key in the keyring is used.
+
+        homedir: Path to the gpg keyring. If not passed the default keyring
+            is used.
+
+    """
+    def __init__(
+            self, keyid: Optional[str] = None, homedir: Optional[str] = None
+    ):
+        self.keyid = keyid
+        self.homedir = homedir
+
+
+    def sign(self, payload: bytes) -> "GPGSignature":
+        """Signs a given payload by the key assigned to the GPGSigner instance.
+
+        Calls the gpg command line utility to sign the passed content with the
+        key identified by the passed keyid from the gpg keyring at the passed
+        homedir.
+
+        The executed base command is defined in
+        securesystemslib.gpg.constants.GPG_SIGN_COMMAND.
+
+        Arguments:
+            payload: The bytes to be signed.
+
+        Raises:
+            securesystemslib.exceptions.FormatError:
+                If the keyid was passed and does not match
+                securesystemslib.formats.KEYID_SCHEMA.
+
+            ValueError: the gpg command failed to create a valid signature.
+            OSError: the gpg command is not present or non-executable.
+            securesystemslib.exceptions.UnsupportedLibraryError: the gpg
+                command is not available, or the cryptography library is
+                not installed.
+            securesystemslib.gpg.exceptions.CommandError: the gpg command
+                returned a non-zero exit code.
+            securesystemslib.gpg.exceptions.KeyNotFoundError: the used gpg
+                version is not fully supported and no public key can be found
+                for short keyid.
+
+        Returns:
+            Returns a "GPGSignature" class instance.
+        """
+
+        sig_dict = gpg.create_signature(payload, self.keyid, self.homedir)
+        return GPGSignature(**sig_dict)
