@@ -6,9 +6,10 @@ signing implementations and a couple of example implementations.
 """
 
 import abc
+from typing import Any, Dict, Optional, Mapping
+
 import securesystemslib.keys as sslib_keys
 import securesystemslib.gpg.functions as gpg
-from typing import Any, Dict, Optional, Mapping
 
 
 class Signature:
@@ -27,16 +28,16 @@ class Signature:
             by securesystemslib.
 
     """
+
     def __init__(
         self,
         keyid: str,
         sig: str,
-        unrecognized_fields: Optional[Mapping[str, Any]] = None
+        unrecognized_fields: Optional[Mapping[str, Any]] = None,
     ):
         self.keyid = keyid
         self.signature = sig
         self.unrecognized_fields: Mapping[str, Any] = unrecognized_fields or {}
-
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Signature):
@@ -47,7 +48,6 @@ class Signature:
             and self.signature == other.signature
             and self.unrecognized_fields == other.unrecognized_fields
         )
-
 
     @classmethod
     def from_dict(cls, signature_dict: Dict) -> "Signature":
@@ -73,10 +73,7 @@ class Signature:
         keyid = signature_dict.pop("keyid")
         sig = signature_dict.pop("sig")
         # All fields left in the signature_dict are unrecognized.
-        return cls(
-            keyid, sig, signature_dict
-        )
-
+        return cls(keyid, sig, signature_dict)
 
     def to_dict(self) -> Dict:
         """Returns the JSON-serializable dictionary representation of self."""
@@ -86,7 +83,6 @@ class Signature:
             "sig": self.signature,
             **self.unrecognized_fields,
         }
-
 
 
 class GPGSignature(Signature):
@@ -100,6 +96,7 @@ class GPGSignature(Signature):
         signature: HEX string representing the signature.
         other_headers: HEX representation of additional GPG headers.
     """
+
     def __init__(
         self,
         keyid: str,
@@ -109,9 +106,8 @@ class GPGSignature(Signature):
         super().__init__(keyid, signature)
         self.other_headers = other_headers
 
-
     @classmethod
-    def from_dict(cls, signature_dict: Dict) -> "Signature":
+    def from_dict(cls, signature_dict: Dict) -> "GPGSignature":
         """Creates a GPGSignature object from its JSON/dict representation.
 
         Args:
@@ -128,19 +124,17 @@ class GPGSignature(Signature):
 
         return cls(
             signature_dict["keyid"],
-            signature_dict["sig"],
-            signature_dict["other_headers"]
+            signature_dict["signature"],
+            signature_dict["other_headers"],
         )
-
 
     def to_dict(self) -> Dict:
         """Returns the JSON-serializable dictionary representation of self."""
         return {
             "keyid": self.keyid,
             "signature": self.signature,
-            "other_headers": self.other_headers
+            "other_headers": self.other_headers,
         }
-
 
 
 class Signer:
@@ -149,7 +143,7 @@ class Signer:
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def sign(self, payload: bytes) -> "Signature":
+    def sign(self, payload: bytes) -> Signature:
         """Signs a given payload by the key assigned to the Signer instance.
 
         Arguments:
@@ -158,8 +152,7 @@ class Signer:
         Returns:
             Returns a "Signature" class instance.
         """
-        raise NotImplementedError # pragma: no cover
-
+        raise NotImplementedError  # pragma: no cover
 
 
 class SSlibSigner(Signer):
@@ -193,11 +186,11 @@ class SSlibSigner(Signer):
 
             The public and private keys are strings in PEM format.
     """
+
     def __init__(self, key_dict: Dict):
         self.key_dict = key_dict
 
-
-    def sign(self, payload: bytes) -> "Signature":
+    def sign(self, payload: bytes) -> Signature:
         """Signs a given payload by the key assigned to the SSlibSigner instance.
 
         Arguments:
@@ -217,7 +210,6 @@ class SSlibSigner(Signer):
         return Signature(**sig_dict)
 
 
-
 class GPGSigner(Signer):
     """A securesystemslib gpg implementation of the "Signer" interface.
 
@@ -232,14 +224,12 @@ class GPGSigner(Signer):
             is used.
 
     """
-    def __init__(
-            self, keyid: Optional[str] = None, homedir: Optional[str] = None
-    ):
+
+    def __init__(self, keyid: Optional[str] = None, homedir: Optional[str] = None):
         self.keyid = keyid
         self.homedir = homedir
 
-
-    def sign(self, payload: bytes) -> "GPGSignature":
+    def sign(self, payload: bytes) -> GPGSignature:
         """Signs a given payload by the key assigned to the GPGSigner instance.
 
         Calls the gpg command line utility to sign the passed content with the

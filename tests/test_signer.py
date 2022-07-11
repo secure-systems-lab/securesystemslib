@@ -11,25 +11,21 @@ import shutil
 import securesystemslib.formats
 import securesystemslib.keys as KEYS
 from securesystemslib.exceptions import FormatError, UnsupportedAlgorithmError
-from securesystemslib.signer import Signature, SSlibSigner, GPGSigner
+from securesystemslib.signer import GPGSignature, Signature, SSlibSigner, GPGSigner
 from securesystemslib.gpg.constants import HAVE_GPG
-from securesystemslib.gpg.functions import (
-    export_pubkey,
-    verify_signature as verify_sig
-)
+from securesystemslib.gpg.functions import export_pubkey, verify_signature as verify_sig
 
 
 class TestSSlibSigner(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.rsakey_dict = KEYS.generate_rsa_key()
         cls.ed25519key_dict = KEYS.generate_ed25519_key()
         cls.ecdsakey_dict = KEYS.generate_ecdsa_key()
         cls.DATA_STR = "SOME DATA REQUIRING AUTHENTICITY."
-        cls.DATA = securesystemslib.formats.encode_canonical(
-                cls.DATA_STR).encode("utf-8")
-
+        cls.DATA = securesystemslib.formats.encode_canonical(cls.DATA_STR).encode(
+            "utf-8"
+        )
 
     def test_sslib_sign(self):
         dicts = [self.rsakey_dict, self.ecdsakey_dict, self.ed25519key_dict]
@@ -39,8 +35,7 @@ class TestSSlibSigner(unittest.TestCase):
             sig_obj = sslib_signer.sign(self.DATA)
 
             # Verify signature
-            verified = KEYS.verify_signature(scheme_dict, sig_obj.to_dict(),
-                    self.DATA)
+            verified = KEYS.verify_signature(scheme_dict, sig_obj.to_dict(), self.DATA)
             self.assertTrue(verified, "Incorrect signature.")
 
             # Removing private key from "scheme_dict".
@@ -63,12 +58,11 @@ class TestSSlibSigner(unittest.TestCase):
 
             scheme_dict["scheme"] = valid_scheme
 
-
     def test_signature_from_to_dict(self):
         signature_dict = {
             "sig": "30460221009342e4566528fcecf6a7a5d53ebacdb1df151e242f55f8775883469cb01dbc6602210086b426cc826709acfa2c3f9214610cb0a832db94bbd266fd7c5939a48064a851",
             "keyid": "11fa391a0ed7a447cbfeb4b2667e286fc248f64d5e6d0eeed2e5e23f97f9f714",
-            "foo": "bar" # unrecognized_field
+            "foo": "bar",  # unrecognized_field
         }
         sig_obj = Signature.from_dict(copy.copy(signature_dict))
 
@@ -77,11 +71,10 @@ class TestSSlibSigner(unittest.TestCase):
 
         self.assertDictEqual(signature_dict, sig_obj.to_dict())
 
-
     def test_signature_eq_(self):
         signature_dict = {
             "sig": "30460221009342e4566528fcecf6a7a5d53ebacdb1df151e242f55f8775883469cb01dbc6602210086b426cc826709acfa2c3f9214610cb0a832db94bbd266fd7c5939a48064a851",
-            "keyid": "11fa391a0ed7a447cbfeb4b2667e286fc248f64d5e6d0eeed2e5e23f97f9f714"
+            "keyid": "11fa391a0ed7a447cbfeb4b2667e286fc248f64d5e6d0eeed2e5e23f97f9f714",
         }
         sig_obj = Signature.from_dict(signature_dict)
         sig_obj_2 = copy.deepcopy(sig_obj)
@@ -101,6 +94,7 @@ class TestSSlibSigner(unittest.TestCase):
         sig_obj_2 = None
         self.assertNotEqual(sig_obj, sig_obj_2)
 
+
 @unittest.skipIf(not HAVE_GPG, "gpg not found")
 class TestGPGRSA(unittest.TestCase):
     """Test RSA gpg signature creation and verification."""
@@ -112,18 +106,18 @@ class TestGPGRSA(unittest.TestCase):
 
         # Create directory to run the tests without having everything blow up.
         cls.working_dir = os.getcwd()
-        cls.test_data = b'test_data'
-        cls.wrong_data = b'something malicious'
+        cls.test_data = b"test_data"
+        cls.wrong_data = b"something malicious"
 
         # Find demo files.
         gpg_keyring_path = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "gpg_keyrings", "rsa")
+            os.path.dirname(os.path.realpath(__file__)), "gpg_keyrings", "rsa"
+        )
 
         cls.test_dir = os.path.realpath(tempfile.mkdtemp())
         cls.gnupg_home = os.path.join(cls.test_dir, "rsa")
         shutil.copytree(gpg_keyring_path, cls.gnupg_home)
         os.chdir(cls.test_dir)
-
 
     @classmethod
     def tearDownClass(cls):
@@ -132,9 +126,8 @@ class TestGPGRSA(unittest.TestCase):
         os.chdir(cls.working_dir)
         shutil.rmtree(cls.test_dir)
 
-
     def test_gpg_sign_and_verify_object_with_default_key(self):
-        """Create a signature using the default key on the keyring. """
+        """Create a signature using the default key on the keyring."""
 
         signer = GPGSigner(homedir=self.gnupg_home)
         signature = signer.sign(self.test_data)
@@ -145,9 +138,8 @@ class TestGPGRSA(unittest.TestCase):
         self.assertTrue(verify_sig(signature_dict, key_data, self.test_data))
         self.assertFalse(verify_sig(signature_dict, key_data, self.wrong_data))
 
-
     def test_gpg_sign_and_verify_object(self):
-        """Create a signature using a specific key on the keyring. """
+        """Create a signature using a specific key on the keyring."""
 
         signer = GPGSigner(self.signing_subkey_keyid, self.gnupg_home)
         signature = signer.sign(self.test_data)
@@ -157,6 +149,18 @@ class TestGPGRSA(unittest.TestCase):
 
         self.assertTrue(verify_sig(signature_dict, key_data, self.test_data))
         self.assertFalse(verify_sig(signature_dict, key_data, self.wrong_data))
+
+    def test_gpg_serialization(self):
+        """Tests from_dict and to_dict methods of GPGSignature."""
+
+        sig_dict = {
+            "keyid": "f4f90403af58eef6",
+            "signature": "c39f86e70e12e70e11d87eb7e3ab7d3b",
+            "other_headers": "d8f8a89b5d71f07b842a",
+        }
+
+        signature = GPGSignature.from_dict(sig_dict)
+        self.assertEqual(sig_dict, signature.to_dict())
 
 
 # Run the unit tests.
