@@ -118,8 +118,8 @@ class Test_Process(unittest.TestCase):
   def test_run_duplicate_streams_timeout(self):
     """Test raise TimeoutExpired. """
     with self.assertRaises(securesystemslib.process.subprocess.TimeoutExpired):
-      securesystemslib.process.run_duplicate_streams(sys.executable + " --version",
-          timeout=-1)
+      securesystemslib.process.run_duplicate_streams(sys.executable +
+        " -c \"while True: pass\"", timeout=-1)
 
 
   def test__default_timeout(self):
