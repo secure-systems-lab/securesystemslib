@@ -78,7 +78,7 @@ class TestEnvelope(unittest.TestCase):
         envelope_obj = Envelope.from_dict(copy.deepcopy(self.envelope_dict))
 
         # Checking for Pre-Auth-Encoding generated is correct.
-        self.assertEqual(self.pae, envelope_obj.pae)
+        self.assertEqual(self.pae, envelope_obj.pae())
 
 
 # Run the unit tests.
