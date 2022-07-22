@@ -5,9 +5,14 @@
 import copy
 import unittest
 
-from securesystemslib import exceptions
+import securesystemslib.keys as KEYS
+from securesystemslib.exceptions import (
+    FormatError,
+    UnsupportedAlgorithmError,
+    VerificationError,
+)
 from securesystemslib.metadata import Envelope
-from securesystemslib.signer import Signature
+from securesystemslib.signer import Signature, SSlibKey, SSlibSigner
 
 
 class TestEnvelope(unittest.TestCase):
@@ -15,6 +20,12 @@ class TestEnvelope(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.key_dicts = [
+            KEYS.generate_rsa_key(),
+            KEYS.generate_ed25519_key(),
+            KEYS.generate_ecdsa_key(),
+        ]
+
         cls.signature_dict = {
             "keyid": "11fa391a0ed7a447",
             "sig": "30460221009342e4566528fcecf6a7a5",
@@ -34,16 +45,15 @@ class TestEnvelope(unittest.TestCase):
         # create envelope object from its dict.
         envelope_obj = Envelope.from_dict(envelope_dict)
         for signature in envelope_obj.signatures:
-             self.assertIsInstance(signature, Signature)
+            self.assertIsInstance(signature, Signature)
 
         # Assert envelope dict created by to_dict will be equal.
         self.assertDictEqual(self.envelope_dict, envelope_obj.to_dict())
 
         # Assert TypeError on invalid signature.
         envelope_dict["signatures"] = [""]
-        self.assertRaises(
-            exceptions.FormatError, Envelope.from_dict, envelope_dict
-        )
+        with self.assertRaises(FormatError):
+            Envelope.from_dict(envelope_dict)
 
     def test_envelope_eq_(self):
         """Test envelope equality."""
@@ -79,6 +89,72 @@ class TestEnvelope(unittest.TestCase):
 
         # Checking for Pre-Auth-Encoding generated is correct.
         self.assertEqual(self.pae, envelope_obj.pae())
+
+    def test_sign_and_verify(self):
+        """Test for creating and verifying DSSE signatures."""
+
+        # Create an Envelope with no signatures.
+        envelope_dict = copy.deepcopy(self.envelope_dict)
+        envelope_dict["signatures"] = []
+        envelope_obj = Envelope.from_dict(envelope_dict)
+
+        key_list = []
+        for key_dict in self.key_dicts:
+            # Test for invalid scheme.
+            valid_scheme = key_dict["scheme"]
+            key_dict["scheme"] = "invalid_scheme"
+            signer = SSlibSigner(key_dict)
+            with self.assertRaises((FormatError, UnsupportedAlgorithmError)):
+                envelope_obj.sign(signer)
+
+            # Sign the payload.
+            key_dict["scheme"] = valid_scheme
+            signer = SSlibSigner(key_dict)
+            envelope_obj.sign(signer)
+
+            # Create a List of "Key" from key_dict.
+            key_list.append(SSlibKey.from_securesystemslib_key(key_dict))
+
+        # Check for signatures of Envelope.
+        self.assertEqual(len(self.key_dicts), len(envelope_obj.signatures))
+        for signature in envelope_obj.signatures:
+            self.assertIsInstance(signature, Signature)
+
+        # Test for invalid threshold value for keys_list.
+        # threshold is 0.
+        with self.assertRaises(ValueError):
+            envelope_obj.verify(key_list, 0)
+
+        # threshold is greater than no of keys.
+        with self.assertRaises(ValueError):
+            envelope_obj.verify(key_list, 4)
+
+        # Test with valid keylist and threshold.
+        verified_keys = envelope_obj.verify(key_list, len(key_list))
+        self.assertEqual(len(verified_keys), len(key_list))
+
+        # Test for unknown keys and threshold of 1.
+        new_key_dicts = [
+            KEYS.generate_rsa_key(),
+            KEYS.generate_ed25519_key(),
+            KEYS.generate_ecdsa_key(),
+        ]
+        new_key_list = []
+        for key_dict in new_key_dicts:
+            new_key_list.append(SSlibKey.from_securesystemslib_key(key_dict))
+
+        with self.assertRaises(VerificationError):
+            envelope_obj.verify(new_key_list, 1)
+
+        all_keys = key_list + new_key_list
+        envelope_obj.verify(all_keys, 3)
+
+        # Test with duplicate keys.
+        duplicate_keys = key_list + key_list
+        with self.assertRaises(VerificationError):
+            envelope_obj.verify(
+                duplicate_keys, 4
+            )  # 3 unique keys, threshold 4.
 
 
 # Run the unit tests.
