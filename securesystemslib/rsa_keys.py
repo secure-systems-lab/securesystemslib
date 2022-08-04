@@ -326,10 +326,11 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
     if scheme.startswith('rsassa-pss'):
       # Generate an RSSA-PSS signature.  Raise
       # 'securesystemslib.exceptions.CryptoError' for any of the expected
-      # exceptions raised by pyca/cryptography.
+      # exceptions raised by pyca/cryptography. 'salt_length' is set to
+      # the maximum length available.
       signature = private_key_object.sign(
           data, padding.PSS(mgf=padding.MGF1(digest_obj.algorithm),
-          salt_length=digest_obj.algorithm.digest_size), digest_obj.algorithm)
+          salt_length=padding.PSS.MAX_LENGTH), digest_obj.algorithm)
 
     elif scheme.startswith('rsa-pkcs1v15'):
       # Generate an RSA-PKCS1v15 signature.  Raise
@@ -453,13 +454,13 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
     digest_obj = digest_from_rsa_scheme(signature_scheme, 'pyca_crypto')
 
     # verify() raises 'cryptography.exceptions.InvalidSignature' if the
-    # signature is invalid. 'salt_length' is set to the digest size of the
-    # hashing algorithm.
+    # signature is invalid. 'salt_length' is automatically
+    # determined when verifying the signature.
     try:
       if signature_scheme.startswith('rsassa-pss'):
         public_key_object.verify(signature, data,
             padding.PSS(mgf=padding.MGF1(digest_obj.algorithm),
-            salt_length=digest_obj.algorithm.digest_size),
+            salt_length=padding.PSS.AUTO),
             digest_obj.algorithm)
 
       elif signature_scheme.startswith('rsa-pkcs1v15'):

@@ -103,7 +103,7 @@ setup(
   python_requires = "~=3.7",
   extras_require = {
       'colors': ['colorama>=0.3.9'],
-      'crypto': ['cryptography>=3.3.2'],
+      'crypto': ['cryptography>=37.0.0'],
       'pynacl': ['pynacl>1.2.0']},
   packages = find_packages(exclude=['tests', 'debian']),
   scripts = []
