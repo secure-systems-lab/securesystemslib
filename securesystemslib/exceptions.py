@@ -147,3 +147,11 @@ class UnverifiedSignatureError(Error):
 
 class VerificationError(UnverifiedSignatureError):
     """Signature could not be verified because something failed in the process"""
+
+
+class SerializationError(Error):
+    """Error during serialization."""
+
+
+class DeserializationError(Error):
+    """Error during deserialization."""
