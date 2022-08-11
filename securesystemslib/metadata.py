@@ -7,8 +7,11 @@ from typing import Any, Dict, List, Optional
 from securesystemslib import exceptions, formats
 from securesystemslib.serialization import (
     BaseDeserializer,
+    BaseSerializer,
     JSONDeserializer,
-    Serializable,
+    JSONSerializable,
+    JSONSerializer,
+    SerializationMixin,
 )
 from securesystemslib.signer import Key, Signature, Signer
 from securesystemslib.util import b64dec, b64enc
@@ -16,7 +19,7 @@ from securesystemslib.util import b64dec, b64enc
 logger = logging.getLogger(__name__)
 
 
-class Envelope(Serializable):
+class Envelope(SerializationMixin, JSONSerializable):
     """DSSE Envelope to provide interface for signing arbitrary data.
 
     Attributes:
@@ -43,9 +46,17 @@ class Envelope(Serializable):
             and self.signatures == other.signatures
         )
 
+    @staticmethod
+    def _default_deserializer() -> BaseDeserializer:
+        return JSONDeserializer()
+
+    @staticmethod
+    def _default_serializer() -> BaseSerializer:
+        return JSONSerializer()
+
     @classmethod
     def from_dict(cls, data: dict) -> "Envelope":
-        """Creates a Signature object from its JSON/dict representation.
+        """Creates a DSSE Envelope from its JSON/dict representation.
 
         Arguments:
             data: A dict containing a valid payload, payloadType and signatures

@@ -25,12 +25,12 @@ class BaseDeserializer(metaclass=abc.ABCMeta):
 class JSONDeserializer(BaseDeserializer):
     """Provides raw to JSON deserialize method."""
 
-    def deserialize(self, raw_data: bytes, cls: Any) -> Any:
+    def deserialize(self, raw_data: bytes, cls: "JSONSerializable") -> Any:
         """Deserialize utf-8 encoded JSON bytes into an instance of cls.
 
         Arguments:
             raw_data: A utf-8 encoded bytes string.
-            cls: A class type having a from_dict method.
+            cls: A "JSONSerializable" subclass.
 
         Returns:
             Object of the provided class type.
@@ -71,11 +71,11 @@ class JSONSerializer(BaseSerializer):
             self.indent = None
             self.separators = (",", ":")
 
-    def serialize(self, obj: Any) -> bytes:
+    def serialize(self, obj: "JSONSerializable") -> bytes:
         """Serialize an object into utf-8 encoded JSON bytes.
 
         Arguments:
-            obj: An object with to_dict method.
+            obj: An instance of "JSONSerializable" subclass.
 
         Returns:
             UTF-8 encoded JSON bytes of the object.
@@ -95,20 +95,35 @@ class JSONSerializer(BaseSerializer):
         return json_bytes
 
 
-class Serializable(metaclass=abc.ABCMeta):
-    """Objects with Base class Serializable are to be serialized and
+class SerializationMixin(metaclass=abc.ABCMeta):
+    """Instance of class with SerializationMixin are to be serialized and
     deserialized using `to_bytes`, `from_bytes`, `to_file` and `from_file`
     methods.
     """
+
+    @staticmethod
+    @abc.abstractmethod
+    def default_deserializer() -> BaseDeserializer:
+        """Default Deserializer to be used for deserialization"""
+
+        raise NotImplementedError  # pragma: no cover
+
+    @staticmethod
+    @abc.abstractmethod
+    def default_serializer() -> BaseSerializer:
+        """Default Serializer to be used for serialization."""
+
+        raise NotImplementedError  # pragma: no cover
 
     @classmethod
     def from_bytes(
         cls,
         data: bytes,
         deserializer: Optional[BaseDeserializer] = None,
-    ) -> "Serializable":
+    ) -> "SerializationMixin":
         """Loads the Serializable from raw data.
-        Args:
+
+        Arguments:
             data: bytes content.
             deserializer: ``BaseDeserializer`` implementation to use.
                 Default is JSONDeserializer.
@@ -119,7 +134,7 @@ class Serializable(metaclass=abc.ABCMeta):
         """
 
         if deserializer is None:
-            deserializer = JSONDeserializer()
+            deserializer = cls.default_deserializer()
 
         return deserializer.deserialize(data, cls)
 
@@ -129,7 +144,7 @@ class Serializable(metaclass=abc.ABCMeta):
         filename: str,
         deserializer: Optional[BaseDeserializer] = None,
         storage_backend: Optional[StorageBackendInterface] = None,
-    ) -> "Serializable":
+    ) -> "SerializationMixin":
         """Loads object from file storage.
 
         Arguments:
@@ -170,7 +185,7 @@ class Serializable(metaclass=abc.ABCMeta):
         """
 
         if serializer is None:
-            serializer = JSONSerializer()
+            serializer = self.default_serializer()
 
         return serializer.serialize(self)
 
@@ -205,3 +220,26 @@ class Serializable(metaclass=abc.ABCMeta):
         with tempfile.TemporaryFile() as temp_file:
             temp_file.write(bytes_data)
             persist_temp_file(temp_file, filename, storage_backend)
+
+
+class JSONSerializable(metaclass=abc.ABCMeta):
+    """Abstract base class that provide method to convert an instance of class
+    to dict and back to an object from its JSON/dict representation.
+
+    It provides `from_dict` and `to_dict` method, therefore, JSONSerializer and
+    JSONDeserializer requires a subclass of this class for serialization and
+    deserialization.
+    """
+
+    @classmethod
+    @abc.abstractmethod
+    def from_dict(cls, data: dict) -> Any:
+        """Creates an object from its JSON/dict representation."""
+
+        raise NotImplementedError  # pragma: no cover
+
+    @abc.abstractmethod
+    def to_dict(self) -> dict:
+        """Returns the JSON-serializable dictionary representation of self."""
+
+        raise NotImplementedError  # pragma: no cover
