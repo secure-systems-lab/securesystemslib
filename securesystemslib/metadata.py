@@ -183,7 +183,8 @@ class Envelope(SerializationMixin, JSONSerializable):
         """Parse DSSE payload.
 
         Arguments:
-            class_type: A class having a from_dict method.
+            class_type: The class to be deserialized. If the default
+                deserializer is used, it must implement ``JSONSerializable``.
             deserializer: ``BaseDeserializer`` implementation to use.
                 Default is JSONDeserializer.
 

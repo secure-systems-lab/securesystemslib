@@ -12,6 +12,8 @@ from securesystemslib.storage import FilesystemBackend, StorageBackendInterface
 from securesystemslib.util import persist_temp_file
 
 
+# TODO: Use typing.Protocol post python 3.7
+# See https://github.com/in-toto/securesystemslib/issues/10.
 class BaseDeserializer(metaclass=abc.ABCMeta):
     """Abstract base class for deserialization of objects."""
 
@@ -120,7 +122,7 @@ class SerializationMixin(metaclass=abc.ABCMeta):
         cls,
         data: bytes,
         deserializer: Optional[BaseDeserializer] = None,
-    ) -> "SerializationMixin":
+    ) -> Any:
         """Loads the Serializable from raw data.
 
         Arguments:
@@ -144,7 +146,7 @@ class SerializationMixin(metaclass=abc.ABCMeta):
         filename: str,
         deserializer: Optional[BaseDeserializer] = None,
         storage_backend: Optional[StorageBackendInterface] = None,
-    ) -> "SerializationMixin":
+    ) -> Any:
         """Loads object from file storage.
 
         Arguments:
@@ -194,7 +196,7 @@ class SerializationMixin(metaclass=abc.ABCMeta):
         filename: str,
         serializer: Optional[BaseSerializer] = None,
         storage_backend: Optional[StorageBackendInterface] = None,
-    ) -> None:
+    ):
         """Writes object to file storage.
 
         Note that if a file is first deserialized and then serialized with
