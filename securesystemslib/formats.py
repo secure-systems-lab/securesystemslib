@@ -210,6 +210,7 @@ KEYTYPE_SCHEMA = SCHEMA.OneOf(
         SCHEMA.String("ed25519"),
         SCHEMA.String("ecdsa"),
         SCHEMA.RegularExpression(r"ecdsa-sha2-nistp(256|384)"),
+        SCHEMA.String('sphincs-shake-128s')
     ]
 )
 
@@ -290,11 +291,20 @@ ECDSAKEY_SCHEMA = SCHEMA.Object(
 # An ED25519 raw public key, which must be 32 bytes.
 ED25519PUBLIC_SCHEMA = SCHEMA.LengthBytes(32)
 
+# An SPHINCS raw public key, which must be 32 bytes.
+SPHINCSPUBLIC_SCHEMA = SCHEMA.LengthBytes(32)
+
 # An ED25519 raw seed key, which must be 32 bytes.
 ED25519SEED_SCHEMA = SCHEMA.LengthBytes(32)
 
+# An SPHINCS raw public key, which must be 32 bytes.
+SPHINCSPRIVATE_SCHEMA = SCHEMA.LengthBytes(64)
+
 # An ED25519 raw signature, which must be 64 bytes.
 ED25519SIGNATURE_SCHEMA = SCHEMA.LengthBytes(64)
+
+# An SPHINCS raw signature, which must be 64 bytes.
+SPHINCSSIGNATURE_SCHEMA = SCHEMA.LengthBytes(7_856)
 
 # An ECDSA signature.
 ECDSASIGNATURE_SCHEMA = SCHEMA.AnyBytes()
@@ -302,6 +312,8 @@ ECDSASIGNATURE_SCHEMA = SCHEMA.AnyBytes()
 # Ed25519 signature schemes.  The vanilla Ed25519 signature scheme is currently
 # supported.
 ED25519_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String("ed25519")])
+
+SPHINCS_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String('sphincs-shake-128s')])
 
 # An ed25519 key.
 ED25519KEY_SCHEMA = SCHEMA.Object(
