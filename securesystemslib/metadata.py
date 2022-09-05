@@ -2,7 +2,7 @@
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from securesystemslib import exceptions, formats
 from securesystemslib.serialization import (
@@ -17,6 +17,30 @@ from securesystemslib.signer import Key, Signature, Signer
 from securesystemslib.util import b64dec, b64enc
 
 logger = logging.getLogger(__name__)
+
+
+class EnvelopeJSONDeserializer(JSONDeserializer):
+    """Deserializes raw bytes and creates an Envelope object using JSON
+    Deserialization."""
+
+    def deserialize(self, raw_data: bytes) -> "Envelope":
+        """Deserialize utf-8 encoded JSON bytes into an instance of Envelope.
+
+        Arguments:
+            raw_data: A utf-8 encoded bytes string.
+
+        Raises:
+            DeserializationError: If fails to deserialize raw_data.
+
+        Returns:
+            dict.
+        """
+        try:
+            return Envelope.from_dict(super().deserialize(raw_data))
+        except Exception as e:
+            raise exceptions.DeserializationError(
+                "Failed to create Envelope"
+            ) from e
 
 
 class Envelope(SerializationMixin, JSONSerializable):
@@ -48,7 +72,7 @@ class Envelope(SerializationMixin, JSONSerializable):
 
     @staticmethod
     def _default_deserializer() -> BaseDeserializer:
-        return JSONDeserializer()
+        return EnvelopeJSONDeserializer()
 
     @staticmethod
     def _default_serializer() -> BaseSerializer:
@@ -175,18 +199,14 @@ class Envelope(SerializationMixin, JSONSerializable):
 
         return accepted_keys
 
-    def deserialize_payload(
+    def get_payload(
         self,
-        class_type: Any,
-        deserializer: Optional[BaseDeserializer] = None,
+        deserializer: BaseDeserializer,
     ) -> Any:
         """Parse DSSE payload.
 
         Arguments:
-            class_type: The class to be deserialized. If the default
-                deserializer is used, it must implement ``JSONSerializable``.
             deserializer: ``BaseDeserializer`` implementation to use.
-                Default is JSONDeserializer.
 
         Raises:
             DeserializationError: The payload cannot be deserialized.
@@ -195,8 +215,4 @@ class Envelope(SerializationMixin, JSONSerializable):
             The deserialized object of payload.
         """
 
-        if deserializer is None:
-            deserializer = JSONDeserializer()
-
-        payload = deserializer.deserialize(self.payload, class_type)
-        return payload
+        return deserializer.deserialize(self.payload)

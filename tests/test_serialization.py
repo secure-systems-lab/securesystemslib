@@ -9,7 +9,7 @@ import tempfile
 import unittest
 
 from securesystemslib.exceptions import DeserializationError, SerializationError
-from securesystemslib.metadata import Envelope
+from securesystemslib.metadata import Envelope, EnvelopeJSONDeserializer
 from securesystemslib.serialization import JSONDeserializer, JSONSerializer
 from securesystemslib.storage import FilesystemBackend
 
@@ -148,7 +148,7 @@ class TestSerializable(unittest.TestCase):
         json_bytes = self.test_obj.to_bytes(serializer)
 
         # Deserialize object from bytes.
-        deserializer = JSONDeserializer()
+        deserializer = EnvelopeJSONDeserializer()
         envelope_obj = Envelope.from_bytes(json_bytes, deserializer)
 
         # Test for equality.
