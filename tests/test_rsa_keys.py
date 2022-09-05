@@ -23,8 +23,11 @@ import securesystemslib.exceptions
 import securesystemslib.formats
 import securesystemslib.keys
 import securesystemslib.rsa_keys
+import securesystemslib.hash
 
-from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
 public_rsa, private_rsa = securesystemslib.rsa_keys.generate_rsa_public_and_private()
 FORMAT_ERROR_MSG = 'securesystemslib.exceptions.FormatError raised.  Check object\'s format.'
@@ -152,6 +155,29 @@ class TestRSA_keys(unittest.TestCase):
       self.assertEqual(False,
           securesystemslib.rsa_keys.verify_rsa_signature(mismatched_signature,
           scheme, public_rsa, data))
+
+
+  def test_verify_rsa_pss_sha256(self):
+    rsa_scheme = 'rsassa-pss-sha256'
+    data = 'The ancients say the longer the salt, the more provable the security'.encode('utf-8')
+
+    private_key = load_pem_private_key(private_rsa.encode('utf-8'),
+        password=None, backend=default_backend())
+    digest = securesystemslib.hash.digest_from_rsa_scheme(rsa_scheme, 'pyca_crypto')
+
+    # Old-style signature: use the hash length as the salt length.
+    old_signature = private_key.sign(data,
+      padding.PSS(mgf=padding.MGF1(digest.algorithm), salt_length=padding.PSS.DIGEST_LENGTH),
+      digest.algorithm)
+
+    # New-style signature: use the automatic salt length.
+    new_signature, _ = securesystemslib.rsa_keys.create_rsa_signature(private_rsa, data)
+
+    # Verify both old-style and new-style signatures.
+    for signature in (old_signature, new_signature):
+      verified = securesystemslib.rsa_keys.verify_rsa_signature(signature, rsa_scheme,
+                                                                public_rsa, data)
+      self.assertTrue(verified)
 
 
   def test_create_rsa_encrypted_pem(self):

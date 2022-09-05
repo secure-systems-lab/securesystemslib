@@ -31,6 +31,6 @@
 # 3. Use this command to remove per-version files
 #    `rm requirements-?.?.txt`
 #
-cryptography >= 3.3.2; python_version >= '3'
+cryptography >= 37.0.0; python_version >= '3'
 pynacl
 colorama
