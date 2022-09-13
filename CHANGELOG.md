@@ -1,4 +1,20 @@
 # Changelog
+## securesystemslib v0.24.0
+
+### Added
+* GPGSigner to support gpg signing via Signer interface (#341, #419)
+
+### Changed
+* Use max salt lengths in RSA PSS signature creation & automatically verify previous/new
+  sigs (#422)
+* Speed up canonical json encoding (#410)
+* Bumped dependencies: cffi (#415), colorama (#413), cryptography (#405, #406, #414,
+  #417, #424, #425), ed25519 (#412)
+* Changed Debian packaging metadata (#392)
+
+### Fixed
+* Minor test fixes (#403, #420)
+
 
 ## securesystemslib v0.23.0
 
