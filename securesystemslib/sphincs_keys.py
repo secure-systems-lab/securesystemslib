@@ -18,6 +18,13 @@ _SHAKE_SEED_LEN = 48
 
 
 def generate_public_and_private():
+    """Generates spx public and private key.
+
+    Returns:
+        tuple: Containing the (public, private) keys.
+    Raises:
+        UnsupportedLibraryError: In case pyspx is not available.
+    """
     if not _SPX_AVAIL:
         raise exceptions.UnsupportedLibraryError(NO_SPX_MSG)
     seed = os.urandom(_SHAKE_SEED_LEN)
@@ -26,6 +33,17 @@ def generate_public_and_private():
 
 
 def create_signature(public_key, private_key, data, scheme):
+    """Signs data with the private key.
+      Arguments:
+            public_key (bytes): The public key. Not used so far.
+            private_key (bytes): The private key.
+            data (bytes): The data to be signed.
+            scheme (str): The name of the scheme as defined in formats.py.
+      Returns:
+          tuple: Containing the values (signature, scheme).
+      Raises:
+          UnsupportedLibraryError: In case pyspx is not available.
+    """
     if not _SPX_AVAIL:
         raise exceptions.UnsupportedLibraryError(NO_SPX_MSG)
     formats.SPHINCSPUBLIC_SCHEMA.check_match(public_key)
@@ -38,6 +56,17 @@ def create_signature(public_key, private_key, data, scheme):
 
 
 def verify_signature(public_key, scheme, signature, data):
+    """Verify a signature using the public key.
+      Arguments:
+            public_key (bytes): The public key used for verification.
+            scheme (str): The name of the scheme as defined in formats.py.
+            signature (bytes): The sphincs+ signature as generated with create_signature.
+            data (bytes): The data that was signed.
+      Returns:
+          bool: True if the signature was valid, False otherwise.
+      Raises:
+          UnsupportedLibraryError: In case pyspx is not available.
+    """
     if not _SPX_AVAIL:
         raise exceptions.UnsupportedLibraryError(NO_SPX_MSG)
     formats.SPHINCSPUBLIC_SCHEMA.check_match(public_key)
