@@ -3,21 +3,31 @@
 # http://docs.python.org/2/library/os.html#miscellaneous-functions
 import os
 
-from pyspx import shake_128s
-
 from securesystemslib import exceptions
 from securesystemslib import formats
+
+_SPX_AVAIL = True
+NO_SPX_MSG = "spinhcs+ key support requires the pyspx library"
+
+try:
+    from pyspx import shake_128s
+except ImportError:
+    _SPX_AVAIL = False
 
 _SHAKE_SEED_LEN = 48
 
 
 def generate_public_and_private():
+    if not _SPX_AVAIL:
+        raise exceptions.UnsupportedLibraryError(NO_SPX_MSG)
     seed = os.urandom(_SHAKE_SEED_LEN)
     public, private = shake_128s.generate_keypair(seed)
     return public, private
 
 
 def create_signature(public_key, private_key, data, scheme):
+    if not _SPX_AVAIL:
+        raise exceptions.UnsupportedLibraryError(NO_SPX_MSG)
     formats.SPHINCSPUBLIC_SCHEMA.check_match(public_key)
     formats.SPHINCSPRIVATE_SCHEMA.check_match(private_key)
     formats.SPHINCS_SIG_SCHEMA.check_match(scheme)
@@ -28,6 +38,8 @@ def create_signature(public_key, private_key, data, scheme):
 
 
 def verify_signature(public_key, scheme, signature, data):
+    if not _SPX_AVAIL:
+        raise exceptions.UnsupportedLibraryError(NO_SPX_MSG)
     formats.SPHINCSPUBLIC_SCHEMA.check_match(public_key)
 
     # Is 'scheme' properly formatted?
