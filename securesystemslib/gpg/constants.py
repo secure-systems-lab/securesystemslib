@@ -28,7 +28,7 @@ def is_available_gnupg(gnupg):
   try:
     process.run(gpg_version_cmd, stdout=process.PIPE, stderr=process.PIPE)
     return True
-  except OSError:
+  except (OSError, subprocess.TimeoutExpired):
     return False
 
 
