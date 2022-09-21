@@ -180,7 +180,7 @@ def persist_temp_file(
     persist_path: str,
     storage_backend: Optional[StorageBackendInterface] = None,
     should_close: bool = True,
-    mode = None
+    restrict: bool = False
 ) -> None:
   """
   <Purpose>
@@ -204,12 +204,10 @@ def persist_temp_file(
       A boolean indicating whether the file should be closed after it has been
       persisted. Default is True, the file is closed.
 
-    mode:
-      Bit mask with custom file permissions for the newly created file. When
-      computing mode, the current OS umask value is first masked out. If None,
-      the default OS permissions apply. See os.open() 'mode' documentation.
-      On Windows systems only the file's read-only flag can be set. All other
-      bits are ignored.
+    restrict:
+      A boolean indicating whether the file should have restricted privileges.
+      What evactly counts as restricted privileges is an implementation detail
+      of the backing StorageBackendInterface implementation.
 
   <Exceptions>
     securesystemslib.exceptions.StorageError: If file cannot be written.
@@ -221,7 +219,7 @@ def persist_temp_file(
   if storage_backend is None:
     storage_backend = FilesystemBackend()
 
-  storage_backend.put(temp_file, persist_path, mode=mode)
+  storage_backend.put(temp_file, persist_path, restrict=restrict)
 
   if should_close:
     temp_file.close()

@@ -242,16 +242,13 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     tmpfile = tempfile.TemporaryFile()
     tmpfile.write(self.random_string().encode('utf-8'))
 
-    # Write a file with custom permissions
-    # stat.S_IRUSR: user has read permissions
-    # stat.S_IWUSR: user has write permissions
-    mode= stat.S_IRUSR | stat.S_IWUSR
-    securesystemslib.util.persist_temp_file(tmpfile, dest_path, mode=mode)
+    # Write a file with restricted permissions
+    securesystemslib.util.persist_temp_file(tmpfile, dest_path, restrict=True)
     self.assertTrue(dest_path)
 
     # Need to set also the stat.S_IFREG bit to match the st_mode output
     # stat.S_IFREG - Regular file
-    expected_mode =  stat.S_IFREG | mode
+    expected_mode =  stat.S_IFREG | stat.S_IRUSR | stat.S_IWUSR
     if os.name != 'posix':
       # Windows only supports setting the read-only attribute.
       expected_mode = stat.S_IFREG | 0o666

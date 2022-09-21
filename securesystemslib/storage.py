@@ -20,9 +20,10 @@ import errno
 import logging
 import os
 import shutil
+import stat
 from contextlib import contextmanager
 from securesystemslib import exceptions
-from typing import BinaryIO, IO, Iterator, List
+from typing import BinaryIO, IO, Iterator, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +66,8 @@ class StorageBackendInterface():
 
 
   @abc.abstractmethod
-  def put(self, fileobj: IO, filepath: str, mode=None):
+  def put(self, fileobj: IO, filepath: str, restrict: Optional[bool] = False
+        ) -> None:
     """
     <Purpose>
       Store a file-like object in the storage backend.
@@ -79,12 +81,12 @@ class StorageBackendInterface():
       filepath:
         The full path to the location where 'fileobj' will be stored.
 
-      mode:
-        Bit mask with custom file permissions for the file-like object. When
-        computing mode, the current OS umask value is first masked out. If None,
-        the default OS permissions apply. See os.open() 'mode' documentation.
-        On Windows systems only the file's read-only flag can be set. All other
-        bits are ignored.
+      restrict:
+        Whether the file should be created with restricted permissions.
+        What counts as restricted is backend-specific. For a filesystem on a
+        UNIX-like operating system, that may mean read/write permissions only
+        for the user (octal mode 0o600). For a cloud storage system, that
+        likely means Cloud provider specific ACL restrictions.
 
     <Exceptions>
       securesystemslib.exceptions.StorageError, if the file can not be stored.
@@ -215,7 +217,8 @@ class FilesystemBackend(StorageBackendInterface):
         file_object.close()
 
 
-  def put(self, fileobj: IO, filepath: str, mode=None) -> None:
+  def put(self, fileobj: IO, filepath: str, restrict: Optional[bool] = False
+        ) -> None:
     # If we are passed an open file, seek to the beginning such that we are
     # copying the entire contents
     if not fileobj.closed:
@@ -229,10 +232,11 @@ class FilesystemBackend(StorageBackendInterface):
       pass
 
     try:
-      if mode is not None:
-        # The effective mode is modified by the process's umask. The mode
-        # of the created file is (mode & ~umask).
-        fd = os.open(filepath, os.O_WRONLY|os.O_CREAT, mode)
+      if restrict:
+        # On UNIX-based systems restricted files are created with read and
+        # write permissions for the user only (octal value 0o600).
+        fd = os.open(filepath, os.O_WRONLY|os.O_CREAT,
+          stat.S_IRUSR|stat.S_IWUSR)
       else:
         # Use the default value (0o777) of the 'mode' argument of os.open()
         fd = os.open(filepath, os.O_WRONLY|os.O_CREAT)
