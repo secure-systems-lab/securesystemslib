@@ -25,9 +25,7 @@ import securesystemslib.keys
 import securesystemslib.rsa_keys
 import securesystemslib.hash
 
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key
 
 public_rsa, private_rsa = securesystemslib.rsa_keys.generate_rsa_public_and_private()
 FORMAT_ERROR_MSG = 'securesystemslib.exceptions.FormatError raised.  Check object\'s format.'

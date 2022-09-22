@@ -89,6 +89,12 @@ try:
   # https://tools.ietf.org/html/rfc3447#section-8.1
   # The 'padding' module is needed for PSS signatures.
   from cryptography.hazmat.primitives.asymmetric import padding
+  # By default, the PSS signing salt length is set so as
+  # to be backwards-compatible with previous verifiers.
+  _SIGN_SALT_LENGTH = padding.PSS.DIGEST_LENGTH
+  # By default, the PSS verification salt length is set so as to
+  # automatically verify signatures w/o specifying the salt length.
+  _VERIFY_SALT_LENGTH = padding.PSS.AUTO
 
   # Import pyca/cryptography's Key Derivation Function (KDF) module.
   # 'securesystemslib.keys.py' needs this module to derive a secret key according
@@ -112,6 +118,8 @@ try:
   from cryptography.hazmat.primitives.ciphers import modes
 except ImportError:
   CRYPTO = False
+  _SIGN_SALT_LENGTH = None
+  _VERIFY_SALT_LENGTH = None
 
 from securesystemslib import exceptions
 from securesystemslib import formats
@@ -238,7 +246,7 @@ def generate_rsa_public_and_private(bits=_DEFAULT_RSA_KEY_BITS):
 
 
 def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256',
-                         salt_length=padding.PSS.DIGEST_LENGTH):
+                         salt_length=_SIGN_SALT_LENGTH):
   """
   <Purpose>
     Generate a 'scheme' signature.  The signature, and the signature scheme
@@ -273,8 +281,6 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256',
 
     salt_length:
       The salt length (int) used to to generate the signature.
-      By default, this is set to padding.PSS.DIGEST_LENGTH,
-      so as to be backwards-compatible with previous verifiers.
       Override this to set your own salt length
       (e.g., padding.PSS.MAX_LENGTH).
 
@@ -382,7 +388,7 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256',
 
 
 def verify_rsa_signature(signature, signature_scheme, public_key, data,
-                         salt_length=padding.PSS.AUTO):
+                         salt_length=_VERIFY_SALT_LENGTH):
   """
   <Purpose>
     Determine whether the corresponding private key of 'public_key' produced
@@ -417,9 +423,6 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data,
 
     salt_length:
       The salt length (int) used to to generate the signature.
-      By default, this is set to padding.PSS.AUTO,
-      so that it can automatically verify signatures
-      w/o specifying the salt length.
       Override this to fix your own salt length
       (e.g., padding.PSS.DIGEST_LENGTH).
 

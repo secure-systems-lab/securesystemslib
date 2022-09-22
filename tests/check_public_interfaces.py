@@ -149,6 +149,14 @@ class TestPublicInterfaces(unittest.TestCase):
         securesystemslib.interface.import_ecdsa_privatekey_from_file(
             path, password='pw')
 
+    with self.assertRaises(
+          securesystemslib.exceptions.UnsupportedLibraryError):
+      securesystemslib.rsa_keys.create_rsa_signature(None, None)
+
+    with self.assertRaises(
+          securesystemslib.exceptions.UnsupportedLibraryError):
+      securesystemslib.rsa_keys.verify_rsa_signature(None, None, None, None)
+
 
   def test_keys(self):
     with self.assertRaises(
