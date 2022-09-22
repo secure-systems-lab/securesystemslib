@@ -159,34 +159,34 @@ class TestRSA_keys(unittest.TestCase):
     rsa_scheme = 'rsassa-pss-sha256'
     data = 'The ancients say the longer the salt, the more provable the security'.encode('utf-8')
 
-    # Old-style signature: use the hash length as the salt length.
-    old_signature, _ = securesystemslib.rsa_keys.create_rsa_signature(private_rsa, data)
+    # Default signature: use the digest length as the salt length.
+    def_sig, _ = securesystemslib.rsa_keys.create_rsa_signature(private_rsa, data)
 
-    # New-style signature: use the maximum salt length.
-    new_signature, _ = securesystemslib.rsa_keys.create_rsa_signature(private_rsa, data,
-                                                                      salt_length=padding.PSS.MAX_LENGTH)
+    # "Max" signature: use the maximum salt length.
+    max_sig, _ = securesystemslib.rsa_keys.create_rsa_signature(private_rsa, data,
+                                                                salt_length=padding.PSS.MAX_LENGTH)
 
-    # Test that old verifiers can verify the old-style signature.
-    old_sign_old_ver = securesystemslib.rsa_keys.verify_rsa_signature(old_signature, rsa_scheme,
-                                                                      public_rsa, data,
-                                                                      salt_length=padding.PSS.DIGEST_LENGTH)
-    self.assertTrue(old_sign_old_ver)
-
-    # Test that new verifiers can also automatically verify the old-style signature.
-    old_sig_new_ver = securesystemslib.rsa_keys.verify_rsa_signature(old_signature, rsa_scheme,
-                                                                     public_rsa, data)
-    self.assertTrue(old_sig_new_ver)
-
-    # Test that old verifiers cannot automatically verify new-style signatures.
-    new_sig_old_ver = securesystemslib.rsa_keys.verify_rsa_signature(new_signature, rsa_scheme,
+    # Test that *old* verifiers can verify the *default* signature.
+    def_sig_old_ver = securesystemslib.rsa_keys.verify_rsa_signature(def_sig, rsa_scheme,
                                                                      public_rsa, data,
                                                                      salt_length=padding.PSS.DIGEST_LENGTH)
-    self.assertFalse(new_sig_old_ver)
+    self.assertTrue(def_sig_old_ver)
 
-    # Test that new verifiers can verify new-style signatures.
-    new_sig_new_ver = securesystemslib.rsa_keys.verify_rsa_signature(new_signature, rsa_scheme,
+    # Test that *new* verifiers can also automatically verify the *default* signature.
+    def_sig_new_ver = securesystemslib.rsa_keys.verify_rsa_signature(def_sig, rsa_scheme,
                                                                      public_rsa, data)
-    self.assertTrue(new_sig_new_ver)
+    self.assertTrue(def_sig_new_ver)
+
+    # Test that *old* verifiers *cannot* automatically verify the *max* signature.
+    max_sig_old_ver = securesystemslib.rsa_keys.verify_rsa_signature(max_sig, rsa_scheme,
+                                                                     public_rsa, data,
+                                                                     salt_length=padding.PSS.DIGEST_LENGTH)
+    self.assertFalse(max_sig_old_ver)
+
+    # Test that *new* verifiers can verify the *max* signatures.
+    max_sig_new_ver = securesystemslib.rsa_keys.verify_rsa_signature(max_sig, rsa_scheme,
+                                                                     public_rsa, data)
+    self.assertTrue(max_sig_new_ver)
 
 
   def test_create_rsa_encrypted_pem(self):
