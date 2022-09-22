@@ -27,7 +27,7 @@ import securesystemslib.hash
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key
 
 public_rsa, private_rsa = securesystemslib.rsa_keys.generate_rsa_public_and_private()
 FORMAT_ERROR_MSG = 'securesystemslib.exceptions.FormatError raised.  Check object\'s format.'
@@ -161,23 +161,34 @@ class TestRSA_keys(unittest.TestCase):
     rsa_scheme = 'rsassa-pss-sha256'
     data = 'The ancients say the longer the salt, the more provable the security'.encode('utf-8')
 
-    private_key = load_pem_private_key(private_rsa.encode('utf-8'),
-        password=None, backend=default_backend())
-    digest = securesystemslib.hash.digest_from_rsa_scheme(rsa_scheme, 'pyca_crypto')
-
     # Old-style signature: use the hash length as the salt length.
-    old_signature = private_key.sign(data,
-      padding.PSS(mgf=padding.MGF1(digest.algorithm), salt_length=padding.PSS.DIGEST_LENGTH),
-      digest.algorithm)
+    old_signature, _ = securesystemslib.rsa_keys.create_rsa_signature(private_rsa, data)
 
-    # New-style signature: use the automatic salt length.
-    new_signature, _ = securesystemslib.rsa_keys.create_rsa_signature(private_rsa, data)
+    # New-style signature: use the maximum salt length.
+    new_signature, _ = securesystemslib.rsa_keys.create_rsa_signature(private_rsa, data,
+                                                                      salt_length=padding.PSS.MAX_LENGTH)
 
-    # Verify both old-style and new-style signatures.
-    for signature in (old_signature, new_signature):
-      verified = securesystemslib.rsa_keys.verify_rsa_signature(signature, rsa_scheme,
-                                                                public_rsa, data)
-      self.assertTrue(verified)
+    # Test that old verifiers can verify the old-style signature.
+    old_sign_old_ver = securesystemslib.rsa_keys.verify_rsa_signature(old_signature, rsa_scheme,
+                                                                      public_rsa, data,
+                                                                      salt_length=padding.PSS.DIGEST_LENGTH)
+    self.assertTrue(old_sign_old_ver)
+
+    # Test that new verifiers can also automatically verify the old-style signature.
+    old_sig_new_ver = securesystemslib.rsa_keys.verify_rsa_signature(old_signature, rsa_scheme,
+                                                                     public_rsa, data)
+    self.assertTrue(old_sig_new_ver)
+
+    # Test that old verifiers cannot automatically verify new-style signatures.
+    new_sig_old_ver = securesystemslib.rsa_keys.verify_rsa_signature(new_signature, rsa_scheme,
+                                                                     public_rsa, data,
+                                                                     salt_length=padding.PSS.DIGEST_LENGTH)
+    self.assertFalse(new_sig_old_ver)
+
+    # Test that new verifiers can verify new-style signatures.
+    new_sig_new_ver = securesystemslib.rsa_keys.verify_rsa_signature(new_signature, rsa_scheme,
+                                                                     public_rsa, data)
+    self.assertTrue(new_sig_new_ver)
 
 
   def test_create_rsa_encrypted_pem(self):

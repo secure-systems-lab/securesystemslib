@@ -237,7 +237,8 @@ def generate_rsa_public_and_private(bits=_DEFAULT_RSA_KEY_BITS):
 
 
 
-def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
+def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256',
+                         salt_length=padding.PSS.DIGEST_LENGTH):
   """
   <Purpose>
     Generate a 'scheme' signature.  The signature, and the signature scheme
@@ -269,6 +270,13 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
 
     scheme:
       The signature scheme used to generate the signature.
+
+    salt_length:
+      The salt length (int) used to to generate the signature.
+      By default, this is set to padding.PSS.DIGEST_LENGTH,
+      so as to be backwards-compatible with previous verifiers.
+      Override this to set your own salt length
+      (e.g., padding.PSS.MAX_LENGTH).
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'private_key' is improperly
@@ -330,7 +338,7 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
       # the maximum length available.
       signature = private_key_object.sign(
           data, padding.PSS(mgf=padding.MGF1(digest_obj.algorithm),
-          salt_length=padding.PSS.MAX_LENGTH), digest_obj.algorithm)
+          salt_length=salt_length), digest_obj.algorithm)
 
     elif scheme.startswith('rsa-pkcs1v15'):
       # Generate an RSA-PKCS1v15 signature.  Raise
@@ -373,7 +381,8 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
 
 
 
-def verify_rsa_signature(signature, signature_scheme, public_key, data):
+def verify_rsa_signature(signature, signature_scheme, public_key, data,
+                         salt_length=padding.PSS.AUTO):
   """
   <Purpose>
     Determine whether the corresponding private key of 'public_key' produced
@@ -405,6 +414,14 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
     data:
       Data used by securesystemslib.keys.create_signature() to generate
       'signature'.  'data' (a string) is needed here to verify 'signature'.
+
+    salt_length:
+      The salt length (int) used to to generate the signature.
+      By default, this is set to padding.PSS.AUTO,
+      so that it can automatically verify signatures
+      w/o specifying the salt length.
+      Override this to fix your own salt length
+      (e.g., padding.PSS.DIGEST_LENGTH).
 
   <Exceptions>
     securesystemslib.exceptions.FormatError, if 'signature',
@@ -460,7 +477,7 @@ def verify_rsa_signature(signature, signature_scheme, public_key, data):
       if signature_scheme.startswith('rsassa-pss'):
         public_key_object.verify(signature, data,
             padding.PSS(mgf=padding.MGF1(digest_obj.algorithm),
-            salt_length=padding.PSS.AUTO),
+            salt_length=salt_length),
             digest_obj.algorithm)
 
       elif signature_scheme.startswith('rsa-pkcs1v15'):
