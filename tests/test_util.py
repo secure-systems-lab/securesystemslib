@@ -248,7 +248,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
     # Need to set also the stat.S_IFREG bit to match the st_mode output
     # stat.S_IFREG - Regular file
-    expected_mode =  stat.S_IFREG | stat.S_IRUSR | stat.S_IWUSR
+    expected_mode = stat.S_IFREG | stat.S_IRUSR | stat.S_IWUSR
     if os.name != 'posix':
       # Windows only supports setting the read-only attribute.
       expected_mode = stat.S_IFREG | 0o666

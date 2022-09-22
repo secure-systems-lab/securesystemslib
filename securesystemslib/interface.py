@@ -201,7 +201,7 @@ def _generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
   Side Effects:
     Prompts user for a password if 'prompt' is True.
     Writes key files to disk.
-    Overwrites filepath if already exists.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -268,7 +268,7 @@ def generate_and_write_rsa_keypair(password, filepath=None,
 
   Side Effects:
     Writes key files to disk.
-    Overwrites filepath if already exists.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -305,7 +305,7 @@ def generate_and_write_rsa_keypair_with_prompt(filepath=None,
   Side Effects:
     Prompts user for a password.
     Writes key files to disk.
-    Overwrites filepath if already exists.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -338,7 +338,7 @@ def generate_and_write_unencrypted_rsa_keypair(filepath=None,
 
   Side Effects:
     Writes unencrypted key files to disk.
-    Overwrites filepath if already exists.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -470,7 +470,7 @@ def _generate_and_write_ed25519_keypair(filepath=None, password=None,
   Side Effects:
     Prompts user for a password if 'prompt' is True.
     Writes key files to disk.
-    Overwrites filepath if already exists.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -538,7 +538,7 @@ def generate_and_write_ed25519_keypair(password, filepath=None):
 
   Side Effects:
     Writes key files to disk.
-    Overwrites filepath if already exists.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -571,7 +571,7 @@ def generate_and_write_ed25519_keypair_with_prompt(filepath=None):
   Side Effects:
     Prompts user for a password.
     Writes key files to disk.
-    Overwrites filepath if already exists.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -599,7 +599,7 @@ def generate_and_write_unencrypted_ed25519_keypair(filepath=None):
 
   Side Effects:
     Writes unencrypted key files to disk.
-    Overwrites filepath if already exists.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -718,7 +718,7 @@ def _generate_and_write_ecdsa_keypair(filepath=None, password=None,
   Side Effects:
     Prompts user for a password if 'prompt' is True.
     Writes key files to disk.
-    Overwrites filepath if already exists.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -786,7 +786,7 @@ def generate_and_write_ecdsa_keypair(password, filepath=None):
 
   Side Effects:
     Writes key files to disk.
-    Overwrites filepath if already exists.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -819,7 +819,7 @@ def generate_and_write_ecdsa_keypair_with_prompt(filepath=None):
   Side Effects:
     Prompts user for a password.
     Writes key files to disk.
-    Overwrites filepath if already exists.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -847,7 +847,7 @@ def generate_and_write_unencrypted_ecdsa_keypair(filepath=None):
 
   Side Effects:
     Writes unencrypted key files to disk.
-    Overwrites filepath if already exists.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
