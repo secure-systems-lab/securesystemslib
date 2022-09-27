@@ -291,19 +291,16 @@ ECDSAKEY_SCHEMA = SCHEMA.Object(
 # An ED25519 raw public key, which must be 32 bytes.
 ED25519PUBLIC_SCHEMA = SCHEMA.LengthBytes(32)
 
-# An SPHINCS raw public key, which must be 32 bytes.
 SPHINCSPUBLIC_SCHEMA = SCHEMA.LengthBytes(32)
 
 # An ED25519 raw seed key, which must be 32 bytes.
 ED25519SEED_SCHEMA = SCHEMA.LengthBytes(32)
 
-# An SPHINCS raw public key, which must be 32 bytes.
 SPHINCSPRIVATE_SCHEMA = SCHEMA.LengthBytes(64)
 
 # An ED25519 raw signature, which must be 64 bytes.
 ED25519SIGNATURE_SCHEMA = SCHEMA.LengthBytes(64)
 
-# An SPHINCS raw signature, which must be 64 bytes.
 SPHINCSSIGNATURE_SCHEMA = SCHEMA.LengthBytes(7_856)
 
 # An ECDSA signature.
