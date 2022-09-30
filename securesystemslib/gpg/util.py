@@ -18,8 +18,8 @@ import struct
 import binascii
 import re
 import logging
+import dataclasses
 
-from distutils.version import StrictVersion # pylint: disable=no-name-in-module,import-error
 
 CRYPTO = True
 NO_CRYPTO_MSG = 'gpg.utils requires the cryptography library'
@@ -29,6 +29,7 @@ try:
 except ImportError:
   CRYPTO = False
 
+# pylint: disable=wrong-import-position
 from securesystemslib import exceptions
 from securesystemslib import process
 from securesystemslib.gpg import constants
@@ -297,7 +298,51 @@ def parse_subpackets(data):
   return parsed_subpackets
 
 
-def get_version():
+@dataclasses.dataclass(order=True)
+class Version:
+  """A version of GPG."""
+
+  major: int
+  minor: int
+  patch: int
+
+  VERSION_RE = re.compile(r'(\d)\.(\d)\.(\d+)')
+  EXAMPLE = '1.3.22'
+
+  @classmethod
+  def from_string(cls, value: str) -> 'Version':
+    """
+    <Purpose>
+      Parses `value` as a `Version`.
+
+      Expects a version in the format `major.minor.patch`. `major` and `minor`
+      must be one-digit numbers; `patch` can be any integer.
+
+    <Arguments>
+      value:
+              The version string to parse.
+
+    <Exceptions>
+      ValueError:
+              If the version string is invalid.
+
+    <Returns>
+      Version
+    """
+    match = cls.VERSION_RE.fullmatch(value)
+    if not match:
+      raise ValueError(
+        f"Invalid version number '{value}'; "
+        f"expected MAJOR.MINOR.PATCH (e.g., '{cls.EXAMPLE}')"
+      )
+    major, minor, patch = map(int, match.groups())
+    return cls(major, minor, patch)
+
+  def __str__(self):
+    return f"{self.major}.{self.minor}.{self.patch}"
+
+
+def get_version() -> Version:
   """
   <Purpose>
     Uses `gpg2 --version` to get the version info of the installed gpg2
@@ -309,8 +354,11 @@ def get_version():
     securesystemslib.exceptions.UnsupportedLibraryError:
             If the gpg command is not available
 
+  <Side Effects>
+    Executes a command: constants.GPG_VERSION_COMMAND.
+
   <Returns>
-    Version number string, e.g. "2.1.22"
+    Version of GPG.
 
   """
   if not constants.HAVE_GPG: # pragma: no cover
@@ -321,9 +369,19 @@ def get_version():
       stderr=process.PIPE, universal_newlines=True)
 
   full_version_info = gpg_process.stdout
-  version_string = re.search(r'(\d\.\d\.\d+)', full_version_info).group(1)
+  try:
+    match = Version.VERSION_RE.search(full_version_info)
+    if not match:
+      raise ValueError(
+        f"Couldn't find version number (ex. '{Version.EXAMPLE}') "
+        f"in the output of `{command}`:\n"
+        + full_version_info
+    )
+    version = Version.from_string(match.group(0))
+  except ValueError as err:
+    raise exceptions.UnsupportedLibraryError(constants.NO_GPG_MSG) from err
 
-  return version_string
+  return version
 
 
 def is_version_fully_supported():
@@ -337,15 +395,8 @@ def is_version_fully_supported():
     constants.FULLY_SUPPORTED_MIN_VERSION, False otherwise.
 
   """
-
-  installed_version = get_version()
-  # Excluded so that coverage does not vary in different test environments
-  if (StrictVersion(installed_version) >=
-      StrictVersion(constants.FULLY_SUPPORTED_MIN_VERSION)): # pragma: no cover
-    return True
-
-  else: # pragma: no cover
-    return False
+  min_version = constants.FULLY_SUPPORTED_MIN_VERSION
+  return get_version() >= Version.from_string(min_version)
 
 
 def get_hashing_class(hash_algorithm_id):
