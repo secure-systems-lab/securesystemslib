@@ -249,9 +249,9 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     # Need to set also the stat.S_IFREG bit to match the st_mode output
     # stat.S_IFREG - Regular file
     expected_mode = stat.S_IFREG | stat.S_IRUSR | stat.S_IWUSR
-    if os.name != 'posix':
+    if os.name == 'nt':
       # Windows only supports setting the read-only attribute.
-      expected_mode = stat.S_IFREG | 0o666
+      expected_mode = stat.S_IFREG | stat.S_IWUSR | stat.S_IRUSR | stat.S_IWGRP | stat.S_IRGRP | stat.S_IWOTH | stat.S_IROTH
     self.assertEqual(os.stat(dest_path).st_mode, expected_mode)
     self.assertTrue(tmpfile.closed)
 

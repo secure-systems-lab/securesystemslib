@@ -238,7 +238,11 @@ class FilesystemBackend(StorageBackendInterface):
         fd = os.open(filepath, os.O_WRONLY|os.O_CREAT,
           stat.S_IRUSR|stat.S_IWUSR)
       else:
-        # Use the default value (0o777) of the 'mode' argument of os.open()
+        # Non-restricted files use the default 'mode' argument of os.open()
+        # granting read, write, and execute for all users (octal mode 0o777).
+        # NOTE: mode may be modified by the user's file mode creation mask
+        # (umask) or on Windows limited to the smaller set of OS supported
+        # permisssions.
         fd = os.open(filepath, os.O_WRONLY|os.O_CREAT)
 
       with os.fdopen(fd, "wb") as destination_file:
