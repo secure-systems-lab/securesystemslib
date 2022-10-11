@@ -54,9 +54,6 @@ except ImportError: # pragma: no cover
 DEFAULT_RSA_KEY_BITS = 3072
 
 
-
-
-
 def get_password(prompt='Password: ', confirm=False):
   """Prompts user to enter a password.
 
@@ -204,6 +201,7 @@ def _generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
   Side Effects:
     Prompts user for a password if 'prompt' is True.
     Writes key files to disk.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -239,7 +237,7 @@ def _generate_and_write_rsa_keypair(filepath=None, bits=DEFAULT_RSA_KEY_BITS,
   # Write PEM-encoded private key to <filepath>
   file_object = tempfile.TemporaryFile()
   file_object.write(private.encode('utf-8'))
-  util.persist_temp_file(file_object, filepath)
+  util.persist_temp_file(file_object, filepath, restrict=True)
 
   return filepath
 
@@ -270,6 +268,7 @@ def generate_and_write_rsa_keypair(password, filepath=None,
 
   Side Effects:
     Writes key files to disk.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -306,6 +305,7 @@ def generate_and_write_rsa_keypair_with_prompt(filepath=None,
   Side Effects:
     Prompts user for a password.
     Writes key files to disk.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -338,6 +338,7 @@ def generate_and_write_unencrypted_rsa_keypair(filepath=None,
 
   Side Effects:
     Writes unencrypted key files to disk.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -469,6 +470,7 @@ def _generate_and_write_ed25519_keypair(filepath=None, password=None,
   Side Effects:
     Prompts user for a password if 'prompt' is True.
     Writes key files to disk.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -508,7 +510,7 @@ def _generate_and_write_ed25519_keypair(filepath=None, password=None,
   # Write private key to <filepath>
   file_object = tempfile.TemporaryFile()
   file_object.write(ed25519_key.encode('utf-8'))
-  util.persist_temp_file(file_object, filepath)
+  util.persist_temp_file(file_object, filepath, restrict=True)
 
   return filepath
 
@@ -536,6 +538,7 @@ def generate_and_write_ed25519_keypair(password, filepath=None):
 
   Side Effects:
     Writes key files to disk.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -568,6 +571,7 @@ def generate_and_write_ed25519_keypair_with_prompt(filepath=None):
   Side Effects:
     Prompts user for a password.
     Writes key files to disk.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -595,6 +599,7 @@ def generate_and_write_unencrypted_ed25519_keypair(filepath=None):
 
   Side Effects:
     Writes unencrypted key files to disk.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -713,6 +718,7 @@ def _generate_and_write_ecdsa_keypair(filepath=None, password=None,
   Side Effects:
     Prompts user for a password if 'prompt' is True.
     Writes key files to disk.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -752,7 +758,7 @@ def _generate_and_write_ecdsa_keypair(filepath=None, password=None,
   # Write private key to <filepath>
   file_object = tempfile.TemporaryFile()
   file_object.write(ecdsa_key.encode('utf-8'))
-  util.persist_temp_file(file_object, filepath)
+  util.persist_temp_file(file_object, filepath, restrict=True)
 
   return filepath
 
@@ -780,6 +786,7 @@ def generate_and_write_ecdsa_keypair(password, filepath=None):
 
   Side Effects:
     Writes key files to disk.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -812,6 +819,7 @@ def generate_and_write_ecdsa_keypair_with_prompt(filepath=None):
   Side Effects:
     Prompts user for a password.
     Writes key files to disk.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.
@@ -839,6 +847,7 @@ def generate_and_write_unencrypted_ecdsa_keypair(filepath=None):
 
   Side Effects:
     Writes unencrypted key files to disk.
+    Overwrites files if they already exist.
 
   Returns:
     The private key filepath.

@@ -20,9 +20,10 @@ import errno
 import logging
 import os
 import shutil
+import stat
 from contextlib import contextmanager
 from securesystemslib import exceptions
-from typing import BinaryIO, IO, Iterator, List
+from typing import BinaryIO, IO, Iterator, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +66,8 @@ class StorageBackendInterface():
 
 
   @abc.abstractmethod
-  def put(self, fileobj: IO, filepath: str) -> None:
+  def put(self, fileobj: IO, filepath: str, restrict: Optional[bool] = False
+        ) -> None:
     """
     <Purpose>
       Store a file-like object in the storage backend.
@@ -78,6 +80,13 @@ class StorageBackendInterface():
 
       filepath:
         The full path to the location where 'fileobj' will be stored.
+
+      restrict:
+        Whether the file should be created with restricted permissions.
+        What counts as restricted is backend-specific. For a filesystem on a
+        UNIX-like operating system, that may mean read/write permissions only
+        for the user (octal mode 0o600). For a cloud storage system, that
+        likely means Cloud provider specific ACL restrictions.
 
     <Exceptions>
       securesystemslib.exceptions.StorageError, if the file can not be stored.
@@ -208,14 +217,35 @@ class FilesystemBackend(StorageBackendInterface):
         file_object.close()
 
 
-  def put(self, fileobj: IO, filepath: str) -> None:
+  def put(self, fileobj: IO, filepath: str, restrict: Optional[bool] = False
+        ) -> None:
     # If we are passed an open file, seek to the beginning such that we are
     # copying the entire contents
     if not fileobj.closed:
       fileobj.seek(0)
 
+    # If a file with the same name already exists, the new permissions
+    # may not be applied.
     try:
-      with open(filepath, 'wb') as destination_file:
+      os.remove(filepath)
+    except OSError:
+      pass
+
+    try:
+      if restrict:
+        # On UNIX-based systems restricted files are created with read and
+        # write permissions for the user only (octal value 0o600).
+        fd = os.open(filepath, os.O_WRONLY|os.O_CREAT,
+          stat.S_IRUSR|stat.S_IWUSR)
+      else:
+        # Non-restricted files use the default 'mode' argument of os.open()
+        # granting read, write, and execute for all users (octal mode 0o777).
+        # NOTE: mode may be modified by the user's file mode creation mask
+        # (umask) or on Windows limited to the smaller set of OS supported
+        # permisssions.
+        fd = os.open(filepath, os.O_WRONLY|os.O_CREAT)
+
+      with os.fdopen(fd, "wb") as destination_file:
         shutil.copyfileobj(fileobj, destination_file)
         # Force the destination file to be written to disk from Python's internal
         # and the operating system's buffers.  os.fsync() should follow flush().

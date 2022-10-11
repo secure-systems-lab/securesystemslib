@@ -179,7 +179,8 @@ def persist_temp_file(
     temp_file: IO,
     persist_path: str,
     storage_backend: Optional[StorageBackendInterface] = None,
-    should_close: bool = True
+    should_close: bool = True,
+    restrict: bool = False
 ) -> None:
   """
   <Purpose>
@@ -203,6 +204,11 @@ def persist_temp_file(
       A boolean indicating whether the file should be closed after it has been
       persisted. Default is True, the file is closed.
 
+    restrict:
+      A boolean indicating whether the file should have restricted privileges.
+      What evactly counts as restricted privileges is an implementation detail
+      of the backing StorageBackendInterface implementation.
+
   <Exceptions>
     securesystemslib.exceptions.StorageError: If file cannot be written.
 
@@ -213,7 +219,7 @@ def persist_temp_file(
   if storage_backend is None:
     storage_backend = FilesystemBackend()
 
-  storage_backend.put(temp_file, persist_path)
+  storage_backend.put(temp_file, persist_path, restrict=restrict)
 
   if should_close:
     temp_file.close()

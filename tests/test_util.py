@@ -24,6 +24,7 @@ import logging
 import tempfile
 import unittest
 import timeit
+import stat
 
 import securesystemslib.settings
 import securesystemslib.hash
@@ -240,8 +241,18 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     dest_path = os.path.join(dest_temp_dir, self.random_string())
     tmpfile = tempfile.TemporaryFile()
     tmpfile.write(self.random_string().encode('utf-8'))
-    securesystemslib.util.persist_temp_file(tmpfile, dest_path)
+
+    # Write a file with restricted permissions
+    securesystemslib.util.persist_temp_file(tmpfile, dest_path, restrict=True)
     self.assertTrue(dest_path)
+
+    # Need to set also the stat.S_IFREG bit to match the st_mode output
+    # stat.S_IFREG - Regular file
+    expected_mode = stat.S_IFREG | stat.S_IRUSR | stat.S_IWUSR
+    if os.name == 'nt':
+      # Windows only supports setting the read-only attribute.
+      expected_mode = stat.S_IFREG | stat.S_IWUSR | stat.S_IRUSR | stat.S_IWGRP | stat.S_IRGRP | stat.S_IWOTH | stat.S_IROTH
+    self.assertEqual(os.stat(dest_path).st_mode, expected_mode)
     self.assertTrue(tmpfile.closed)
 
     # Test persisting a file without automatically closing the tmpfile
