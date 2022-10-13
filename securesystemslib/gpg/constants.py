@@ -19,8 +19,6 @@ import functools
 import logging
 import os
 
-import securesystemslib.gpg._lazy as lazy
-
 from securesystemslib import process
 
 log = logging.getLogger(__name__)
@@ -55,22 +53,13 @@ def gpg_command() -> str:
     return GPG1_COMMAND
   return ""
 
-GPG_COMMAND = lazy.wrap_thunk(gpg_command)
-
-
 def have_gpg() -> bool:
   """Returns True if a gpg_command is available."""
   return bool(gpg_command())
 
-HAVE_GPG = lazy.wrap_thunk(have_gpg)
-
-
 def gpg_version_command() -> str:
   """Returns the command to get the current GPG version."""
   return f"{gpg_command()} --version"
-
-GPG_VERSION_COMMAND = lazy.wrap_thunk(gpg_version_command)
-
 
 FULLY_SUPPORTED_MIN_VERSION = "2.1.0"
 NO_GPG_MSG = (
@@ -82,16 +71,9 @@ def gpg_sign_command(keyarg: str, homearg: str) -> str:
   """Returns the command to use GPG to sign STDIN."""
   return f"{gpg_command()} --detach-sign --digest-algo SHA256 {keyarg} {homearg}"
 
-GPG_SIGN_COMMAND = lazy.wrap_thunk(lambda: gpg_sign_command("{keyarg}", "{homearg}"))
-
-
 def gpg_export_pubkey_command(homearg: str, keyid: str):
   """Returns the GPG command to export a public key."""
   return f"{gpg_command()} {homearg} --export {keyid}"
-
-GPG_EXPORT_PUBKEY_COMMAND = lazy.wrap_thunk(
-  lambda: gpg_export_pubkey_command("{homearg}", "{keyid}")
-)
 
 # See RFC4880 section 4.3. Packet Tags for a list of all packet types The
 # relevant packets defined below are described in sections 5.2 (signature),
