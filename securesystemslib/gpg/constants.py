@@ -18,6 +18,7 @@
 import functools
 import logging
 import os
+import subprocess
 
 from securesystemslib import process
 
@@ -30,7 +31,7 @@ def is_available_gnupg(gnupg: str) -> bool:
   try:
     process.run(gpg_version_cmd, stdout=process.PIPE, stderr=process.PIPE)
     return True
-  except OSError:
+  except (OSError, subprocess.TimeoutExpired):
     return False
 
 
