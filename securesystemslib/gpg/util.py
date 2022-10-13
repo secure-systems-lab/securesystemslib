@@ -348,20 +348,20 @@ def get_version() -> Version:
     Uses `gpg2 --version` to get the version info of the installed gpg2
     and extracts and returns the version number.
 
-    The executed base command is defined in constants.GPG_VERSION_COMMAND.
+    The executed base command is defined in constants.gpg_version_command.
 
   <Exceptions>
     securesystemslib.exceptions.UnsupportedLibraryError:
             If the gpg command is not available
 
   <Side Effects>
-    Executes a command: constants.GPG_VERSION_COMMAND.
+    Executes a command: constants.gpg_version_command.
 
   <Returns>
     Version of GPG.
 
   """
-  if not constants.HAVE_GPG: # pragma: no cover
+  if not constants.have_gpg(): # pragma: no cover
     raise exceptions.UnsupportedLibraryError(constants.NO_GPG_MSG)
 
   command = constants.gpg_version_command()

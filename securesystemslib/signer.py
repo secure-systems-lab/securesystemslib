@@ -237,7 +237,7 @@ class GPGSigner(Signer):
         homedir.
 
         The executed base command is defined in
-        securesystemslib.gpg.constants.GPG_SIGN_COMMAND.
+        securesystemslib.gpg.constants.gpg_sign_command.
 
         Arguments:
             payload: The bytes to be signed.

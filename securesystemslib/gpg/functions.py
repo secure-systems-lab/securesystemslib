@@ -26,9 +26,9 @@ from securesystemslib.gpg.exceptions import (
     CommandError, KeyExpirationError)
 from securesystemslib.gpg.constants import (
     FULLY_SUPPORTED_MIN_VERSION,
-    GPG_EXPORT_PUBKEY_COMMAND,
-    GPG_SIGN_COMMAND,
-    HAVE_GPG,
+    gpg_export_pubkey_command,
+    gpg_sign_command,
+    have_gpg,
     NO_GPG_MSG,
     SHA256)
 from securesystemslib.gpg.handlers import (
@@ -50,7 +50,7 @@ def create_signature(content, keyid=None, homedir=None):
     identified by the passed keyid from the gpg keyring at the passed homedir.
 
     The executed base command is defined in
-    securesystemslib.gpg.constants.GPG_SIGN_COMMAND.
+    securesystemslib.gpg.constants.gpg_sign_command.
 
     NOTE: On not fully supported versions of GPG, i.e. versions below
     securesystemslib.gpg.constants.FULLY_SUPPORTED_MIN_VERSION the returned
@@ -99,7 +99,7 @@ def create_signature(content, keyid=None, homedir=None):
     securesystemslib.formats.GPG_SIGNATURE_SCHEMA.
 
   """
-  if not HAVE_GPG: # pragma: no cover
+  if not have_gpg(): # pragma: no cover
     raise exceptions.UnsupportedLibraryError(NO_GPG_MSG)
 
   if not CRYPTO: # pragma: no cover
@@ -114,7 +114,7 @@ def create_signature(content, keyid=None, homedir=None):
   if homedir:
     homearg = "--homedir {}".format(homedir).replace("\\", "/")
 
-  command = GPG_SIGN_COMMAND.format(keyarg=keyarg, homearg=homearg)
+  command = gpg_sign_command(keyarg=keyarg, homearg=homearg)
 
   gpg_process = process.run(command, input=content, check=False,
       stdout=process.PIPE, stderr=process.PIPE)
@@ -258,7 +258,7 @@ def export_pubkey(keyid, homedir=None):
     An OpenPGP public key object in GPG_PUBKEY_SCHEMA format.
 
   """
-  if not HAVE_GPG: # pragma: no cover
+  if not have_gpg(): # pragma: no cover
     raise exceptions.UnsupportedLibraryError(NO_GPG_MSG)
 
   if not CRYPTO: # pragma: no cover
@@ -276,7 +276,7 @@ def export_pubkey(keyid, homedir=None):
 
   # TODO: Consider adopting command error handling from `create_signature`
   # above, e.g. in a common 'run gpg command' utility function
-  command = GPG_EXPORT_PUBKEY_COMMAND.format(keyid=keyid, homearg=homearg)
+  command = gpg_export_pubkey_command(keyid=keyid, homearg=homearg)
   gpg_process = process.run(command, stdout=process.PIPE, stderr=process.PIPE)
 
   key_packet = gpg_process.stdout

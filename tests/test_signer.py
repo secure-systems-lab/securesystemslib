@@ -12,7 +12,7 @@ import securesystemslib.formats
 import securesystemslib.keys as KEYS
 from securesystemslib.exceptions import FormatError, UnsupportedAlgorithmError
 from securesystemslib.signer import GPGSignature, Signature, SSlibSigner, GPGSigner
-from securesystemslib.gpg.constants import HAVE_GPG
+from securesystemslib.gpg.constants import have_gpg
 from securesystemslib.gpg.functions import export_pubkey, verify_signature as verify_sig
 
 
@@ -95,7 +95,7 @@ class TestSSlibSigner(unittest.TestCase):
         self.assertNotEqual(sig_obj, sig_obj_2)
 
 
-@unittest.skipIf(not HAVE_GPG, "gpg not found")
+@unittest.skipIf(not have_gpg(), "gpg not found")
 class TestGPGRSA(unittest.TestCase):
     """Test RSA gpg signature creation and verification."""
 

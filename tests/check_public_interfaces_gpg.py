@@ -25,7 +25,7 @@
 """
 
 import unittest
-from securesystemslib.gpg.constants import HAVE_GPG, NO_GPG_MSG
+from securesystemslib.gpg.constants import have_gpg, NO_GPG_MSG
 from securesystemslib.gpg.util import get_version
 from securesystemslib.gpg.functions import (
     create_signature, export_pubkey, export_pubkeys, verify_signature)
@@ -36,7 +36,7 @@ from securesystemslib.exceptions import UnsupportedLibraryError
 class TestPublicInterfacesGPG(unittest.TestCase):
   @classmethod
   def setUpClass(cls):
-    assert not HAVE_GPG, \
+    assert not have_gpg(), \
         "please remove GnuPG from your environment to run this test case"
 
   def test_gpg_functions(self):
