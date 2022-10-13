@@ -80,11 +80,11 @@ class TestUtil(unittest.TestCase):
     self.assertTrue(isinstance(get_version(), Version))
     self.assertTrue(isinstance(is_version_fully_supported(), bool))
 
-  @patch('securesystemslib.gpg.constants.GPG_VERSION_COMMAND', 'echo "bad"')
   def test_version_utils_error(self):
     """Run dummy tests for coverage. """
-    with self.assertRaises(exceptions.UnsupportedLibraryError):
-      get_version()
+    with patch('securesystemslib.gpg.constants.HAVE_GPG', False):
+      with self.assertRaises(exceptions.UnsupportedLibraryError):
+        get_version()
 
   def test_get_hashing_class(self):
     # Assert return expected hashing class

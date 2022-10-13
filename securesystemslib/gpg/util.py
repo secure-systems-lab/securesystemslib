@@ -364,7 +364,7 @@ def get_version() -> Version:
   if not constants.HAVE_GPG: # pragma: no cover
     raise exceptions.UnsupportedLibraryError(constants.NO_GPG_MSG)
 
-  command = constants.GPG_VERSION_COMMAND
+  command = constants.gpg_version_command()
   gpg_process = process.run(command, stdout=process.PIPE,
       stderr=process.PIPE, universal_newlines=True)
 
