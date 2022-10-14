@@ -326,11 +326,10 @@ def create_rsa_signature(private_key, data, scheme='rsassa-pss-sha256'):
     if scheme.startswith('rsassa-pss'):
       # Generate an RSSA-PSS signature.  Raise
       # 'securesystemslib.exceptions.CryptoError' for any of the expected
-      # exceptions raised by pyca/cryptography. 'salt_length' is set to
-      # the maximum length available.
+      # exceptions raised by pyca/cryptography.
       signature = private_key_object.sign(
           data, padding.PSS(mgf=padding.MGF1(digest_obj.algorithm),
-          salt_length=padding.PSS.MAX_LENGTH), digest_obj.algorithm)
+          salt_length=padding.PSS.DIGEST_LENGTH), digest_obj.algorithm)
 
     elif scheme.startswith('rsa-pkcs1v15'):
       # Generate an RSA-PKCS1v15 signature.  Raise

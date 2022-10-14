@@ -157,26 +157,30 @@ class TestRSA_keys(unittest.TestCase):
           scheme, public_rsa, data))
 
 
-  def test_verify_rsa_pss_sha256(self):
+  def test_verify_rsa_pss_different_salt_lengths(self):
     rsa_scheme = 'rsassa-pss-sha256'
-    data = 'The ancients say the longer the salt, the more provable the security'.encode('utf-8')
+    data = 'The ancients say, salt length does not matter that much'.encode('utf-8')
 
     private_key = load_pem_private_key(private_rsa.encode('utf-8'),
         password=None, backend=default_backend())
     digest = securesystemslib.hash.digest_from_rsa_scheme(rsa_scheme, 'pyca_crypto')
 
-    # Old-style signature: use the hash length as the salt length.
-    old_signature = private_key.sign(data,
-      padding.PSS(mgf=padding.MGF1(digest.algorithm), salt_length=padding.PSS.DIGEST_LENGTH),
-      digest.algorithm)
+    # Make sure digest size and max salt length are not accidentally the same
+    self.assertNotEqual(digest.algorithm.digest_size,
+        padding.calculate_max_pss_salt_length(private_key, digest.algorithm))
 
-    # New-style signature: use the automatic salt length.
-    new_signature, _ = securesystemslib.rsa_keys.create_rsa_signature(private_rsa, data)
+    # Sign with max salt length (briefly available in sslib v0.24.0):
+    max_salt_sig = private_key.sign(data,
+        padding.PSS(mgf=padding.MGF1(digest.algorithm), salt_length=padding.PSS.MAX_LENGTH),
+        digest.algorithm)
 
-    # Verify both old-style and new-style signatures.
-    for signature in (old_signature, new_signature):
+    # Sign with salt length == digest length
+    fix_salt_sig, _ = securesystemslib.rsa_keys.create_rsa_signature(private_rsa, data)
+
+    # Verification infers salt length automatically and so works for both
+    for signature in (max_salt_sig, fix_salt_sig):
       verified = securesystemslib.rsa_keys.verify_rsa_signature(signature, rsa_scheme,
-                                                                public_rsa, data)
+          public_rsa, data)
       self.assertTrue(verified)
 
 
