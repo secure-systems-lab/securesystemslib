@@ -78,11 +78,3 @@ def verify_signature(public_key, scheme, signature, data):
     formats.SPHINCSSIGNATURE_SCHEMA.check_match(signature)
 
     return shake_128s.verify(data, signature, public_key)
-
-
-if __name__ == '__main__':
-    # The interactive sessions of the documentation strings can
-    # be tested by running 'ed25519_keys.py' as a standalone module.
-    # python -B ed25519_keys.py
-    import doctest
-    doctest.testmod()
