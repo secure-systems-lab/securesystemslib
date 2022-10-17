@@ -59,9 +59,7 @@
   $ export PATH=$PATH:~/.local/bin
 """
 
-from setuptools import setup
-from setuptools import find_packages
-
+from setuptools import find_packages, setup
 
 with open("README.rst") as file_object:
     long_description = file_object.read()

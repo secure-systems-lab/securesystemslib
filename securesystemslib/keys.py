@@ -50,18 +50,18 @@
 # Required for hexadecimal conversions.  Signatures and public/private keys are
 # hexlified.
 import binascii
-
 import logging
 
-from securesystemslib import ecdsa_keys
-from securesystemslib import ed25519_keys
-from securesystemslib import exceptions
-from securesystemslib import formats
-from securesystemslib import rsa_keys
-from securesystemslib import settings
-from securesystemslib import util
+from securesystemslib import (
+    ecdsa_keys,
+    ed25519_keys,
+    exceptions,
+    formats,
+    rsa_keys,
+    settings,
+    util,
+)
 from securesystemslib.hash import digest
-
 
 # The hash algorithm to use in the generation of keyids.
 _KEY_ID_HASH_ALGORITHM = "sha256"

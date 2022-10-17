@@ -18,24 +18,21 @@
 import logging
 import time
 
-from securesystemslib import exceptions
-from securesystemslib import formats
+from securesystemslib import exceptions, formats, process
 from securesystemslib.gpg.common import (
     get_pubkey_bundle,
     parse_signature_packet,
 )
-from securesystemslib.gpg.exceptions import CommandError, KeyExpirationError
 from securesystemslib.gpg.constants import (
     FULLY_SUPPORTED_MIN_VERSION,
+    NO_GPG_MSG,
+    SHA256,
     gpg_export_pubkey_command,
     gpg_sign_command,
     have_gpg,
-    NO_GPG_MSG,
-    SHA256,
 )
+from securesystemslib.gpg.exceptions import CommandError, KeyExpirationError
 from securesystemslib.gpg.handlers import SIGNATURE_HANDLERS
-
-from securesystemslib import process
 from securesystemslib.gpg.rsa import CRYPTO
 
 log = logging.getLogger(__name__)

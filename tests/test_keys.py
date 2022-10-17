@@ -17,13 +17,13 @@
   Test cases for test_keys.py.
 """
 
-import unittest
 import copy
+import unittest
 
+import securesystemslib.ecdsa_keys
 import securesystemslib.exceptions
 import securesystemslib.formats
 import securesystemslib.keys
-import securesystemslib.ecdsa_keys
 
 KEYS = securesystemslib.keys
 FORMAT_ERROR_MSG = (

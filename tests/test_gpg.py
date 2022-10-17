@@ -20,73 +20,72 @@
 """
 
 import os
-import sys
 import shutil
+import sys
 import tempfile
 import unittest
 
 if sys.version_info >= (3, 3):
-    from unittest.mock import (
+    from unittest.mock import (  # pylint: disable=no-name-in-module,import-error
         patch,
-    )  # pylint: disable=no-name-in-module,import-error
+    )
 else:
     from mock import patch  # pylint: disable=import-error
 
-from copy import deepcopy
 from collections import OrderedDict
+from copy import deepcopy
 
-import cryptography.hazmat.primitives.serialization as serialization
 import cryptography.hazmat.backends as backends
 import cryptography.hazmat.primitives.hashes as hashing
+import cryptography.hazmat.primitives.serialization as serialization
 
-from securesystemslib import exceptions
-from securesystemslib import process
-from securesystemslib.gpg.functions import (
-    create_signature,
-    export_pubkey,
-    verify_signature,
-    export_pubkeys,
-)
-from securesystemslib.gpg.util import (
-    get_version,
-    is_version_fully_supported,
-    get_hashing_class,
-    parse_packet_header,
-    parse_subpacket_header,
-    Version,
-)
-from securesystemslib.gpg.rsa import create_pubkey as rsa_create_pubkey
-from securesystemslib.gpg.dsa import create_pubkey as dsa_create_pubkey
-from securesystemslib.gpg.eddsa import create_pubkey as eddsa_create_pubkey
-from securesystemslib.gpg.eddsa import ED25519_SIG_LENGTH
+from securesystemslib import exceptions, process
+from securesystemslib.formats import ANY_PUBKEY_DICT_SCHEMA, GPG_PUBKEY_SCHEMA
 from securesystemslib.gpg.common import (
-    parse_pubkey_payload,
-    parse_pubkey_bundle,
-    get_pubkey_bundle,
     _assign_certified_key_info,
     _get_verified_subkeys,
+    get_pubkey_bundle,
+    parse_pubkey_bundle,
+    parse_pubkey_payload,
     parse_signature_packet,
 )
 from securesystemslib.gpg.constants import (
+    PACKET_TYPE_PRIMARY_KEY,
+    PACKET_TYPE_SUB_KEY,
+    PACKET_TYPE_USER_ATTR,
+    PACKET_TYPE_USER_ID,
     SHA1,
     SHA256,
     SHA512,
     gpg_export_pubkey_command,
-    PACKET_TYPE_PRIMARY_KEY,
-    PACKET_TYPE_USER_ID,
-    PACKET_TYPE_USER_ATTR,
-    PACKET_TYPE_SUB_KEY,
     have_gpg,
 )
+from securesystemslib.gpg.dsa import create_pubkey as dsa_create_pubkey
+from securesystemslib.gpg.eddsa import ED25519_SIG_LENGTH
+from securesystemslib.gpg.eddsa import create_pubkey as eddsa_create_pubkey
 from securesystemslib.gpg.exceptions import (
+    CommandError,
+    KeyExpirationError,
+    KeyNotFoundError,
     PacketParsingError,
     PacketVersionNotSupportedError,
     SignatureAlgorithmNotSupportedError,
-    KeyNotFoundError,
-    CommandError,
-    KeyExpirationError,
 )
-from securesystemslib.formats import GPG_PUBKEY_SCHEMA, ANY_PUBKEY_DICT_SCHEMA
+from securesystemslib.gpg.functions import (
+    create_signature,
+    export_pubkey,
+    export_pubkeys,
+    verify_signature,
+)
+from securesystemslib.gpg.rsa import create_pubkey as rsa_create_pubkey
+from securesystemslib.gpg.util import (
+    Version,
+    get_hashing_class,
+    get_version,
+    is_version_fully_supported,
+    parse_packet_header,
+    parse_subpacket_header,
+)
 
 
 class GPGTestUtils:

@@ -17,8 +17,8 @@
   Unit test for 'schema.py'
 """
 
-import unittest
 import re
+import unittest
 
 import securesystemslib.exceptions
 import securesystemslib.schema as SCHEMA

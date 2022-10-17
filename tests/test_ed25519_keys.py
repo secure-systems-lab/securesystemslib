@@ -17,13 +17,12 @@
   Test cases for test_ed25519_keys.py.
 """
 
-import unittest
 import os
+import unittest
 
+import securesystemslib.ed25519_keys
 import securesystemslib.exceptions
 import securesystemslib.formats
-import securesystemslib.ed25519_keys
-
 
 public, private = securesystemslib.ed25519_keys.generate_public_and_private()
 FORMAT_ERROR_MSG = (

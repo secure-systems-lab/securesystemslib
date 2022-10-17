@@ -17,14 +17,13 @@
   Test cases for test_ecdsa_keys.py.
 """
 
-import unittest
 import os
+import unittest
 
+import securesystemslib.ecdsa_keys
 import securesystemslib.exceptions
 import securesystemslib.formats
-import securesystemslib.ecdsa_keys
 import securesystemslib.rsa_keys
-
 
 public, private = securesystemslib.ecdsa_keys.generate_public_and_private()
 FORMAT_ERROR_MSG = (

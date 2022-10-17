@@ -21,17 +21,16 @@
   - provide a special `run_duplicate_streams` function
 
 """
-import os
-import sys
 import io
-import tempfile
 import logging
-import time
+import os
 import shlex
 import subprocess
+import sys
+import tempfile
+import time
 
-from securesystemslib import formats
-from securesystemslib import settings
+from securesystemslib import formats, settings
 
 DEVNULL = subprocess.DEVNULL
 PIPE = subprocess.PIPE

@@ -18,15 +18,13 @@
 """
 
 import json
-import os
 import logging
+import os
+from typing import IO, Any, Dict, List, Optional, Sequence, Tuple, Union
 
-from securesystemslib import exceptions
-from securesystemslib import formats
+from securesystemslib import exceptions, formats
 from securesystemslib.hash import digest_fileobject
 from securesystemslib.storage import FilesystemBackend, StorageBackendInterface
-
-from typing import Any, Dict, IO, List, Optional, Sequence, Tuple, Union
 
 logger = logging.getLogger(__name__)
 

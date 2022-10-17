@@ -17,8 +17,8 @@
   Test cases for exceptions.py (mainly the exceptions defined there).
 """
 
-import unittest
 import logging
+import unittest
 
 import securesystemslib.exceptions
 

@@ -50,36 +50,23 @@
   Key Derivation Function 1 (PBKF1) + MD5.
  """
 
-import os
 import binascii
 import json
+import os
 
 CRYPTO = True
 NO_CRYPTO_MSG = "RSA key support requires the cryptography library"
 try:
     # Import pyca/cryptography routines needed to generate and load cryptographic
     # keys in PEM format.
-    from cryptography.hazmat.primitives import serialization
-    from cryptography.hazmat.primitives.serialization import (
-        load_pem_private_key,
-    )
-    from cryptography.hazmat.backends import default_backend
-
     # Import Exception classes need to catch pyca/cryptography exceptions.
     from cryptography.exceptions import InvalidSignature, UnsupportedAlgorithm
-
-    # 'cryptography.hazmat.primitives.asymmetric' (i.e., pyca/cryptography's
-    # public-key cryptography modules) supports algorithms like the Digital
-    # Signature Algorithm (DSA) and the ECDSA (Elliptic Curve Digital Signature
-    # Algorithm) encryption system.  The 'rsa' module module is needed here to
-    # generate RSA keys and PS
-    from cryptography.hazmat.primitives.asymmetric import rsa
+    from cryptography.hazmat.backends import default_backend
 
     # pyca/cryptography requires hash objects to generate PKCS#1 PSS
     # signatures (i.e., padding.PSS).  The 'hmac' module is needed to verify
     # ciphertexts in encrypted key files.
-    from cryptography.hazmat.primitives import hashes
-    from cryptography.hazmat.primitives import hmac
+    from cryptography.hazmat.primitives import hashes, hmac, serialization
 
     # RSA's probabilistic signature scheme with appendix (RSASSA-PSS).
     # PKCS#1 v1.5 is available for compatibility with existing applications, but
@@ -89,20 +76,12 @@ try:
     # http://en.wikipedia.org/wiki/RSA-PSS#Schemes
     # https://tools.ietf.org/html/rfc3447#section-8.1
     # The 'padding' module is needed for PSS signatures.
-    from cryptography.hazmat.primitives.asymmetric import padding
-
-    # Import pyca/cryptography's Key Derivation Function (KDF) module.
-    # 'securesystemslib.keys.py' needs this module to derive a secret key according
-    # to the Password-Based Key Derivation Function 2 specification.  The derived
-    # key is used as the symmetric key to encrypt securesystemslib key information.
-    # PKCS#5 v2.0 PBKDF2 specification: http://tools.ietf.org/html/rfc2898#section-5.2
-    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-
-    # pyca/cryptography's AES implementation available in 'ciphers.Cipher. and
-    # 'ciphers.algorithms'.  AES is a symmetric key algorithm that operates on
-    # fixed block sizes of 128-bits.
-    # https://en.wikipedia.org/wiki/Advanced_Encryption_Standard
-    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms
+    # 'cryptography.hazmat.primitives.asymmetric' (i.e., pyca/cryptography's
+    # public-key cryptography modules) supports algorithms like the Digital
+    # Signature Algorithm (DSA) and the ECDSA (Elliptic Curve Digital Signature
+    # Algorithm) encryption system.  The 'rsa' module module is needed here to
+    # generate RSA keys and PS
+    from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
     # The mode of operation is presently set to CTR (CounTeR Mode) for symmetric
     # block encryption (AES-256, where the symmetric key is 256 bits).  'modes' can
@@ -110,16 +89,26 @@ try:
     # for the block cipher.  The initial random block, or initialization vector
     # (IV), can be set to begin the process of incrementing the 128-bit blocks and
     # allowing the AES algorithm to perform cipher block operations on them.
-    from cryptography.hazmat.primitives.ciphers import modes
+    # pyca/cryptography's AES implementation available in 'ciphers.Cipher. and
+    # 'ciphers.algorithms'.  AES is a symmetric key algorithm that operates on
+    # fixed block sizes of 128-bits.
+    # https://en.wikipedia.org/wiki/Advanced_Encryption_Standard
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
+    # Import pyca/cryptography's Key Derivation Function (KDF) module.
+    # 'securesystemslib.keys.py' needs this module to derive a secret key according
+    # to the Password-Based Key Derivation Function 2 specification.  The derived
+    # key is used as the symmetric key to encrypt securesystemslib key information.
+    # PKCS#5 v2.0 PBKDF2 specification: http://tools.ietf.org/html/rfc2898#section-5.2
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+    from cryptography.hazmat.primitives.serialization import (
+        load_pem_private_key,
+    )
 except ImportError:
     CRYPTO = False
 
-from securesystemslib import exceptions
-from securesystemslib import formats
-from securesystemslib import settings
-from securesystemslib import util
+from securesystemslib import exceptions, formats, settings, util
 from securesystemslib.hash import digest_from_rsa_scheme
-
 
 # Recommended RSA key sizes:
 # http://www.emc.com/emc-plus/rsa-labs/historical/twirl-and-rsa-key-size.htm#table1

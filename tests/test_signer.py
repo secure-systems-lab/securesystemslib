@@ -4,23 +4,21 @@
 
 import copy
 import os
-import unittest
-import tempfile
 import shutil
+import tempfile
+import unittest
 
 import securesystemslib.formats
 import securesystemslib.keys as KEYS
 from securesystemslib.exceptions import FormatError, UnsupportedAlgorithmError
+from securesystemslib.gpg.constants import have_gpg
+from securesystemslib.gpg.functions import export_pubkey
+from securesystemslib.gpg.functions import verify_signature as verify_sig
 from securesystemslib.signer import (
     GPGSignature,
+    GPGSigner,
     Signature,
     SSlibSigner,
-    GPGSigner,
-)
-from securesystemslib.gpg.constants import have_gpg
-from securesystemslib.gpg.functions import (
-    export_pubkey,
-    verify_signature as verify_sig,
 )
 
 

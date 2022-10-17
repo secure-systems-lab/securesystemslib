@@ -17,8 +17,8 @@
   Unit test for 'formats.py'
 """
 
-import unittest
 import datetime
+import unittest
 
 import securesystemslib.formats
 import securesystemslib.schema

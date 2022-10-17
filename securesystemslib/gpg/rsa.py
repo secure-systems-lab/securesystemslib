@@ -19,16 +19,13 @@ import binascii
 CRYPTO = True
 NO_CRYPTO_MSG = "RSA key support for GPG requires the cryptography library"
 try:
-    from cryptography.hazmat.primitives.asymmetric import rsa
-    from cryptography.hazmat import backends
-    from cryptography.hazmat.primitives.asymmetric import padding
-    from cryptography.hazmat.primitives.asymmetric import utils
     from cryptography.exceptions import InvalidSignature
+    from cryptography.hazmat import backends
+    from cryptography.hazmat.primitives.asymmetric import padding, rsa, utils
 except ImportError:
     CRYPTO = False
 
-from securesystemslib import exceptions
-from securesystemslib import formats
+from securesystemslib import exceptions, formats
 from securesystemslib.gpg import util as gpg_util
 from securesystemslib.gpg.exceptions import PacketParsingError
 

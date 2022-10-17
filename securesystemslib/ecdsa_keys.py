@@ -34,18 +34,14 @@ import logging
 CRYPTO = True
 NO_CRYPTO_MSG = "ECDSA key support requires the cryptography library"
 try:
+    from cryptography.exceptions import InvalidSignature, UnsupportedAlgorithm
     from cryptography.hazmat.backends import default_backend
-    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.asymmetric import ec
-
-    from cryptography.hazmat.primitives import serialization
-
-    from cryptography.hazmat.primitives.serialization import load_pem_public_key
     from cryptography.hazmat.primitives.serialization import (
         load_pem_private_key,
+        load_pem_public_key,
     )
-
-    from cryptography.exceptions import InvalidSignature, UnsupportedAlgorithm
 
     _SCHEME_HASHER = {
         "ecdsa-sha2-nistp256": ec.ECDSA(hashes.SHA256()),
@@ -56,8 +52,7 @@ except ImportError:
     CRYPTO = False
 
 # Perform object format-checking and add ability to handle/raise exceptions.
-from securesystemslib import exceptions
-from securesystemslib import formats
+from securesystemslib import exceptions, formats
 
 _SUPPORTED_ECDSA_SCHEMES = ["ecdsa-sha2-nistp256"]
 

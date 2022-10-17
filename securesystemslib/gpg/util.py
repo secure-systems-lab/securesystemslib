@@ -14,12 +14,11 @@
 <Purpose>
   general-purpose utilities for binary data handling and pgp data parsing
 """
-import struct
 import binascii
-import re
-import logging
 import dataclasses
-
+import logging
+import re
+import struct
 
 CRYPTO = True
 NO_CRYPTO_MSG = "gpg.utils requires the cryptography library"
@@ -30,8 +29,7 @@ except ImportError:
     CRYPTO = False
 
 # pylint: disable=wrong-import-position
-from securesystemslib import exceptions
-from securesystemslib import process
+from securesystemslib import exceptions, process
 from securesystemslib.gpg import constants
 from securesystemslib.gpg.exceptions import PacketParsingError
 

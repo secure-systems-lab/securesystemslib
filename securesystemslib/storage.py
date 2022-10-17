@@ -22,8 +22,9 @@ import os
 import shutil
 import stat
 from contextlib import contextmanager
+from typing import IO, BinaryIO, Iterator, List, Optional
+
 from securesystemslib import exceptions
-from typing import BinaryIO, IO, Iterator, List, Optional
 
 logger = logging.getLogger(__name__)
 

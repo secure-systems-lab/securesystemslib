@@ -18,18 +18,17 @@
 """
 import binascii
 
-from securesystemslib import exceptions
-from securesystemslib import formats
+from securesystemslib import exceptions, formats
 from securesystemslib.gpg import util as gpg_util
 from securesystemslib.gpg.exceptions import PacketParsingError
 
 CRYPTO = True
 NO_CRYPTO_MSG = "EdDSA key support for GPG requires the cryptography library"
 try:
+    from cryptography.exceptions import InvalidSignature
     from cryptography.hazmat.primitives.asymmetric import (
         ed25519 as pyca_ed25519,
     )
-    from cryptography.exceptions import InvalidSignature
 except ImportError:
     CRYPTO = False
 

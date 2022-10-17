@@ -16,12 +16,13 @@
   Test subprocess interface.
 
 """
+import io
 import os
+import shlex
+import sys
 import tempfile
 import unittest
-import shlex
-import io
-import sys
+
 import securesystemslib.process
 import securesystemslib.settings
 

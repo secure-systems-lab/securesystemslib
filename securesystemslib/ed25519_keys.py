@@ -64,21 +64,19 @@ import os
 NACL = True
 NO_NACL_MSG = "ed25519 key support requires the nacl library"
 try:
-    from nacl.encoding import RawEncoder
-    from nacl.signing import SigningKey, VerifyKey
-
     # avoid conflicts with own exceptions of same name
     from nacl import exceptions as nacl_exceptions
+    from nacl.encoding import RawEncoder
+    from nacl.signing import SigningKey, VerifyKey
 except ImportError:
     NACL = False
+
+from securesystemslib import exceptions, formats
 
 # The optimized pure Python implementation of Ed25519.  If
 # PyNaCl cannot be imported and an attempt to use is made in this module, a
 # 'securesystemslib.exceptions.UnsupportedLibraryError' exception is raised.
 from securesystemslib._vendor.ed25519 import ed25519 as python_ed25519
-
-from securesystemslib import exceptions
-from securesystemslib import formats
 
 # Supported ed25519 signing schemes: 'ed25519'.  The pure Python implementation
 # (i.e., ed25519') and PyNaCl (i.e., 'nacl', libsodium + Python bindings)

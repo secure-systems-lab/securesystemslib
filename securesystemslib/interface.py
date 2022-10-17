@@ -20,21 +20,24 @@
   'securesystemslib/README' for the complete guide to using 'interface.py'.
 """
 
+import getpass
+import json
+import logging
 import os
 import sys
-import getpass
-import logging
 import tempfile
-import json
 
-from securesystemslib import exceptions
-from securesystemslib import formats
-from securesystemslib import keys
-from securesystemslib import settings
-from securesystemslib import util
+from securesystemslib import (
+    KEY_TYPE_ECDSA,
+    KEY_TYPE_ED25519,
+    KEY_TYPE_RSA,
+    exceptions,
+    formats,
+    keys,
+    settings,
+    util,
+)
 from securesystemslib.storage import FilesystemBackend
-
-from securesystemslib import KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA
 
 logger = logging.getLogger(__name__)
 

@@ -17,20 +17,20 @@
   Unit test for 'util.py'
 """
 
-import os
-import sys
-import shutil
 import logging
-import tempfile
-import unittest
-import timeit
+import os
+import shutil
 import stat
+import sys
+import tempfile
+import timeit
+import unittest
 
-import securesystemslib.settings
-import securesystemslib.hash
-import securesystemslib.util
-import securesystemslib.unittest_toolbox as unittest_toolbox
 import securesystemslib.exceptions as exceptions
+import securesystemslib.hash
+import securesystemslib.settings
+import securesystemslib.unittest_toolbox as unittest_toolbox
+import securesystemslib.util
 
 logger = logging.getLogger(__name__)
 

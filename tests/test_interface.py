@@ -17,18 +17,18 @@
   Unit test for 'interface.py'.
 """
 
-import os
-import time
 import datetime
-import tempfile
 import json
+import os
 import shutil
 import stat
 import sys
+import tempfile
+import time
 import unittest
 
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
 # Use external backport 'mock' on versions under 3.3
 if sys.version_info >= (3, 3):
@@ -37,39 +37,36 @@ if sys.version_info >= (3, 3):
 else:
     import mock
 
-from securesystemslib import KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA
-
+from securesystemslib import KEY_TYPE_ECDSA, KEY_TYPE_ED25519, KEY_TYPE_RSA
+from securesystemslib.exceptions import CryptoError, Error, FormatError
 from securesystemslib.formats import (
-    RSAKEY_SCHEMA,
-    PUBLIC_KEY_SCHEMA,
     ANY_PUBKEY_DICT_SCHEMA,
-    ED25519KEY_SCHEMA,
     ECDSAKEY_SCHEMA,
+    ED25519KEY_SCHEMA,
+    PUBLIC_KEY_SCHEMA,
+    RSAKEY_SCHEMA,
 )
-
-from securesystemslib.exceptions import Error, FormatError, CryptoError
-
 from securesystemslib.interface import (
-    _generate_and_write_rsa_keypair,
-    generate_and_write_rsa_keypair,
-    generate_and_write_rsa_keypair_with_prompt,
-    generate_and_write_unencrypted_rsa_keypair,
-    import_rsa_privatekey_from_file,
-    import_rsa_publickey_from_file,
-    _generate_and_write_ed25519_keypair,
-    generate_and_write_ed25519_keypair,
-    generate_and_write_ed25519_keypair_with_prompt,
-    generate_and_write_unencrypted_ed25519_keypair,
-    import_ed25519_publickey_from_file,
-    import_ed25519_privatekey_from_file,
     _generate_and_write_ecdsa_keypair,
+    _generate_and_write_ed25519_keypair,
+    _generate_and_write_rsa_keypair,
     generate_and_write_ecdsa_keypair,
     generate_and_write_ecdsa_keypair_with_prompt,
+    generate_and_write_ed25519_keypair,
+    generate_and_write_ed25519_keypair_with_prompt,
+    generate_and_write_rsa_keypair,
+    generate_and_write_rsa_keypair_with_prompt,
     generate_and_write_unencrypted_ecdsa_keypair,
-    import_ecdsa_publickey_from_file,
+    generate_and_write_unencrypted_ed25519_keypair,
+    generate_and_write_unencrypted_rsa_keypair,
     import_ecdsa_privatekey_from_file,
-    import_publickeys_from_file,
+    import_ecdsa_publickey_from_file,
+    import_ed25519_privatekey_from_file,
+    import_ed25519_publickey_from_file,
     import_privatekey_from_file,
+    import_publickeys_from_file,
+    import_rsa_privatekey_from_file,
+    import_rsa_publickey_from_file,
 )
 
 

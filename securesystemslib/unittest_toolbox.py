@@ -18,11 +18,11 @@
 """
 
 import os
-import shutil
-import unittest
-import tempfile
 import random
+import shutil
 import string
+import tempfile
+import unittest
 
 
 class Modified_TestCase(unittest.TestCase):

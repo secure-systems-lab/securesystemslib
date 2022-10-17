@@ -24,10 +24,8 @@
 
 import hashlib
 
-from securesystemslib import exceptions
-from securesystemslib import formats
+from securesystemslib import exceptions, formats
 from securesystemslib.storage import FilesystemBackend
-
 
 DEFAULT_CHUNK_SIZE = 4096
 DEFAULT_HASH_ALGORITHM = "sha256"
@@ -37,9 +35,10 @@ SUPPORTED_LIBRARIES = ["hashlib"]
 
 # If `pyca_crypto` is installed, add it to supported libraries
 try:
+    import binascii
+
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import hashes as _pyca_hashes
-    import binascii
 
     # Dictionary of `pyca/cryptography` supported hash algorithms.
     PYCA_DIGEST_OBJECTS_CACHE = {

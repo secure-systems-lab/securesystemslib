@@ -6,10 +6,10 @@ signing implementations and a couple of example implementations.
 """
 
 import abc
-from typing import Any, Dict, Optional, Mapping
+from typing import Any, Dict, Mapping, Optional
 
-import securesystemslib.keys as sslib_keys
 import securesystemslib.gpg.functions as gpg
+import securesystemslib.keys as sslib_keys
 
 
 class Signature:

@@ -16,8 +16,8 @@
 """
 
 import os
-import tempfile
 import shutil
+import tempfile
 import unittest
 
 import securesystemslib.exceptions

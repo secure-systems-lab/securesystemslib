@@ -25,16 +25,16 @@
 """
 
 import unittest
-from securesystemslib.gpg.constants import have_gpg, NO_GPG_MSG
-from securesystemslib.gpg.util import get_version
+
+from securesystemslib.exceptions import UnsupportedLibraryError
+from securesystemslib.gpg.constants import NO_GPG_MSG, have_gpg
 from securesystemslib.gpg.functions import (
     create_signature,
     export_pubkey,
     export_pubkeys,
     verify_signature,
 )
-
-from securesystemslib.exceptions import UnsupportedLibraryError
+from securesystemslib.gpg.util import get_version
 
 
 class TestPublicInterfacesGPG(unittest.TestCase):
