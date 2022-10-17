@@ -885,9 +885,13 @@ def verify_signature(
                 "Unsupported" " signature scheme is specified: " + repr(scheme)
             )
     elif keytype == "sphincs-shake-128s":
-        valid_signature = sphincs_keys.verify_signature(
-          bytes.fromhex(public), scheme, sig, data
-        )
+        if scheme == "sphincs-shake-128s":
+            valid_signature = sphincs_keys.verify_signature(
+              bytes.fromhex(public), scheme, sig, data
+            )
+        else:
+            raise exceptions.UnsupportedAlgorithmError('Unsupported'
+              ' signature scheme is specified: ' + repr(scheme))
 
     # 'securesystemslib.formats.ANYKEY_SCHEMA' should have detected invalid key
     # types.  This is a defensive check against an invalid key type.
