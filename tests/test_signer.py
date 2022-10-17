@@ -11,9 +11,17 @@ import shutil
 import securesystemslib.formats
 import securesystemslib.keys as KEYS
 from securesystemslib.exceptions import FormatError, UnsupportedAlgorithmError
-from securesystemslib.signer import GPGSignature, Signature, SSlibSigner, GPGSigner
+from securesystemslib.signer import (
+    GPGSignature,
+    Signature,
+    SSlibSigner,
+    GPGSigner,
+)
 from securesystemslib.gpg.constants import have_gpg
-from securesystemslib.gpg.functions import export_pubkey, verify_signature as verify_sig
+from securesystemslib.gpg.functions import (
+    export_pubkey,
+    verify_signature as verify_sig,
+)
 
 
 class TestSSlibSigner(unittest.TestCase):
@@ -23,9 +31,9 @@ class TestSSlibSigner(unittest.TestCase):
         cls.ed25519key_dict = KEYS.generate_ed25519_key()
         cls.ecdsakey_dict = KEYS.generate_ecdsa_key()
         cls.DATA_STR = "SOME DATA REQUIRING AUTHENTICITY."
-        cls.DATA = securesystemslib.formats.encode_canonical(cls.DATA_STR).encode(
-            "utf-8"
-        )
+        cls.DATA = securesystemslib.formats.encode_canonical(
+            cls.DATA_STR
+        ).encode("utf-8")
 
     def test_sslib_sign(self):
         dicts = [self.rsakey_dict, self.ecdsakey_dict, self.ed25519key_dict]
@@ -35,7 +43,9 @@ class TestSSlibSigner(unittest.TestCase):
             sig_obj = sslib_signer.sign(self.DATA)
 
             # Verify signature
-            verified = KEYS.verify_signature(scheme_dict, sig_obj.to_dict(), self.DATA)
+            verified = KEYS.verify_signature(
+                scheme_dict, sig_obj.to_dict(), self.DATA
+            )
             self.assertTrue(verified, "Incorrect signature.")
 
             # Removing private key from "scheme_dict".

@@ -32,11 +32,12 @@ import securesystemslib.gpg.constants
 
 
 class TestGpgAvailable(unittest.TestCase):
-  """Test that securesystemslib finds some GPG executable in the environment."""
+    """Test that securesystemslib finds some GPG executable in the environment."""
 
-  def test_gpg_available(self):
-    """Test that GPG is available."""
-    self.assertTrue(securesystemslib.gpg.constants.have_gpg())
+    def test_gpg_available(self):
+        """Test that GPG is available."""
+        self.assertTrue(securesystemslib.gpg.constants.have_gpg())
+
 
 if __name__ == "__main__":
-  unittest.main(verbosity=1, buffer=True)
+    unittest.main(verbosity=1, buffer=True)

@@ -22,25 +22,9 @@ from securesystemslib.gpg import eddsa
 
 # See section 9.1. (public-key algorithms) of RFC4880 (-bis8)
 SUPPORTED_SIGNATURE_ALGORITHMS = {
-    0x01: {
-      "type":"rsa",
-      "method": "pgp+rsa-pkcsv1.5",
-      "handler": rsa
-    },
-    0x11: {
-      "type": "dsa",
-      "method": "pgp+dsa-fips-180-2",
-      "handler": dsa
-    },
-    0x16: {
-      "type": "eddsa",
-      "method": "pgp+eddsa-ed25519",
-      "handler": eddsa
-    }
+    0x01: {"type": "rsa", "method": "pgp+rsa-pkcsv1.5", "handler": rsa},
+    0x11: {"type": "dsa", "method": "pgp+dsa-fips-180-2", "handler": dsa},
+    0x16: {"type": "eddsa", "method": "pgp+eddsa-ed25519", "handler": eddsa},
 }
 
-SIGNATURE_HANDLERS = {
-    "rsa": rsa,
-    "dsa": dsa,
-    "eddsa": eddsa
-}
+SIGNATURE_HANDLERS = {"rsa": rsa, "dsa": dsa, "eddsa": eddsa}

@@ -24,57 +24,66 @@ from securesystemslib import process
 
 log = logging.getLogger(__name__)
 
+
 @functools.lru_cache(maxsize=3)
 def is_available_gnupg(gnupg: str) -> bool:
-  """Returns whether gnupg points to a gpg binary."""
-  gpg_version_cmd = gnupg + " --version"
-  try:
-    process.run(gpg_version_cmd, stdout=process.PIPE, stderr=process.PIPE)
-    return True
-  except (OSError, subprocess.TimeoutExpired):
-    return False
+    """Returns whether gnupg points to a gpg binary."""
+    gpg_version_cmd = gnupg + " --version"
+    try:
+        process.run(gpg_version_cmd, stdout=process.PIPE, stderr=process.PIPE)
+        return True
+    except (OSError, subprocess.TimeoutExpired):
+        return False
 
 
-GPG_ENV_COMMAND = os.environ.get('GNUPG')
+GPG_ENV_COMMAND = os.environ.get("GNUPG")
 GPG2_COMMAND = "gpg2"
 GPG1_COMMAND = "gpg"
 
 
 def gpg_command() -> str:
-  """Returns command to run GPG, or ``""``` if not found)."""
-  # By default, we allow providing GPG client through the environment
-  # assuming gpg2 as default value and test if exists. Otherwise, we assume gpg
-  # exists.
-  if GPG_ENV_COMMAND:
-    if is_available_gnupg(GPG_ENV_COMMAND):
-      return GPG_ENV_COMMAND
-  elif is_available_gnupg(GPG2_COMMAND):
-    return GPG2_COMMAND
-  elif is_available_gnupg(GPG1_COMMAND):
-    return GPG1_COMMAND
-  return ""
+    """Returns command to run GPG, or ``""``` if not found)."""
+    # By default, we allow providing GPG client through the environment
+    # assuming gpg2 as default value and test if exists. Otherwise, we assume gpg
+    # exists.
+    if GPG_ENV_COMMAND:
+        if is_available_gnupg(GPG_ENV_COMMAND):
+            return GPG_ENV_COMMAND
+    elif is_available_gnupg(GPG2_COMMAND):
+        return GPG2_COMMAND
+    elif is_available_gnupg(GPG1_COMMAND):
+        return GPG1_COMMAND
+    return ""
+
 
 def have_gpg() -> bool:
-  """Returns True if a gpg_command is available."""
-  return bool(gpg_command())
+    """Returns True if a gpg_command is available."""
+    return bool(gpg_command())
+
 
 def gpg_version_command() -> str:
-  """Returns the command to get the current GPG version."""
-  return f"{gpg_command()} --version"
+    """Returns the command to get the current GPG version."""
+    return f"{gpg_command()} --version"
+
 
 FULLY_SUPPORTED_MIN_VERSION = "2.1.0"
 NO_GPG_MSG = (
-  f"GPG support requires a GPG client. 'gpg2' or 'gpg' with version "
-  f"{FULLY_SUPPORTED_MIN_VERSION} or newer is fully supported."
+    f"GPG support requires a GPG client. 'gpg2' or 'gpg' with version "
+    f"{FULLY_SUPPORTED_MIN_VERSION} or newer is fully supported."
 )
 
+
 def gpg_sign_command(keyarg: str, homearg: str) -> str:
-  """Returns the command to use GPG to sign STDIN."""
-  return f"{gpg_command()} --detach-sign --digest-algo SHA256 {keyarg} {homearg}"
+    """Returns the command to use GPG to sign STDIN."""
+    return (
+        f"{gpg_command()} --detach-sign --digest-algo SHA256 {keyarg} {homearg}"
+    )
+
 
 def gpg_export_pubkey_command(homearg: str, keyid: str):
-  """Returns the GPG command to export a public key."""
-  return f"{gpg_command()} {homearg} --export {keyid}"
+    """Returns the GPG command to export a public key."""
+    return f"{gpg_command()} {homearg} --export {keyid}"
+
 
 # See RFC4880 section 4.3. Packet Tags for a list of all packet types The
 # relevant packets defined below are described in sections 5.2 (signature),

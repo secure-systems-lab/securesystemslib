@@ -28,270 +28,261 @@ from typing import BinaryIO, IO, Iterator, List, Optional
 logger = logging.getLogger(__name__)
 
 
-class StorageBackendInterface():
-  """
-  <Purpose>
-  Defines an interface for abstract storage operations which can be implemented
-  for a variety of storage solutions, such as remote and local filesystems.
-  """
-
-  __metaclass__ = abc.ABCMeta
-
-
-  @abc.abstractmethod
-  @contextmanager
-  def get(self, filepath: str) -> Iterator[BinaryIO]:
+class StorageBackendInterface:
     """
     <Purpose>
-      A context manager for 'with' statements that is used for retrieving files
-      from a storage backend and cleans up the files upon exit.
-
-        with storage_backend.get('/path/to/file') as file_object:
-          # operations
-        # file is now closed
-
-    <Arguments>
-      filepath:
-        The full path of the file to be retrieved.
-
-    <Exceptions>
-      securesystemslib.exceptions.StorageError, if the file does not exist or is
-      no accessible.
-
-    <Returns>
-      A ContextManager object that emits a file-like object for the file at
-      'filepath'.
+    Defines an interface for abstract storage operations which can be implemented
+    for a variety of storage solutions, such as remote and local filesystems.
     """
-    raise NotImplementedError # pragma: no cover
 
+    __metaclass__ = abc.ABCMeta
 
-  @abc.abstractmethod
-  def put(self, fileobj: IO, filepath: str, restrict: Optional[bool] = False
-        ) -> None:
-    """
-    <Purpose>
-      Store a file-like object in the storage backend.
-      The file-like object is read from the beginning, not its current
-      offset (if any).
+    @abc.abstractmethod
+    @contextmanager
+    def get(self, filepath: str) -> Iterator[BinaryIO]:
+        """
+        <Purpose>
+          A context manager for 'with' statements that is used for retrieving files
+          from a storage backend and cleans up the files upon exit.
 
-    <Arguments>
-      fileobj:
-        The file-like object to be stored.
+            with storage_backend.get('/path/to/file') as file_object:
+              # operations
+            # file is now closed
 
-      filepath:
-        The full path to the location where 'fileobj' will be stored.
+        <Arguments>
+          filepath:
+            The full path of the file to be retrieved.
 
-      restrict:
-        Whether the file should be created with restricted permissions.
-        What counts as restricted is backend-specific. For a filesystem on a
-        UNIX-like operating system, that may mean read/write permissions only
-        for the user (octal mode 0o600). For a cloud storage system, that
-        likely means Cloud provider specific ACL restrictions.
+        <Exceptions>
+          securesystemslib.exceptions.StorageError, if the file does not exist or is
+          no accessible.
 
-    <Exceptions>
-      securesystemslib.exceptions.StorageError, if the file can not be stored.
+        <Returns>
+          A ContextManager object that emits a file-like object for the file at
+          'filepath'.
+        """
+        raise NotImplementedError  # pragma: no cover
 
-    <Returns>
-      None
-    """
-    raise NotImplementedError # pragma: no cover
+    @abc.abstractmethod
+    def put(
+        self, fileobj: IO, filepath: str, restrict: Optional[bool] = False
+    ) -> None:
+        """
+        <Purpose>
+          Store a file-like object in the storage backend.
+          The file-like object is read from the beginning, not its current
+          offset (if any).
 
+        <Arguments>
+          fileobj:
+            The file-like object to be stored.
 
-  @abc.abstractmethod
-  def remove(self, filepath: str) -> None:
-    """
-    <Purpose>
-      Remove the file at 'filepath' from the storage.
+          filepath:
+            The full path to the location where 'fileobj' will be stored.
 
-    <Arguments>
-      filepath:
-        The full path to the file.
+          restrict:
+            Whether the file should be created with restricted permissions.
+            What counts as restricted is backend-specific. For a filesystem on a
+            UNIX-like operating system, that may mean read/write permissions only
+            for the user (octal mode 0o600). For a cloud storage system, that
+            likely means Cloud provider specific ACL restrictions.
 
-    <Exceptions>
-      securesystemslib.exceptions.StorageError, if the file can not be removed.
+        <Exceptions>
+          securesystemslib.exceptions.StorageError, if the file can not be stored.
 
-    <Returns>
-      None
-    """
-    raise NotImplementedError # pragma: no cover
+        <Returns>
+          None
+        """
+        raise NotImplementedError  # pragma: no cover
 
+    @abc.abstractmethod
+    def remove(self, filepath: str) -> None:
+        """
+        <Purpose>
+          Remove the file at 'filepath' from the storage.
 
-  @abc.abstractmethod
-  def getsize(self, filepath: str) -> int:
-    """
-    <Purpose>
-      Retrieve the size, in bytes, of the file at 'filepath'.
+        <Arguments>
+          filepath:
+            The full path to the file.
 
-    <Arguments>
-      filepath:
-        The full path to the file.
+        <Exceptions>
+          securesystemslib.exceptions.StorageError, if the file can not be removed.
 
-    <Exceptions>
-      securesystemslib.exceptions.StorageError, if the file does not exist or is
-      not accessible.
+        <Returns>
+          None
+        """
+        raise NotImplementedError  # pragma: no cover
 
-    <Returns>
-      The size in bytes of the file at 'filepath'.
-    """
-    raise NotImplementedError # pragma: no cover
+    @abc.abstractmethod
+    def getsize(self, filepath: str) -> int:
+        """
+        <Purpose>
+          Retrieve the size, in bytes, of the file at 'filepath'.
 
+        <Arguments>
+          filepath:
+            The full path to the file.
 
-  @abc.abstractmethod
-  def create_folder(self, filepath: str) -> None:
-    """
-    <Purpose>
-      Create a folder at filepath and ensure all intermediate components of the
-      path exist.
-      Passing an empty string for filepath does nothing and does not raise an
-      exception.
+        <Exceptions>
+          securesystemslib.exceptions.StorageError, if the file does not exist or is
+          not accessible.
 
-    <Arguments>
-      filepath:
-        The full path of the folder to be created.
+        <Returns>
+          The size in bytes of the file at 'filepath'.
+        """
+        raise NotImplementedError  # pragma: no cover
 
-    <Exceptions>
-      securesystemslib.exceptions.StorageError, if the folder can not be
-      created.
+    @abc.abstractmethod
+    def create_folder(self, filepath: str) -> None:
+        """
+        <Purpose>
+          Create a folder at filepath and ensure all intermediate components of the
+          path exist.
+          Passing an empty string for filepath does nothing and does not raise an
+          exception.
 
-    <Returns>
-      None
-    """
-    raise NotImplementedError # pragma: no cover
+        <Arguments>
+          filepath:
+            The full path of the folder to be created.
 
+        <Exceptions>
+          securesystemslib.exceptions.StorageError, if the folder can not be
+          created.
 
-  @abc.abstractmethod
-  def list_folder(self, filepath: str) -> List[str]:
-    """
-    <Purpose>
-      List the contents of the folder at 'filepath'.
+        <Returns>
+          None
+        """
+        raise NotImplementedError  # pragma: no cover
 
-    <Arguments>
-      filepath:
-        The full path of the folder to be listed.
+    @abc.abstractmethod
+    def list_folder(self, filepath: str) -> List[str]:
+        """
+        <Purpose>
+          List the contents of the folder at 'filepath'.
 
-    <Exceptions>
-      securesystemslib.exceptions.StorageError, if the file does not exist or is
-      not accessible.
+        <Arguments>
+          filepath:
+            The full path of the folder to be listed.
 
-    <Returns>
-      A list containing the names of the files in the folder. May be an empty
-      list.
-    """
-    raise NotImplementedError # pragma: no cover
+        <Exceptions>
+          securesystemslib.exceptions.StorageError, if the file does not exist or is
+          not accessible.
 
-
-
+        <Returns>
+          A list containing the names of the files in the folder. May be an empty
+          list.
+        """
+        raise NotImplementedError  # pragma: no cover
 
 
 class FilesystemBackend(StorageBackendInterface):
-  """
-  <Purpose>
-    A concrete implementation of StorageBackendInterface which interacts with
-    local filesystems using Python standard library functions.
-  """
+    """
+    <Purpose>
+      A concrete implementation of StorageBackendInterface which interacts with
+      local filesystems using Python standard library functions.
+    """
 
-  # As FilesystemBackend is effectively a stateless wrapper around various
-  # standard library operations, we only ever need a single instance of it.
-  # That single instance is safe to be (re-)used by all callers. Therefore
-  # implement the singleton pattern to avoid uneccesarily creating multiple
-  # objects.
-  _instance = None
+    # As FilesystemBackend is effectively a stateless wrapper around various
+    # standard library operations, we only ever need a single instance of it.
+    # That single instance is safe to be (re-)used by all callers. Therefore
+    # implement the singleton pattern to avoid uneccesarily creating multiple
+    # objects.
+    _instance = None
 
-  def __new__(cls, *args, **kwargs):
-    if cls._instance is None:
-      cls._instance = object.__new__(cls, *args, **kwargs)
-    return cls._instance
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = object.__new__(cls, *args, **kwargs)
+        return cls._instance
 
+    @contextmanager
+    def get(self, filepath: str) -> Iterator[BinaryIO]:
+        file_object = None
+        try:
+            file_object = open(filepath, "rb")
+            yield file_object
+        except OSError:
+            raise exceptions.StorageError("Can't open %s" % filepath)
+        finally:
+            if file_object is not None:
+                file_object.close()
 
-  @contextmanager
-  def get(self, filepath:str) -> Iterator[BinaryIO]:
-    file_object = None
-    try:
-      file_object = open(filepath, 'rb')
-      yield file_object
-    except OSError:
-      raise exceptions.StorageError(
-          "Can't open %s" % filepath)
-    finally:
-      if file_object is not None:
-        file_object.close()
+    def put(
+        self, fileobj: IO, filepath: str, restrict: Optional[bool] = False
+    ) -> None:
+        # If we are passed an open file, seek to the beginning such that we are
+        # copying the entire contents
+        if not fileobj.closed:
+            fileobj.seek(0)
 
+        # If a file with the same name already exists, the new permissions
+        # may not be applied.
+        try:
+            os.remove(filepath)
+        except OSError:
+            pass
 
-  def put(self, fileobj: IO, filepath: str, restrict: Optional[bool] = False
-        ) -> None:
-    # If we are passed an open file, seek to the beginning such that we are
-    # copying the entire contents
-    if not fileobj.closed:
-      fileobj.seek(0)
+        try:
+            if restrict:
+                # On UNIX-based systems restricted files are created with read and
+                # write permissions for the user only (octal value 0o600).
+                fd = os.open(
+                    filepath,
+                    os.O_WRONLY | os.O_CREAT,
+                    stat.S_IRUSR | stat.S_IWUSR,
+                )
+            else:
+                # Non-restricted files use the default 'mode' argument of os.open()
+                # granting read, write, and execute for all users (octal mode 0o777).
+                # NOTE: mode may be modified by the user's file mode creation mask
+                # (umask) or on Windows limited to the smaller set of OS supported
+                # permisssions.
+                fd = os.open(filepath, os.O_WRONLY | os.O_CREAT)
 
-    # If a file with the same name already exists, the new permissions
-    # may not be applied.
-    try:
-      os.remove(filepath)
-    except OSError:
-      pass
+            with os.fdopen(fd, "wb") as destination_file:
+                shutil.copyfileobj(fileobj, destination_file)
+                # Force the destination file to be written to disk from Python's internal
+                # and the operating system's buffers.  os.fsync() should follow flush().
+                destination_file.flush()
+                os.fsync(destination_file.fileno())
+        except OSError:
+            raise exceptions.StorageError("Can't write file %s" % filepath)
 
-    try:
-      if restrict:
-        # On UNIX-based systems restricted files are created with read and
-        # write permissions for the user only (octal value 0o600).
-        fd = os.open(filepath, os.O_WRONLY|os.O_CREAT,
-          stat.S_IRUSR|stat.S_IWUSR)
-      else:
-        # Non-restricted files use the default 'mode' argument of os.open()
-        # granting read, write, and execute for all users (octal mode 0o777).
-        # NOTE: mode may be modified by the user's file mode creation mask
-        # (umask) or on Windows limited to the smaller set of OS supported
-        # permisssions.
-        fd = os.open(filepath, os.O_WRONLY|os.O_CREAT)
+    def remove(self, filepath: str) -> None:
+        try:
+            os.remove(filepath)
+        except (
+            FileNotFoundError,
+            PermissionError,
+            OSError,
+        ):  # pragma: no cover
+            raise exceptions.StorageError("Can't remove file %s" % filepath)
 
-      with os.fdopen(fd, "wb") as destination_file:
-        shutil.copyfileobj(fileobj, destination_file)
-        # Force the destination file to be written to disk from Python's internal
-        # and the operating system's buffers.  os.fsync() should follow flush().
-        destination_file.flush()
-        os.fsync(destination_file.fileno())
-    except OSError:
-      raise exceptions.StorageError(
-          "Can't write file %s" % filepath)
+    def getsize(self, filepath: str) -> int:
+        try:
+            return os.path.getsize(filepath)
+        except OSError:
+            raise exceptions.StorageError("Can't access file %s" % filepath)
 
+    def create_folder(self, filepath: str) -> None:
+        try:
+            os.makedirs(filepath)
+        except OSError as e:
+            # 'OSError' raised if the leaf directory already exists or cannot be
+            # created. Check for case where 'filepath' has already been created and
+            # silently ignore.
+            if e.errno == errno.EEXIST:
+                pass
+            elif e.errno == errno.ENOENT and not filepath:
+                raise exceptions.StorageError(
+                    "Can't create a folder with an empty filepath!"
+                )
+            else:
+                raise exceptions.StorageError(
+                    "Can't create folder at %s" % filepath
+                )
 
-  def remove(self, filepath: str) -> None:
-    try:
-      os.remove(filepath)
-    except (FileNotFoundError, PermissionError, OSError):  # pragma: no cover
-      raise exceptions.StorageError(
-          "Can't remove file %s" % filepath)
-
-
-  def getsize(self, filepath: str) -> int:
-    try:
-      return os.path.getsize(filepath)
-    except OSError:
-      raise exceptions.StorageError(
-          "Can't access file %s" % filepath)
-
-
-  def create_folder(self, filepath: str) -> None:
-    try:
-      os.makedirs(filepath)
-    except OSError as e:
-      # 'OSError' raised if the leaf directory already exists or cannot be
-      # created. Check for case where 'filepath' has already been created and
-      # silently ignore.
-      if e.errno == errno.EEXIST:
-        pass
-      elif e.errno == errno.ENOENT and not filepath:
-        raise exceptions.StorageError(
-            "Can't create a folder with an empty filepath!")
-      else:
-        raise exceptions.StorageError(
-            "Can't create folder at %s" % filepath)
-
-
-  def list_folder(self, filepath: str) -> List[str]:
-    try:
-      return os.listdir(filepath)
-    except FileNotFoundError:
-      raise exceptions.StorageError(
-          "Can't list folder at %s" % filepath)
+    def list_folder(self, filepath: str) -> List[str]:
+        try:
+            return os.listdir(filepath)
+        except FileNotFoundError:
+            raise exceptions.StorageError("Can't list folder at %s" % filepath)

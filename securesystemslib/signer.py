@@ -225,7 +225,9 @@ class GPGSigner(Signer):
 
     """
 
-    def __init__(self, keyid: Optional[str] = None, homedir: Optional[str] = None):
+    def __init__(
+        self, keyid: Optional[str] = None, homedir: Optional[str] = None
+    ):
         self.keyid = keyid
         self.homedir = homedir
 
