@@ -105,11 +105,19 @@ def create_signature(content, keyid=None, homedir=None):
     keyarg = ""
     if keyid:
         formats.KEYID_SCHEMA.check_match(keyid)
-        keyarg = "--local-user {}".format(keyid)
+        keyarg = (
+            "--local-user {}".format(  # pylint: disable=consider-using-f-string
+                keyid
+            )
+        )
 
     homearg = ""
     if homedir:
-        homearg = "--homedir {}".format(homedir).replace("\\", "/")
+        homearg = (
+            "--homedir {}".format(  # pylint: disable=consider-using-f-string
+                homedir
+            ).replace("\\", "/")
+        )
 
     command = gpg_sign_command(keyarg=keyarg, homearg=homearg)
 
@@ -126,7 +134,7 @@ def create_signature(content, keyid=None, homedir=None):
     # https://lists.gnupg.org/pipermail/gnupg-devel/2005-December/022559.html
     if gpg_process.returncode != 0:
         raise CommandError(
-            "Command '{}' returned "
+            "Command '{}' returned "  # pylint: disable=consider-using-f-string
             "non-zero exit status '{}', stderr was:\n{}.".format(
                 gpg_process.args,
                 gpg_process.returncode,
@@ -146,7 +154,7 @@ def create_signature(content, keyid=None, homedir=None):
     # test environments.
     if not signature["keyid"]:  # pragma: no cover
         log.warning(
-            "The created signature does not include the hashed subpacket"
+            "The created signature does not include the hashed subpacket"  # pylint: disable=logging-format-interpolation,consider-using-f-string
             " '33' (full keyid). You probably have a gpg version <{}."
             " We will export the public keys associated with the short keyid to"
             " compute the full keyid.".format(FULLY_SUPPORTED_MIN_VERSION)
@@ -175,7 +183,7 @@ def create_signature(content, keyid=None, homedir=None):
     # If there is still no full keyid something went wrong
     if not signature["keyid"]:  # pragma: no cover
         raise ValueError(
-            "Full keyid could not be determined for signature '{}'".format(
+            "Full keyid could not be determined for signature '{}'".format(  # pylint: disable=consider-using-f-string
                 signature
             )
         )
@@ -284,13 +292,17 @@ def export_pubkey(keyid, homedir=None):
         # FIXME: probably needs smarter parsing of what a valid keyid is so as to
         # not export more than one pubkey packet.
         raise ValueError(
-            "we need to export an individual key. Please provide a "
+            "we need to export an individual key. Please provide a "  # pylint: disable=consider-using-f-string
             " valid keyid! Keyid was '{}'.".format(keyid)
         )
 
     homearg = ""
     if homedir:
-        homearg = "--homedir {}".format(homedir).replace("\\", "/")
+        homearg = (
+            "--homedir {}".format(  # pylint: disable=consider-using-f-string
+                homedir
+            ).replace("\\", "/")
+        )
 
     # TODO: Consider adopting command error handling from `create_signature`
     # above, e.g. in a common 'run gpg command' utility function

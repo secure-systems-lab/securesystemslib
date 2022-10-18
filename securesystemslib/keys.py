@@ -426,7 +426,7 @@ def format_keyval_to_metadata(keytype, scheme, key_value, private=False):
         # key in the returned dictionary, ensure the private key is actually
         # present in 'key_val' (a private key is optional for 'KEYVAL_SCHEMA'
         # dicts).
-        if "private" not in key_value:
+        if "private" not in key_value:  # pylint: disable=no-else-raise
             raise exceptions.FormatError(
                 "The required private key"
                 " is missing from: " + repr(key_value)
@@ -710,7 +710,9 @@ def create_signature(key_dict, data):
     return signature
 
 
-def verify_signature(key_dict, signature, data):
+def verify_signature(
+    key_dict, signature, data
+):  # pylint: disable=too-many-branches
     """
     <Purpose>
       Determine whether the private key belonging to 'key_dict' produced
@@ -795,7 +797,7 @@ def verify_signature(key_dict, signature, data):
 
     # Verify that the KEYID in 'key_dict' matches the KEYID listed in the
     # 'signature'.
-    if key_dict["keyid"] != signature["keyid"]:
+    if key_dict["keyid"] != signature["keyid"]:  # pylint: disable=no-else-raise
         raise exceptions.CryptoError(
             "The KEYID ("
             " " + repr(key_dict["keyid"]) + " ) in the given key does not match"
@@ -1191,15 +1193,15 @@ def extract_pem(pem, private_pem=False):
 
     except ValueError:
         # Be careful not to print private key material in exception message.
-        if not private_pem:
-            raise exceptions.FormatError(
+        if not private_pem:  # pylint: disable=no-else-raise
+            raise exceptions.FormatError(  # pylint: disable=raise-missing-from
                 "Required PEM"
                 " header " + repr(pem_header) + "\n not found in PEM"
                 " string: " + repr(pem)
             )
 
         else:
-            raise exceptions.FormatError(
+            raise exceptions.FormatError(  # pylint: disable=raise-missing-from
                 "Required PEM"
                 " header "
                 + repr(pem_header)
@@ -1212,15 +1214,15 @@ def extract_pem(pem, private_pem=False):
 
     except ValueError:
         # Be careful not to print private key material in exception message.
-        if not private_pem:
-            raise exceptions.FormatError(
+        if not private_pem:  # pylint: disable=no-else-raise
+            raise exceptions.FormatError(  # pylint: disable=raise-missing-from
                 "Required PEM"
                 " footer " + repr(pem_footer) + "\n not found in PEM"
                 " string " + repr(pem)
             )
 
         else:
-            raise exceptions.FormatError(
+            raise exceptions.FormatError(  # pylint: disable=raise-missing-from
                 "Required PEM"
                 " footer "
                 + repr(pem_footer)
@@ -1555,7 +1557,9 @@ def is_pem_private(pem, keytype="rsa"):
     return True
 
 
-def import_ed25519key_from_private_json(json_str, password=None):
+def import_ed25519key_from_private_json(
+    json_str, password=None
+):  # pylint: disable=missing-function-docstring
     if password is not None:
         # This check will not fail, because a mal-formatted passed password fails
         # above and an entered password will always be a string (see get_password)
@@ -1577,7 +1581,7 @@ def import_ed25519key_from_private_json(json_str, password=None):
         # If the JSON could not be decoded, it is very likely, but not necessarily,
         # due to a non-empty password.
         except exceptions.Error:
-            raise exceptions.CryptoError(
+            raise exceptions.CryptoError(  # pylint: disable=raise-missing-from
                 "Malformed Ed25519 key JSON, "
                 "possibly due to encryption, "
                 "but no password provided?"

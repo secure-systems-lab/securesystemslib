@@ -84,7 +84,7 @@ def get_password(prompt="Password: ", confirm=False):
             return password
         password2 = getpass.getpass("Confirm: ", sys.stderr)
 
-        if password == password2:
+        if password == password2:  # pylint: disable=no-else-return
             return password
 
         else:
@@ -122,7 +122,7 @@ def _get_key_file_encryption_password(password, prompt, path):
 
         # Treat empty password as no password. A user on the prompt can only
         # indicate the desire to not encrypt by entering no password.
-        if not len(password):
+        if not len(password):  # pylint: disable=use-implicit-booleaness-not-len
             return None
 
     if password is not None:
@@ -130,7 +130,7 @@ def _get_key_file_encryption_password(password, prompt, path):
 
         # Fail on empty passed password. A caller should pass None to indicate the
         # desire to not encrypt.
-        if not len(password):
+        if not len(password):  # pylint: disable=use-implicit-booleaness-not-len
             raise ValueError(
                 "encryption password must be 1 or more characters long"
             )
@@ -169,7 +169,7 @@ def _get_key_file_decryption_password(password, prompt, path):
 
         # Treat empty password as no password. A user on the prompt can only
         # indicate the desire to not decrypt by entering no password.
-        if not len(password):
+        if not len(password):  # pylint: disable=use-implicit-booleaness-not-len
             return None
 
     if password is not None:
@@ -1004,7 +1004,7 @@ def import_publickeys_from_file(filepaths, key_types=None):
 
     if len(key_types) != len(filepaths):
         raise exceptions.FormatError(
-            "Pass equal amount of 'filepaths' (got {}) and 'key_types (got {}), "
+            "Pass equal amount of 'filepaths' (got {}) and 'key_types (got {}), "  # pylint: disable=consider-using-f-string
             "or no 'key_types' at all to default to '{}'.".format(
                 len(filepaths), len(key_types), KEY_TYPE_RSA
             )
@@ -1023,7 +1023,7 @@ def import_publickeys_from_file(filepaths, key_types=None):
 
         else:
             raise exceptions.FormatError(
-                "Unsupported key type '{}'. Must be '{}', '{}' or '{}'.".format(
+                "Unsupported key type '{}'. Must be '{}', '{}' or '{}'.".format(  # pylint: disable=consider-using-f-string
                     key_types[idx],
                     KEY_TYPE_RSA,
                     KEY_TYPE_ED25519,
@@ -1073,7 +1073,7 @@ def import_privatekey_from_file(
     if key_type is None:
         key_type = KEY_TYPE_RSA
 
-    if key_type == KEY_TYPE_ED25519:
+    if key_type == KEY_TYPE_ED25519:  # pylint: disable=no-else-return
         return import_ed25519_privatekey_from_file(
             filepath, password=password, prompt=prompt
         )
@@ -1090,7 +1090,7 @@ def import_privatekey_from_file(
 
     else:
         raise exceptions.FormatError(
-            "Unsupported key type '{}'. Must be '{}', '{}' or '{}'.".format(
+            "Unsupported key type '{}'. Must be '{}', '{}' or '{}'.".format(  # pylint: disable=consider-using-f-string
                 key_type, KEY_TYPE_RSA, KEY_TYPE_ED25519, KEY_TYPE_ECDSA
             )
         )

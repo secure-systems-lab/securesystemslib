@@ -17,7 +17,7 @@
   Test cases for test_ecdsa_keys.py.
 """
 
-import os
+import os  # pylint: disable=unused-import
 import unittest
 
 import securesystemslib.ecdsa_keys
@@ -31,14 +31,16 @@ FORMAT_ERROR_MSG = (
 )
 
 
-class TestECDSA_keys(unittest.TestCase):
+class TestECDSA_keys(
+    unittest.TestCase
+):  # pylint: disable=missing-class-docstring,invalid-name
     def setUp(self):
         pass
 
     def test_generate_public_and_private(self):
         (
-            public,
-            private,
+            public,  # pylint: disable=redefined-outer-name
+            private,  # pylint: disable=redefined-outer-name
         ) = securesystemslib.ecdsa_keys.generate_public_and_private()
 
         # Check format of 'public' and 'private'.
@@ -57,8 +59,8 @@ class TestECDSA_keys(unittest.TestCase):
         )
 
     def test_create_ecdsa_public_and_private_from_pem(self):
-        global public
-        global private
+        global public  # pylint: disable=global-statement
+        global private  # pylint: disable=global-statement
 
         # Check format of 'public' and 'private'.
         self.assertEqual(
@@ -91,8 +93,8 @@ class TestECDSA_keys(unittest.TestCase):
         )
 
     def test_create_signature(self):
-        global public
-        global private
+        global public  # pylint: disable=global-variable-not-assigned
+        global private  # pylint: disable=global-variable-not-assigned
         data = b"The quick brown fox jumps over the lazy dog"
         signature, method = securesystemslib.ecdsa_keys.create_signature(
             public, private, data
@@ -136,8 +138,8 @@ class TestECDSA_keys(unittest.TestCase):
         )
 
     def test_verify_signature(self):
-        global public
-        global private
+        global public  # pylint: disable=global-variable-not-assigned
+        global private  # pylint: disable=global-variable-not-assigned
         data = b"The quick brown fox jumps over the lazy dog"
         scheme = "ecdsa-sha2-nistp256"
         signature, scheme = securesystemslib.ecdsa_keys.create_signature(
@@ -153,7 +155,7 @@ class TestECDSA_keys(unittest.TestCase):
         # rejected.
         (
             rsa_pem,
-            junk,
+            junk,  # pylint: disable=unused-variable
         ) = securesystemslib.rsa_keys.generate_rsa_public_and_private()
 
         # Verify that a non-ECDSA key (via the PEM argument) is rejected.

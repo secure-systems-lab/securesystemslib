@@ -19,23 +19,25 @@
 
 import logging
 import os
-import shutil
+import shutil  # pylint: disable=unused-import
 import stat
-import sys
+import sys  # pylint: disable=unused-import
 import tempfile
 import timeit
 import unittest
 
-import securesystemslib.exceptions as exceptions
+import securesystemslib.exceptions as exceptions  # pylint: disable=consider-using-from-import
 import securesystemslib.hash
 import securesystemslib.settings
-import securesystemslib.unittest_toolbox as unittest_toolbox
+import securesystemslib.unittest_toolbox as unittest_toolbox  # pylint: disable=consider-using-from-import
 import securesystemslib.util
 
 logger = logging.getLogger(__name__)
 
 
-class TestUtil(unittest_toolbox.Modified_TestCase):
+class TestUtil(
+    unittest_toolbox.Modified_TestCase
+):  # pylint: disable=missing-class-docstring
     def setUp(self):
         unittest_toolbox.Modified_TestCase.setUp(self)
         self.temp_fileobj = tempfile.TemporaryFile()
@@ -133,7 +135,7 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
         filepath = self.make_temp_data_file()
 
         # Computing the length of the tempfile.
-        digest_object = securesystemslib.hash.digest_filename(
+        digest_object = securesystemslib.hash.digest_filename(  # pylint: disable=unused-variable
             filepath, algorithm="sha256"
         )
         file_length = os.path.getsize(filepath)
@@ -264,7 +266,11 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
     def test_B8_load_json_file(self):
         data = ["a", {"b": ["c", None, 30.3, 29]}]
         filepath = self.make_temp_file()
-        fileobj = open(filepath, "wt")
+        fileobj = (
+            open(  # pylint: disable=unspecified-encoding,consider-using-with
+                filepath, "wt"
+            )
+        )
         securesystemslib.util.json.dump(data, fileobj)
         fileobj.close()
         self.assertEqual(data, securesystemslib.util.load_json_file(filepath))
@@ -286,7 +292,11 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
 
         # Invalid JSON content.
         filepath_bad_data = self.make_temp_file()
-        fileobj = open(filepath_bad_data, "wt")
+        fileobj = (
+            open(  # pylint: disable=unspecified-encoding,consider-using-with
+                filepath_bad_data, "wt"
+            )
+        )
         fileobj.write("junk data")
         fileobj.close()
 
@@ -356,7 +366,9 @@ class TestUtil(unittest_toolbox.Modified_TestCase):
         self.assertTrue(
             securesystemslib.formats.PATH_SCHEMA.matches(random_path)
         )
-        self.assertTrue(10, len(random_path))
+        self.assertTrue(  # pylint: disable=redundant-unittest-assert
+            10, len(random_path)
+        )
 
     def test_digests_are_equal(self):
         digest = (

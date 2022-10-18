@@ -32,12 +32,13 @@ if sys.version_info >= (3, 3):
 else:
     from mock import patch  # pylint: disable=import-error
 
+# pylint: disable=wrong-import-position
 from collections import OrderedDict
 from copy import deepcopy
 
-import cryptography.hazmat.backends as backends
+import cryptography.hazmat.backends as backends  # pylint: disable=consider-using-from-import
 import cryptography.hazmat.primitives.hashes as hashing
-import cryptography.hazmat.primitives.serialization as serialization
+import cryptography.hazmat.primitives.serialization as serialization  # pylint: disable=consider-using-from-import
 
 from securesystemslib import exceptions, process
 from securesystemslib.formats import ANY_PUBKEY_DICT_SCHEMA, GPG_PUBKEY_SCHEMA
@@ -61,8 +62,12 @@ from securesystemslib.gpg.constants import (
     have_gpg,
 )
 from securesystemslib.gpg.dsa import create_pubkey as dsa_create_pubkey
+
+# pylint: disable=unused-import
 from securesystemslib.gpg.eddsa import ED25519_SIG_LENGTH
 from securesystemslib.gpg.eddsa import create_pubkey as eddsa_create_pubkey
+
+# pylint: enable=unused-import
 from securesystemslib.gpg.exceptions import (
     CommandError,
     KeyExpirationError,
@@ -87,12 +92,16 @@ from securesystemslib.gpg.util import (
     parse_subpacket_header,
 )
 
+# pylint: enable=wrong-import-position
+
 
 class GPGTestUtils:
     """GPG Test utility class"""
 
     @staticmethod
-    def ignore_not_found_error(function, path, exc_info):
+    def ignore_not_found_error(
+        function, path, exc_info
+    ):  # pylint: disable=unused-argument,unused-argument
         """Callback that ignores FileNotFoundError"""
         _, error, _ = exc_info
         if not isinstance(error, FileNotFoundError):
@@ -223,11 +232,15 @@ class TestCommon(unittest.TestCase):
     """Test common functions of the securesystemslib.gpg module."""
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(self):  # pylint: disable=bad-classmethod-argument
         gpg_keyring_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "gpg_keyrings", "rsa"
         )
-        homearg = "--homedir {}".format(gpg_keyring_path).replace("\\", "/")
+        homearg = (
+            "--homedir {}".format(  # pylint: disable=consider-using-f-string
+                gpg_keyring_path
+            ).replace("\\", "/")
+        )
 
         # Load test raw public key bundle from rsa keyring, used to construct
         # erroneous gpg data in tests below.
@@ -402,7 +415,9 @@ class TestCommon(unittest.TestCase):
                 msg = str(mock_log.info.call_args[0][0])
                 self.assertTrue(
                     expected_msg in msg,
-                    "'{}' not in '{}'".format(expected_msg, msg),
+                    "'{}' not in '{}'".format(  # pylint: disable=consider-using-f-string
+                        expected_msg, msg
+                    ),
                 )
 
     def test_assign_certified_key_info_expiration(self):
@@ -513,7 +528,9 @@ class TestCommon(unittest.TestCase):
                 msg = str(mock_log.info.call_args[0][0])
                 self.assertTrue(
                     expected_msg in msg,
-                    "'{}' not in '{}'".format(expected_msg, msg),
+                    "'{}' not in '{}'".format(  # pylint: disable=consider-using-f-string
+                        expected_msg, msg
+                    ),
                 )
 
     def test_get_verified_subkeys(self):
@@ -530,9 +547,9 @@ class TestCommon(unittest.TestCase):
 
         # Test subkey  without validity period, i.e. it does not expire
         self.assertTrue(
-            subkeys["70cfabf1e2f1dc60ac5c7bca10cd20d3d5bcb6ef"].get(
-                "validity_period"
-            )
+            subkeys[  # pylint: disable=singleton-comparison
+                "70cfabf1e2f1dc60ac5c7bca10cd20d3d5bcb6ef"
+            ].get("validity_period")
             == None
         )
 
@@ -574,7 +591,7 @@ class TestCommon(unittest.TestCase):
                 parse_signature_packet(data)
             self.assertTrue(
                 expected_error_str in str(ctx.exception),
-                "'{}' not in '{}'".format(
+                "'{}' not in '{}'".format(  # pylint: disable=consider-using-f-string
                     expected_error_str, str(ctx.exception)
                 ),
             )
@@ -591,10 +608,10 @@ class TestGPGRSA(unittest.TestCase):
     unsupported_subkey_keyid = "611A9B648E16F54E8A7FAD5DA51E8CDF3B06524F"
     expired_key_keyid = "E8AC80C924116DABB51D4B987CB07D6D2C199C7C"
 
-    keyid_768C43 = "7B3ABB26B97B655AB9296BD15B0BD02E1C768C43"
+    keyid_768C43 = "7B3ABB26B97B655AB9296BD15B0BD02E1C768C43"  # pylint: disable=invalid-name
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(self):  # pylint: disable=bad-classmethod-argument
         # Create directory to run the tests without having everything blow up
         self.working_dir = os.getcwd()
 
@@ -609,7 +626,7 @@ class TestGPGRSA(unittest.TestCase):
         os.chdir(self.test_dir)
 
     @classmethod
-    def tearDownClass(self):
+    def tearDownClass(self):  # pylint: disable=bad-classmethod-argument
         """Change back to initial working dir and remove temp test directory."""
         os.chdir(self.working_dir)
         shutil.rmtree(
@@ -634,7 +651,11 @@ class TestGPGRSA(unittest.TestCase):
 
         # load the equivalent ssh key, and make sure that we get the same RSA key
         # parameters
-        ssh_key_basename = "{}.ssh".format(self.default_keyid)
+        ssh_key_basename = (
+            "{}.ssh".format(  # pylint: disable=consider-using-f-string
+                self.default_keyid
+            )
+        )
         ssh_key_path = os.path.join(self.gnupg_home, ssh_key_basename)
         with open(ssh_key_path, "rb") as fp:
             keydata = fp.read()
@@ -731,7 +752,9 @@ class TestGPGRSA(unittest.TestCase):
         expected = "returned non-zero exit status '2'"
         self.assertTrue(
             expected in str(ctx.exception),
-            "{} not in {}".format(expected, ctx.exception),
+            "{} not in {}".format(  # pylint: disable=consider-using-f-string
+                expected, ctx.exception
+            ),
         )
 
     def test_verify_signature_with_expired_key(self):
@@ -754,7 +777,10 @@ class TestGPGRSA(unittest.TestCase):
         )
         self.assertTrue(
             expected == str(ctx.exception),
-            "\nexpected: {}" "\ngot:      {}".format(expected, ctx.exception),
+            "\nexpected: {}"  # pylint: disable=consider-using-f-string
+            "\ngot:      {}".format(  # pylint: disable=consider-using-f-string
+                expected, ctx.exception
+            ),
         )
 
 
@@ -766,7 +792,7 @@ class TestGPGDSA(unittest.TestCase):
     default_keyid = "C242A830DAAF1C2BEF604A9EF033A3A3E267B3B1"
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(self):  # pylint: disable=bad-classmethod-argument
         # Create directory to run the tests without having everything blow up
         self.working_dir = os.getcwd()
         self.test_dir = os.path.realpath(tempfile.mkdtemp())
@@ -781,7 +807,7 @@ class TestGPGDSA(unittest.TestCase):
         os.chdir(self.test_dir)
 
     @classmethod
-    def tearDownClass(self):
+    def tearDownClass(self):  # pylint: disable=bad-classmethod-argument
         """Change back to initial working dir and remove temp test directory."""
         os.chdir(self.working_dir)
         shutil.rmtree(
@@ -800,7 +826,11 @@ class TestGPGDSA(unittest.TestCase):
         our_exported_key = dsa_create_pubkey(key_data)
 
         # load same key, pre-exported with 3rd-party tooling
-        pem_key_basename = "{}.pem".format(self.default_keyid)
+        pem_key_basename = (
+            "{}.pem".format(  # pylint: disable=consider-using-f-string
+                self.default_keyid
+            )
+        )
         pem_key_path = os.path.join(self.gnupg_home, pem_key_basename)
         with open(pem_key_path, "rb") as fp:
             keydata = fp.read()
@@ -861,7 +891,7 @@ class TestGPGEdDSA(unittest.TestCase):
     default_keyid = "4E630F84838BF6F7447B830B22692F5FEA9E2DD2"
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(self):  # pylint: disable=bad-classmethod-argument
         # Create directory to run the tests without having everything blow up
         self.working_dir = os.getcwd()
         self.test_dir = os.path.realpath(tempfile.mkdtemp())
@@ -876,7 +906,7 @@ class TestGPGEdDSA(unittest.TestCase):
         os.chdir(self.test_dir)
 
     @classmethod
-    def tearDownClass(self):
+    def tearDownClass(self):  # pylint: disable=bad-classmethod-argument
         """Change back to initial working dir and remove temp test directory."""
         os.chdir(self.working_dir)
         shutil.rmtree(

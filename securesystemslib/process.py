@@ -113,7 +113,7 @@ def run(cmd, check=True, timeout=_default_timeout(), **kwargs):
     # don't pass on `stdin` if the user passes `input` and `stdin`
     # https://github.com/python/cpython/blob/3.5/Lib/subprocess.py#L378-L381
     if kwargs.get("input") is not None and "stdin" in kwargs:
-        log.debug(
+        log.debug(  # pylint: disable=logging-not-lazy
             "stdin and input arguments may not both be used. "
             "Ignoring passed stdin: " + str(kwargs["stdin"])
         )
@@ -174,16 +174,18 @@ def run_duplicate_streams(cmd, timeout=_default_timeout()):
     stdout_fd, stdout_name = tempfile.mkstemp()
     stderr_fd, stderr_name = tempfile.mkstemp()
     try:
-        with io.open(stdout_name, "r") as stdout_reader, os.fdopen(
+        with io.open(  # pylint: disable=unspecified-encoding
+            stdout_name, "r"
+        ) as stdout_reader, os.fdopen(  # pylint: disable=unspecified-encoding
             stdout_fd, "w"
-        ) as stdout_writer, io.open(
+        ) as stdout_writer, io.open(  # pylint: disable=unspecified-encoding
             stderr_name, "r"
         ) as stderr_reader, os.fdopen(
             stderr_fd, "w"
         ) as stderr_writer:
 
             # Store stream results in mutable dict to update it inside nested helper
-            _std = {"out": "", "err": ""}
+            _std = {"out": "", "err": ""}  # pylint: disable=invalid-name
 
             def _duplicate_streams():
                 """Helper to read from child process standard streams, write their
@@ -203,7 +205,7 @@ def run_duplicate_streams(cmd, timeout=_default_timeout()):
                 _std["err"] += stderr_part
 
             # Start child process, writing its standard streams to temporary files
-            proc = subprocess.Popen(
+            proc = subprocess.Popen(  # pylint: disable=consider-using-with
                 cmd,
                 stdout=stdout_writer,
                 stderr=stderr_writer,

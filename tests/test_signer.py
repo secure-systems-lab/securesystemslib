@@ -22,7 +22,9 @@ from securesystemslib.signer import (
 )
 
 
-class TestSSlibSigner(unittest.TestCase):
+class TestSSlibSigner(
+    unittest.TestCase
+):  # pylint: disable=missing-class-docstring
     @classmethod
     def setUpClass(cls):
         cls.rsakey_dict = KEYS.generate_rsa_key()

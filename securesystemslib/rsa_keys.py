@@ -107,8 +107,15 @@ try:
 except ImportError:
     CRYPTO = False
 
-from securesystemslib import exceptions, formats, settings, util
-from securesystemslib.hash import digest_from_rsa_scheme
+from securesystemslib import (  # pylint: disable=wrong-import-position
+    exceptions,
+    formats,
+    settings,
+    util,
+)
+from securesystemslib.hash import (  # pylint: disable=wrong-import-position
+    digest_from_rsa_scheme,
+)
 
 # Recommended RSA key sizes:
 # http://www.emc.com/emc-plus/rsa-labs/historical/twirl-and-rsa-key-size.htm#table1
@@ -300,7 +307,7 @@ def create_rsa_signature(private_key, data, scheme="rsassa-pss-sha256"):
     # explicitly check that 'private_key' is not '', we can/should check for a
     # value and not compare identities with the 'is' keyword.  Up to this point
     # 'private_key' has variable size and can be an empty string.
-    if not len(private_key):
+    if not len(private_key):  # pylint: disable=use-implicit-booleaness-not-len
         raise ValueError("The required private key is unset.")
 
     try:
@@ -346,8 +353,9 @@ def create_rsa_signature(private_key, data, scheme="rsassa-pss-sha256"):
     # If the PEM data could not be decrypted, or if its structure could not
     # be decoded successfully.
     except ValueError:
-        raise exceptions.CryptoError(
-            "The private key" " (in PEM format) could not be deserialized."
+        raise exceptions.CryptoError(  # pylint: disable=raise-missing-from
+            "The private key"
+            " (in PEM format) could not be deserialized."  # pylint: disable=implicit-str-concat
         )
 
     # 'TypeError' is raised if a password was given and the private key was
@@ -355,8 +363,9 @@ def create_rsa_signature(private_key, data, scheme="rsassa-pss-sha256"):
     # supplied.  Note: A passphrase or password is not used when generating
     # 'private_key', since it should not be encrypted.
     except TypeError:
-        raise exceptions.CryptoError(
-            "The private key was" " unexpectedly encrypted."
+        raise exceptions.CryptoError(  # pylint: disable=raise-missing-from
+            "The private key was"
+            " unexpectedly encrypted."  # pylint: disable=implicit-str-concat
         )
 
     # 'cryptography.exceptions.UnsupportedAlgorithm' is raised if the
@@ -364,8 +373,9 @@ def create_rsa_signature(private_key, data, scheme="rsassa-pss-sha256"):
     # the key is encrypted with a symmetric cipher that is not supported by
     # the backend.
     except UnsupportedAlgorithm:  # pragma: no cover
-        raise exceptions.CryptoError(
-            "The private key is" " encrypted with an unsupported algorithm."
+        raise exceptions.CryptoError(  # pylint: disable=raise-missing-from
+            "The private key is"
+            " encrypted with an unsupported algorithm."  # pylint: disable=implicit-str-concat
         )
 
     return signature, scheme
@@ -558,8 +568,9 @@ def create_rsa_encrypted_pem(private_key, passphrase):
                 backend=default_backend(),
             )
         except ValueError:
-            raise exceptions.CryptoError(
-                "The private key" " (in PEM format) could not be deserialized."
+            raise exceptions.CryptoError(  # pylint: disable=raise-missing-from
+                "The private key"
+                " (in PEM format) could not be deserialized."  # pylint: disable=implicit-str-concat
             )
 
     else:
@@ -1044,7 +1055,9 @@ def _decrypt(file_contents, password):
         )
 
     except ValueError:
-        raise exceptions.CryptoError("Invalid encrypted file.")
+        raise exceptions.CryptoError(  # pylint: disable=raise-missing-from
+            "Invalid encrypted file."
+        )
 
     # Ensure we have the expected raw data for the delimited cryptographic data.
     salt = binascii.unhexlify(salt.encode("utf-8"))
@@ -1056,9 +1069,11 @@ def _decrypt(file_contents, password):
     # specified so that the expected derived key is regenerated correctly.
     # Discard the old "salt" and "iterations" values, as we only need the old
     # derived key.
-    junk_old_salt, junk_old_iterations, symmetric_key = _generate_derived_key(
-        password, salt, iterations
-    )
+    (
+        junk_old_salt,  # pylint: disable=unused-variable
+        junk_old_iterations,  # pylint: disable=unused-variable
+        symmetric_key,
+    ) = _generate_derived_key(password, salt, iterations)
 
     # Verify the hmac to ensure the ciphertext is valid and has not been altered.
     # See the encryption routine for why we use the encrypt-then-MAC approach.

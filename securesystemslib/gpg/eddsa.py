@@ -79,7 +79,7 @@ def get_pubkey_params(data):
     # See 9.2. ECC Curve OID
     if curve_oid != ED25519_PUBLIC_KEY_OID:
         raise PacketParsingError(
-            "bad ed25519 curve OID '{}', expected {}'".format(
+            "bad ed25519 curve OID '{}', expected {}'".format(  # pylint: disable=consider-using-f-string
                 curve_oid, ED25519_PUBLIC_KEY_OID
             )
         )
@@ -90,7 +90,7 @@ def get_pubkey_params(data):
 
     if public_key_len != ED25519_PUBLIC_KEY_LENGTH:
         raise PacketParsingError(
-            "bad ed25519 MPI length '{}', expected {}'".format(
+            "bad ed25519 MPI length '{}', expected {}'".format(  # pylint: disable=consider-using-f-string
                 public_key_len, ED25519_PUBLIC_KEY_LENGTH
             )
         )
@@ -100,7 +100,7 @@ def get_pubkey_params(data):
 
     if public_key_prefix != ED25519_PUBLIC_KEY_PREFIX:
         raise PacketParsingError(
-            "bad ed25519 MPI prefix '{}', expected '{}'".format(
+            "bad ed25519 MPI prefix '{}', expected '{}'".format(  # pylint: disable=consider-using-f-string
                 public_key_prefix, ED25519_PUBLIC_KEY_PREFIX
             )
         )

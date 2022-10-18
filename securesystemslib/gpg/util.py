@@ -101,7 +101,9 @@ def hash_object(headers, algorithm, content):
     return hasher.finalize()
 
 
-def parse_packet_header(data, expected_type=None):
+def parse_packet_header(
+    data, expected_type=None
+):  # pylint: disable=too-many-branches
     """
     <Purpose>
       Parse out packet type and header and body lengths from an RFC4880 packet.
@@ -205,7 +207,7 @@ def parse_packet_header(data, expected_type=None):
 
     if expected_type is not None and packet_type != expected_type:
         raise PacketParsingError(
-            "Expected packet "
+            "Expected packet "  # pylint: disable=consider-using-f-string
             "{}, but got {} instead!".format(expected_type, packet_type)
         )
 
@@ -446,8 +448,8 @@ def get_hashing_class(hash_algorithm_id):
         return hashing_class[hash_algorithm_id]
 
     except KeyError:
-        raise ValueError(
-            "Hash algorithm '{}' not supported, must be one of '{}' "
+        raise ValueError(  # pylint: disable=raise-missing-from
+            "Hash algorithm '{}' not supported, must be one of '{}' "  # pylint: disable=consider-using-f-string
             "(see RFC4880 9.4. Hash Algorithms).".format(
                 hash_algorithm_id, supported_hashing_algorithms
             )

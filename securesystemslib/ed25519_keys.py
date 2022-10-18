@@ -71,12 +71,15 @@ try:
 except ImportError:
     NACL = False
 
+# pylint: disable=wrong-import-position
 from securesystemslib import exceptions, formats
 
 # The optimized pure Python implementation of Ed25519.  If
 # PyNaCl cannot be imported and an attempt to use is made in this module, a
 # 'securesystemslib.exceptions.UnsupportedLibraryError' exception is raised.
 from securesystemslib._vendor.ed25519 import ed25519 as python_ed25519
+
+# pylint: enable=wrong-import-position
 
 # Supported ed25519 signing schemes: 'ed25519'.  The pure Python implementation
 # (i.e., ed25519') and PyNaCl (i.e., 'nacl', libsodium + Python bindings)
@@ -332,7 +335,7 @@ def verify_signature(public_key, scheme, signature, data):
 
             # The pure Python implementation raises 'Exception' if 'signature' is
             # invalid.
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 pass
 
     # This is a defensive check for a valid 'scheme', which should have already

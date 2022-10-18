@@ -21,7 +21,7 @@
 import io
 import logging
 import os
-import sys
+import sys  # pylint: disable=unused-import
 import tempfile
 import unittest
 
@@ -31,11 +31,14 @@ import securesystemslib.hash
 logger = logging.getLogger(__name__)
 
 
-if not "hashlib" in securesystemslib.hash.SUPPORTED_LIBRARIES:
+if (
+    not "hashlib"  # pylint: disable=unneeded-not
+    in securesystemslib.hash.SUPPORTED_LIBRARIES
+):
     logger.warning("Not testing hashlib: could not be imported.")
 
 
-class TestHash(unittest.TestCase):
+class TestHash(unittest.TestCase):  # pylint: disable=missing-class-docstring
     @staticmethod
     def _is_supported_combination(library, algorithm):
         blake_algos = ["blake2b", "blake2b-256", "blake2s"]
@@ -46,7 +49,9 @@ class TestHash(unittest.TestCase):
                 return False
         return True
 
-    def _run_with_all_algos_and_libs(self, test_func):
+    def _run_with_all_algos_and_libs(
+        self, test_func
+    ):  # pylint: disable=missing-function-docstring
         algorithms = [
             "md5",
             "sha1",
@@ -73,7 +78,9 @@ class TestHash(unittest.TestCase):
                     algorithm,
                 )
 
-    def _do_algorithm_update(self, library, algorithm):
+    def _do_algorithm_update(
+        self, library, algorithm
+    ):  # pylint: disable=missing-function-docstring
         expected = {
             "blake2b": [
                 "786a02f742015903c6c6fd852552d272912f4740e15847618a86e217f71f5419d25e1031afee585313896444934eb04b903a685b1448b755d56f701afe9be2ce",
@@ -185,7 +192,9 @@ class TestHash(unittest.TestCase):
     def test_digest_size(self):
         self._run_with_all_algos_and_libs(self._do_digest_size)
 
-    def _do_digest_size(self, library, algorithm):
+    def _do_digest_size(
+        self, library, algorithm
+    ):  # pylint: disable=missing-function-docstring
         digest_sizes = {
             "md5": 16,
             "sha1": 20,
@@ -205,7 +214,9 @@ class TestHash(unittest.TestCase):
     def test_update_filename(self):
         self._run_with_all_algos_and_libs(self._do_update_filename)
 
-    def _do_update_filename(self, library, algorithm):
+    def _do_update_filename(
+        self, library, algorithm
+    ):  # pylint: disable=missing-function-docstring
         data = "abcdefgh" * 4096
         fd, filename = tempfile.mkstemp()
         try:
@@ -228,7 +239,9 @@ class TestHash(unittest.TestCase):
     def test_update_filename_normalize(self):
         self._run_with_all_algos_and_libs(self._do_update_filename_normalize)
 
-    def _do_update_filename_normalize(self, library, algorithm):
+    def _do_update_filename_normalize(
+        self, library, algorithm
+    ):  # pylint: disable=missing-function-docstring
         data = b"ab\r\nd\nf\r" * 4096
         normalized_data = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
         fd, filename = tempfile.mkstemp()
@@ -252,7 +265,9 @@ class TestHash(unittest.TestCase):
     def test_update_file_obj(self):
         self._run_with_all_algos_and_libs(self._do_update_file_obj)
 
-    def _do_update_file_obj(self, library, algorithm):
+    def _do_update_file_obj(
+        self, library, algorithm
+    ):  # pylint: disable=missing-function-docstring
         data = "abcdefgh" * 4096
         file_obj = io.StringIO()
         file_obj.write(data)
@@ -285,7 +300,9 @@ class TestHash(unittest.TestCase):
             expected_digest_cls,
         )
 
-    def _do_get_digest_from_rsa_non_valid_schemes(self, library, algorithm):
+    def _do_get_digest_from_rsa_non_valid_schemes(
+        self, library, algorithm
+    ):  # pylint: disable=unused-argument
         self.assertRaises(
             securesystemslib.exceptions.FormatError,
             securesystemslib.hash.digest_from_rsa_scheme,

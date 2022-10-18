@@ -25,7 +25,9 @@ import securesystemslib.exceptions
 logger = logging.getLogger(__name__)
 
 
-class TestExceptions(unittest.TestCase):
+class TestExceptions(
+    unittest.TestCase
+):  # pylint: disable=missing-class-docstring
     def setUp(self):
         pass
 

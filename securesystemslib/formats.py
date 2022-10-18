@@ -334,7 +334,7 @@ def _create_gpg_pubkey_with_subkey_schema(pubkey_schema):
     # define the attributes of the object in its `_required` property, even if
     # such a schema is of type `Optional`.
     # TODO: Find a way that does not require to access a protected member
-    schema._required.append(
+    schema._required.append(  # pylint: disable=protected-access
         subkey_schema_tuple
     )  # pylint: disable=protected-access
     return schema
@@ -640,7 +640,9 @@ def _canonical_string_encoder(string):
     return string
 
 
-def _encode_canonical(object, output_function):
+def _encode_canonical(
+    object, output_function
+):  # pylint: disable=missing-function-docstring,redefined-builtin
     # Helper for encode_canonical.  Older versions of json.encoder don't
     # even let us replace the separators.
 
@@ -680,7 +682,9 @@ def _encode_canonical(object, output_function):
         raise exceptions.FormatError("I cannot encode " + repr(object))
 
 
-def encode_canonical(object, output_function=None):
+def encode_canonical(  # pylint: disable=inconsistent-return-statements
+    object, output_function=None  # pylint: disable=redefined-builtin
+):
     """
     <Purpose>
       Encode 'object' in canonical JSON form, as specified at

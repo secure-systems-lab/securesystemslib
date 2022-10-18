@@ -52,7 +52,10 @@ except ImportError:
     CRYPTO = False
 
 # Perform object format-checking and add ability to handle/raise exceptions.
-from securesystemslib import exceptions, formats
+from securesystemslib import (  # pylint: disable=wrong-import-position
+    exceptions,
+    formats,
+)
 
 _SUPPORTED_ECDSA_SCHEMES = ["ecdsa-sha2-nistp256"]
 
@@ -324,7 +327,9 @@ def verify_signature(public_key, scheme, signature, data):
             f"Failed to load PEM key {public_key}"
         ) from e
 
-    if not isinstance(ecdsa_key, ec.EllipticCurvePublicKey):
+    if not isinstance(  # pylint: disable=no-else-raise
+        ecdsa_key, ec.EllipticCurvePublicKey
+    ):
         raise exceptions.FormatError(
             "Invalid ECDSA public" " key: " + repr(public_key)
         )

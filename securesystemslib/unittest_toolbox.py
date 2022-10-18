@@ -25,7 +25,7 @@ import tempfile
 import unittest
 
 
-class Modified_TestCase(unittest.TestCase):
+class Modified_TestCase(unittest.TestCase):  # pylint: disable=invalid-name
     """
     <Purpose>
       Provide additional test-setup methods to make testing
@@ -106,7 +106,11 @@ class Modified_TestCase(unittest.TestCase):
         """Returns an absolute path of a temp file containing data."""
 
         temp_file_path = self.make_temp_file(suffix=suffix, directory=directory)
-        temp_file = open(temp_file_path, "wt")
+        temp_file = (
+            open(  # pylint: disable=unspecified-encoding,consider-using-with
+                temp_file_path, "wt"
+            )
+        )
         temp_file.write(data)
         temp_file.close()
 
@@ -116,7 +120,7 @@ class Modified_TestCase(unittest.TestCase):
         """Generate a 'random' path consisting of random n-length strings."""
 
         rand_path = "/" + self.random_string(length)
-        for i in range(2):
+        for i in range(2):  # pylint: disable=unused-variable
             rand_path = os.path.join(rand_path, self.random_string(length))
 
         return rand_path
@@ -126,7 +130,7 @@ class Modified_TestCase(unittest.TestCase):
         """Generate a random string of specified length."""
 
         rand_str = ""
-        for letter in range(length):
+        for letter in range(length):  # pylint: disable=unused-variable
             rand_str += random.choice("abcdefABCDEF" + string.digits)
 
         return rand_str

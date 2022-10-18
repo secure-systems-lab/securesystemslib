@@ -52,7 +52,9 @@ try:
 
     SUPPORTED_LIBRARIES.append("pyca_crypto")
 
-    class PycaDiggestWrapper(object):
+    class PycaDiggestWrapper(
+        object
+    ):  # pylint: disable=useless-object-inheritance
         """
         <Purpose>
           A wrapper around `cryptography.hazmat.primitives.hashes.Hash` which adds
@@ -99,7 +101,9 @@ try:
 
         def digest(self):
             digest_obj_copy = self._digest_obj.copy()
-            digest = self._digest_obj.finalize()
+            digest = (  # pylint: disable=redefined-outer-name
+                self._digest_obj.finalize()
+            )
             self._digest_obj = digest_obj_copy
             return digest
 
@@ -175,7 +179,7 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
     # If so, return the digest object.
     if hash_library == "hashlib" and hash_library in SUPPORTED_LIBRARIES:
         try:
-            if algorithm == "blake2b-256":
+            if algorithm == "blake2b-256":  # pylint: disable=no-else-return
                 return hashlib.new("blake2b", digest_size=32)
             else:
                 return hashlib.new(algorithm)
@@ -183,7 +187,9 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
         except (ValueError, TypeError):
             # ValueError: the algorithm value was unknown
             # TypeError: unexpected argument digest_size (on old python)
-            raise exceptions.UnsupportedAlgorithmError(algorithm)
+            raise exceptions.UnsupportedAlgorithmError(  # pylint: disable=raise-missing-from
+                algorithm
+            )
 
     # Was a pyca_crypto digest object requested and is it supported?
     elif hash_library == "pyca_crypto" and hash_library in SUPPORTED_LIBRARIES:
@@ -194,7 +200,9 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
             )
 
         except KeyError:
-            raise exceptions.UnsupportedAlgorithmError(algorithm)
+            raise exceptions.UnsupportedAlgorithmError(  # pylint: disable=raise-missing-from
+                algorithm
+            )
 
     # The requested hash library is not supported.
     else:

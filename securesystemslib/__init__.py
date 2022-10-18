@@ -1,3 +1,4 @@
+# pylint: disable=missing-module-docstring
 import logging
 
 # Configure a basic 'securesystemslib' top-level logger with a StreamHandler

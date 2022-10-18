@@ -29,7 +29,7 @@ from securesystemslib.storage import FilesystemBackend, StorageBackendInterface
 logger = logging.getLogger(__name__)
 
 
-def get_file_details(
+def get_file_details(  # pylint: disable=dangerous-default-value
     filepath: str,
     hash_algorithms: List[str] = ["sha256"],
     storage_backend: Optional[StorageBackendInterface] = None,
@@ -78,7 +78,7 @@ def get_file_details(
     return file_length, file_hashes
 
 
-def get_file_hashes(
+def get_file_hashes(  # pylint: disable=dangerous-default-value
     filepath: str,
     hash_algorithms: List[str] = ["sha256"],
     storage_backend: Optional[StorageBackendInterface] = None,
@@ -348,11 +348,11 @@ def load_json_string(data: Union[str, bytes]) -> Any:
 
     except TypeError:
         message = "Invalid JSON string: " + repr(data)
-        raise exceptions.Error(message)
+        raise exceptions.Error(message)  # pylint: disable=raise-missing-from
 
     except ValueError:
         message = "Cannot deserialize to a Python object: " + repr(data)
-        raise exceptions.Error(message)
+        raise exceptions.Error(message)  # pylint: disable=raise-missing-from
 
     else:
         return deserialized_object
@@ -407,7 +407,7 @@ def load_json_file(
             deserialized_object = json.loads(raw_data)
 
         except (ValueError, TypeError):
-            raise exceptions.Error(
+            raise exceptions.Error(  # pylint: disable=raise-missing-from
                 "Cannot deserialize to a" " Python object: " + filepath
             )
 
@@ -450,7 +450,9 @@ def digests_are_equal(digest1: str, digest2: str) -> bool:
 
     are_equal = True
 
-    for element in range(len(digest1)):
+    for element in range(  # pylint: disable=consider-using-enumerate
+        len(digest1)
+    ):
         if digest1[element] != digest2[element]:
             are_equal = False
 

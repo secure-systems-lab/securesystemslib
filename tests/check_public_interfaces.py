@@ -29,8 +29,8 @@
   when explicitly invoked.
 """
 
-import inspect
-import json
+import inspect  # pylint: disable=unused-import
+import json  # pylint: disable=unused-import
 import os
 import shutil
 import sys
@@ -38,19 +38,21 @@ import tempfile
 import unittest
 
 if sys.version_info >= (3, 3):
-    import unittest.mock as mock
+    import unittest.mock as mock  # pylint: disable=consider-using-from-import
 else:
     import mock
 
-import securesystemslib.exceptions
-import securesystemslib.gpg.constants
-import securesystemslib.gpg.functions
-import securesystemslib.gpg.util
-import securesystemslib.interface
-import securesystemslib.keys
+import securesystemslib.exceptions  # pylint: disable=wrong-import-position
+import securesystemslib.gpg.constants  # pylint: disable=wrong-import-position
+import securesystemslib.gpg.functions  # pylint: disable=wrong-import-position
+import securesystemslib.gpg.util  # pylint: disable=wrong-import-position
+import securesystemslib.interface  # pylint: disable=wrong-import-position
+import securesystemslib.keys  # pylint: disable=wrong-import-position
 
 
-class TestPublicInterfaces(unittest.TestCase):
+class TestPublicInterfaces(
+    unittest.TestCase
+):  # pylint: disable=missing-class-docstring
     @classmethod
     def setUpClass(cls):
         cls.temp_dir = tempfile.mkdtemp(dir=os.getcwd())
@@ -64,7 +66,7 @@ class TestPublicInterfaces(unittest.TestCase):
         with self.assertRaises(
             securesystemslib.exceptions.UnsupportedLibraryError
         ):
-            securesystemslib.interface._generate_and_write_rsa_keypair(
+            securesystemslib.interface._generate_and_write_rsa_keypair(  # pylint: disable=protected-access
                 password="pw"
             )
 
@@ -97,13 +99,13 @@ class TestPublicInterfaces(unittest.TestCase):
             securesystemslib.exceptions.UnsupportedLibraryError
         ):
             path = os.path.join(self.temp_dir, "rsa_key")
-            with open(path, "a"):
+            with open(path, "a"):  # pylint: disable=unspecified-encoding
                 securesystemslib.interface.import_rsa_privatekey_from_file(path)
 
         with self.assertRaises(
             securesystemslib.exceptions.UnsupportedLibraryError
         ):
-            securesystemslib.interface._generate_and_write_ed25519_keypair(
+            securesystemslib.interface._generate_and_write_ed25519_keypair(  # pylint: disable=protected-access
                 password="pw"
             )
 
@@ -131,7 +133,7 @@ class TestPublicInterfaces(unittest.TestCase):
             securesystemslib.exceptions.UnsupportedLibraryError
         ):
             path = os.path.join(self.temp_dir, "ed25519_priv.json")
-            with open(path, "a") as f:
+            with open(path, "a") as f:  # pylint: disable=unspecified-encoding
                 f.write("{}")
                 securesystemslib.interface.import_ed25519_privatekey_from_file(
                     path, "pw"
@@ -140,7 +142,7 @@ class TestPublicInterfaces(unittest.TestCase):
         with self.assertRaises(
             securesystemslib.exceptions.UnsupportedLibraryError
         ):
-            securesystemslib.interface._generate_and_write_ecdsa_keypair(
+            securesystemslib.interface._generate_and_write_ecdsa_keypair(  # pylint: disable=protected-access
                 password="pw"
             )
 
@@ -168,7 +170,7 @@ class TestPublicInterfaces(unittest.TestCase):
             securesystemslib.exceptions.UnsupportedLibraryError
         ):
             path = os.path.join(self.temp_dir, "ecddsa.priv")
-            with open(path, "a") as f:
+            with open(path, "a") as f:  # pylint: disable=unspecified-encoding
                 f.write("{}")
                 securesystemslib.interface.import_ecdsa_privatekey_from_file(
                     path, password="pw"

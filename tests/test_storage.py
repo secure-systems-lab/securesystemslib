@@ -24,14 +24,16 @@ import securesystemslib.exceptions
 import securesystemslib.storage
 
 
-class TestStorage(unittest.TestCase):
+class TestStorage(unittest.TestCase):  # pylint: disable=missing-class-docstring
     def setUp(self):
         self.storage_backend = securesystemslib.storage.FilesystemBackend()
         self.temp_dir = tempfile.mkdtemp(dir=os.getcwd())
         self.filepath = os.path.join(self.temp_dir, "testfile")
         with open(self.filepath, "wb") as test:
             test.write(b"testing")
-        self.fileobj = open(self.filepath, "rb")
+        self.fileobj = open(  # pylint: disable=consider-using-with
+            self.filepath, "rb"
+        )
 
     def tearDown(self):
         self.fileobj.close()
@@ -41,7 +43,7 @@ class TestStorage(unittest.TestCase):
         try:
             with self.storage_backend.get("/none/existent/path") as file_object:
                 file_object.read()
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             self.assertIsInstance(exc, securesystemslib.exceptions.StorageError)
 
         self.assertRaises(

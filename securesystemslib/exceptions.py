@@ -21,25 +21,25 @@
 class Error(Exception):
     """Indicate a generic error."""
 
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
-class Warning(Warning):
+class Warning(Warning):  # pylint: disable=redefined-builtin
     """Generic warning.  It is used by the 'warnings' module."""
 
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class FormatError(Error):
     """Indicate an error while validating an object's format."""
 
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class InvalidMetadataJSONError(FormatError):
     """Indicate that a metadata file is not valid JSON."""
 
-    def __init__(self, exception):
+    def __init__(self, exception):  # pylint: disable=super-init-not-called
         # Store the original exception.
         self.exception = exception
 
@@ -51,13 +51,15 @@ class InvalidMetadataJSONError(FormatError):
 class UnsupportedAlgorithmError(Error):
     """Indicate an error while trying to identify a user-specified algorithm."""
 
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class BadHashError(Error):
     """Indicate an error while checking the value a hash object."""
 
-    def __init__(self, expected_hash, observed_hash):
+    def __init__(
+        self, expected_hash, observed_hash
+    ):  # pylint: disable=super-init-not-called
         self.expected_hash = expected_hash
         self.observed_hash = observed_hash
 
@@ -74,19 +76,21 @@ class BadHashError(Error):
 class BadPasswordError(Error):
     """Indicate an error after encountering an invalid password."""
 
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class CryptoError(Error):
     """Indicate any cryptography-related errors."""
 
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class BadSignatureError(CryptoError):
     """Indicate that some metadata has a bad signature."""
 
-    def __init__(self, metadata_role_name):
+    def __init__(
+        self, metadata_role_name
+    ):  # pylint: disable=super-init-not-called
         self.metadata_role_name = metadata_role_name
 
     def __str__(self):
@@ -96,41 +100,41 @@ class BadSignatureError(CryptoError):
 class UnknownMethodError(CryptoError):
     """Indicate that a user-specified cryptograpthic method is unknown."""
 
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class UnsupportedLibraryError(Error):
     """Indicate that a supported library could not be located or imported."""
 
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class InvalidNameError(Error):
     """Indicate an error while trying to validate any type of named object."""
 
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class NotFoundError(Error):
     """If a required configuration or resource is not found."""
 
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class URLMatchesNoPatternError(Error):
     """If a URL does not match a user-specified regular expression."""
 
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class InvalidConfigurationError(Error):
     """If a configuration object does not match the expected format."""
 
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class StorageError(Error):
     """Indicate an error occured during interaction with an abstracted storage
     backend."""
 
-    pass
+    pass  # pylint: disable=unnecessary-pass

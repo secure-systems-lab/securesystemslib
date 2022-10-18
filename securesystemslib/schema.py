@@ -60,7 +60,7 @@ class Schema:
       should implement check_match().
     """
 
-    def matches(self, object):
+    def matches(self, object):  # pylint: disable=redefined-builtin
         """
         <Purpose>
           Return True if 'object' matches this schema, False if it doesn't.
@@ -75,7 +75,7 @@ class Schema:
         else:
             return True
 
-    def check_match(self, object):
+    def check_match(self, object):  # pylint: disable=redefined-builtin
         """
         <Purpose>
           Abstract method.  Classes that inherit from 'Schema' must
@@ -111,7 +111,7 @@ class Any(Schema):
     def __init__(self):
         pass
 
-    def check_match(self, object):
+    def check_match(self, object):  # pylint: disable=redefined-builtin
         pass
 
 
@@ -143,7 +143,7 @@ class String(Schema):
 
         self._string = string
 
-    def check_match(self, object):
+    def check_match(self, object):  # pylint: disable=redefined-builtin
         if self._string != object:
             raise exceptions.FormatError(
                 "Expected " + repr(self._string) + " got " + repr(object)
@@ -181,7 +181,7 @@ class AnyString(Schema):
     def __init__(self):
         pass
 
-    def check_match(self, object):
+    def check_match(self, object):  # pylint: disable=redefined-builtin
         if not isinstance(object, str):
             raise exceptions.FormatError(
                 "Expected a string" " but got " + repr(object)
@@ -217,7 +217,7 @@ class AnyNonemptyString(AnyString):
       False
     """
 
-    def check_match(self, object):
+    def check_match(self, object):  # pylint: disable=redefined-builtin
         AnyString.check_match(self, object)
 
         if object == "":
@@ -255,7 +255,7 @@ class AnyBytes(Schema):
     def __init__(self):
         pass
 
-    def check_match(self, object):
+    def check_match(self, object):  # pylint: disable=redefined-builtin
         if not isinstance(object, bytes):
             raise exceptions.FormatError(
                 "Expected a byte string" " but got " + repr(object)
@@ -292,7 +292,7 @@ class LengthString(Schema):
 
         self._string_length = length
 
-    def check_match(self, object):
+    def check_match(self, object):  # pylint: disable=redefined-builtin
         if not isinstance(object, str):
             raise exceptions.FormatError(
                 "Expected a string but" " got " + repr(object)
@@ -335,7 +335,7 @@ class LengthBytes(Schema):
 
         self._bytes_length = length
 
-    def check_match(self, object):
+    def check_match(self, object):  # pylint: disable=redefined-builtin
         if not isinstance(object, bytes):
             raise exceptions.FormatError(
                 "Expected a byte but" " got " + repr(object)
@@ -390,14 +390,15 @@ class OneOf(Schema):
 
         self._alternatives = alternatives
 
-    def check_match(self, object):
+    def check_match(self, object):  # pylint: disable=redefined-builtin
         # Simply return as soon as we find a match.
         # Raise 'exceptions.FormatError' if no matches are found.
         for alternative in self._alternatives:
             if alternative.matches(object):
                 return
         raise exceptions.FormatError(
-            "Object did not match a" " recognized alternative."
+            "Object did not match a"
+            " recognized alternative."  # pylint: disable=implicit-str-concat
         )
 
 
@@ -436,7 +437,7 @@ class AllOf(Schema):
 
         self._required_schemas = required_schemas[:]
 
-    def check_match(self, object):
+    def check_match(self, object):  # pylint: disable=redefined-builtin
         for required_schema in self._required_schemas:
             required_schema.check_match(object)
 
@@ -462,7 +463,7 @@ class Boolean(Schema):
     def __init__(self):
         pass
 
-    def check_match(self, object):
+    def check_match(self, object):  # pylint: disable=redefined-builtin
         if not isinstance(object, bool):
             raise exceptions.FormatError(
                 "Got " + repr(object) + " instead of a boolean."
@@ -529,10 +530,10 @@ class ListOf(Schema):
         self._max_count = max_count
         self._list_name = list_name
 
-    def check_match(self, object):
+    def check_match(self, object):  # pylint: disable=redefined-builtin
         if not isinstance(object, (list, tuple)):
             raise exceptions.FormatError(
-                "Expected object of type {} but got type {}".format(
+                "Expected object of type {} but got type {}".format(  # pylint: disable=consider-using-f-string
                     self._list_name, type(object).__name__
                 )
             )
@@ -595,8 +596,10 @@ class Integer(Schema):
         self._lo = lo
         self._hi = hi
 
-    def check_match(self, object):
-        if isinstance(object, bool) or not isinstance(object, int):
+    def check_match(self, object):  # pylint: disable=redefined-builtin
+        if isinstance(  # pylint: disable=no-else-raise
+            object, bool
+        ) or not isinstance(object, int):
             # We need to check for bool as a special case, since bool
             # is for historical reasons a subtype of int.
             raise exceptions.FormatError(
@@ -660,7 +663,7 @@ class DictOf(Schema):
         self._key_schema = key_schema
         self._value_schema = value_schema
 
-    def check_match(self, object):
+    def check_match(self, object):  # pylint: disable=redefined-builtin
         if not isinstance(object, dict):
             raise exceptions.FormatError(
                 "Expected a dict but" " got " + repr(object)
@@ -704,7 +707,7 @@ class Optional(Schema):
             )
         self._schema = schema
 
-    def check_match(self, object):
+    def check_match(self, object):  # pylint: disable=redefined-builtin
         self._schema.check_match(object)
 
 
@@ -745,7 +748,7 @@ class Object(Schema):
         """
 
         # Ensure valid arguments.
-        for key, schema in required.items():
+        for key, schema in required.items():  # pylint: disable=unused-variable
             if not isinstance(schema, Schema):
                 raise exceptions.FormatError(
                     "Expected Schema but" " got " + repr(schema)
@@ -754,7 +757,7 @@ class Object(Schema):
         self._object_name = object_name
         self._required = list(required.items())
 
-    def check_match(self, object):
+    def check_match(self, object):  # pylint: disable=redefined-builtin
         if not isinstance(object, dict):
             raise exceptions.FormatError(
                 "Wanted a " + repr(self._object_name) + "."
@@ -770,7 +773,7 @@ class Object(Schema):
             except KeyError:
                 # If not an Optional schema, raise an exception.
                 if not isinstance(schema, Optional):
-                    raise exceptions.FormatError(
+                    raise exceptions.FormatError(  # pylint: disable=raise-missing-from
                         "Missing key "
                         + repr(key)
                         + " in "
@@ -882,8 +885,10 @@ class Struct(Schema):
         self._allow_more = allow_more
         self._struct_name = struct_name
 
-    def check_match(self, object):
-        if not isinstance(object, (list, tuple)):
+    def check_match(self, object):  # pylint: disable=redefined-builtin
+        if not isinstance(  # pylint: disable=no-else-raise
+            object, (list, tuple)
+        ):
             raise exceptions.FormatError(
                 "Expected "
                 + repr(self._struct_name)
@@ -975,7 +980,7 @@ class RegularExpression(Schema):
                 re_name = "pattern"
         self._re_name = re_name
 
-    def check_match(self, object):
+    def check_match(self, object):  # pylint: disable=redefined-builtin
         if not isinstance(object, str) or not self._re_object.match(object):
             raise exceptions.FormatError(
                 repr(object) + " did not match " + repr(self._re_name)

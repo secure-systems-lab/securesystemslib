@@ -38,7 +38,9 @@ FORMAT_ERROR_MSG = (
 )
 
 
-class TestRSA_keys(unittest.TestCase):
+class TestRSA_keys(
+    unittest.TestCase
+):  # pylint: disable=missing-class-docstring,invalid-name
     def setUp(self):
         pass
 
@@ -71,8 +73,8 @@ class TestRSA_keys(unittest.TestCase):
         )
 
     def test_create_rsa_signature(self):
-        global private_rsa
-        global public_rsa
+        global private_rsa  # pylint: disable=global-variable-not-assigned
+        global public_rsa  # pylint: disable=global-variable-not-assigned
         data = "The quick brown fox jumps over the lazy dog".encode("utf-8")
 
         for rsa_scheme in securesystemslib.keys.RSA_SIGNATURE_SCHEMES:
@@ -149,8 +151,8 @@ class TestRSA_keys(unittest.TestCase):
             )
 
     def test_verify_rsa_signature(self):
-        global public_rsa
-        global private_rsa
+        global public_rsa  # pylint: disable=global-variable-not-assigned
+        global private_rsa  # pylint: disable=global-variable-not-assigned
         data = "The quick brown fox jumps over the lazy dog".encode("utf-8")
 
         for rsa_scheme in securesystemslib.keys.RSA_SIGNATURE_SCHEMES:
@@ -287,8 +289,8 @@ class TestRSA_keys(unittest.TestCase):
             self.assertTrue(verified)
 
     def test_create_rsa_encrypted_pem(self):
-        global public_rsa
-        global private_rsa
+        global public_rsa  # pylint: disable=global-variable-not-assigned
+        global private_rsa  # pylint: disable=global-variable-not-assigned
 
         encrypted_pem = securesystemslib.rsa_keys.create_rsa_encrypted_pem(
             private_rsa, "password"
@@ -328,8 +330,8 @@ class TestRSA_keys(unittest.TestCase):
         )
 
     def test_create_rsa_public_and_private_from_pem(self):
-        global public_rsa
-        global private_rsa
+        global public_rsa  # pylint: disable=global-variable-not-assigned
+        global private_rsa  # pylint: disable=global-variable-not-assigned
 
         (
             public,
@@ -348,8 +350,8 @@ class TestRSA_keys(unittest.TestCase):
         )
 
     def test_encrypt_key(self):
-        global public_rsa
-        global private_rsa
+        global public_rsa  # pylint: disable=global-variable-not-assigned
+        global private_rsa  # pylint: disable=global-variable-not-assigned
 
         key_object = {
             "keytype": "rsa",
@@ -376,8 +378,8 @@ class TestRSA_keys(unittest.TestCase):
     def test_decrypt_key(self):
 
         # Test for valid arguments.
-        global public_rsa
-        global private_rsa
+        global public_rsa  # pylint: disable=global-variable-not-assigned
+        global private_rsa  # pylint: disable=global-variable-not-assigned
         passphrase = "pw"
 
         rsa_key = {
@@ -391,7 +393,7 @@ class TestRSA_keys(unittest.TestCase):
             rsa_key, passphrase
         )
 
-        decrypted_rsa_key = securesystemslib.rsa_keys.decrypt_key(
+        decrypted_rsa_key = securesystemslib.rsa_keys.decrypt_key(  # pylint: disable=unused-variable
             encrypted_rsa_key, passphrase
         )
 
@@ -404,7 +406,9 @@ class TestRSA_keys(unittest.TestCase):
         )
 
         # Test for invalid encrypted content (i.e., invalid hmac and ciphertext.)
-        encryption_delimiter = securesystemslib.rsa_keys._ENCRYPTION_DELIMITER
+        encryption_delimiter = (
+            securesystemslib.rsa_keys._ENCRYPTION_DELIMITER  # pylint: disable=protected-access
+        )
         salt, iterations, hmac, iv, ciphertext = encrypted_rsa_key.split(
             encryption_delimiter
         )

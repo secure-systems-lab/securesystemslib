@@ -37,7 +37,9 @@ from securesystemslib.gpg.functions import (
 from securesystemslib.gpg.util import get_version
 
 
-class TestPublicInterfacesGPG(unittest.TestCase):
+class TestPublicInterfacesGPG(
+    unittest.TestCase
+):  # pylint: disable=missing-class-docstring
     @classmethod
     def setUpClass(cls):
         assert (

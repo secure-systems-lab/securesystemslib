@@ -30,7 +30,9 @@ FORMAT_ERROR_MSG = (
 )
 
 
-class TestEd25519_keys(unittest.TestCase):
+class TestEd25519_keys(
+    unittest.TestCase
+):  # pylint: disable=missing-class-docstring,invalid-name
     def setUp(self):
         pass
 
@@ -46,8 +48,8 @@ class TestEd25519_keys(unittest.TestCase):
         )
 
     def test_create_signature(self):
-        global public
-        global private
+        global public  # pylint: disable=global-variable-not-assigned
+        global private  # pylint: disable=global-variable-not-assigned
         data = b"The quick brown fox jumps over the lazy dog"
         scheme = "ed25519"
         signature, scheme = securesystemslib.ed25519_keys.create_signature(
@@ -95,8 +97,8 @@ class TestEd25519_keys(unittest.TestCase):
         )
 
     def test_verify_signature(self):
-        global public
-        global private
+        global public  # pylint: disable=global-variable-not-assigned
+        global private  # pylint: disable=global-variable-not-assigned
         data = b"The quick brown fox jumps over the lazy dog"
         scheme = "ed25519"
         signature, scheme = securesystemslib.ed25519_keys.create_signature(

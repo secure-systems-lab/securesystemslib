@@ -24,7 +24,7 @@ import securesystemslib.exceptions
 import securesystemslib.schema as SCHEMA
 
 
-class TestSchema(unittest.TestCase):
+class TestSchema(unittest.TestCase):  # pylint: disable=missing-class-docstring
     def setUp(self):
         pass
 
@@ -34,7 +34,7 @@ class TestSchema(unittest.TestCase):
     def test_Schema(self):
         # Test conditions for the instantation of classes that inherit
         # from class Schema().
-        class NewSchema(SCHEMA.Schema):
+        class NewSchema(SCHEMA.Schema):  # pylint: disable=abstract-method
             def __init__(self):
                 pass
 
@@ -46,7 +46,7 @@ class TestSchema(unittest.TestCase):
             def __init__(self, string):
                 self._string = string
 
-            def check_match(self, object):
+            def check_match(self, object):  # pylint: disable=redefined-builtin
                 if self._string != object:
                     message = "Expected: " + repr(self._string)
                     raise securesystemslib.exceptions.FormatError(message)
@@ -443,7 +443,10 @@ class TestSchema(unittest.TestCase):
         )
 
         self.assertTrue(re_schema_optional.matches("abc"))
-        self.assertTrue(re_schema_optional._re_name == "pattern")
+        self.assertTrue(
+            re_schema_optional._re_name  # pylint: disable=protected-access
+            == "pattern"
+        )
 
         # Test conditions for invalid arguments.
         self.assertFalse(re_schema.matches("Hello World"))

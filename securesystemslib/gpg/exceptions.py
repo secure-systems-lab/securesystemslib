@@ -41,9 +41,11 @@ class CommandError(Exception):
     pass
 
 
-class KeyExpirationError(Exception):
+class KeyExpirationError(Exception):  # pylint: disable=missing-class-docstring
     def __init__(self, key):
-        super(KeyExpirationError, self).__init__()
+        super(  # pylint: disable=super-with-arguments
+            KeyExpirationError, self
+        ).__init__()
         self.key = key
 
     def __str__(self):
@@ -56,7 +58,7 @@ class KeyExpirationError(Exception):
         validity_period = expiration_time - creation_time
 
         return (
-            "GPG key '{}' created on '{:%Y-%m-%d %H:%M} UTC' with validity "
+            "GPG key '{}' created on '{:%Y-%m-%d %H:%M} UTC' with validity "  # pylint: disable=consider-using-f-string
             "period '{}' expired on '{:%Y-%m-%d %H:%M} UTC'.".format(
                 self.key["keyid"],
                 creation_time,

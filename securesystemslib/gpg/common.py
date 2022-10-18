@@ -104,7 +104,7 @@ def parse_pubkey_payload(data):
     ptr += 1
     if version_number not in SUPPORTED_PUBKEY_PACKET_VERSIONS:
         raise PacketVersionNotSupportedError(
-            "Pubkey packet version '{}' not supported, must be one of {}".format(
+            "Pubkey packet version '{}' not supported, must be one of {}".format(  # pylint: disable=consider-using-f-string
                 version_number, SUPPORTED_PUBKEY_PACKET_VERSIONS
             )
         )
@@ -129,7 +129,7 @@ def parse_pubkey_payload(data):
     # as described in section 5.2.3.21.
     if algorithm not in SUPPORTED_SIGNATURE_ALGORITHMS:
         raise SignatureAlgorithmNotSupportedError(
-            "Signature algorithm '{}' not "
+            "Signature algorithm '{}' not "  # pylint: disable=consider-using-f-string
             "supported, please verify that your gpg configuration is creating "
             "either DSA, RSA, or EdDSA signatures (see RFC4880 9.1. Public-Key "
             "Algorithms).".format(algorithm)
@@ -210,12 +210,12 @@ def parse_pubkey_bundle(data):
             # - there must be least one User ID packet, or
             # - order and type of signatures, or
             # - disallow duplicate packets
-            if (
+            if (  # pylint: disable=no-else-raise
                 packet_type != PACKET_TYPE_PRIMARY_KEY
                 and not key_bundle[PACKET_TYPE_PRIMARY_KEY]["key"]
             ):
                 raise PacketParsingError(
-                    "First packet must be a primary key ('{}'), "
+                    "First packet must be a primary key ('{}'), "  # pylint: disable=consider-using-f-string
                     "got '{}'.".format(PACKET_TYPE_PRIMARY_KEY, packet_type)
                 )
 
@@ -281,7 +281,7 @@ def parse_pubkey_bundle(data):
 
             else:
                 log.info(
-                    "Ignoring gpg key packet '{}', we only handle packets of "
+                    "Ignoring gpg key packet '{}', we only handle packets of "  # pylint: disable=logging-format-interpolation,consider-using-f-string
                     "types '{}' (see RFC4880 4.3. Packet Tags).".format(
                         packet_type,
                         [
@@ -296,8 +296,8 @@ def parse_pubkey_bundle(data):
 
         # Both errors might be raised in parse_packet_header and in this loop
         except (PacketParsingError, IndexError) as e:
-            raise PacketParsingError(
-                "Invalid public key data at position {}: {}.".format(
+            raise PacketParsingError(  # pylint: disable=raise-missing-from
+                "Invalid public key data at position {}: {}.".format(  # pylint: disable=consider-using-f-string
                     position, e
                 )
             )
@@ -368,7 +368,7 @@ def _assign_certified_key_info(bundle):
             # TODO: Revise exception taxonomy:
             # It's okay to ignore some exceptions (unsupported algorithms etc.) but
             # we should blow up if a signature is malformed (missing subpackets).
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-except
                 log.info(e)
                 continue
 
@@ -376,7 +376,7 @@ def _assign_certified_key_info(bundle):
                 signature["keyid"]
             ):
                 log.info(
-                    "Ignoring User ID certificate issued by '{}'.".format(
+                    "Ignoring User ID certificate issued by '{}'.".format(  # pylint: disable=logging-format-interpolation,consider-using-f-string
                         signature["keyid"]
                     )
                 )
@@ -391,7 +391,7 @@ def _assign_certified_key_info(bundle):
 
             if not is_valid:
                 log.info(
-                    "Ignoring invalid User ID self-certificate issued "
+                    "Ignoring invalid User ID self-certificate issued "  # pylint: disable=logging-format-interpolation,consider-using-f-string
                     "by '{}'.".format(signature["keyid"])
                 )
                 continue
@@ -493,7 +493,7 @@ def _get_verified_subkeys(bundle):
             )
 
         # TODO: Revise exception taxonomy
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             log.info(e)
             continue
 
@@ -523,7 +523,7 @@ def _get_verified_subkeys(bundle):
                 key_binding_signatures.append(signature)
 
             # TODO: Revise exception taxonomy
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-except
                 log.info(e)
                 continue
         # NOTE: As per the V4 key structure diagram in RFC4880 section 12.1., a
@@ -535,7 +535,7 @@ def _get_verified_subkeys(bundle):
         # an *embedded primary key binding signature*.
         if len(key_binding_signatures) != 1:
             log.info(
-                "Ignoring subkey '{}' due to wrong amount of key binding "
+                "Ignoring subkey '{}' due to wrong amount of key binding "  # pylint: disable=logging-format-interpolation,consider-using-f-string
                 "signatures ({}), must be exactly 1.".format(
                     subkey["keyid"], len(key_binding_signatures)
                 )
@@ -550,7 +550,7 @@ def _get_verified_subkeys(bundle):
 
         if not is_valid:
             log.info(
-                "Ignoring subkey '{}' due to invalid key binding signature.".format(
+                "Ignoring subkey '{}' due to invalid key binding signature.".format(  # pylint: disable=logging-format-interpolation,consider-using-f-string
                     subkey["keyid"]
                 )
             )
@@ -615,7 +615,7 @@ def get_pubkey_bundle(data, keyid):
     formats.KEYID_SCHEMA.check_match(keyid)
     if not data:
         raise KeyNotFoundError(
-            "Could not find gpg key '{}' in empty exported key "
+            "Could not find gpg key '{}' in empty exported key "  # pylint: disable=consider-using-f-string
             "data.".format(keyid)
         )
 
@@ -636,7 +636,7 @@ def get_pubkey_bundle(data, keyid):
         if public_key and public_key["keyid"].endswith(keyid.lower()):
             if idx > 1:
                 log.warning(
-                    "Exporting master key '{}' including subkeys '{}' for"
+                    "Exporting master key '{}' including subkeys '{}' for"  # pylint: disable=logging-format-interpolation,consider-using-f-string
                     " passed keyid '{}'.".format(
                         master_public_key["keyid"],
                         ", ".join(list(sub_public_keys.keys())),
@@ -647,7 +647,9 @@ def get_pubkey_bundle(data, keyid):
 
     else:
         raise KeyNotFoundError(
-            "Could not find gpg key '{}' in exported key data.".format(keyid)
+            "Could not find gpg key '{}' in exported key data.".format(  # pylint: disable=consider-using-f-string
+                keyid
+            )
         )
 
     # Add subkeys dictionary to master pubkey "subkeys" field if subkeys exist
@@ -657,7 +659,7 @@ def get_pubkey_bundle(data, keyid):
     return master_public_key
 
 
-def parse_signature_packet(
+def parse_signature_packet(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     data,
     supported_signature_types=None,
     supported_hash_algorithms=None,
@@ -729,7 +731,7 @@ def parse_signature_packet(
     ptr += 1
     if version_number not in SUPPORTED_SIGNATURE_PACKET_VERSIONS:
         raise ValueError(
-            "Signature version '{}' not supported, must be one of "
+            "Signature version '{}' not supported, must be one of "  # pylint: disable=consider-using-f-string
             "{}.".format(version_number, SUPPORTED_SIGNATURE_PACKET_VERSIONS)
         )
 
@@ -742,7 +744,7 @@ def parse_signature_packet(
 
     if signature_type not in supported_signature_types:
         raise ValueError(
-            "Signature type '{}' not supported, must be one of {} "
+            "Signature type '{}' not supported, must be one of {} "  # pylint: disable=consider-using-f-string
             "(see RFC4880 5.2.1. Signature Types).".format(
                 signature_type, supported_signature_types
             )
@@ -753,7 +755,7 @@ def parse_signature_packet(
 
     if signature_algorithm not in SUPPORTED_SIGNATURE_ALGORITHMS:
         raise ValueError(
-            "Signature algorithm '{}' not "
+            "Signature algorithm '{}' not "  # pylint: disable=consider-using-f-string
             "supported, please verify that your gpg configuration is creating "
             "either DSA, RSA, or EdDSA signatures (see RFC4880 9.1. Public-Key "
             "Algorithms).".format(signature_algorithm)
@@ -767,7 +769,7 @@ def parse_signature_packet(
 
     if hash_algorithm not in supported_hash_algorithms:
         raise ValueError(
-            "Hash algorithm '{}' not supported, must be one of {}"
+            "Hash algorithm '{}' not supported, must be one of {}"  # pylint: disable=consider-using-f-string
             " (see RFC4880 9.4. Hash Algorithms).".format(
                 hash_algorithm, supported_hash_algorithms
             )
@@ -868,7 +870,7 @@ def parse_signature_packet(
     # Fail if keyid and short keyid are specified but don't match
     if keyid and not keyid.endswith(short_keyid):  # pragma: no cover
         raise ValueError(
-            "This signature packet seems to be corrupted. The key ID "
+            "This signature packet seems to be corrupted. The key ID "  # pylint: disable=consider-using-f-string
             "'{}' of the 'Issuer' subpacket must match the lower 64 bits of the "
             "fingerprint '{}' of the 'Issuer Fingerprint' subpacket (see RFC4880 "
             "and rfc4880bis-06 5.2.3.28. Issuer Fingerprint).".format(
@@ -892,7 +894,7 @@ def parse_signature_packet(
     signature = handler.get_signature_params(data[ptr:])
 
     signature_data = {
-        "keyid": "{}".format(keyid),
+        "keyid": "{}".format(keyid),  # pylint: disable=consider-using-f-string
         "other_headers": binascii.hexlify(data[:other_headers_ptr]).decode(
             "ascii"
         ),
