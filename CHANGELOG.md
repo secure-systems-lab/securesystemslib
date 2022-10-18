@@ -1,4 +1,16 @@
 # Changelog
+## securesystemslib v0.25.0
+
+### Changed
+* Do not use max salt lengths in RSA PSS signature creation (#436)
+* Restrict read and write access for new private keys (#231)
+* Replaced deprecated `distutils.version.StrictVersion` (#433)
+* Bumped dependencies: cryptography (#435)
+
+### Fixed
+* GPG availability check in tests (#434)
+
+
 ## securesystemslib v0.24.0
 
 ### Added
