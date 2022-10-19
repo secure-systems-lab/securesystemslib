@@ -224,10 +224,15 @@ class TestFormats(unittest.TestCase):  # pylint: disable=missing-class-docstring
             schema_type,
             valid_schema,
         ) in valid_schemas.items():
-            if not schema_type.matches(valid_schema):
+            if not schema_type.matches(  # pylint: disable=no-member
+                valid_schema
+            ):
                 print("bad schema: " + repr(valid_schema))
 
-            self.assertEqual(True, schema_type.matches(valid_schema))
+            self.assertEqual(
+                True,
+                schema_type.matches(valid_schema),  # pylint: disable=no-member
+            )
 
         # Test conditions for invalid schemas.
         # Set the 'valid_schema' of 'valid_schemas' to an invalid
@@ -237,7 +242,12 @@ class TestFormats(unittest.TestCase):  # pylint: disable=missing-class-docstring
 
             if isinstance(schema_type, securesystemslib.schema.Integer):
                 invalid_schema = "BAD"
-            self.assertEqual(False, schema_type.matches(invalid_schema))
+            self.assertEqual(
+                False,
+                schema_type.matches(  # pylint: disable=no-member
+                    invalid_schema
+                ),
+            )
 
     def test_unix_timestamp_to_datetime(self):
         # Test conditions for valid arguments.
