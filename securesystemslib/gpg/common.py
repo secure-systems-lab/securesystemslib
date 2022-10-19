@@ -147,7 +147,7 @@ def parse_pubkey_bundle(data):
 
   <Arguments>
     data:
-          Public key data as written to stdout by GPG_EXPORT_PUBKEY_COMMAND.
+          Public key data as written to stdout by gpg_export_pubkey_command.
 
   <Exceptions>
     securesystemslib.gpg.exceptions.PacketParsingError
@@ -500,7 +500,7 @@ def get_pubkey_bundle(data, keyid):
   <Arguments>
     data:
           Public key data as written to stdout by
-          securesystemslib.gpg.constants.GPG_EXPORT_PUBKEY_COMMAND.
+          securesystemslib.gpg.constants.gpg_export_pubkey_command.
 
     keyid:
           The keyid of the master key or one of its subkeys expected to be

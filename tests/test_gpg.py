@@ -51,8 +51,8 @@ from securesystemslib.gpg.common import (parse_pubkey_payload,
     parse_pubkey_bundle, get_pubkey_bundle, _assign_certified_key_info,
     _get_verified_subkeys, parse_signature_packet)
 from securesystemslib.gpg.constants import (SHA1, SHA256, SHA512,
-    GPG_EXPORT_PUBKEY_COMMAND, PACKET_TYPE_PRIMARY_KEY, PACKET_TYPE_USER_ID,
-    PACKET_TYPE_USER_ATTR, PACKET_TYPE_SUB_KEY, HAVE_GPG)
+    gpg_export_pubkey_command, PACKET_TYPE_PRIMARY_KEY, PACKET_TYPE_USER_ID,
+    PACKET_TYPE_USER_ATTR, PACKET_TYPE_SUB_KEY, have_gpg)
 from securesystemslib.gpg.exceptions import (PacketParsingError,
     PacketVersionNotSupportedError, SignatureAlgorithmNotSupportedError,
     KeyNotFoundError, CommandError, KeyExpirationError)
@@ -71,7 +71,7 @@ class GPGTestUtils:
             raise error
 
 
-@unittest.skipIf(not HAVE_GPG, "gpg not found")
+@unittest.skipIf(not have_gpg(), "gpg not found")
 class TestUtil(unittest.TestCase):
   """Test util functions. """
 
@@ -80,11 +80,11 @@ class TestUtil(unittest.TestCase):
     self.assertTrue(isinstance(get_version(), Version))
     self.assertTrue(isinstance(is_version_fully_supported(), bool))
 
-  @patch('securesystemslib.gpg.constants.GPG_VERSION_COMMAND', 'echo "bad"')
   def test_version_utils_error(self):
     """Run dummy tests for coverage. """
-    with self.assertRaises(exceptions.UnsupportedLibraryError):
-      get_version()
+    with patch('securesystemslib.gpg.constants.have_gpg', return_value=False):
+      with self.assertRaises(exceptions.UnsupportedLibraryError):
+        get_version()
 
   def test_get_hashing_class(self):
     # Assert return expected hashing class
@@ -191,7 +191,7 @@ class TestUtil(unittest.TestCase):
       self.assertEqual(result, expected[idx])
 
 
-@unittest.skipIf(not HAVE_GPG, "gpg not found")
+@unittest.skipIf(not have_gpg(), "gpg not found")
 class TestCommon(unittest.TestCase):
   """Test common functions of the securesystemslib.gpg module. """
   @classmethod
@@ -203,14 +203,14 @@ class TestCommon(unittest.TestCase):
     # Load test raw public key bundle from rsa keyring, used to construct
     # erroneous gpg data in tests below.
     keyid = "F557D0FF451DEF45372591429EA70BD13D883381"
-    cmd = GPG_EXPORT_PUBKEY_COMMAND.format(keyid=keyid, homearg=homearg)
+    cmd = gpg_export_pubkey_command(keyid=keyid, homearg=homearg)
     proc = process.run(cmd, stdout=process.PIPE, stderr=process.PIPE)
     self.raw_key_data = proc.stdout
     self.raw_key_bundle = parse_pubkey_bundle(self.raw_key_data)
 
     # Export pubkey bundle with expired key for key expiration tests
     keyid = "E8AC80C924116DABB51D4B987CB07D6D2C199C7C"
-    cmd = GPG_EXPORT_PUBKEY_COMMAND.format(keyid=keyid, homearg=homearg)
+    cmd = gpg_export_pubkey_command(keyid=keyid, homearg=homearg)
     proc = process.run(cmd, stdout=process.PIPE, stderr=process.PIPE)
     self.raw_expired_key_bundle = parse_pubkey_bundle(proc.stdout)
 
@@ -491,7 +491,7 @@ class TestCommon(unittest.TestCase):
           "'{}' not in '{}'".format(expected_error_str, str(ctx.exception)))
 
 
-@unittest.skipIf(not HAVE_GPG, "gpg not found")
+@unittest.skipIf(not have_gpg(), "gpg not found")
 class TestGPGRSA(unittest.TestCase):
   """Test signature creation, verification and key export from the gpg
   module"""
@@ -658,7 +658,7 @@ class TestGPGRSA(unittest.TestCase):
         "\ngot:      {}".format(expected, ctx.exception))
 
 
-@unittest.skipIf(not HAVE_GPG, "gpg not found")
+@unittest.skipIf(not have_gpg(), "gpg not found")
 class TestGPGDSA(unittest.TestCase):
   """ Test signature creation, verification and key export from the gpg
   module """
@@ -743,7 +743,7 @@ class TestGPGDSA(unittest.TestCase):
 
 
 
-@unittest.skipIf(not HAVE_GPG, "gpg not found")
+@unittest.skipIf(not have_gpg(), "gpg not found")
 class TestGPGEdDSA(unittest.TestCase):
   """ Test signature creation, verification and key export from the gpg
   module """
