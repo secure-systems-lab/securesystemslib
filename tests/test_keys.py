@@ -167,42 +167,6 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
         )
         keyvalue["private"] = private
 
-    def test_import_rsakey_from_public_pem(self):
-        pem = self.rsakey_dict["keyval"]["public"]
-        rsa_key = KEYS.import_rsakey_from_public_pem(pem)
-
-        # Check if the format of the object returned by this function corresponds
-        # to 'securesystemslib.formats.RSAKEY_SCHEMA' format.
-        self.assertTrue(securesystemslib.formats.RSAKEY_SCHEMA.matches(rsa_key))
-
-        # Verify whitespace is stripped.
-        self.assertEqual(
-            rsa_key, KEYS.import_rsakey_from_public_pem(pem + "\n")
-        )
-
-        # Supplying a 'bad_pem' argument.
-        self.assertRaises(
-            securesystemslib.exceptions.FormatError,
-            KEYS.import_rsakey_from_public_pem,
-            "bad_pem",
-        )
-
-        # Supplying an improperly formatted PEM.
-        # Strip the PEM header and footer.
-        pem_header = "-----BEGIN PUBLIC KEY-----"
-        self.assertRaises(
-            securesystemslib.exceptions.FormatError,
-            KEYS.import_rsakey_from_public_pem,
-            pem[len(pem_header) :],
-        )
-
-        pem_footer = "-----END PUBLIC KEY-----"
-        self.assertRaises(
-            securesystemslib.exceptions.FormatError,
-            KEYS.import_rsakey_from_public_pem,
-            pem[: -len(pem_footer)],
-        )
-
     def test_format_metadata_to_key(self):
         # Copying self.rsakey_dict so that rsakey_dict remains
         # unchanged during and after this test execution.
