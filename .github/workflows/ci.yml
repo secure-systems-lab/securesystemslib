@@ -27,7 +27,7 @@ jobs:
             toxenv: py38-no-gpg
           - python-version: 3.8
             os: ubuntu-latest
-            toxenv: mypy
+            toxenv: lint
 
     runs-on: ${{ matrix.os }}
 
