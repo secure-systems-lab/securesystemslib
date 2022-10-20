@@ -1,0 +1,8 @@
+# Ignore black, isort and pylint (auto-disable)
+#
+# For change details see commit messages
+# For usage see
+#   https://black.readthedocs.io/en/stable/guides/introducing_black_to_your_project.html
+8531f7d8edc8732a959cf283e64b0d19b49f7a16
+b48bc23acc7e49cdd1029d207ef61deca45c100d
+91ac1f3154cea57e1bf1a8bebd368fce5b07176c
