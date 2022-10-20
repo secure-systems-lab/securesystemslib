@@ -25,7 +25,7 @@ import io
 import logging
 import os
 import shlex
-import subprocess
+import subprocess  # nosec
 import sys
 import tempfile
 import time
@@ -119,7 +119,7 @@ def run(cmd, check=True, timeout=_default_timeout(), **kwargs):
         )
         del kwargs["stdin"]
 
-    return subprocess.run(cmd, check=check, timeout=timeout, **kwargs)
+    return subprocess.run(cmd, check=check, timeout=timeout, **kwargs)  # nosec
 
 
 def run_duplicate_streams(cmd, timeout=_default_timeout()):
@@ -205,7 +205,7 @@ def run_duplicate_streams(cmd, timeout=_default_timeout()):
                 _std["err"] += stderr_part
 
             # Start child process, writing its standard streams to temporary files
-            proc = subprocess.Popen(  # pylint: disable=consider-using-with
+            proc = subprocess.Popen(  # pylint: disable=consider-using-with  # nosec
                 cmd,
                 stdout=stdout_writer,
                 stderr=stderr_writer,

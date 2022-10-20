@@ -335,7 +335,7 @@ def verify_signature(public_key, scheme, signature, data):
 
             # The pure Python implementation raises 'Exception' if 'signature' is
             # invalid.
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except  # nosec
                 pass
 
     # This is a defensive check for a valid 'scheme', which should have already

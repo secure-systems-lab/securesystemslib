@@ -235,7 +235,9 @@ def compute_keyid(pubkey_packet_data):
     if not CRYPTO:  # pragma: no cover
         raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
-    hasher = hashing.Hash(hashing.SHA1(), backend=backends.default_backend())
+    hasher = hashing.Hash(
+        hashing.SHA1(), backend=backends.default_backend()  # nosec
+    )
     hasher.update(b"\x99")
     hasher.update(struct.pack(">H", len(pubkey_packet_data)))
     hasher.update(bytes(pubkey_packet_data))

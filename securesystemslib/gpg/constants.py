@@ -18,7 +18,7 @@
 import functools
 import logging
 import os
-import subprocess
+import subprocess  # nosec
 
 from securesystemslib import process
 

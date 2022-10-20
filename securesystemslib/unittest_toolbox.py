@@ -131,6 +131,6 @@ class Modified_TestCase(unittest.TestCase):  # pylint: disable=invalid-name
 
         rand_str = ""
         for letter in range(length):  # pylint: disable=unused-variable
-            rand_str += random.choice("abcdefABCDEF" + string.digits)
+            rand_str += random.choice("abcdefABCDEF" + string.digits)  # nosec
 
         return rand_str
