@@ -6,10 +6,10 @@ signing implementations and a couple of example implementations.
 """
 
 import abc
-from typing import Any, Dict, Optional, Mapping
+from typing import Any, Dict, Mapping, Optional
 
-import securesystemslib.keys as sslib_keys
 import securesystemslib.gpg.functions as gpg
+import securesystemslib.keys as sslib_keys
 
 
 class Signature:
@@ -225,7 +225,9 @@ class GPGSigner(Signer):
 
     """
 
-    def __init__(self, keyid: Optional[str] = None, homedir: Optional[str] = None):
+    def __init__(
+        self, keyid: Optional[str] = None, homedir: Optional[str] = None
+    ):
         self.keyid = keyid
         self.homedir = homedir
 

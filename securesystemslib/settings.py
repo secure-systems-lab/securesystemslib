@@ -36,7 +36,7 @@ temporary_directory = None
 PBKDF2_ITERATIONS = 100000
 
 # The algorithm(s) in HASH_ALGORITHMS are used to generate key IDs.
-HASH_ALGORITHMS = ['sha256', 'sha512']
+HASH_ALGORITHMS = ["sha256", "sha512"]
 
 # Used in securesystemslib.process, to raise a subprocess.TimeoutExpired if
 # a started subprocess does not terminate before the here specified seconds

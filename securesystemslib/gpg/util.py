@@ -14,24 +14,22 @@
 <Purpose>
   general-purpose utilities for binary data handling and pgp data parsing
 """
-import struct
 import binascii
-import re
-import logging
 import dataclasses
-
+import logging
+import re
+import struct
 
 CRYPTO = True
-NO_CRYPTO_MSG = 'gpg.utils requires the cryptography library'
+NO_CRYPTO_MSG = "gpg.utils requires the cryptography library"
 try:
-  from cryptography.hazmat import backends
-  from cryptography.hazmat.primitives import hashes as hashing
+    from cryptography.hazmat import backends
+    from cryptography.hazmat.primitives import hashes as hashing
 except ImportError:
-  CRYPTO = False
+    CRYPTO = False
 
 # pylint: disable=wrong-import-position
-from securesystemslib import exceptions
-from securesystemslib import process
+from securesystemslib import exceptions, process
 from securesystemslib.gpg import constants
 from securesystemslib.gpg.exceptions import PacketParsingError
 
@@ -39,397 +37,422 @@ log = logging.getLogger(__name__)
 
 
 def get_mpi_length(data):
-  """
-  <Purpose>
-    parses an MPI (Multi-Precision Integer) buffer and returns the appropriate
-    length. This is mostly done to perform bitwise to byte-wise conversion.
+    """
+    <Purpose>
+      parses an MPI (Multi-Precision Integer) buffer and returns the appropriate
+      length. This is mostly done to perform bitwise to byte-wise conversion.
 
-    See RFC4880 section 3.2. Multiprecision Integers for details.
+      See RFC4880 section 3.2. Multiprecision Integers for details.
 
-  <Arguments>
-    data: The MPI data
+    <Arguments>
+      data: The MPI data
 
-  <Exceptions>
-    None
+    <Exceptions>
+      None
 
-  <Side Effects>
-    None
+    <Side Effects>
+      None
 
-  <Returns>
-    The length of the MPI contained at the beginning of this data buffer.
-  """
-  bitlength = int(struct.unpack(">H", data)[0])
-  # Notice the /8 at the end, this length is the bitlength, not the length of
-  # the data in bytes (as len reports it)
-  return int((bitlength - 1)/8) + 1
+    <Returns>
+      The length of the MPI contained at the beginning of this data buffer.
+    """
+    bitlength = int(struct.unpack(">H", data)[0])
+    # Notice the /8 at the end, this length is the bitlength, not the length of
+    # the data in bytes (as len reports it)
+    return int((bitlength - 1) / 8) + 1
 
 
 def hash_object(headers, algorithm, content):
-  """
-  <Purpose>
-    Hash data prior to signature verification in conformance of the RFC4880
-    openPGP standard.
+    """
+    <Purpose>
+      Hash data prior to signature verification in conformance of the RFC4880
+      openPGP standard.
 
-  <Arguments>
-    headers: the additional OpenPGP headers as populated from
-    gpg_generate_signature
+    <Arguments>
+      headers: the additional OpenPGP headers as populated from
+      gpg_generate_signature
 
-    algorithm: The hash algorithm object defined by the cryptography.io hashes
-    module
+      algorithm: The hash algorithm object defined by the cryptography.io hashes
+      module
 
-    content: the signed content
+      content: the signed content
 
-  <Exceptions>
-    securesystemslib.exceptions.UnsupportedLibraryError if:
-      the cryptography module is unavailable
+    <Exceptions>
+      securesystemslib.exceptions.UnsupportedLibraryError if:
+        the cryptography module is unavailable
 
-  <Side Effects>
-    None
+    <Side Effects>
+      None
 
-  <Returns>
-    The RFC4880-compliant hashed buffer
-  """
-  if not CRYPTO: # pragma: no cover
-    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    <Returns>
+      The RFC4880-compliant hashed buffer
+    """
+    if not CRYPTO:  # pragma: no cover
+        raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
-  # As per RFC4880 Section 5.2.4., we need to hash the content,
-  # signature headers and add a very opinionated trailing header
-  hasher = hashing.Hash(algorithm, backend=backends.default_backend())
-  hasher.update(content)
-  hasher.update(headers)
-  hasher.update(b'\x04\xff')
-  hasher.update(struct.pack(">I", len(headers)))
+    # As per RFC4880 Section 5.2.4., we need to hash the content,
+    # signature headers and add a very opinionated trailing header
+    hasher = hashing.Hash(algorithm, backend=backends.default_backend())
+    hasher.update(content)
+    hasher.update(headers)
+    hasher.update(b"\x04\xff")
+    hasher.update(struct.pack(">I", len(headers)))
 
-  return hasher.finalize()
+    return hasher.finalize()
 
 
-def parse_packet_header(data, expected_type=None):
-  """
-  <Purpose>
-    Parse out packet type and header and body lengths from an RFC4880 packet.
+def parse_packet_header(
+    data, expected_type=None
+):  # pylint: disable=too-many-branches
+    """
+    <Purpose>
+      Parse out packet type and header and body lengths from an RFC4880 packet.
 
-  <Arguments>
-    data:
-            An RFC4880 packet as described in section 4.2 of the rfc.
+    <Arguments>
+      data:
+              An RFC4880 packet as described in section 4.2 of the rfc.
 
-    expected_type: (optional)
-            Used to error out if the packet does not have the expected
-            type. See securesystemslib.gpg.constants.PACKET_TYPE_* for
-            available types.
+      expected_type: (optional)
+              Used to error out if the packet does not have the expected
+              type. See securesystemslib.gpg.constants.PACKET_TYPE_* for
+              available types.
 
-  <Exceptions>
-    securesystemslib.gpg.exceptions.PacketParsingError
-            If the new format packet length encodes a partial body length
-            If the old format packet length encodes an indeterminate length
-            If header or body length could not be determined
-            If the expected_type was passed and does not match the packet type
+    <Exceptions>
+      securesystemslib.gpg.exceptions.PacketParsingError
+              If the new format packet length encodes a partial body length
+              If the old format packet length encodes an indeterminate length
+              If header or body length could not be determined
+              If the expected_type was passed and does not match the packet type
 
-    IndexError
-            If the passed data is incomplete
+      IndexError
+              If the passed data is incomplete
 
-  <Side Effects>
-    None.
+    <Side Effects>
+      None.
 
-  <Returns>
-    A tuple of packet type, header length, body length and packet length.
-    (see  RFC4880 4.3. for the list of available packet types)
+    <Returns>
+      A tuple of packet type, header length, body length and packet length.
+      (see  RFC4880 4.3. for the list of available packet types)
 
-  """
-  data = bytearray(data)
-  header_len = None
-  body_len = None
+    """
+    data = bytearray(data)
+    header_len = None
+    body_len = None
 
-  # If Bit 6 of 1st octet is set we parse a New Format Packet Length, and
-  # an Old Format Packet Lengths otherwise
-  if data[0] & 0b01000000:
-    # In new format packet lengths the packet type is encoded in Bits 5-0 of
-    # the 1st octet of the packet
-    packet_type = data[0] & 0b00111111
+    # If Bit 6 of 1st octet is set we parse a New Format Packet Length, and
+    # an Old Format Packet Lengths otherwise
+    if data[0] & 0b01000000:
+        # In new format packet lengths the packet type is encoded in Bits 5-0 of
+        # the 1st octet of the packet
+        packet_type = data[0] & 0b00111111
 
-    # The rest of the packet header is the body length header, which may
-    # consist of one, two or five octets. To disambiguate the RFC, the first
-    # octet of the body length header is the second octet of the packet.
-    if data[1] < 192:
-      header_len = 2
-      body_len = data[1]
+        # The rest of the packet header is the body length header, which may
+        # consist of one, two or five octets. To disambiguate the RFC, the first
+        # octet of the body length header is the second octet of the packet.
+        if data[1] < 192:
+            header_len = 2
+            body_len = data[1]
 
-    elif data[1] >= 192 and data[1] <= 223:
-      header_len = 3
-      body_len = (data[1] - 192 << 8) + data[2] + 192
+        elif data[1] >= 192 and data[1] <= 223:
+            header_len = 3
+            body_len = (data[1] - 192 << 8) + data[2] + 192
 
-    elif data[1] >= 224 and data[1] < 255:
-      raise PacketParsingError("New length "
-          "format packets of partial body lengths are not supported")
+        elif data[1] >= 224 and data[1] < 255:
+            raise PacketParsingError(
+                "New length "
+                "format packets of partial body lengths are not supported"
+            )
 
-    elif data[1] == 255:
-      header_len = 6
-      body_len = data[2] << 24 | data[3] << 16 | data[4] << 8 | data[5]
+        elif data[1] == 255:
+            header_len = 6
+            body_len = data[2] << 24 | data[3] << 16 | data[4] << 8 | data[5]
 
-    else: # pragma: no cover
-      # Unreachable: octet must be between 0 and 255
-      raise PacketParsingError("Invalid new length")
+        else:  # pragma: no cover
+            # Unreachable: octet must be between 0 and 255
+            raise PacketParsingError("Invalid new length")
 
-  else:
-    # In old format packet lengths the packet type is encoded in Bits 5-2 of
-    # the 1st octet and the length type in Bits 1-0
-    packet_type = (data[0] & 0b00111100) >> 2
-    length_type = data[0] & 0b00000011
+    else:
+        # In old format packet lengths the packet type is encoded in Bits 5-2 of
+        # the 1st octet and the length type in Bits 1-0
+        packet_type = (data[0] & 0b00111100) >> 2
+        length_type = data[0] & 0b00000011
 
-    # The body length is encoded using one, two, or four octets, starting
-    # with the second octet of the packet
-    if length_type == 0:
-      body_len = data[1]
-      header_len = 2
+        # The body length is encoded using one, two, or four octets, starting
+        # with the second octet of the packet
+        if length_type == 0:
+            body_len = data[1]
+            header_len = 2
 
-    elif length_type == 1:
-      header_len = 3
-      body_len = struct.unpack(">H", data[1:header_len])[0]
+        elif length_type == 1:
+            header_len = 3
+            body_len = struct.unpack(">H", data[1:header_len])[0]
 
-    elif length_type == 2:
-      header_len = 5
-      body_len = struct.unpack(">I", data[1:header_len])[0]
+        elif length_type == 2:
+            header_len = 5
+            body_len = struct.unpack(">I", data[1:header_len])[0]
 
-    elif length_type == 3:
-      raise PacketParsingError("Old length "
-          "format packets of indeterminate length are not supported")
+        elif length_type == 3:
+            raise PacketParsingError(
+                "Old length "
+                "format packets of indeterminate length are not supported"
+            )
 
-    else: # pragma: no cover (unreachable)
-      # Unreachable: bits 1-0 must be one of 0 to 3
-      raise PacketParsingError("Invalid old length")
+        else:  # pragma: no cover (unreachable)
+            # Unreachable: bits 1-0 must be one of 0 to 3
+            raise PacketParsingError("Invalid old length")
 
-  if header_len is None or body_len is None: # pragma: no cover
-    # Unreachable: One of above must have assigned lengths or raised error
-    raise PacketParsingError("Could not determine packet length")
+    if header_len is None or body_len is None:  # pragma: no cover
+        # Unreachable: One of above must have assigned lengths or raised error
+        raise PacketParsingError("Could not determine packet length")
 
-  if expected_type is not None and packet_type != expected_type:
-    raise PacketParsingError("Expected packet "
-        "{}, but got {} instead!".format(expected_type, packet_type))
+    if expected_type is not None and packet_type != expected_type:
+        raise PacketParsingError(
+            "Expected packet "  # pylint: disable=consider-using-f-string
+            "{}, but got {} instead!".format(expected_type, packet_type)
+        )
 
-  return packet_type, header_len, body_len, header_len + body_len
+    return packet_type, header_len, body_len, header_len + body_len
 
 
 def compute_keyid(pubkey_packet_data):
-  """
-  <Purpose>
-    compute a keyid from an RFC4880 public-key buffer
+    """
+    <Purpose>
+      compute a keyid from an RFC4880 public-key buffer
 
-  <Arguments>
-    pubkey_packet_data: the public-key packet buffer
+    <Arguments>
+      pubkey_packet_data: the public-key packet buffer
 
-  <Exceptions>
-    securesystemslib.exceptions.UnsupportedLibraryError if:
-      the cryptography module is unavailable
+    <Exceptions>
+      securesystemslib.exceptions.UnsupportedLibraryError if:
+        the cryptography module is unavailable
 
-  <Side Effects>
-    None
+    <Side Effects>
+      None
 
-  <Returns>
-    The RFC4880-compliant hashed buffer
-  """
-  if not CRYPTO: # pragma: no cover
-    raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
+    <Returns>
+      The RFC4880-compliant hashed buffer
+    """
+    if not CRYPTO:  # pragma: no cover
+        raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
-  hasher = hashing.Hash(hashing.SHA1(), backend=backends.default_backend())
-  hasher.update(b'\x99')
-  hasher.update(struct.pack(">H", len(pubkey_packet_data)))
-  hasher.update(bytes(pubkey_packet_data))
-  return binascii.hexlify(hasher.finalize()).decode("ascii")
+    hasher = hashing.Hash(
+        hashing.SHA1(), backend=backends.default_backend()  # nosec
+    )
+    hasher.update(b"\x99")
+    hasher.update(struct.pack(">H", len(pubkey_packet_data)))
+    hasher.update(bytes(pubkey_packet_data))
+    return binascii.hexlify(hasher.finalize()).decode("ascii")
 
 
 def parse_subpacket_header(data):
-  """ Parse out subpacket header as per RFC4880 5.2.3.1. Signature Subpacket
-  Specification. """
-  # NOTE: Although the RFC does not state it explicitly, the length encoded
-  # in the header must be greater equal 1, as it includes the mandatory
-  # subpacket type octet.
-  # Hence, passed bytearrays like [0] or [255, 0, 0, 0, 0], which encode a
-  # subpacket length 0  are invalid.
-  # The caller has to deal with the resulting IndexError.
-  if data[0] < 192:
-    length_len = 1
-    length = data[0]
+    """Parse out subpacket header as per RFC4880 5.2.3.1. Signature Subpacket
+    Specification."""
+    # NOTE: Although the RFC does not state it explicitly, the length encoded
+    # in the header must be greater equal 1, as it includes the mandatory
+    # subpacket type octet.
+    # Hence, passed bytearrays like [0] or [255, 0, 0, 0, 0], which encode a
+    # subpacket length 0  are invalid.
+    # The caller has to deal with the resulting IndexError.
+    if data[0] < 192:
+        length_len = 1
+        length = data[0]
 
-  elif data[0] >= 192 and data[0] < 255:
-    length_len = 2
-    length = ((data[0] - 192 << 8) + (data[1] + 192))
+    elif data[0] >= 192 and data[0] < 255:
+        length_len = 2
+        length = (data[0] - 192 << 8) + (data[1] + 192)
 
-  elif data[0] == 255:
-    length_len = 5
-    length = struct.unpack(">I", data[1:length_len])[0]
+    elif data[0] == 255:
+        length_len = 5
+        length = struct.unpack(">I", data[1:length_len])[0]
 
-  else: # pragma: no cover (unreachable)
-    raise PacketParsingError("Invalid subpacket header")
+    else:  # pragma: no cover (unreachable)
+        raise PacketParsingError("Invalid subpacket header")
 
-  return data[length_len], length_len + 1, length - 1, length_len + length
+    return data[length_len], length_len + 1, length - 1, length_len + length
+
 
 def parse_subpackets(data):
-  """
-  <Purpose>
-    parse the subpackets fields
+    """
+    <Purpose>
+      parse the subpackets fields
 
-  <Arguments>
-    data: the unparsed subpacketoctets
+    <Arguments>
+      data: the unparsed subpacketoctets
 
-  <Exceptions>
-    IndexErrorif the subpackets octets are incomplete or malformed
+    <Exceptions>
+      IndexErrorif the subpackets octets are incomplete or malformed
 
-  <Side Effects>
-    None
+    <Side Effects>
+      None
 
-  <Returns>
-    A list of tuples with like:
-        [ (packet_type, data),
-          (packet_type, data),
-          ...
-        ]
-  """
-  parsed_subpackets = []
-  position = 0
+    <Returns>
+      A list of tuples with like:
+          [ (packet_type, data),
+            (packet_type, data),
+            ...
+          ]
+    """
+    parsed_subpackets = []
+    position = 0
 
-  while position < len(data):
-    subpacket_type, header_len, _, subpacket_len = \
-        parse_subpacket_header(data[position:])
+    while position < len(data):
+        subpacket_type, header_len, _, subpacket_len = parse_subpacket_header(
+            data[position:]
+        )
 
-    payload = data[position+header_len:position+subpacket_len]
-    parsed_subpackets.append((subpacket_type, payload))
+        payload = data[position + header_len : position + subpacket_len]
+        parsed_subpackets.append((subpacket_type, payload))
 
-    position += subpacket_len
+        position += subpacket_len
 
-  return parsed_subpackets
+    return parsed_subpackets
 
 
 @dataclasses.dataclass(order=True)
 class Version:
-  """A version of GPG."""
+    """A version of GPG."""
 
-  major: int
-  minor: int
-  patch: int
+    major: int
+    minor: int
+    patch: int
 
-  VERSION_RE = re.compile(r'(\d)\.(\d)\.(\d+)')
-  EXAMPLE = '1.3.22'
+    VERSION_RE = re.compile(r"(\d)\.(\d)\.(\d+)")
+    EXAMPLE = "1.3.22"
 
-  @classmethod
-  def from_string(cls, value: str) -> 'Version':
-    """
-    <Purpose>
-      Parses `value` as a `Version`.
+    @classmethod
+    def from_string(cls, value: str) -> "Version":
+        """
+        <Purpose>
+          Parses `value` as a `Version`.
 
-      Expects a version in the format `major.minor.patch`. `major` and `minor`
-      must be one-digit numbers; `patch` can be any integer.
+          Expects a version in the format `major.minor.patch`. `major` and `minor`
+          must be one-digit numbers; `patch` can be any integer.
 
-    <Arguments>
-      value:
-              The version string to parse.
+        <Arguments>
+          value:
+                  The version string to parse.
 
-    <Exceptions>
-      ValueError:
-              If the version string is invalid.
+        <Exceptions>
+          ValueError:
+                  If the version string is invalid.
 
-    <Returns>
-      Version
-    """
-    match = cls.VERSION_RE.fullmatch(value)
-    if not match:
-      raise ValueError(
-        f"Invalid version number '{value}'; "
-        f"expected MAJOR.MINOR.PATCH (e.g., '{cls.EXAMPLE}')"
-      )
-    major, minor, patch = map(int, match.groups())
-    return cls(major, minor, patch)
+        <Returns>
+          Version
+        """
+        match = cls.VERSION_RE.fullmatch(value)
+        if not match:
+            raise ValueError(
+                f"Invalid version number '{value}'; "
+                f"expected MAJOR.MINOR.PATCH (e.g., '{cls.EXAMPLE}')"
+            )
+        major, minor, patch = map(int, match.groups())
+        return cls(major, minor, patch)
 
-  def __str__(self):
-    return f"{self.major}.{self.minor}.{self.patch}"
+    def __str__(self):
+        return f"{self.major}.{self.minor}.{self.patch}"
 
 
 def get_version() -> Version:
-  """
-  <Purpose>
-    Uses `gpg2 --version` to get the version info of the installed gpg2
-    and extracts and returns the version number.
+    """
+    <Purpose>
+      Uses `gpg2 --version` to get the version info of the installed gpg2
+      and extracts and returns the version number.
 
-    The executed base command is defined in constants.gpg_version_command.
+      The executed base command is defined in constants.gpg_version_command.
 
-  <Exceptions>
-    securesystemslib.exceptions.UnsupportedLibraryError:
-            If the gpg command is not available
+    <Exceptions>
+      securesystemslib.exceptions.UnsupportedLibraryError:
+              If the gpg command is not available
 
-  <Side Effects>
-    Executes a command: constants.gpg_version_command.
+    <Side Effects>
+      Executes a command: constants.gpg_version_command.
 
-  <Returns>
-    Version of GPG.
+    <Returns>
+      Version of GPG.
 
-  """
-  if not constants.have_gpg(): # pragma: no cover
-    raise exceptions.UnsupportedLibraryError(constants.NO_GPG_MSG)
+    """
+    if not constants.have_gpg():  # pragma: no cover
+        raise exceptions.UnsupportedLibraryError(constants.NO_GPG_MSG)
 
-  command = constants.gpg_version_command()
-  gpg_process = process.run(command, stdout=process.PIPE,
-      stderr=process.PIPE, universal_newlines=True)
-
-  full_version_info = gpg_process.stdout
-  try:
-    match = Version.VERSION_RE.search(full_version_info)
-    if not match:
-      raise ValueError(
-        f"Couldn't find version number (ex. '{Version.EXAMPLE}') "
-        f"in the output of `{command}`:\n"
-        + full_version_info
+    command = constants.gpg_version_command()
+    gpg_process = process.run(
+        command,
+        stdout=process.PIPE,
+        stderr=process.PIPE,
+        universal_newlines=True,
     )
-    version = Version.from_string(match.group(0))
-  except ValueError as err:
-    raise exceptions.UnsupportedLibraryError(constants.NO_GPG_MSG) from err
 
-  return version
+    full_version_info = gpg_process.stdout
+    try:
+        match = Version.VERSION_RE.search(full_version_info)
+        if not match:
+            raise ValueError(
+                f"Couldn't find version number (ex. '{Version.EXAMPLE}') "
+                f"in the output of `{command}`:\n" + full_version_info
+            )
+        version = Version.from_string(match.group(0))
+    except ValueError as err:
+        raise exceptions.UnsupportedLibraryError(constants.NO_GPG_MSG) from err
+
+    return version
 
 
 def is_version_fully_supported():
-  """
-  <Purpose>
-    Compares the version of installed gpg2 with the minimal fully supported
-    gpg2 version (2.1.0).
+    """
+    <Purpose>
+      Compares the version of installed gpg2 with the minimal fully supported
+      gpg2 version (2.1.0).
 
-  <Returns>
-    True if the version returned by `get_version` is greater-equal
-    constants.FULLY_SUPPORTED_MIN_VERSION, False otherwise.
+    <Returns>
+      True if the version returned by `get_version` is greater-equal
+      constants.FULLY_SUPPORTED_MIN_VERSION, False otherwise.
 
-  """
-  min_version = constants.FULLY_SUPPORTED_MIN_VERSION
-  return get_version() >= Version.from_string(min_version)
+    """
+    min_version = constants.FULLY_SUPPORTED_MIN_VERSION
+    return get_version() >= Version.from_string(min_version)
 
 
 def get_hashing_class(hash_algorithm_id):
-  """
-  <Purpose>
-    Return a pyca/cryptography hashing class reference for the passed RFC4880
-    hash algorithm ID.
+    """
+    <Purpose>
+      Return a pyca/cryptography hashing class reference for the passed RFC4880
+      hash algorithm ID.
 
-  <Arguments>
-    hash_algorithm_id:
-            one of SHA1, SHA256, SHA512 (see securesystemslib.gpg.constants)
+    <Arguments>
+      hash_algorithm_id:
+              one of SHA1, SHA256, SHA512 (see securesystemslib.gpg.constants)
 
-  <Exceptions>
-    ValueError
-            if the passed hash_algorithm_id is not supported.
+    <Exceptions>
+      ValueError
+              if the passed hash_algorithm_id is not supported.
 
-  <Returns>
-    A pyca/cryptography hashing class
+    <Returns>
+      A pyca/cryptography hashing class
 
-  """
-  supported_hashing_algorithms = [constants.SHA1, constants.SHA256,
-      constants.SHA512]
-  corresponding_hashing_classes = [hashing.SHA1, hashing.SHA256,
-      hashing.SHA512]
+    """
+    supported_hashing_algorithms = [
+        constants.SHA1,
+        constants.SHA256,
+        constants.SHA512,
+    ]
+    corresponding_hashing_classes = [
+        hashing.SHA1,
+        hashing.SHA256,
+        hashing.SHA512,
+    ]
 
-  # Map supported hash algorithm ids to corresponding hashing classes
-  hashing_class = dict(zip(supported_hashing_algorithms,
-      corresponding_hashing_classes))
+    # Map supported hash algorithm ids to corresponding hashing classes
+    hashing_class = dict(
+        zip(supported_hashing_algorithms, corresponding_hashing_classes)
+    )
 
-  try:
-    return hashing_class[hash_algorithm_id]
+    try:
+        return hashing_class[hash_algorithm_id]
 
-  except KeyError:
-    raise ValueError("Hash algorithm '{}' not supported, must be one of '{}' "
-        "(see RFC4880 9.4. Hash Algorithms).".format(hash_algorithm_id,
-        supported_hashing_algorithms))
+    except KeyError:
+        raise ValueError(  # pylint: disable=raise-missing-from
+            "Hash algorithm '{}' not supported, must be one of '{}' "  # pylint: disable=consider-using-f-string
+            "(see RFC4880 9.4. Hash Algorithms).".format(
+                hash_algorithm_id, supported_hashing_algorithms
+            )
+        )

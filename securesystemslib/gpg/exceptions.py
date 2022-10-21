@@ -22,32 +22,47 @@ import datetime
 
 
 class PacketParsingError(Exception):
-  pass
+    pass
+
 
 class KeyNotFoundError(Exception):
-  pass
+    pass
+
 
 class PacketVersionNotSupportedError(Exception):
-  pass
+    pass
+
 
 class SignatureAlgorithmNotSupportedError(Exception):
-  pass
+    pass
+
 
 class CommandError(Exception):
-  pass
+    pass
 
-class KeyExpirationError(Exception):
-  def __init__(self, key):
-    super(KeyExpirationError, self).__init__()
-    self.key = key
 
-  def __str__(self):
-    creation_time = datetime.datetime.utcfromtimestamp(
-        self.key["creation_time"])
-    expiration_time = datetime.datetime.utcfromtimestamp(
-        self.key["creation_time"] + self.key["validity_period"])
-    validity_period = expiration_time - creation_time
+class KeyExpirationError(Exception):  # pylint: disable=missing-class-docstring
+    def __init__(self, key):
+        super(  # pylint: disable=super-with-arguments
+            KeyExpirationError, self
+        ).__init__()
+        self.key = key
 
-    return ("GPG key '{}' created on '{:%Y-%m-%d %H:%M} UTC' with validity "
-        "period '{}' expired on '{:%Y-%m-%d %H:%M} UTC'.".format(
-        self.key["keyid"], creation_time, validity_period, expiration_time))
+    def __str__(self):
+        creation_time = datetime.datetime.utcfromtimestamp(
+            self.key["creation_time"]
+        )
+        expiration_time = datetime.datetime.utcfromtimestamp(
+            self.key["creation_time"] + self.key["validity_period"]
+        )
+        validity_period = expiration_time - creation_time
+
+        return (
+            "GPG key '{}' created on '{:%Y-%m-%d %H:%M} UTC' with validity "  # pylint: disable=consider-using-f-string
+            "period '{}' expired on '{:%Y-%m-%d %H:%M} UTC'.".format(
+                self.key["keyid"],
+                creation_time,
+                validity_period,
+                expiration_time,
+            )
+        )
