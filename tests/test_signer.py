@@ -8,9 +8,12 @@ import shutil
 import tempfile
 import unittest
 
-import securesystemslib.formats
 import securesystemslib.keys as KEYS
-from securesystemslib.exceptions import FormatError, UnsupportedAlgorithmError
+from securesystemslib.exceptions import (
+    CryptoError,
+    FormatError,
+    UnsupportedAlgorithmError,
+)
 from securesystemslib.gpg.constants import have_gpg
 from securesystemslib.gpg.functions import export_pubkey
 from securesystemslib.gpg.functions import verify_signature as verify_sig
@@ -18,32 +21,95 @@ from securesystemslib.signer import (
     GPGSignature,
     GPGSigner,
     Signature,
+    Signer,
     SSlibSigner,
 )
 
 
-class TestSSlibSigner(
-    unittest.TestCase
-):  # pylint: disable=missing-class-docstring
+class TestSigner(unittest.TestCase):
+    """Test Signer and SSlibSigner functionality"""
+
     @classmethod
     def setUpClass(cls):
-        cls.rsakey_dict = KEYS.generate_rsa_key()
-        cls.ed25519key_dict = KEYS.generate_ed25519_key()
-        cls.ecdsakey_dict = KEYS.generate_ecdsa_key()
-        cls.sphincskey_dict = KEYS.generate_sphincs_key()
-        cls.DATA_STR = "SOME DATA REQUIRING AUTHENTICITY."
-        cls.DATA = securesystemslib.formats.encode_canonical(
-            cls.DATA_STR
-        ).encode("utf-8")
-
-    def test_sslib_sign(self):
-        dicts = [
-            self.rsakey_dict,
-            self.ecdsakey_dict,
-            self.ed25519key_dict,
-            self.sphincskey_dict,
+        cls.keys = [
+            KEYS.generate_rsa_key(),
+            KEYS.generate_ed25519_key(),
+            KEYS.generate_ecdsa_key(),
+            KEYS.generate_sphincs_key(),
         ]
-        for scheme_dict in dicts:
+        cls.DATA = b"DATA"
+
+        # pylint: disable=consider-using-with
+        cls.testdir = tempfile.TemporaryDirectory()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.testdir.cleanup()
+
+    def test_signer_sign_with_envvar_uri(self):
+        for key in self.keys:
+            # setup
+            pubkey = copy.deepcopy(key)
+            privkey = pubkey["keyval"].pop("private")
+            os.environ["PRIVKEY"] = privkey
+
+            # test signing
+            signer = Signer.from_priv_key_uri("envvar:PRIVKEY", pubkey)
+            sig = signer.sign(self.DATA).to_dict()
+
+            self.assertTrue(KEYS.verify_signature(pubkey, sig, self.DATA))
+            self.assertFalse(KEYS.verify_signature(pubkey, sig, b"NOT DATA"))
+
+    def test_signer_sign_with_file_uri(self):
+        for key in self.keys:
+            # setup
+            pubkey = copy.deepcopy(key)
+            privkey = pubkey["keyval"].pop("private")
+            # let teardownclass handle the file removal
+            with tempfile.NamedTemporaryFile(
+                dir=self.testdir.name, delete=False
+            ) as f:
+                f.write(privkey.encode())
+
+            # test signing
+            signer = Signer.from_priv_key_uri(f"file:{f.name}", pubkey)
+            sig = signer.sign(self.DATA).to_dict()
+
+            self.assertTrue(KEYS.verify_signature(pubkey, sig, self.DATA))
+            self.assertFalse(KEYS.verify_signature(pubkey, sig, b"NOT DATA"))
+
+    def test_signer_sign_with_enc_file_uri(self):
+        for key in self.keys:
+            # setup
+            pubkey = copy.deepcopy(key)
+            pubkey["keyval"].pop("private")
+            privkey = KEYS.encrypt_key(key, "hunter2")
+            # let teardownclass handle the file removal
+            with tempfile.NamedTemporaryFile(
+                dir=self.testdir.name, delete=False
+            ) as f:
+                f.write(privkey.encode())
+
+            # test signing
+            def secrets_handler(secret: str) -> str:
+                return "hunter2" if secret == "passphrase" else "???"
+
+            uri = f"encfile:{f.name}"
+            signer = Signer.from_priv_key_uri(uri, pubkey, secrets_handler)
+            sig = signer.sign(self.DATA).to_dict()
+
+            self.assertTrue(KEYS.verify_signature(pubkey, sig, self.DATA))
+            self.assertFalse(KEYS.verify_signature(pubkey, sig, b"NOT DATA"))
+
+            # test wrong passphrase
+            def fake_handler(_) -> str:
+                return "12345"
+
+            with self.assertRaises(CryptoError):
+                signer = Signer.from_priv_key_uri(uri, pubkey, fake_handler)
+
+    def test_sslib_signer_sign(self):
+        for scheme_dict in self.keys:
             # Test generation of signatures.
             sslib_signer = SSlibSigner(scheme_dict)
             sig_obj = sslib_signer.sign(self.DATA)
