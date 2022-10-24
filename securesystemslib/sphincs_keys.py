@@ -3,8 +3,7 @@
 # http://docs.python.org/2/library/os.html#miscellaneous-functions
 import os
 
-from securesystemslib import exceptions
-from securesystemslib import formats
+from securesystemslib import exceptions, formats
 
 _SPX_AVAIL = True
 NO_SPX_MSG = "spinhcs+ key support requires the pyspx library"
@@ -34,15 +33,15 @@ def generate_public_and_private():
 
 def create_signature(public_key, private_key, data, scheme):
     """Signs data with the private key.
-      Arguments:
-            public_key (bytes): The public key. Not used so far.
-            private_key (bytes): The private key.
-            data (bytes): The data to be signed.
-            scheme (str): The name of the scheme as defined in formats.py.
-      Returns:
-          tuple: Containing the values (signature, scheme).
-      Raises:
-          UnsupportedLibraryError: In case pyspx is not available.
+    Arguments:
+          public_key (bytes): The public key. Not used so far.
+          private_key (bytes): The private key.
+          data (bytes): The data to be signed.
+          scheme (str): The name of the scheme as defined in formats.py.
+    Returns:
+        tuple: Containing the values (signature, scheme).
+    Raises:
+        UnsupportedLibraryError: In case pyspx is not available.
     """
     if not _SPX_AVAIL:
         raise exceptions.UnsupportedLibraryError(NO_SPX_MSG)
@@ -57,15 +56,15 @@ def create_signature(public_key, private_key, data, scheme):
 
 def verify_signature(public_key, scheme, signature, data):
     """Verify a signature using the public key.
-      Arguments:
-            public_key (bytes): The public key used for verification.
-            scheme (str): The name of the scheme as defined in formats.py.
-            signature (bytes): The sphincs+ signature as generated with create_signature.
-            data (bytes): The data that was signed.
-      Returns:
-          bool: True if the signature was valid, False otherwise.
-      Raises:
-          UnsupportedLibraryError: In case pyspx is not available.
+    Arguments:
+          public_key (bytes): The public key used for verification.
+          scheme (str): The name of the scheme as defined in formats.py.
+          signature (bytes): The sphincs+ signature as generated with create_signature.
+          data (bytes): The data that was signed.
+    Returns:
+        bool: True if the signature was valid, False otherwise.
+    Raises:
+        UnsupportedLibraryError: In case pyspx is not available.
     """
     if not _SPX_AVAIL:
         raise exceptions.UnsupportedLibraryError(NO_SPX_MSG)

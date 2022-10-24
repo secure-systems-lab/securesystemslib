@@ -37,7 +37,12 @@ class TestSSlibSigner(
         ).encode("utf-8")
 
     def test_sslib_sign(self):
-        dicts = [self.rsakey_dict, self.ecdsakey_dict, self.ed25519key_dict, self.sphincskey_dict]
+        dicts = [
+            self.rsakey_dict,
+            self.ecdsakey_dict,
+            self.ed25519key_dict,
+            self.sphincskey_dict,
+        ]
         for scheme_dict in dicts:
             # Test generation of signatures.
             sslib_signer = SSlibSigner(scheme_dict)

@@ -210,7 +210,7 @@ KEYTYPE_SCHEMA = SCHEMA.OneOf(
         SCHEMA.String("ed25519"),
         SCHEMA.String("ecdsa"),
         SCHEMA.RegularExpression(r"ecdsa-sha2-nistp(256|384)"),
-        SCHEMA.String('sphincs')
+        SCHEMA.String("sphincs"),
     ]
 )
 
@@ -310,7 +310,7 @@ ECDSASIGNATURE_SCHEMA = SCHEMA.AnyBytes()
 # supported.
 ED25519_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String("ed25519")])
 
-SPHINCS_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String('sphincs-shake-128s')])
+SPHINCS_SIG_SCHEMA = SCHEMA.OneOf([SCHEMA.String("sphincs-shake-128s")])
 
 # An ed25519 key.
 ED25519KEY_SCHEMA = SCHEMA.Object(

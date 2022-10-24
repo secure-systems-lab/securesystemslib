@@ -55,11 +55,11 @@ import logging
 from securesystemslib import (
     ecdsa_keys,
     ed25519_keys,
-    sphincs_keys,
     exceptions,
     formats,
     rsa_keys,
     settings,
+    sphincs_keys,
     util,
 )
 from securesystemslib.hash import digest
@@ -350,24 +350,21 @@ def generate_ed25519_key(scheme="ed25519"):
     return ed25519_key
 
 
-def generate_sphincs_key(scheme='sphincs-shake-128s'):
+def generate_sphincs_key(scheme="sphincs-shake-128s"):
     formats.SPHINCS_SIG_SCHEMA.check_match(scheme)
 
     sphincs_key = {}
-    keytype = 'sphincs'
+    keytype = "sphincs"
     public, private = sphincs_keys.generate_public_and_private()
 
-    key_value = {
-      'public': public.hex(),
-      'private': private.hex()
-    }
+    key_value = {"public": public.hex(), "private": private.hex()}
     keyid = _get_keyid(keytype, scheme, key_value)
 
-    sphincs_key['keytype'] = keytype
-    sphincs_key['scheme'] = scheme
-    sphincs_key['keyid'] = keyid
-    sphincs_key['keyid_hash_algorithms'] = settings.HASH_ALGORITHMS
-    sphincs_key['keyval'] = key_value
+    sphincs_key["keytype"] = keytype
+    sphincs_key["scheme"] = scheme
+    sphincs_key["keyid"] = keyid
+    sphincs_key["keyid_hash_algorithms"] = settings.HASH_ALGORITHMS
+    sphincs_key["keyval"] = key_value
 
     return sphincs_key
 
@@ -719,11 +716,11 @@ def create_signature(key_dict, data):
     # for backwards compatibility with older securesystemslib releases
     elif keytype in ["ecdsa", "ecdsa-sha2-nistp256", "ecdsa-sha2-nistp384"]:
         sig, scheme = ecdsa_keys.create_signature(public, private, data, scheme)
-      
+
     elif keytype == "sphincs":
         sig, scheme = sphincs_keys.create_signature(
             bytes.fromhex(public), bytes.fromhex(private), data, scheme
-          )
+        )
 
     # 'securesystemslib.formats.ANYKEY_SCHEMA' should have detected invalid key
     # types.  This is a defensive check against an invalid key type.
@@ -887,11 +884,12 @@ def verify_signature(
     elif keytype == "sphincs":
         if scheme == "sphincs-shake-128s":
             valid_signature = sphincs_keys.verify_signature(
-              bytes.fromhex(public), scheme, sig, data
+                bytes.fromhex(public), scheme, sig, data
             )
         else:
-            raise exceptions.UnsupportedAlgorithmError('Unsupported'
-              ' signature scheme is specified: ' + repr(scheme))
+            raise exceptions.UnsupportedAlgorithmError(
+                "Unsupported" " signature scheme is specified: " + repr(scheme)
+            )
 
     # 'securesystemslib.formats.ANYKEY_SCHEMA' should have detected invalid key
     # types.  This is a defensive check against an invalid key type.

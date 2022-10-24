@@ -296,7 +296,7 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
             securesystemslib.formats.SIGNATURE_SCHEMA.check_match(
                 sphincs_signature
             ),
-            FORMAT_ERROR_MSG
+            FORMAT_ERROR_MSG,
         )
 
         # Test for invalid signature scheme.
@@ -382,16 +382,16 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
         self.assertTrue(verified, "Incorrect signature.")
 
         # Verify that an invalid sphincs signature scheme is rejected.
-        valid_scheme = self.sphincskey_dict['scheme']
-        self.sphincskey_dict['scheme'] = 'invalid_scheme'
+        valid_scheme = self.sphincskey_dict["scheme"]
+        self.sphincskey_dict["scheme"] = "invalid_scheme"
         self.assertRaises(
             securesystemslib.exceptions.UnsupportedAlgorithmError,
             KEYS.verify_signature,
             self.sphincskey_dict,
-            sphincs_signature, 
-            DATA
+            sphincs_signature,
+            DATA,
         )
-        self.sphincskey_dict['scheme'] = valid_scheme
+        self.sphincskey_dict["scheme"] = valid_scheme
 
         # Verifying the 'ecdsa_signature' of 'DATA'.
         verified = KEYS.verify_signature(
@@ -493,7 +493,9 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
 
         # Verify that sphincs fails if PySPX is not installed
         KEYS.sphincs_keys._SPX_AVAIL = False  # Monkey patch availability
-        with self.assertRaises(securesystemslib.exceptions.UnsupportedLibraryError):
+        with self.assertRaises(
+            securesystemslib.exceptions.UnsupportedLibraryError
+        ):
             KEYS.verify_signature(self.sphincskey_dict, sphincs_signature, DATA)
         KEYS.sphincs_keys._SPX_AVAIL = True
 
