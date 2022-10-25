@@ -237,12 +237,11 @@ class TestPublicInterfaces(
         ):
             securesystemslib.keys.verify_signature(keydict, sig, data)
 
-        SPX_KEY_LEN = 7_856
         keydict["keytype"] = "sphincs"
         keydict["scheme"] = "sphincs-shake-128s"
         sig = {
             "keyid": "f00",
-            "sig": "A" * SPX_KEY_LEN,
+            "sig": "A" * 7_856,
         }
         with self.assertRaises(
             securesystemslib.exceptions.UnsupportedLibraryError

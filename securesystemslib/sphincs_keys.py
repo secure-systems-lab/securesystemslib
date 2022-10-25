@@ -1,3 +1,19 @@
+"""
+<Program Name>
+  sphincs_keys.py
+
+<Author>
+  Ruben Gonzalez <mail@ruben-gonzalez.de>
+
+<Started>
+  Otober 12, 2022.
+
+<Copyright>
+  See LICENSE for licensing information.
+
+<Purpose>
+  The goal of this module is to include SPHINCS+ post-quantum signature support.
+ """
 # 'os' required to generate OS-specific randomness (os.urandom) suitable for
 # cryptographic use.
 # http://docs.python.org/2/library/os.html#miscellaneous-functions
@@ -5,13 +21,13 @@ import os
 
 from securesystemslib import exceptions, formats
 
-_SPX_AVAIL = True
+SPX_AVAIL = True
 NO_SPX_MSG = "spinhcs+ key support requires the pyspx library"
 
 try:
     from pyspx import shake_128s
 except ImportError:
-    _SPX_AVAIL = False
+    SPX_AVAIL = False
 
 _SHAKE_SEED_LEN = 48
 
@@ -24,7 +40,7 @@ def generate_public_and_private():
     Raises:
         UnsupportedLibraryError: In case pyspx is not available.
     """
-    if not _SPX_AVAIL:
+    if not SPX_AVAIL:
         raise exceptions.UnsupportedLibraryError(NO_SPX_MSG)
     seed = os.urandom(_SHAKE_SEED_LEN)
     public, private = shake_128s.generate_keypair(seed)
@@ -43,7 +59,7 @@ def create_signature(public_key, private_key, data, scheme):
     Raises:
         UnsupportedLibraryError: In case pyspx is not available.
     """
-    if not _SPX_AVAIL:
+    if not SPX_AVAIL:
         raise exceptions.UnsupportedLibraryError(NO_SPX_MSG)
     formats.SPHINCSPUBLIC_SCHEMA.check_match(public_key)
     formats.SPHINCSPRIVATE_SCHEMA.check_match(private_key)
@@ -66,7 +82,7 @@ def verify_signature(public_key, scheme, signature, data):
     Raises:
         UnsupportedLibraryError: In case pyspx is not available.
     """
-    if not _SPX_AVAIL:
+    if not SPX_AVAIL:
         raise exceptions.UnsupportedLibraryError(NO_SPX_MSG)
     formats.SPHINCSPUBLIC_SCHEMA.check_match(public_key)
 

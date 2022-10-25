@@ -492,12 +492,12 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
         self.assertTrue(verified, "Incorrect signature.")
 
         # Verify that sphincs fails if PySPX is not installed
-        KEYS.sphincs_keys._SPX_AVAIL = False  # Monkey patch availability
+        KEYS.sphincs_keys.SPX_AVAIL = False  # Monkey patch availability
         with self.assertRaises(
             securesystemslib.exceptions.UnsupportedLibraryError
         ):
             KEYS.verify_signature(self.sphincskey_dict, sphincs_signature, DATA)
-        KEYS.sphincs_keys._SPX_AVAIL = True
+        KEYS.sphincs_keys.SPX_AVAIL = True
 
         # Verify ecdsa key with HEX encoded keyval instead of PEM encoded keyval
         ecdsa_key = KEYS.generate_ecdsa_key()
