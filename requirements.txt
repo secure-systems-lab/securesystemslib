@@ -33,4 +33,3 @@
 #
 cryptography >= 37.0.0; python_version >= '3'
 pynacl
-colorama

@@ -41,18 +41,6 @@ from securesystemslib.storage import FilesystemBackend
 
 logger = logging.getLogger(__name__)
 
-try:
-    from colorama import Fore
-
-    TERM_RED = Fore.RED
-    TERM_RESET = Fore.RESET
-except ImportError:  # pragma: no cover
-    logger.debug(
-        "Failed to find colorama module, terminal output won't be colored"
-    )
-    TERM_RED = ""
-    TERM_RESET = ""
-
 # Recommended RSA key sizes:
 # https://en.wikipedia.org/wiki/Key_size#Asymmetric_algorithm_key_lengths
 # Based on the above, RSA keys of size 3072 bits are expected to provide
@@ -115,7 +103,7 @@ def _get_key_file_encryption_password(password, prompt, path):
     if prompt:
         password = get_password(
             "enter password to encrypt private key file "
-            "'" + TERM_RED + str(path) + TERM_RESET + "' (leave empty if key "
+            "'" + str(path) + "' (leave empty if key "
             "should not be encrypted): ",
             confirm=True,
         )
@@ -162,7 +150,7 @@ def _get_key_file_decryption_password(password, prompt, path):
     if prompt:
         password = get_password(
             "enter password to decrypt private key file "
-            "'" + TERM_RED + str(path) + TERM_RESET + "' "
+            "'" + str(path) + "' "
             "(leave empty if key not encrypted): ",
             confirm=False,
         )
