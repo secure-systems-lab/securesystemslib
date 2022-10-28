@@ -709,6 +709,38 @@ class TestGPGRSA(unittest.TestCase):
         self.assertTrue(verify_signature(signature, key_data, test_data))
         self.assertFalse(verify_signature(signature, key_data, wrong_data))
 
+    def test_gpg_verify_with_deprecated_json_key_name(self):
+        """Verify that 'signature' as key name is accepted in verification."""
+        key_data = {
+            "method": "pgp+rsa-pkcsv1.5",
+            "type": "rsa",
+            "hashes": ["pgp+SHA2"],
+            "creation_time": 1519661780,
+            "keyid": "c5a0abe6ec19d0d65f85e2c39be9df5131d924e9",
+            "keyval": {
+                "private": "",
+                "public": {
+                    "e": "010001",
+                    "n": "c152fc1f1535a6d3c1e8c0dece7f0a1d09324466e10e4ea51d5d7223ab125c1743393eebca73ccb1022d44c379fae30ef63b263d0a793882a7332ef06f28a4b9ae777f5d2d8d289167e86c162df1b9a9e127acb26803688556ecb08492d071f06caf88cea95571354349d8ef131eff03b0d259fae30ebf8dac9ab5acd6f26f4770fe2f30fcd0a3c54f03463a3094aa6524e39027a625108f04e12475da248fb3b536df61b0f6e2954739b8828c61171f66f8e176823e1c887e65fa0aec081013b2a50ed60515f7e3b3291ca443e1222b9b625005dba045a7208188fb88d436d473f6340348953e891354c7a5734bf64e6274e196db3074a7ce3607960baacb1b",
+                },
+            },
+        }
+        signature = {
+            "keyid": "c5a0abe6ec19d0d65f85e2c39be9df5131d924e9",
+            "other_headers": "04000108001d162104c5a0abe6ec19d0d65f85e2c39be9df5131d924e905025e56444b",
+            "sig": "bc4490901bd6edfe0ec49e0358c0a7ef37fc229824ca75dd4f163205745c78baaa2ca5cda79be259a5ac8323b4c1a1ee18fab0a8cc90eeafeb3eb1221d4bafb55510f34cf99e7ac121874f3c01152d6d8953c661c3e5147a387fffaee672318ed39c49fa02c80fa806956695f2fdfe0429a61639e7fb544f1531100eb02b7a140ffa284746fa1620e8461e4af5f93594f8aed6d34a33d51b265bae90ea8bedccb7497594003eb46516bddb1778a4fadd02cbb227e1931eeb5ef445fb9745f85cfbebfa169c3ae7d15e2ca75b15dd020877c9a968ff853993a06420d3c3ff158800014f21e558103cd4e7e84cf5e320ebf7c525e0eab9ab22ad4af02c7ad48b5e",
+        }
+
+        # Baseline: verify the signature with "sig" as the key name
+        self.assertTrue(verify_signature(signature, key_data, b"deadbeef"))
+        self.assertFalse(verify_signature(signature, key_data, b"incorrect"))
+
+        # Now use "signature" as key name: Securesystemslib <= 0.25 used this for GPG signatures
+        # See https://github.com/secure-systems-lab/securesystemslib/issues/448
+        signature["signature"] = signature.pop("sig")
+        self.assertTrue(verify_signature(signature, key_data, b"deadbeef"))
+        self.assertFalse(verify_signature(signature, key_data, b"incorrect"))
+
     def test_gpg_sign_and_verify_object(self):
         """Create a signature using a specific key on the keyring"""
 

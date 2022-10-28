@@ -15,6 +15,7 @@
   publicly-usable functions for exporting public-keys, signing data and
   verifying signatures.
 """
+import copy
 import logging
 import time
 
@@ -234,7 +235,12 @@ def verify_signature(signature_object, pubkey_info, content):
         raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
     formats.GPG_PUBKEY_SCHEMA.check_match(pubkey_info)
-    formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
+    formats.GPG_COMPAT_SIGNATURE_SCHEMA.check_match(signature_object)
+
+    if "signature" in signature_object:
+        # backwards compatibility
+        signature_object = copy.deepcopy(signature_object)
+        signature_object["sig"] = signature_object.pop("signature")
 
     handler = SIGNATURE_HANDLERS[pubkey_info["type"]]
     sig_keyid = signature_object["keyid"]
