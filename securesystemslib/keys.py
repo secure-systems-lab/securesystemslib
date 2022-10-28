@@ -314,16 +314,6 @@ def generate_ed25519_key(scheme="ed25519"):
       Conforms to 'securesystemslib.formats.ED25519KEY_SCHEMA'.
     """
 
-    # Are the arguments properly formatted?  If not, raise an
-    # 'securesystemslib.exceptions.FormatError' exceptions.
-    formats.ED25519_SIG_SCHEMA.check_match(scheme)
-
-    # Begin building the Ed25519 key dictionary.
-    ed25519_key = {}
-    keytype = "ed25519"
-    public = None
-    private = None
-
     # Generate the public and private Ed25519 key with the 'pynacl' library.
     # Unlike in the verification of Ed25519 signatures, do not fall back to the
     # optimized, pure python implementation provided by PyCA.  Ed25519 should
@@ -331,15 +321,56 @@ def generate_ed25519_key(scheme="ed25519"):
     # attacks.
     public, private = ed25519_keys.generate_public_and_private()
 
+    return format_ed25519_dict(public, private, scheme=scheme)
+
+
+def format_ed25519_dict(public: bytes, private: bytes, scheme="ed25519"):
+    """
+    <Purpose>
+      Formats a ed25519 private key dict.
+
+    <Arguments>
+      public:
+        Bytes of public key.
+
+      private:
+        Bytes of private key.
+
+      scheme:
+        The signature scheme used by the generated Ed25519 key.
+
+    <Exceptions>
+      None.
+
+    <Side Effects>
+      None.
+
+    <Returns>
+      A dictionary containing the ED25519 keys and other identifying information.
+      Conforms to 'securesystemslib.formats.ED25519KEY_SCHEMA'.
+    """
+
+    assert private is None or len(private) == 32  # nosec assert_used
+    assert len(public) == 32  # nosec assert_used
+
+    # Are the arguments properly formatted?  If not, raise an
+    # 'securesystemslib.exceptions.FormatError' exceptions.
+    formats.ED25519_SIG_SCHEMA.check_match(scheme)
+
+    # Begin building the Ed25519 key dictionary.
+    ed25519_key = {}
+    keytype = "ed25519"
+
     # Generate the keyid of the Ed25519 key.  'key_value' corresponds to the
     # 'keyval' entry of the 'Ed25519KEY_SCHEMA' dictionary.  The private key
     # information is not included in the generation of the 'keyid' identifier.
     key_value = {"public": binascii.hexlify(public).decode(), "private": ""}
     keyid = _get_keyid(keytype, scheme, key_value)
 
-    # Build the 'ed25519_key' dictionary.  Update 'key_value' with the Ed25519
-    # private key prior to adding 'key_value' to 'ed25519_key'.
-    key_value["private"] = binascii.hexlify(private).decode()
+    if private is not None:
+        # Build the 'ed25519_key' dictionary.  Update 'key_value' with the Ed25519
+        # private key prior to adding 'key_value' to 'ed25519_key'.
+        key_value["private"] = binascii.hexlify(private).decode()
 
     ed25519_key["keytype"] = keytype
     ed25519_key["scheme"] = scheme
