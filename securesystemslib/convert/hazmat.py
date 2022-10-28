@@ -23,7 +23,6 @@ from cryptography.hazmat.primitives.serialization import (
     PrivateFormat,
     PublicFormat,
 )
-
 from ..keys import (
     format_ed25519_dict,
     import_ecdsakey_from_pem,
