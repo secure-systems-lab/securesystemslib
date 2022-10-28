@@ -14,12 +14,7 @@ from securesystemslib.exceptions import FormatError, UnsupportedAlgorithmError
 from securesystemslib.gpg.constants import have_gpg
 from securesystemslib.gpg.functions import export_pubkey
 from securesystemslib.gpg.functions import verify_signature as verify_sig
-from securesystemslib.signer import (
-    GPGSignature,
-    GPGSigner,
-    Signature,
-    SSlibSigner,
-)
+from securesystemslib.signer import GPGSigner, Signature, SSlibSigner
 
 
 class TestSSlibSigner(
@@ -159,18 +154,6 @@ class TestGPGRSA(unittest.TestCase):
 
         self.assertTrue(verify_sig(signature_dict, key_data, self.test_data))
         self.assertFalse(verify_sig(signature_dict, key_data, self.wrong_data))
-
-    def test_gpg_serialization(self):
-        """Tests from_dict and to_dict methods of GPGSignature."""
-
-        sig_dict = {
-            "keyid": "f4f90403af58eef6",
-            "sig": "c39f86e70e12e70e11d87eb7e3ab7d3b",
-            "other_headers": "d8f8a89b5d71f07b842a",
-        }
-
-        signature = GPGSignature.from_dict(sig_dict)
-        self.assertEqual(sig_dict, signature.to_dict())
 
 
 # Run the unit tests.

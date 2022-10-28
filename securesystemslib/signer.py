@@ -85,58 +85,6 @@ class Signature:
         }
 
 
-class GPGSignature(Signature):
-    """A container class containing information about a gpg signature.
-
-    Besides the signature, it also contains other meta information
-    needed to uniquely identify the key used to generate the signature.
-
-    Attributes:
-        keyid: HEX string used as a unique identifier of the key.
-        signature: HEX string representing the signature.
-        other_headers: HEX representation of additional GPG headers.
-    """
-
-    def __init__(
-        self,
-        keyid: str,
-        sig: str,
-        other_headers: str,
-    ):
-        super().__init__(keyid, sig)
-        self.other_headers = other_headers
-
-    @classmethod
-    def from_dict(cls, signature_dict: Dict) -> "GPGSignature":
-        """Creates a GPGSignature object from its JSON/dict representation.
-
-        Args:
-            signature_dict: Dict containing valid "keyid", "sig" and
-                "other_fields" fields.
-
-        Raises:
-            KeyError: If any of the "keyid", "sig" or "other_headers" fields
-                are missing from the signature_dict.
-
-        Returns:
-            GPGSignature instance.
-        """
-
-        return cls(
-            signature_dict["keyid"],
-            signature_dict["sig"],
-            signature_dict["other_headers"],
-        )
-
-    def to_dict(self) -> Dict:
-        """Returns the JSON-serializable dictionary representation of self."""
-        return {
-            "keyid": self.keyid,
-            "sig": self.signature,
-            "other_headers": self.other_headers,
-        }
-
-
 class Signer:
     """Signer interface created to support multiple signing implementations."""
 
@@ -231,7 +179,7 @@ class GPGSigner(Signer):
         self.keyid = keyid
         self.homedir = homedir
 
-    def sign(self, payload: bytes) -> GPGSignature:
+    def sign(self, payload: bytes) -> Signature:
         """Signs a given payload by the key assigned to the GPGSigner instance.
 
         Calls the gpg command line utility to sign the passed content with the
@@ -261,8 +209,9 @@ class GPGSigner(Signer):
                 for short keyid.
 
         Returns:
-            Returns a "GPGSignature" class instance.
+            Returns a Signature which has a custom "other_headers" field
+            with additional hex encoded GPG headers.
         """
 
         sig_dict = gpg.create_signature(payload, self.keyid, self.homedir)
-        return GPGSignature(**sig_dict)
+        return Signature.from_dict(sig_dict)
