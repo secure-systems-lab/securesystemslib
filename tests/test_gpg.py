@@ -762,7 +762,7 @@ class TestGPGRSA(unittest.TestCase):
         signature = {
             "keyid": self.expired_key_keyid,
             "other_headers": "deadbeef",
-            "signature": "deadbeef",
+            "sig": "deadbeef",
         }
         content = b"livestock"
         key = export_pubkey(self.expired_key_keyid, homedir=self.gnupg_home)
@@ -952,7 +952,7 @@ class TestGPGEdDSA(unittest.TestCase):
         # Check that the signature is padded upon parsing
         # NOTE: The returned signature is a hex string and thus twice as long
         signature = parse_signature_packet(signature_data)
-        self.assertTrue(len(signature["signature"]) == (ED25519_SIG_LENGTH * 2))
+        self.assertTrue(len(signature["sig"]) == (ED25519_SIG_LENGTH * 2))
 
         # Check that the signature can be successfully verified
         key = export_pubkey(self.default_keyid, homedir=self.gnupg_home)

@@ -416,11 +416,11 @@ GPG_PUBKEY_SCHEMA = SCHEMA.OneOf(
 )
 
 GPG_SIGNATURE_SCHEMA = SCHEMA.Object(
-    object_name="SIGNATURE_SCHEMA",
+    object_name="GPGP_SIGNATURE_SCHEMA",
     keyid=KEYID_SCHEMA,
     short_keyid=SCHEMA.Optional(KEYID_SCHEMA),
     other_headers=HEX_SCHEMA,
-    signature=HEX_SCHEMA,
+    sig=HEX_SCHEMA,
     info=SCHEMA.Optional(SCHEMA.Any()),
 )
 

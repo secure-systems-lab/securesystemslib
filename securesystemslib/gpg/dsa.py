@@ -237,7 +237,7 @@ def verify_signature(signature_object, pubkey_info, content, hash_algorithm_id):
 
     try:
         pubkey_object.verify(
-            binascii.unhexlify(signature_object["signature"]),
+            binascii.unhexlify(signature_object["sig"]),
             digest,
             dsautils.Prehashed(hasher()),
         )

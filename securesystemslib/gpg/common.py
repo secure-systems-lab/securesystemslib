@@ -898,7 +898,7 @@ def parse_signature_packet(  # pylint: disable=too-many-locals,too-many-branches
         "other_headers": binascii.hexlify(data[:other_headers_ptr]).decode(
             "ascii"
         ),
-        "signature": binascii.hexlify(signature).decode("ascii"),
+        "sig": binascii.hexlify(signature).decode("ascii"),
     }
 
     if short_keyid:  # pragma: no branch

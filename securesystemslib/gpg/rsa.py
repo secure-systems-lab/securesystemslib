@@ -199,13 +199,13 @@ def verify_signature(signature_object, pubkey_info, content, hash_algorithm_id):
     # we are skipping this if on the tests because well, how would one test this
     # deterministically.
     pubkey_length = len(pubkey_info["keyval"]["public"]["n"])
-    signature_length = len(signature_object["signature"])
+    signature_length = len(signature_object["sig"])
     if pubkey_length != signature_length:  # pragma: no cover
         zero_pad = "0" * (pubkey_length - signature_length)
         signature_object[
-            "signature"
+            "sig"
         ] = "{}{}".format(  # pylint: disable=consider-using-f-string
-            zero_pad, signature_object["signature"]
+            zero_pad, signature_object["sig"]
         )
 
     digest = gpg_util.hash_object(
@@ -214,7 +214,7 @@ def verify_signature(signature_object, pubkey_info, content, hash_algorithm_id):
 
     try:
         pubkey_object.verify(
-            binascii.unhexlify(signature_object["signature"]),
+            binascii.unhexlify(signature_object["sig"]),
             digest,
             padding.PKCS1v15(),
             utils.Prehashed(hasher()),

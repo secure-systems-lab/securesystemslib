@@ -92,7 +92,7 @@ class TestPublicInterfacesGPG(
                 {
                     "keyid": "c5a0abe6ec19d0d65f85e2c39be9df5131d924e9",
                     "other_headers": "04000108001d162104c5a0abe6ec19d0d65f85e2c39be9df5131d924e905025e56444b",
-                    "signature": "bc4490901bd6edfe0ec49e0358c0a7ef37fc229824ca75dd4f163205745c78baaa2ca5cda79be259a5ac8323b4c1a1ee18fab0a8cc90eeafeb3eb1221d4bafb55510f34cf99e7ac121874f3c01152d6d8953c661c3e5147a387fffaee672318ed39c49fa02c80fa806956695f2fdfe0429a61639e7fb544f1531100eb02b7a140ffa284746fa1620e8461e4af5f93594f8aed6d34a33d51b265bae90ea8bedccb7497594003eb46516bddb1778a4fadd02cbb227e1931eeb5ef445fb9745f85cfbebfa169c3ae7d15e2ca75b15dd020877c9a968ff853993a06420d3c3ff158800014f21e558103cd4e7e84cf5e320ebf7c525e0eab9ab22ad4af02c7ad48b5e",
+                    "sig": "bc4490901bd6edfe0ec49e0358c0a7ef37fc229824ca75dd4f163205745c78baaa2ca5cda79be259a5ac8323b4c1a1ee18fab0a8cc90eeafeb3eb1221d4bafb55510f34cf99e7ac121874f3c01152d6d8953c661c3e5147a387fffaee672318ed39c49fa02c80fa806956695f2fdfe0429a61639e7fb544f1531100eb02b7a140ffa284746fa1620e8461e4af5f93594f8aed6d34a33d51b265bae90ea8bedccb7497594003eb46516bddb1778a4fadd02cbb227e1931eeb5ef445fb9745f85cfbebfa169c3ae7d15e2ca75b15dd020877c9a968ff853993a06420d3c3ff158800014f21e558103cd4e7e84cf5e320ebf7c525e0eab9ab22ad4af02c7ad48b5e",
                 },
             ),
             # DSA
@@ -116,7 +116,7 @@ class TestPublicInterfacesGPG(
                 {
                     "keyid": "c242a830daaf1c2bef604a9ef033a3a3e267b3b1",
                     "other_headers": "04001108001d162104c242a830daaf1c2bef604a9ef033a3a3e267b3b105025e5644d1",
-                    "signature": "3044022009e95f952f64f559852fb6b321173f3cb142a5dbe0c84d709d55026ab945582802203144ee0f4c2cb70fa00ca6942c847208b96811271445ed85c75ebebdb609b174",
+                    "sig": "3044022009e95f952f64f559852fb6b321173f3cb142a5dbe0c84d709d55026ab945582802203144ee0f4c2cb70fa00ca6942c847208b96811271445ed85c75ebebdb609b174",
                 },
             ),
             # EDDSA
@@ -137,7 +137,7 @@ class TestPublicInterfacesGPG(
                 {
                     "keyid": "4e630f84838bf6f7447b830b22692f5fea9e2dd2",
                     "other_headers": "04001608001d1621044e630f84838bf6f7447b830b22692f5fea9e2dd205025e564505",
-                    "signature": "70ba3fe785bccac105b837b6b27cc8d5ddd0159c3f640bbac026b744e0b10839bf4ea53e786074d32f9617389a4fe3356ec1c4a19045c5c02821563786e1d10d",
+                    "sig": "70ba3fe785bccac105b837b6b27cc8d5ddd0159c3f640bbac026b744e0b10839bf4ea53e786074d32f9617389a4fe3356ec1c4a19045c5c02821563786e1d10d",
                 },
             ),
         ]

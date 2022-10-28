@@ -165,7 +165,7 @@ class TestGPGRSA(unittest.TestCase):
 
         sig_dict = {
             "keyid": "f4f90403af58eef6",
-            "signature": "c39f86e70e12e70e11d87eb7e3ab7d3b",
+            "sig": "c39f86e70e12e70e11d87eb7e3ab7d3b",
             "other_headers": "d8f8a89b5d71f07b842a",
         }
 

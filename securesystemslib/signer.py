@@ -100,10 +100,10 @@ class GPGSignature(Signature):
     def __init__(
         self,
         keyid: str,
-        signature: str,
+        sig: str,
         other_headers: str,
     ):
-        super().__init__(keyid, signature)
+        super().__init__(keyid, sig)
         self.other_headers = other_headers
 
     @classmethod
@@ -111,7 +111,7 @@ class GPGSignature(Signature):
         """Creates a GPGSignature object from its JSON/dict representation.
 
         Args:
-            signature_dict: Dict containing valid "keyid", "signature" and
+            signature_dict: Dict containing valid "keyid", "sig" and
                 "other_fields" fields.
 
         Raises:
@@ -124,7 +124,7 @@ class GPGSignature(Signature):
 
         return cls(
             signature_dict["keyid"],
-            signature_dict["signature"],
+            signature_dict["sig"],
             signature_dict["other_headers"],
         )
 
@@ -132,7 +132,7 @@ class GPGSignature(Signature):
         """Returns the JSON-serializable dictionary representation of self."""
         return {
             "keyid": self.keyid,
-            "signature": self.signature,
+            "sig": self.signature,
             "other_headers": self.other_headers,
         }
 
