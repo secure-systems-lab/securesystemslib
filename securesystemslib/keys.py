@@ -355,7 +355,7 @@ def generate_sphincs_key(scheme="sphincs-shake-128s"):
     Arguments:
           scheme (str): Name of the scheme as defined in formats.py.
     Returns:
-        dict: A dictionary containing the ED25519 keys.
+        dict: A dictionary containing the SPHINCS+ keys.
     Raises:
         UnsupportedLibraryError: In case pyspx is not available.
     """
