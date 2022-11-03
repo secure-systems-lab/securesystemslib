@@ -30,13 +30,19 @@ class TestSSlibSigner(
         cls.rsakey_dict = KEYS.generate_rsa_key()
         cls.ed25519key_dict = KEYS.generate_ed25519_key()
         cls.ecdsakey_dict = KEYS.generate_ecdsa_key()
+        cls.sphincskey_dict = KEYS.generate_sphincs_key()
         cls.DATA_STR = "SOME DATA REQUIRING AUTHENTICITY."
         cls.DATA = securesystemslib.formats.encode_canonical(
             cls.DATA_STR
         ).encode("utf-8")
 
     def test_sslib_sign(self):
-        dicts = [self.rsakey_dict, self.ecdsakey_dict, self.ed25519key_dict]
+        dicts = [
+            self.rsakey_dict,
+            self.ecdsakey_dict,
+            self.ed25519key_dict,
+            self.sphincskey_dict,
+        ]
         for scheme_dict in dicts:
             # Test generation of signatures.
             sslib_signer = SSlibSigner(scheme_dict)

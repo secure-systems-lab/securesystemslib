@@ -204,6 +204,13 @@ class TestPublicInterfaces(
         ):
             securesystemslib.keys.create_signature(keydict, data)
 
+        keydict["keytype"] = "sphincs"
+        keydict["scheme"] = "sphincs-shake-128s"
+        with self.assertRaises(
+            securesystemslib.exceptions.UnsupportedLibraryError
+        ):
+            securesystemslib.keys.create_signature(keydict, data)
+
         keydict["keytype"] = "ecdsa"
         keydict["scheme"] = "ecdsa-sha2-nistp256"
         with self.assertRaises(
@@ -225,6 +232,17 @@ class TestPublicInterfaces(
             "sig": "cfbce8e23eef478975a4339036de2335002d57c7b1632dd01e526a3bc52a5b261508ad50b9e25f1b819d61017e7347e912db1af019bf47ee298cc58bbdef9703",
         }
         # NOTE: we don't test ed25519 keys as they can be verified in pure python
+        with self.assertRaises(
+            securesystemslib.exceptions.UnsupportedLibraryError
+        ):
+            securesystemslib.keys.verify_signature(keydict, sig, data)
+
+        keydict["keytype"] = "sphincs"
+        keydict["scheme"] = "sphincs-shake-128s"
+        sig = {
+            "keyid": "f00",
+            "sig": "A" * 7_856,
+        }
         with self.assertRaises(
             securesystemslib.exceptions.UnsupportedLibraryError
         ):

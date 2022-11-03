@@ -48,3 +48,6 @@ notes=TODO
 
 [STRING]
 check-quote-consistency=yes
+
+[TYPECHECK]
+generated-members=shake_128s.*

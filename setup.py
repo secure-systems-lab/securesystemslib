@@ -102,6 +102,7 @@ setup(
     extras_require={
         "crypto": ["cryptography>=37.0.0"],
         "pynacl": ["pynacl>1.2.0"],
+        "PySPX": ["PySPX==0.5.0"],
     },
     packages=find_packages(exclude=["tests", "debian"]),
     scripts=[],
