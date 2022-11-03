@@ -6,14 +6,16 @@ signing implementations and a couple of example implementations.
 """
 
 import abc
-import copy
+import logging
 import os
 from typing import Any, Callable, Dict, Mapping, Optional
 from urllib import parse
 
 import securesystemslib.gpg.functions as gpg
 import securesystemslib.keys as sslib_keys
-from securesystemslib import formats
+from securesystemslib.exceptions import FormatError
+
+logger = logging.getLogger(__name__)
 
 # NOTE This dictionary is initialized here so it's available to Signer, but
 # filled at end of file when Signer subclass definitions are available.
@@ -146,6 +148,136 @@ class GPGSignature(Signature):
         }
 
 
+class Key:
+    """A container class representing the public portion of a key.
+
+    *All parameters named below are not just constructor arguments but also
+    instance attributes.*
+
+    Args:
+        keyid: Key identifier that is unique within the metadata it is used in.
+            Keyid is not verified to be the hash of a specific representation
+            of the key.
+        keytype: Key type, e.g. "rsa", "ed25519" or "ecdsa-sha2-nistp256".
+        scheme: Signature scheme. For example:
+            "rsassa-pss-sha256", "ed25519", and "ecdsa-sha2-nistp256".
+        keyval: Opaque key content
+        unrecognized_fields: Dictionary of all attributes that are not managed
+            by Securesystemslib
+
+    Raises:
+        TypeError: Invalid type for an argument.
+    """
+
+    def __init__(
+        self,
+        keyid: str,
+        keytype: str,
+        scheme: str,
+        keyval: Dict[str, Any],
+        unrecognized_fields: Optional[Dict[str, Any]] = None,
+    ):
+        if not all(
+            isinstance(at, str) for at in [keyid, keytype, scheme]
+        ) or not isinstance(keyval, dict):
+            raise TypeError("Unexpected Key attributes types!")
+        self.keyid = keyid
+        self.keytype = keytype
+        self.scheme = scheme
+        self.keyval = keyval
+        if unrecognized_fields is None:
+            unrecognized_fields = {}
+
+        self.unrecognized_fields = unrecognized_fields
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Key):
+            return False
+
+        return (
+            self.keyid == other.keyid
+            and self.keytype == other.keytype
+            and self.scheme == other.scheme
+            and self.keyval == other.keyval
+            and self.unrecognized_fields == other.unrecognized_fields
+        )
+
+    @classmethod
+    def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "Key":
+        """Creates ``Key`` object from TUF serialization dict.
+
+        Raises:
+            KeyError, TypeError: Invalid arguments.
+        """
+        keytype = key_dict.pop("keytype")
+        scheme = key_dict.pop("scheme")
+        keyval = key_dict.pop("keyval")
+        # All fields left in the key_dict are unrecognized.
+        return cls(keyid, keytype, scheme, keyval, key_dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Returns a dict for TUF serialization."""
+        return {
+            "keytype": self.keytype,
+            "scheme": self.scheme,
+            "keyval": self.keyval,
+            **self.unrecognized_fields,
+        }
+
+    def to_securesystemslib_key(self) -> Dict[str, Any]:
+        """Returns a classic Securesystemslib keydict"""
+        return {
+            "keyid": self.keyid,
+            "keytype": self.keytype,
+            "scheme": self.scheme,
+            "keyval": self.keyval,
+        }
+
+    @classmethod
+    def from_securesystemslib_key(cls, key_dict: Dict[str, Any]) -> "Key":
+        """Creates a ``Key`` object from a classic securesystemlib keydict.
+
+        Args:
+            key_dict: Key in securesystemlib dict representation.
+
+        Raises:
+            ValueError: ``key_dict`` value is not in securesystemslib format.
+        """
+        try:
+            key_meta = sslib_keys.format_keyval_to_metadata(
+                key_dict["keytype"],
+                key_dict["scheme"],
+                key_dict["keyval"],
+            )
+        except FormatError as e:
+            raise ValueError("keydict not in securesystemslib format") from e
+
+        return cls(
+            key_dict["keyid"],
+            key_meta["keytype"],
+            key_meta["scheme"],
+            key_meta["keyval"],
+        )
+
+    def is_verified(self, signature: Signature, data: bytes) -> bool:
+        """Verifies the signature over data.
+
+        Args:
+            signature: Signature object.
+            data: Payload bytes.
+
+        Raises:
+            CryptoError, FormatError, UnsupportedAlgorithmError.
+
+        Returns True if signature is valid for this key for given data.
+        """
+        return sslib_keys.verify_signature(
+            self.to_securesystemslib_key(),
+            signature.to_dict(),
+            data,
+        )
+
+
 # SecretsHandler is a function the calling code can provide to Signer:
 # If Signer needs secrets from user, the function will be called
 SecretsHandler = Callable[[str], str]
@@ -184,7 +316,7 @@ class Signer:
     def new_from_uri(
         cls,
         priv_key_uri: str,
-        public_key: Dict[str, Any],
+        public_key: Key,
         secrets_handler: SecretsHandler,
     ) -> "Signer":
         """Constructor for given private key URI
@@ -195,7 +327,7 @@ class Signer:
 
         Arguments:
             priv_key_uri: URI that identifies the private key and signer
-            public_key: Public key metadata conforming to PUBLIC_KEY_SCHEMA
+            public_key: Key object
             secrets_handler: Optional function that may be called if the
                 signer needs additional secrets (like a PIN or passphrase)
         """
@@ -204,17 +336,16 @@ class Signer:
     @staticmethod
     def from_priv_key_uri(
         priv_key_uri: str,
-        public_key: Dict[str, Any],
+        public_key: Key,
         secrets_handler: Optional[SecretsHandler] = None,
     ):
         """Returns a concrete Signer implementation based on private key URI
 
         Args:
             priv_key_uri: URI that identifies the private key location and signer
-            public_key: Public key metadata conforming to PUBLIC_KEY_SCHEMA
+            public_key: Key object
         """
 
-        formats.PUBLIC_KEY_SCHEMA.check_match(public_key)
         scheme, _, _ = priv_key_uri.partition(":")
         if scheme not in SIGNER_FOR_URI_SCHEME:
             raise ValueError(f"Unsupported private key scheme {scheme}")
@@ -246,8 +377,8 @@ class SSlibSigner(Signer):
 
     Attributes:
         key_dict:
-            A securesystemslib-style key dictionary, which includes a keyid,
-            key type, scheme, and keyval with both private and public parts.
+            A securesystemslib-style key dictionary. This is an implementation
+            detail, not part of public API
     """
 
     ENVVAR_URI_SCHEME = "envvar"
@@ -261,15 +392,14 @@ class SSlibSigner(Signer):
     def new_from_uri(
         cls,
         priv_key_uri: str,
-        public_key: Dict[str, Any],
+        public_key: Key,
         secrets_handler: SecretsHandler,
     ) -> "SSlibSigner":
         """Semi-private Constructor for Signer to call
 
         Arguments:
             priv_key_uri: private key URI described in class doc
-            public_key: securesystemslib-style key dict, which includes keyid,
-                type, scheme, and keyval the public key.
+            public_key: Key object.
 
         Raises:
             OSError: Reading the file failed with "file:" URI
@@ -279,7 +409,6 @@ class SSlibSigner(Signer):
         Returns:
             SSlibSigner for the given private key URI.
         """
-        keydict = copy.deepcopy(public_key)
         uri = parse.urlparse(priv_key_uri)
 
         if uri.scheme == cls.ENVVAR_URI_SCHEME:
@@ -308,6 +437,7 @@ class SSlibSigner(Signer):
                 f"SSlibSigner does not support priv key uri {priv_key_uri}"
             )
 
+        keydict = public_key.to_securesystemslib_key()
         keydict["keyval"]["private"] = private
         return cls(keydict)
 
@@ -355,7 +485,7 @@ class GPGSigner(Signer):
     def new_from_uri(
         cls,
         priv_key_uri: str,
-        public_key: Dict[str, Any],
+        public_key: Key,
         secrets_handler: SecretsHandler,
     ) -> Signer:
         # GPGSigner uses keys and produces signature dicts that are not

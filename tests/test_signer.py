@@ -20,6 +20,7 @@ from securesystemslib.gpg.functions import verify_signature as verify_sig
 from securesystemslib.signer import (
     GPGSignature,
     GPGSigner,
+    Key,
     Signature,
     Signer,
     SSlibSigner,
@@ -49,40 +50,37 @@ class TestSigner(unittest.TestCase):
     def test_signer_sign_with_envvar_uri(self):
         for key in self.keys:
             # setup
-            pubkey = copy.deepcopy(key)
-            privkey = pubkey["keyval"].pop("private")
-            os.environ["PRIVKEY"] = privkey
+            pubkey = Key.from_securesystemslib_key(key)
+            os.environ["PRIVKEY"] = key["keyval"]["private"]
 
             # test signing
             signer = Signer.from_priv_key_uri("envvar:PRIVKEY", pubkey)
-            sig = signer.sign(self.DATA).to_dict()
+            sig = signer.sign(self.DATA)
 
-            self.assertTrue(KEYS.verify_signature(pubkey, sig, self.DATA))
-            self.assertFalse(KEYS.verify_signature(pubkey, sig, b"NOT DATA"))
+            self.assertTrue(pubkey.is_verified(sig, self.DATA))
+            self.assertFalse(pubkey.is_verified(sig, b"NOT DATA"))
 
     def test_signer_sign_with_file_uri(self):
         for key in self.keys:
             # setup
-            pubkey = copy.deepcopy(key)
-            privkey = pubkey["keyval"].pop("private")
+            pubkey = Key.from_securesystemslib_key(key)
             # let teardownclass handle the file removal
             with tempfile.NamedTemporaryFile(
                 dir=self.testdir.name, delete=False
             ) as f:
-                f.write(privkey.encode())
+                f.write(key["keyval"]["private"].encode())
 
             # test signing
             signer = Signer.from_priv_key_uri(f"file:{f.name}", pubkey)
-            sig = signer.sign(self.DATA).to_dict()
+            sig = signer.sign(self.DATA)
 
-            self.assertTrue(KEYS.verify_signature(pubkey, sig, self.DATA))
-            self.assertFalse(KEYS.verify_signature(pubkey, sig, b"NOT DATA"))
+            self.assertTrue(pubkey.is_verified(sig, self.DATA))
+            self.assertFalse(pubkey.is_verified(sig, b"NOT DATA"))
 
     def test_signer_sign_with_enc_file_uri(self):
         for key in self.keys:
             # setup
-            pubkey = copy.deepcopy(key)
-            pubkey["keyval"].pop("private")
+            pubkey = Key.from_securesystemslib_key(key)
             privkey = KEYS.encrypt_key(key, "hunter2")
             # let teardownclass handle the file removal
             with tempfile.NamedTemporaryFile(
@@ -96,10 +94,10 @@ class TestSigner(unittest.TestCase):
 
             uri = f"encfile:{f.name}"
             signer = Signer.from_priv_key_uri(uri, pubkey, secrets_handler)
-            sig = signer.sign(self.DATA).to_dict()
+            sig = signer.sign(self.DATA)
 
-            self.assertTrue(KEYS.verify_signature(pubkey, sig, self.DATA))
-            self.assertFalse(KEYS.verify_signature(pubkey, sig, b"NOT DATA"))
+            self.assertTrue(pubkey.is_verified(sig, self.DATA))
+            self.assertFalse(pubkey.is_verified(sig, b"NOT DATA"))
 
             # test wrong passphrase
             def fake_handler(_) -> str:
