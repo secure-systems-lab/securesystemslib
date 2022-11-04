@@ -12,6 +12,7 @@ jobs:
 
     permissions:
       id-token: 'write' # for OIDC auth for GCP authentication
+      issues: 'write' # for filing an issue on failure
 
     steps:
       - name: Checkout securesystemslib
@@ -36,3 +37,25 @@ jobs:
           service_account: securesystemslib@python-tuf-kms.iam.gserviceaccount.com
 
       - run: tox -e kms
+
+      - name: File an issue on failure
+        if: ${{ failure() }}
+        uses: actions/github-script@d556feaca394842dc55e4734bf3bb9f685482fa0
+        with:
+          script: |
+              const repo = context.repo.owner + "/" + context.repo.repo
+              const issues = await github.rest.search.issuesAndPullRequests({
+                q: "KMS+tests+failed+in:title+state:open+type:issue+repo:" + repo,
+              })
+              if (issues.data.total_count > 0) {
+                console.log("Issue open already, not creating.")
+              } else {
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: "KMS tests failed",
+                  body: "Hey, it seems KMS tests have failed, please see - [workflow run](" +
+                        "https://github.com/" + repo + "/actions/runs/" + context.runId + ")"
+                })
+                console.log("New issue created.")
+              }
