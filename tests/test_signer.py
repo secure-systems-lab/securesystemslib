@@ -20,6 +20,8 @@ from securesystemslib.gpg.functions import export_pubkey
 from securesystemslib.gpg.functions import verify_signature as verify_sig
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
+    SIGNER_FOR_URI_SCHEME,
+    GPGKey,
     GPGSignature,
     GPGSigner,
     Key,
@@ -49,6 +51,31 @@ class TestKey(unittest.TestCase):
             key = Key.from_dict("aa", copy.deepcopy(keydict))
             self.assertIsInstance(key, key_impl)
             self.assertDictEqual(keydict, key.to_dict())
+
+        # test GPG as a special non-default case
+        keydict = {
+            "hashes": ["pgp+SHA2"],
+            "keyid": "7b3abb26b97b655ab9296bd15b0bd02e1c768c43",
+            "keyval": {
+                "private": "",
+                "public": {
+                    "e": "010001",
+                    "n": "e9ad391502ae32bd4fcc41a0f9970f8901ed6ad1c5c128c02add22721cdc22318b64bec9f9467b6949b19fc2e98ce41906125ad45d0b138f1ad6c5da7bde38092d9e3e697ce8b8373b150b57342dd921d634b873f258f5c15559b52921fa4bb7f482ec43a1c85c3385bd520cedbdc16b2524a64aecf32ac5690e6dd4ee0210a975e1b6c5af164ea69ca64533422432070511068730594793885567bb8f7cffacf6eb5ffdc640e898e599579b21b15e497f5c052112c5fdf7974e7056cd1564fe84f207cb946d1efc521e5031299e6275936e6f9464a735bd4edc8e0cde3fe5b1bf6d3bc1ed12993b865d8fcb9d9a2b2ef2df30cb7f0ab4c0dea819ea017ff195",
+                },
+            },
+            "method": "pgp+rsa-pkcsv1.5",
+            "type": "rsa",
+        }
+
+        # Add non-default keytype
+        KEY_FOR_TYPE_AND_SCHEME[(None, None)] = GPGKey
+        key = Key.from_dict(
+            "7b3abb26b97b655ab9296bd15b0bd02e1c768c43", copy.deepcopy(keydict)
+        )
+        del KEY_FOR_TYPE_AND_SCHEME[(None, None)]
+
+        self.assertIsInstance(key, GPGKey)
+        self.assertDictEqual(keydict, key.to_dict())
 
     def test_key_verify_signature(self):
         sigdict = {
@@ -249,9 +276,14 @@ class TestGPGRSA(unittest.TestCase):
         shutil.copytree(gpg_keyring_path, cls.gnupg_home)
         os.chdir(cls.test_dir)
 
+        # add signer that is by default not supported
+        SIGNER_FOR_URI_SCHEME[GPGSigner.GPG_SCHEME] = GPGSigner
+
     @classmethod
     def tearDownClass(cls):
         """Change back to initial working dir and remove temp test directory."""
+
+        del SIGNER_FOR_URI_SCHEME[GPGSigner.GPG_SCHEME]
 
         os.chdir(cls.working_dir)
         shutil.rmtree(cls.test_dir)
@@ -291,6 +323,19 @@ class TestGPGRSA(unittest.TestCase):
 
         signature = GPGSignature.from_dict(sig_dict)
         self.assertEqual(sig_dict, signature.to_dict())
+
+    def test_signer_dispatch_with_gpg_signer(self):
+
+        key_data = export_pubkey(self.signing_subkey_keyid, self.gnupg_home)
+        pubkey = GPGKey.from_dict(key_data["keyid"], key_data)
+
+        signer = Signer.from_priv_key_uri(f"gpg:{self.gnupg_home}", pubkey)
+
+        signature = signer.sign(self.test_data)
+        signature_dict = signature.to_dict()
+
+        self.assertTrue(verify_sig(signature_dict, key_data, self.test_data))
+        self.assertFalse(verify_sig(signature_dict, key_data, self.wrong_data))
 
 
 # Run the unit tests.
