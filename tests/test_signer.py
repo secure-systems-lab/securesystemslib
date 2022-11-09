@@ -13,16 +13,19 @@ from securesystemslib.exceptions import (
     CryptoError,
     FormatError,
     UnsupportedAlgorithmError,
+    UnverifiedSignatureError,
 )
 from securesystemslib.gpg.constants import have_gpg
 from securesystemslib.gpg.functions import export_pubkey
 from securesystemslib.gpg.functions import verify_signature as verify_sig
 from securesystemslib.signer import (
+    KEY_FOR_TYPE_AND_SCHEME,
     GPGSignature,
     GPGSigner,
     Key,
     Signature,
     Signer,
+    SSlibKey,
     SSlibSigner,
 )
 
@@ -31,20 +34,23 @@ class TestKey(unittest.TestCase):
     """Key tests. See many more tests in python-tuf test suite"""
 
     def test_key_from_to_dict(self):
-        keydict = {
-            "keytype": "rsa",
-            "scheme": "rsassa-pss-sha256",
-            "extra": "somedata",
-            "keyval": {
-                "public": "pubkeyval",
-                "foo": "bar",
-            },
-        }
+        """Test to/from_dict for known keytype/scheme combos"""
+        for (keytype, scheme), key_impl in KEY_FOR_TYPE_AND_SCHEME.items():
+            keydict = {
+                "keytype": keytype,
+                "scheme": scheme,
+                "extra": "somedata",
+                "keyval": {
+                    "public": "pubkeyval",
+                    "foo": "bar",
+                },
+            }
 
-        key = Key.from_dict("aa", copy.deepcopy(keydict))
-        self.assertDictEqual(keydict, key.to_dict())
+            key = Key.from_dict("aa", copy.deepcopy(keydict))
+            self.assertIsInstance(key, key_impl)
+            self.assertDictEqual(keydict, key.to_dict())
 
-    def test_key_is_verified(self):
+    def test_key_verify_signature(self):
         sigdict = {
             "keyid": "e33221e745d40465d1efc0215d6db83e5fdb83ea16e1fb894d09d6d96c456f3b",
             "sig": "3fc91f5411a567d6a7f28b7fbb9ba6d60b1e2a1b64d8af0b119650015d86bb5a55e57c0e2c995a9b4a332b8f435703e934c0e6ce69fe6674a8ce68719394a40b",
@@ -62,8 +68,9 @@ class TestKey(unittest.TestCase):
         )
         sig = Signature.from_dict(sigdict)
 
-        self.assertTrue(key.is_verified(sig, b"DATA"))
-        self.assertFalse(key.is_verified(sig, b"NOTDATA"))
+        key.verify_signature(sig, b"DATA")
+        with self.assertRaises(UnverifiedSignatureError):
+            key.verify_signature(sig, b"NOT DATA")
 
 
 class TestSigner(unittest.TestCase):
@@ -89,20 +96,21 @@ class TestSigner(unittest.TestCase):
     def test_signer_sign_with_envvar_uri(self):
         for key in self.keys:
             # setup
-            pubkey = Key.from_securesystemslib_key(key)
+            pubkey = SSlibKey.from_securesystemslib_key(key)
             os.environ["PRIVKEY"] = key["keyval"]["private"]
 
             # test signing
             signer = Signer.from_priv_key_uri("envvar:PRIVKEY", pubkey)
             sig = signer.sign(self.DATA)
 
-            self.assertTrue(pubkey.is_verified(sig, self.DATA))
-            self.assertFalse(pubkey.is_verified(sig, b"NOT DATA"))
+            pubkey.verify_signature(sig, self.DATA)
+            with self.assertRaises(UnverifiedSignatureError):
+                pubkey.verify_signature(sig, b"NOT DATA")
 
     def test_signer_sign_with_file_uri(self):
         for key in self.keys:
             # setup
-            pubkey = Key.from_securesystemslib_key(key)
+            pubkey = SSlibKey.from_securesystemslib_key(key)
             # let teardownclass handle the file removal
             with tempfile.NamedTemporaryFile(
                 dir=self.testdir.name, delete=False
@@ -113,13 +121,14 @@ class TestSigner(unittest.TestCase):
             signer = Signer.from_priv_key_uri(f"file:{f.name}", pubkey)
             sig = signer.sign(self.DATA)
 
-            self.assertTrue(pubkey.is_verified(sig, self.DATA))
-            self.assertFalse(pubkey.is_verified(sig, b"NOT DATA"))
+            pubkey.verify_signature(sig, self.DATA)
+            with self.assertRaises(UnverifiedSignatureError):
+                pubkey.verify_signature(sig, b"NOT DATA")
 
     def test_signer_sign_with_enc_file_uri(self):
         for key in self.keys:
             # setup
-            pubkey = Key.from_securesystemslib_key(key)
+            pubkey = SSlibKey.from_securesystemslib_key(key)
             privkey = KEYS.encrypt_key(key, "hunter2")
             # let teardownclass handle the file removal
             with tempfile.NamedTemporaryFile(
@@ -132,11 +141,13 @@ class TestSigner(unittest.TestCase):
                 return "hunter2" if secret == "passphrase" else "???"
 
             uri = f"encfile:{f.name}"
+
             signer = Signer.from_priv_key_uri(uri, pubkey, secrets_handler)
             sig = signer.sign(self.DATA)
 
-            self.assertTrue(pubkey.is_verified(sig, self.DATA))
-            self.assertFalse(pubkey.is_verified(sig, b"NOT DATA"))
+            pubkey.verify_signature(sig, self.DATA)
+            with self.assertRaises(UnverifiedSignatureError):
+                pubkey.verify_signature(sig, b"NOT DATA")
 
             # test wrong passphrase
             def fake_handler(_) -> str:

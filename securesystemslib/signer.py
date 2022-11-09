@@ -8,19 +8,20 @@ signing implementations and a couple of example implementations.
 import abc
 import logging
 import os
-from typing import Any, Callable, Dict, Mapping, Optional
+from typing import Any, Callable, Dict, Mapping, Optional, Tuple
 from urllib import parse
 
 import securesystemslib.gpg.functions as gpg
 import securesystemslib.keys as sslib_keys
-from securesystemslib.exceptions import FormatError
+from securesystemslib import exceptions
 
 logger = logging.getLogger(__name__)
 
-# NOTE This dictionary is initialized here so it's available to Signer, but
-# filled at end of file when Signer subclass definitions are available.
-# Users can add their own Signer implementations into this dictionary
+# NOTE dicts for Key and Signer dispatch are defined here, but
+# filled at end of file when subclass definitions are available.
+# Users can add their own implementations into these dictionaries
 SIGNER_FOR_URI_SCHEME: Dict[str, "Signer"] = {}
+KEY_FOR_TYPE_AND_SCHEME: Dict[Tuple[str, str], "Key"] = {}
 
 
 class Signature:
@@ -149,7 +150,7 @@ class GPGSignature(Signature):
 
 
 class Key:
-    """A container class representing the public portion of a key.
+    """Abstract class representing the public portion of a key.
 
     *All parameters named below are not just constructor arguments but also
     instance attributes.*
@@ -168,6 +169,8 @@ class Key:
     Raises:
         TypeError: Invalid type for an argument.
     """
+
+    __metaclass__ = abc.ABCMeta
 
     def __init__(
         self,
@@ -203,20 +206,29 @@ class Key:
         )
 
     @classmethod
+    @abc.abstractmethod
     def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "Key":
         """Creates ``Key`` object from TUF serialization dict.
+
+        Key implementations must override this factory constructor.
 
         Raises:
             KeyError, TypeError: Invalid arguments.
         """
-        keytype = key_dict.pop("keytype")
-        scheme = key_dict.pop("scheme")
-        keyval = key_dict.pop("keyval")
-        # All fields left in the key_dict are unrecognized.
-        return cls(keyid, keytype, scheme, keyval, key_dict)
+        keytype = key_dict["keytype"]
+        scheme = key_dict["scheme"]
+
+        if (keytype, scheme) not in KEY_FOR_TYPE_AND_SCHEME:
+            raise ValueError(f"Unsupported public key {keytype}/{scheme}")
+
+        key_impl = KEY_FOR_TYPE_AND_SCHEME[(keytype, scheme)]
+        return key_impl.from_dict(keyid, key_dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        """Returns a dict for TUF serialization."""
+        """Returns a dict for TUF serialization.
+
+        Key implementations may override this method.
+        """
         return {
             "keytype": self.keytype,
             "scheme": self.scheme,
@@ -224,8 +236,50 @@ class Key:
             **self.unrecognized_fields,
         }
 
+    @abc.abstractmethod
+    def verify_signature(self, signature: Signature, data: bytes) -> None:
+        """Verifies the signature over data.
+
+        Args:
+            signature: Signature object.
+            data: Payload bytes.
+
+        Raises:
+            UnverifiedSignatureError: Failed to verify signature, either
+                because it was incorrect or because of a verification problem.
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_payload_hash_algorithm(self) -> str:
+        """Return the payload hash algorithm
+        
+        This is used by Signers where the actual signing system only accepts
+        hashes of payloads: e.g. HSM and KMS
+        
+        """
+        # TODO Do all signing systems support payload prehash? like ed25519?
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def match_keyid(self, keyid: str) -> bool:
+        """Does given keyid match this keys keyid
+
+        This is a workaround for GPSignature design features.
+        """
+        # TODO is this reeally really needed?
+        raise NotImplementedError
+
+
+# TODO verify_signature software errors should have a error of their own?
+# Maybe something deriving from UnverifiedSignature?
+
+
+class SSlibKey(Key):
+    """Key implementation for RSA, Ed25519, ECDSA and Sphincs keys"""
+
     def to_securesystemslib_key(self) -> Dict[str, Any]:
-        """Returns a classic Securesystemslib keydict"""
+        """Internal helper function"""
         return {
             "keyid": self.keyid,
             "keytype": self.keytype,
@@ -234,48 +288,49 @@ class Key:
         }
 
     @classmethod
-    def from_securesystemslib_key(cls, key_dict: Dict[str, Any]) -> "Key":
-        """Creates a ``Key`` object from a classic securesystemlib keydict.
-
-        Args:
-            key_dict: Key in securesystemlib dict representation.
-
-        Raises:
-            ValueError: ``key_dict`` value is not in securesystemslib format.
-        """
-        try:
-            key_meta = sslib_keys.format_keyval_to_metadata(
-                key_dict["keytype"],
-                key_dict["scheme"],
-                key_dict["keyval"],
-            )
-        except FormatError as e:
-            raise ValueError("keydict not in securesystemslib format") from e
-
-        return cls(
+    def from_securesystemslib_key(cls, key_dict: Dict[str, Any]) -> "SSlibKey":
+        """Constructor from classic securesystemslib keydict"""
+        return SSlibKey(
             key_dict["keyid"],
-            key_meta["keytype"],
-            key_meta["scheme"],
-            key_meta["keyval"],
+            key_dict["keytype"],
+            key_dict["scheme"],
+            key_dict["keyval"],
         )
 
-    def is_verified(self, signature: Signature, data: bytes) -> bool:
-        """Verifies the signature over data.
+    @classmethod
+    def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "SSlibKey":
+        keytype = key_dict.pop("keytype")
+        scheme = key_dict.pop("scheme")
+        keyval = key_dict.pop("keyval")
+        # All fields left in the key_dict are unrecognized.
+        return cls(keyid, keytype, scheme, keyval, key_dict)
 
-        Args:
-            signature: Signature object.
-            data: Payload bytes.
+    def verify_signature(self, signature: Signature, data: bytes) -> None:
+        try:
+            if not sslib_keys.verify_signature(
+                self.to_securesystemslib_key(),
+                signature.to_dict(),
+                data,
+            ):
+                raise exceptions.UnverifiedSignatureError(
+                    f"Failed to verify signature by {self.keyid}"
+                )
+        except (
+            exceptions.CryptoError,
+            exceptions.FormatError,
+            exceptions.UnsupportedAlgorithmError,
+        ) as e:
+            # Log unexpected failure, but continue as if there was no signature
+            logger.info("Key %s failed to verify sig: %s", self.keyid, str(e))
+            raise exceptions.UnverifiedSignatureError(
+                f"Unknown failure to verify signature by {self.keyid}"
+            ) from e
 
-        Raises:
-            CryptoError, FormatError, UnsupportedAlgorithmError.
+    def get_payload_hash_algorithm(self) -> str:
+        raise NotImplementedError
 
-        Returns True if signature is valid for this key for given data.
-        """
-        return sslib_keys.verify_signature(
-            self.to_securesystemslib_key(),
-            signature.to_dict(),
-            data,
-        )
+    def match_keyid(self, keyid: str) -> bool:
+        raise NotImplementedError("TODO -- this seems pointless...")
 
 
 # SecretsHandler is a function the calling code can provide to Signer:
@@ -409,6 +464,11 @@ class SSlibSigner(Signer):
         Returns:
             SSlibSigner for the given private key URI.
         """
+        if not isinstance(public_key, SSlibKey):
+            raise ValueError(
+                f"Expected SSlibKey public key for private key {priv_key_uri}"
+            )
+
         uri = parse.urlparse(priv_key_uri)
 
         if uri.scheme == cls.ENVVAR_URI_SCHEME:
@@ -529,9 +589,29 @@ class GPGSigner(Signer):
         return GPGSignature(**sig_dict)
 
 
-# signer implementations are now defined: Add them to the lookup table
+# signer and key implementations are now defined: Add them to the lookup table
 SIGNER_FOR_URI_SCHEME = {
     SSlibSigner.ENVVAR_URI_SCHEME: SSlibSigner,
     SSlibSigner.FILE_URI_SCHEME: SSlibSigner,
     SSlibSigner.ENC_FILE_URI_SCHEME: SSlibSigner,
+}
+KEY_FOR_TYPE_AND_SCHEME = {
+    ("ecdsa", "ecdsa-sha2-nistp256"): SSlibKey,
+    ("ecdsa", "ecdsa-sha2-nistp384"): SSlibKey,
+    ("ecdsa-sha2-nistp256", "ecdsa-sha2-nistp256"): SSlibKey,
+    ("ecdsa-sha2-nistp384", "ecdsa-sha2-nistp384"): SSlibKey,
+    ("ed25519", "ed25519"): SSlibKey,
+    ("rsa", "rsassa-pss-md5"): SSlibKey,
+    ("rsa", "rsassa-pss-sha1"): SSlibKey,
+    ("rsa", "rsassa-pss-sha224"): SSlibKey,
+    ("rsa", "rsassa-pss-sha256"): SSlibKey,
+    ("rsa", "rsassa-pss-sha384"): SSlibKey,
+    ("rsa", "rsassa-pss-sha512"): SSlibKey,
+    ("rsa", "rsa-pkcs1v15-md5"): SSlibKey,
+    ("rsa", "rsa-pkcs1v15-sha1"): SSlibKey,
+    ("rsa", "rsa-pkcs1v15-sha224"): SSlibKey,
+    ("rsa", "rsa-pkcs1v15-sha256"): SSlibKey,
+    ("rsa", "rsa-pkcs1v15-sha384"): SSlibKey,
+    ("rsa", "rsa-pkcs1v15-sha512"): SSlibKey,
+    ("sphincs", "sphincs-shake-128s"): SSlibKey,
 }
