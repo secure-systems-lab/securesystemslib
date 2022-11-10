@@ -6,9 +6,9 @@ signing implementations and a couple of example implementations.
 """
 
 import abc
-from dataclasses import dataclass
 import logging
 import os
+from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple
 from urllib import parse
 
@@ -245,34 +245,12 @@ class Key:
             data: Payload bytes.
 
         Raises:
-            UnverifiedSignatureError: Failed to verify signature, either
-                because it was incorrect or because of a verification problem.
+            UnverifiedSignatureError: Failed to verify signature.
+            VerificationError: Signature verification process failed. If you
+                are only interested in the verify result, just handle
+                UnverifiedSignatureError: it contains VerificationError as well
         """
         raise NotImplementedError
-
-    @abc.abstractmethod
-    def get_payload_hash_algorithm(self) -> str:
-        """Return the payload hash algorithm
-        
-        This is used by Signers where the actual signing system only accepts
-        hashes of payloads: e.g. HSM and KMS
-        
-        """
-        # TODO Do all signing systems support payload prehash? like ed25519?
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def match_keyid(self, keyid: str) -> bool:
-        """Does given keyid match this keys keyid
-
-        This is a workaround for GPSignature design features.
-        """
-        # TODO is this reeally really needed?
-        raise NotImplementedError
-
-
-# TODO verify_signature software errors should have a error of their own?
-# Maybe something deriving from UnverifiedSignature?
 
 
 class SSlibKey(Key):
@@ -320,20 +298,14 @@ class SSlibKey(Key):
             exceptions.FormatError,
             exceptions.UnsupportedAlgorithmError,
         ) as e:
-            # Log unexpected failure, but continue as if there was no signature
             logger.info("Key %s failed to verify sig: %s", self.keyid, str(e))
-            raise exceptions.UnverifiedSignatureError(
+            raise exceptions.VerificationError(
                 f"Unknown failure to verify signature by {self.keyid}"
             ) from e
 
-    def get_payload_hash_algorithm(self) -> str:
-        raise NotImplementedError
-
-    def match_keyid(self, keyid: str) -> bool:
-        raise NotImplementedError("TODO -- this seems pointless...")
 
 @dataclass
-class GPGKey(Key):
+class GPGKey(Key):  # pylint: disable=too-many-instance-attributes
     """Public  GPG key.
 
     Provides a verify method to verify a cryptographic signature with a
@@ -502,18 +474,18 @@ class SSlibSigner(Signer):
     for the supported types, schemes and hash algorithms.
 
     SSlibSigners should be instantiated with Signer.from_priv_key_uri().
-    Two private key URI schemes are supported:
+    These private key URI schemes are supported:
     * envvar:<VAR>:
-        VAR is an environment variable that contains the private key content.
+        VAR is an environment variable with unencrypted private key content.
            envvar:MYPRIVKEY
     * file:<PATH>:
-        PATH is a file path to a file that contains private key content.
+        PATH is a file path to a file with unencrypted private key content.
            file:path/to/file
     * encfile:<PATH>:
         The the private key content in PATH has been encrypted with
-        keys.encryot_key(). Application provided SecretsHandler will be
+        keys.encrypt_key(). Application provided SecretsHandler will be
         called to get the passphrase.
-           file:/path/to/encrypted/file
+           encfile:/path/to/encrypted/file
 
     Attributes:
         key_dict:
@@ -611,14 +583,13 @@ class GPGSigner(Signer):
     Provides a sign method to generate a cryptographic signature with gpg, using
     an RSA, DSA or EdDSA private key identified by the keyid on the instance.
 
-    Args:
-        keyid: The keyid of the gpg signing keyid. If not passed the default
-              key in the keyring is used.
-
-        homedir: Path to the gpg keyring. If not passed the default keyring
-            is used.
+    GPGSigners should be instantiated with Signer.from_priv_key_uri().
+    Two private key URI schemes are supported:
+    * gpg:<HOMEDIR>:
+        HOMEDIR: Optional filesystem path to GPG home directory
 
     """
+
     GPG_SCHEME = "gpg"
 
     def __init__(
@@ -634,8 +605,6 @@ class GPGSigner(Signer):
         public_key: GPGKey,
         secrets_handler: SecretsHandler,
     ) -> Signer:
-        # TODO design the URI structure
-        # TODO public_key is now unused: the signature keyid won't necessarily even match it
         uri = parse.urlparse(priv_key_uri)
         if uri.scheme != cls.GPG_SCHEME:
             raise ValueError(f"Invalid private key uri {priv_key_uri}")
@@ -680,13 +649,14 @@ class GPGSigner(Signer):
         return GPGSignature(**sig_dict)
 
 
-# signer and key implementations are now defined: Add them to the lookup table
+# Supported private key uri schemes and the Signers implementing them
 SIGNER_FOR_URI_SCHEME = {
     SSlibSigner.ENVVAR_URI_SCHEME: SSlibSigner,
     SSlibSigner.FILE_URI_SCHEME: SSlibSigner,
     SSlibSigner.ENC_FILE_URI_SCHEME: SSlibSigner,
     # GPGSigner.GPG_SCHEME: GPGSigner,  # Disabled by default: not compliant with TUF or in-toto specifications
 }
+# Supported key types and schemes, and the Keys implementing them
 KEY_FOR_TYPE_AND_SCHEME = {
     ("ecdsa", "ecdsa-sha2-nistp256"): SSlibKey,
     ("ecdsa", "ecdsa-sha2-nistp384"): SSlibKey,
