@@ -1725,7 +1725,7 @@ def import_ecdsakey_from_private_pem(
     # information is not included in the generation of the 'keyid' identifier.
     # Convert any '\r\n' (e.g., Windows) newline characters to '\n' so that a
     # consistent keyid is generated.
-    key_value = {"public": public.replace("\r\n", "\n"), "private": ""}
+    key_value = {"public": public.replace("\r\n", "\n").strip(), "private": ""}
     keyid = _get_keyid(keytype, scheme, key_value)
 
     # Build the 'ecdsakey_dict' dictionary.  Update 'key_value' with the ECDSA

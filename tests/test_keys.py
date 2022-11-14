@@ -770,6 +770,10 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
             private_ecdsakey, KEYS.import_ecdsakey_from_pem(private_pem + "\n")
         )
 
+        self.assertEqual(
+            public_ecdsakey["keyid"], private_ecdsakey["keyid"]
+        )
+
         # Supplying a 'bad_pem' argument.
         self.assertRaises(
             securesystemslib.exceptions.FormatError,
