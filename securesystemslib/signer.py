@@ -8,8 +8,7 @@ signing implementations and a couple of example implementations.
 import abc
 import logging
 import os
-from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple
+from typing import Any, Callable, Dict, Mapping, Optional, Tuple
 from urllib import parse
 
 import securesystemslib.gpg.functions as gpg
@@ -304,92 +303,6 @@ class SSlibKey(Key):
             ) from e
 
 
-@dataclass
-class GPGKey(Key):  # pylint: disable=too-many-instance-attributes
-    """Public  GPG key.
-
-    Provides a verify method to verify a cryptographic signature with a
-    gpg-style rsa, dsa or ecdsa public key on the instance.
-
-    Note that this implementation is not TUF or in-toto spec compliant
-
-    Attributes:
-        type: Key type, e.g. "rsa", "dsa" or "ecdsa".
-        method: GPG Key Scheme
-        hashes: list of GPG Hash Algorithms, e.g. "pgp+SHA2".
-        keyval: Opaque key content.
-        keyid: Key identifier
-        creation_time: Unix timestamp when GPG key was created.
-        validity_period: Validity of the GPG Keys in days.
-        subkeys: A dictionary containing keyid and GPG subkey.
-    """
-
-    type: str
-    method: str
-    hashes: List[str]
-    keyval: Dict[str, str]
-    keyid: str
-    creation_time: Optional[int] = None
-    validity_period: Optional[int] = None
-    subkeys: Optional[Dict[str, "GPGKey"]] = None
-
-    @classmethod
-    def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "GPGKey":
-        """Creates ``GPGKey`` object from its json/dict representation.
-        Raises:
-            KeyError, TypeError: Invalid arguments.
-        """
-        subkeys_dict = key_dict.get("subkeys")
-
-        gpg_subkeys = None
-        if subkeys_dict:
-            gpg_subkeys = {
-                subkeyid: GPGKey.from_dict(subkeyid, subkey_dict)
-                for (subkeyid, subkey_dict) in subkeys_dict.items()
-            }
-
-        return cls(
-            key_dict["type"],
-            key_dict["method"],
-            key_dict["hashes"],
-            key_dict["keyval"],
-            key_dict["keyid"],
-            key_dict.get("creation_time"),
-            key_dict.get("validity_period"),
-            gpg_subkeys,
-        )
-
-    def to_dict(self):
-        """Returns the dictionary representation of self."""
-
-        key_dict = {
-            "method": self.method,
-            "type": self.type,
-            "hashes": self.hashes,
-            "keyid": self.keyid,
-            "keyval": self.keyval,
-        }
-
-        if self.creation_time:
-            key_dict["creation_time"] = self.creation_time
-        if self.validity_period:
-            key_dict["validity_period"] = self.validity_period
-        if self.subkeys:
-            subkeys_dict = {
-                keyid: subkey.to_dict()
-                for (keyid, subkey) in self.subkeys.items()
-            }
-            key_dict["subkeys"] = subkeys_dict
-
-        return key_dict
-
-    def verify_signature(self, signature: Signature, data: bytes) -> None:
-        if not gpg.verify_signature(signature.to_dict(), self.to_dict(), data):
-            raise exceptions.UnverifiedSignatureError(
-                f"Failed to verify signature by {self.keyid}"
-            )
-
-
 # SecretsHandler is a function the calling code can provide to Signer:
 # If Signer needs secrets from user, the function will be called
 SecretsHandler = Callable[[str], str]
@@ -590,8 +503,6 @@ class GPGSigner(Signer):
 
     """
 
-    GPG_SCHEME = "gpg"
-
     def __init__(
         self, keyid: Optional[str] = None, homedir: Optional[str] = None
     ):
@@ -602,15 +513,10 @@ class GPGSigner(Signer):
     def new_from_uri(
         cls,
         priv_key_uri: str,
-        public_key: GPGKey,
+        public_key: Key,
         secrets_handler: SecretsHandler,
-    ) -> Signer:
-        uri = parse.urlparse(priv_key_uri)
-        if uri.scheme != cls.GPG_SCHEME:
-            raise ValueError(f"Invalid private key uri {priv_key_uri}")
-
-        homedir = uri.path if uri.path else None
-        return GPGSigner(homedir=homedir)
+    ) -> "GPGSigner":
+        raise NotImplementedError("Incompatible with private key URIs")
 
     def sign(self, payload: bytes) -> GPGSignature:
         """Signs a given payload by the key assigned to the GPGSigner instance.
@@ -654,8 +560,8 @@ SIGNER_FOR_URI_SCHEME = {
     SSlibSigner.ENVVAR_URI_SCHEME: SSlibSigner,
     SSlibSigner.FILE_URI_SCHEME: SSlibSigner,
     SSlibSigner.ENC_FILE_URI_SCHEME: SSlibSigner,
-    # GPGSigner.GPG_SCHEME: GPGSigner,  # Disabled by default: not compliant with TUF or in-toto specifications
 }
+
 # Supported key types and schemes, and the Keys implementing them
 KEY_FOR_TYPE_AND_SCHEME = {
     ("ecdsa", "ecdsa-sha2-nistp256"): SSlibKey,
@@ -676,5 +582,4 @@ KEY_FOR_TYPE_AND_SCHEME = {
     ("rsa", "rsa-pkcs1v15-sha384"): SSlibKey,
     ("rsa", "rsa-pkcs1v15-sha512"): SSlibKey,
     ("sphincs", "sphincs-shake-128s"): SSlibKey,
-    # (None, None): GPGKey,  # Disabled by default: not compliant with TUF or in-toto specifications
 }
