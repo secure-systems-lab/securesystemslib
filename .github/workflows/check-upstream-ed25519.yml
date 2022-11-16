@@ -16,10 +16,10 @@ jobs:
       id: test_ed25519
       run: |
         if output=$(securesystemslib/_vendor/test-ed25519-upstream.sh); then
-          echo "::set-output name=result::0"
+          echo "result=0" >> $GITHUB_OUTPUT
         else
-          echo "::set-output name=result::1"
-          echo "::set-output name=output::$output"
+          echo "result=1" >> $GITHUB_OUTPUT
+          echo "output=$output" >> $GITHUB_OUTPUT
         fi
     - name: Create issue (unless one is open already)
       uses: actions/github-script@d556feaca394842dc55e4734bf3bb9f685482fa0
