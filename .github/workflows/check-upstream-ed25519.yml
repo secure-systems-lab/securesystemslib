@@ -5,6 +5,8 @@ on:
     - cron: '0 13 * * *'
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   check-ed25519-upstream:
     name: Open an issue if upstream ed25519 has new commits
