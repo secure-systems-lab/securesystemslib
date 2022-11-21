@@ -7,25 +7,27 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   build:
     strategy:
       fail-fast: false
       # Run tests on each OS/Python combination
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
         # TODO: Add windows-latest when gpg issues are solved
         os: [ubuntu-latest, macos-latest]
         toxenv: [py]
 
         include:
-          - python-version: 3.8
+          - python-version: "3.11"
             os: ubuntu-latest
-            toxenv: purepy38
-          - python-version: 3.8
+            toxenv: purepy311
+          - python-version: "3.11"
             os: ubuntu-latest
-            toxenv: py38-no-gpg
-          - python-version: 3.8
+            toxenv: py311-no-gpg
+          - python-version: "3.8"
             os: ubuntu-latest
             toxenv: lint
 
@@ -33,26 +35,14 @@ jobs:
 
     steps:
       - name: Checkout securesystemslib
-        uses: actions/checkout@v2
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Find pip cache dir
-        id: pip-cache
-        run: echo "::set-output name=dir::$(pip cache dir)"
-
-      - name: pip cache
-        uses: actions/cache@v2
-        with:
-          # Use the os dependent pip cache directory found above
-          path: ${{ steps.pip-cache.outputs.dir }}
-          # A match with 'key' counts as cache hit
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
-          # A match with 'restore-keys' is used as fallback
-          restore-keys: ${{ runner.os }}-pip-
+          cache: "pip"
+          cache-dependency-path: "requirements*.txt"
 
       - name: Install dependencies
         run: |
