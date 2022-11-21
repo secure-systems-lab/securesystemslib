@@ -27,6 +27,9 @@ jobs:
           - python-version: "3.11"
             os: ubuntu-latest
             toxenv: py311-no-gpg
+          - python-version: "3.11"
+            os: ubuntu-latest
+            toxenv: py311-test-gpg-fails
           - python-version: "3.8"
             os: ubuntu-latest
             toxenv: lint
@@ -51,4 +54,3 @@ jobs:
 
       - name: Run tox
         run: tox -e ${{ matrix.toxenv }}
-
