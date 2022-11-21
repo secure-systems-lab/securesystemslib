@@ -54,28 +54,8 @@ class Signer:
 
     @classmethod
     @abc.abstractmethod
-    def new_from_uri(
-        cls,
-        priv_key_uri: str,
-        public_key: Key,
-        secrets_handler: Optional[SecretsHandler],
-    ) -> "Signer":
-        """Constructor implementation for given private key URI
-
-        This is a semi-private method meant to be called by Signer only.
-        Method implementation is required if the Signer subclass is added to
-        SIGNER_FOR_URI_SCHEME.
-
-        Arguments:
-            priv_key_uri: URI that identifies the private key
-            public_key: Key that is the public portion of this private key
-            secrets_handler: Optional function that may be called if the
-                signer needs additional secrets (like a PIN or passphrase)
-        """
-        raise NotImplementedError  # pragma: no cover
-
-    @staticmethod
     def from_priv_key_uri(
+        cls,
         priv_key_uri: str,
         public_key: Key,
         secrets_handler: Optional[SecretsHandler] = None,
@@ -103,7 +83,9 @@ class Signer:
             raise ValueError(f"Unsupported private key scheme {scheme}")
 
         signer = SIGNER_FOR_URI_SCHEME[scheme]
-        return signer.new_from_uri(priv_key_uri, public_key, secrets_handler)
+        return signer.from_priv_key_uri(
+            priv_key_uri, public_key, secrets_handler
+        )
 
 
 class SSlibSigner(Signer):
@@ -136,13 +118,13 @@ class SSlibSigner(Signer):
         self.key_dict = key_dict
 
     @classmethod
-    def new_from_uri(
+    def from_priv_key_uri(
         cls,
         priv_key_uri: str,
         public_key: Key,
-        secrets_handler: Optional[SecretsHandler],
+        secrets_handler: Optional[SecretsHandler] = None,
     ) -> "SSlibSigner":
-        """Semi-private Constructor for Signer to call
+        """Constructor for Signer to call
 
         Arguments:
             priv_key_uri: private key URI described in class doc
@@ -170,9 +152,7 @@ class SSlibSigner(Signer):
         elif uri.scheme == cls.FILE_URI_SCHEME:
             params = dict(parse.parse_qsl(uri.query))
             if "encrypted" not in params:
-                raise ValueError(
-                    f"{uri.scheme} requires 'encrypted' parameter"
-                )
+                raise ValueError(f"{uri.scheme} requires 'encrypted' parameter")
 
             # read private key (may be encrypted or not) from file
             with open(uri.path, "rb") as f:
@@ -180,9 +160,7 @@ class SSlibSigner(Signer):
 
             if params["encrypted"] != "false":
                 if not secrets_handler:
-                    raise ValueError(
-                        f"encrypted private key requires a SecretsHandler"
-                    )
+                    raise ValueError("encrypted key requires a secrets handler")
 
                 secret = secrets_handler("passphrase")
                 decrypted = sslib_keys.decrypt_key(private, secret)
@@ -234,11 +212,11 @@ class GPGSigner(Signer):
         self.homedir = homedir
 
     @classmethod
-    def new_from_uri(
+    def from_priv_key_uri(
         cls,
         priv_key_uri: str,
         public_key: Key,
-        secrets_handler: Optional[SecretsHandler],
+        secrets_handler: Optional[SecretsHandler] = None,
     ) -> "GPGSigner":
         raise NotImplementedError("Incompatible with private key URIs")
 
