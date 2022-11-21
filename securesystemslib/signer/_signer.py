@@ -36,7 +36,6 @@ class Signer:
     currently supported default schemes are:
     * envvar: see SSlibSigner for details
     * file: see SSlibSigner for details
-    * encfile: see SSlibSigner for details
     """
 
     __metaclass__ = abc.ABCMeta
@@ -92,6 +91,11 @@ class Signer:
             secrets_handler: Optional function that may be called if the
                 signer needs additional secrets (like a PIN or passphrase).
                 secrets_handler should return the requested secret string.
+
+        Raises:
+            ValueError: Incorrect arguments
+            Other Signer-specific errors: These could include OSErrors for
+                reading files or network errors for connecting to a KMS.
         """
 
         scheme, _, _ = priv_key_uri.partition(":")
@@ -111,17 +115,13 @@ class SSlibSigner(Signer):
 
     SSlibSigners should be instantiated with Signer.from_priv_key_uri().
     These private key URI schemes are supported:
-    * envvar:<VAR>:
+    * "envvar:<VAR>":
         VAR is an environment variable with unencrypted private key content.
            envvar:MYPRIVKEY
-    * file:<PATH>:
+    * "file:<PATH>?encrypted=[true|false]":
         PATH is a file path to a file with unencrypted private key content.
-           file:path/to/file
-    * encfile:<PATH>:
-        The the private key content in PATH has been encrypted with
-        keys.encrypt_key(). Application provided SecretsHandler will be
-        called to get the passphrase.
-           encfile:/path/to/encrypted/file
+           file:path/to/file?encrypted=true
+           file:/abs/path/to/file?encrypted=false
 
     Attributes:
         key_dict:
@@ -131,7 +131,6 @@ class SSlibSigner(Signer):
 
     ENVVAR_URI_SCHEME = "envvar"
     FILE_URI_SCHEME = "file"
-    ENC_FILE_URI_SCHEME = "encfile"
 
     def __init__(self, key_dict: Dict):
         self.key_dict = key_dict
@@ -158,9 +157,7 @@ class SSlibSigner(Signer):
             SSlibSigner for the given private key URI.
         """
         if not isinstance(public_key, SSlibKey):
-            raise ValueError(
-                f"Expected SSlibKey public key for private key {priv_key_uri}"
-            )
+            raise ValueError(f"Expected SSlibKey for {priv_key_uri}")
 
         uri = parse.urlparse(priv_key_uri)
 
@@ -168,31 +165,31 @@ class SSlibSigner(Signer):
             # read private key from environment variable
             private = os.getenv(uri.path)
             if private is None:
-                raise ValueError(
-                    f"Unset private key variable for {priv_key_uri}"
-                )
+                raise ValueError(f"Unset env var for {priv_key_uri}")
 
         elif uri.scheme == cls.FILE_URI_SCHEME:
-            # read private key from file
+            params = dict(parse.parse_qsl(uri.query))
+            if "encrypted" not in params:
+                raise ValueError(
+                    f"{uri.scheme} requires 'encrypted' parameter"
+                )
+
+            # read private key (may be encrypted or not) from file
             with open(uri.path, "rb") as f:
                 private = f.read().decode()
 
-        elif uri.scheme == cls.ENC_FILE_URI_SCHEME:
-            if not secrets_handler:
-                raise ValueError(
-                    f"{uri.scheme} requires a SecretsHandler"
-                )
-            # read key from file, ask for passphrase, decrypt
-            with open(uri.path, "rb") as f:
-                enc = f.read().decode()
-            secret = secrets_handler("passphrase")
-            decrypted = sslib_keys.decrypt_key(enc, secret)
-            private = decrypted["keyval"]["private"]
+            if params["encrypted"] != "false":
+                if not secrets_handler:
+                    raise ValueError(
+                        f"encrypted private key requires a SecretsHandler"
+                    )
+
+                secret = secrets_handler("passphrase")
+                decrypted = sslib_keys.decrypt_key(private, secret)
+                private = decrypted["keyval"]["private"]
 
         else:
-            raise ValueError(
-                f"SSlibSigner does not support priv key uri {priv_key_uri}"
-            )
+            raise ValueError(f"SSlibSigner does not support {priv_key_uri}")
 
         keydict = public_key.to_securesystemslib_key()
         keydict["keyval"]["private"] = private
@@ -286,5 +283,4 @@ class GPGSigner(Signer):
 SIGNER_FOR_URI_SCHEME = {
     SSlibSigner.ENVVAR_URI_SCHEME: SSlibSigner,
     SSlibSigner.FILE_URI_SCHEME: SSlibSigner,
-    SSlibSigner.ENC_FILE_URI_SCHEME: SSlibSigner,
 }

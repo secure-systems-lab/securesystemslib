@@ -93,6 +93,25 @@ class TestSigner(unittest.TestCase):
     def tearDownClass(cls):
         cls.testdir.cleanup()
 
+    def test_signer_sign_with_incorrect_uri(self):
+        pubkey = SSlibKey.from_securesystemslib_key(self.keys[0])
+        with self.assertRaises(ValueError):
+            # unknown uri
+            Signer.from_priv_key_uri("unknownscheme:x", pubkey)
+
+        with self.assertRaises(ValueError):
+            # env variable not defined
+            Signer.from_priv_key_uri("envvar:NONEXISTENTVAR", pubkey)
+
+        with self.assertRaises(ValueError):
+            # no "encrypted" param
+            Signer.from_priv_key_uri("file:path/to/privkey", pubkey)
+
+        with self.assertRaises(OSError):
+            # file not found
+            uri = "file:nonexistentfile?encrypted=false"
+            Signer.from_priv_key_uri(uri, pubkey)
+
     def test_signer_sign_with_envvar_uri(self):
         for key in self.keys:
             # setup
@@ -117,8 +136,9 @@ class TestSigner(unittest.TestCase):
             ) as f:
                 f.write(key["keyval"]["private"].encode())
 
-            # test signing
-            signer = Signer.from_priv_key_uri(f"file:{f.name}", pubkey)
+            # test signing with unencrypted key
+            uri = f"file:{f.name}?encrypted=false"
+            signer = Signer.from_priv_key_uri(uri, pubkey)
             sig = signer.sign(self.DATA)
 
             pubkey.verify_signature(sig, self.DATA)
@@ -136,11 +156,11 @@ class TestSigner(unittest.TestCase):
             ) as f:
                 f.write(privkey.encode())
 
-            # test signing
+            # test signing with encrypted key
             def secrets_handler(secret: str) -> str:
                 return "hunter2" if secret == "passphrase" else "???"
 
-            uri = f"encfile:{f.name}"
+            uri = f"file:{f.name}?encrypted=true"
 
             signer = Signer.from_priv_key_uri(uri, pubkey, secrets_handler)
             sig = signer.sign(self.DATA)
