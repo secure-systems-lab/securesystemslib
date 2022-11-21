@@ -1,7 +1,7 @@
 """Key interface and the default implementations"""
 import abc
 import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, Type
 
 import securesystemslib.keys as sslib_keys
 from securesystemslib import exceptions
@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 # NOTE dict for Key dispatch defined here, but filled at end of file when
 # subclass definitions are available. Users can add Key implementations.
-KEY_FOR_TYPE_AND_SCHEME: Dict[Tuple[str, str], "Key"] = {}
+
+KEY_FOR_TYPE_AND_SCHEME: Dict[Tuple[str, str], Type] = {}
 
 
 class Key:
@@ -73,9 +74,13 @@ class Key:
     @classmethod
     @abc.abstractmethod
     def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "Key":
-        """Creates ``Key`` object from TUF serialization dict.
+        """Creates ``Key`` object from a serialization dict
 
-        Key implementations must override this factory constructor.
+        Key implementations must override this factory constructor that is used
+        as a deserialization helper.
+
+        Users should call Key.from_dict(): it dispacthes to the actual subclass
+        implementation based on supported keys in KEY_FOR_TYPE_AND_SCHEME.
 
         Raises:
             KeyError, TypeError: Invalid arguments.
@@ -85,13 +90,16 @@ class Key:
         if (keytype, scheme) not in KEY_FOR_TYPE_AND_SCHEME:
             raise ValueError(f"Unsupported public key {keytype}/{scheme}")
 
-        key_impl = KEY_FOR_TYPE_AND_SCHEME[(keytype, scheme)]
+        # NOTE: Explicitly not checking the keytype and scheme types to allow
+        # intoto to use (None,None) to lookup GPGKey, see issue #450
+        key_impl = KEY_FOR_TYPE_AND_SCHEME[(keytype, scheme)]  # type: ignore
         return key_impl.from_dict(keyid, key_dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        """Returns a dict for TUF serialization.
+        """Returns a serialization dict.
 
-        Key implementations may override this method.
+        Key implementations may override this method. This method is a
+        deserialization helper.
         """
         return {
             "keytype": self.keytype,
@@ -102,7 +110,7 @@ class Key:
 
     @abc.abstractmethod
     def verify_signature(self, signature: Signature, data: bytes) -> None:
-        """Verifies the signature over data.
+        """Raises if verification of signature over data fails.
 
         Args:
             signature: Signature object.
@@ -110,7 +118,7 @@ class Key:
 
         Raises:
             UnverifiedSignatureError: Failed to verify signature.
-            VerificationError: Signature verification process failed. If you
+            VerificationError: Signature verification process error. If you
                 are only interested in the verify result, just handle
                 UnverifiedSignatureError: it contains VerificationError as well
         """
@@ -121,7 +129,7 @@ class SSlibKey(Key):
     """Key implementation for RSA, Ed25519, ECDSA and Sphincs keys"""
 
     def to_securesystemslib_key(self) -> Dict[str, Any]:
-        """Internal helper function"""
+        """Internal helper, returns a classic securesystemslib keydict"""
         return {
             "keyid": self.keyid,
             "keytype": self.keytype,

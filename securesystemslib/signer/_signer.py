@@ -3,7 +3,7 @@
 import abc
 import logging
 import os
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, Optional, Type
 from urllib import parse
 
 import securesystemslib.gpg.functions as gpg
@@ -15,11 +15,13 @@ logger = logging.getLogger(__name__)
 
 # NOTE dict for Signer dispatch defined here, but filled at end of file when
 # subclass definitions are available. Users can add Signer implementations.
-SIGNER_FOR_URI_SCHEME: Dict[str, "Signer"] = {}
+SIGNER_FOR_URI_SCHEME: Dict[str, Type] = {}
 
 
 # SecretsHandler is a function the calling code can provide to Signer:
-# If Signer needs secrets from user, the function will be called
+# SecretsHandler will be called if Signer needs additional secrets.
+# The argument is the name of the secret ("PIN", "passphrase", etc).
+# Return value is the secret string.
 SecretsHandler = Callable[[str], str]
 
 
@@ -57,17 +59,17 @@ class Signer:
         cls,
         priv_key_uri: str,
         public_key: Key,
-        secrets_handler: SecretsHandler,
+        secrets_handler: Optional[SecretsHandler],
     ) -> "Signer":
-        """Constructor for given private key URI
+        """Constructor implementation for given private key URI
 
         This is a semi-private method meant to be called by Signer only.
-        Implementation is required if the Signer subclass is in
+        Method implementation is required if the Signer subclass is added to
         SIGNER_FOR_URI_SCHEME.
 
         Arguments:
-            priv_key_uri: URI that identifies the private key and signer
-            public_key: Key object
+            priv_key_uri: URI that identifies the private key
+            public_key: Key that is the public portion of this private key
             secrets_handler: Optional function that may be called if the
                 signer needs additional secrets (like a PIN or passphrase)
         """
@@ -78,12 +80,18 @@ class Signer:
         priv_key_uri: str,
         public_key: Key,
         secrets_handler: Optional[SecretsHandler] = None,
-    ):
-        """Returns a concrete Signer implementation based on private key URI
+    ) -> "Signer":
+        """Factory constructor for a given private key URI
+
+        Returns a specific Signer instance based on the private key URI and the
+        supported uri schemes listed in SIGNER_FOR_URI_SCHEME.
 
         Args:
-            priv_key_uri: URI that identifies the private key location and signer
-            public_key: Key object
+            priv_key_uri: URI that identifies the private key
+            public_key: Key that is the public portion of this private key
+            secrets_handler: Optional function that may be called if the
+                signer needs additional secrets (like a PIN or passphrase).
+                secrets_handler should return the requested secret string.
         """
 
         scheme, _, _ = priv_key_uri.partition(":")
@@ -133,7 +141,7 @@ class SSlibSigner(Signer):
         cls,
         priv_key_uri: str,
         public_key: Key,
-        secrets_handler: SecretsHandler,
+        secrets_handler: Optional[SecretsHandler],
     ) -> "SSlibSigner":
         """Semi-private Constructor for Signer to call
 
@@ -170,6 +178,10 @@ class SSlibSigner(Signer):
                 private = f.read().decode()
 
         elif uri.scheme == cls.ENC_FILE_URI_SCHEME:
+            if not secrets_handler:
+                raise ValueError(
+                    f"{uri.scheme} requires a SecretsHandler"
+                )
             # read key from file, ask for passphrase, decrypt
             with open(uri.path, "rb") as f:
                 enc = f.read().decode()
@@ -229,7 +241,7 @@ class GPGSigner(Signer):
         cls,
         priv_key_uri: str,
         public_key: Key,
-        secrets_handler: SecretsHandler,
+        secrets_handler: Optional[SecretsHandler],
     ) -> "GPGSigner":
         raise NotImplementedError("Incompatible with private key URIs")
 
