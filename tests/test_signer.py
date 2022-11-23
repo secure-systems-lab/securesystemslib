@@ -158,7 +158,9 @@ class TestSigner(unittest.TestCase):
 
             # test signing with encrypted key
             def secrets_handler(secret: str) -> str:
-                return "hunter2" if secret == "passphrase" else "???"
+                if secret != "passphrase":
+                    raise ValueError("Only prepared to return a passphrase")
+                return "hunter2"
 
             uri = f"file:{f.name}?encrypted=true"
 

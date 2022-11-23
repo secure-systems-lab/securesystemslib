@@ -29,6 +29,7 @@ class Signer:
     """Signer interface that supports multiple signing implementations.
 
     Usage example:
+
         signer = Signer.from_priv_key_uri("envvar:MYPRIVKEY", pub_key)
         sig = signer.sign(b"data")
 
@@ -36,6 +37,22 @@ class Signer:
     currently supported default schemes are:
     * envvar: see SSlibSigner for details
     * file: see SSlibSigner for details
+
+    Interactive applications may also define a secrets handler that allows
+    asking for user secrets if they are needed:
+
+        from getpass import getpass
+
+        def sec_handler(secret_name:str) -> str:
+            return getpass(f"Enter {secret_name}: ")
+
+        # user will not be asked for a passphrase for unencrypted key
+        uri = "file:keys/mykey?encrypted=false"
+        signer = Signer.from_priv_key_uri(uri, pub_key, sec_handler)
+
+        # user will be asked for a passphrase for encrypted key
+        uri2 = "file:keys/myenckey?encrypted=true"
+        signer2 = Signer.from_priv_key_uri(uri2, pub_key2, sec_handler)
     """
 
     __metaclass__ = abc.ABCMeta
@@ -101,7 +118,9 @@ class SSlibSigner(Signer):
         VAR is an environment variable with unencrypted private key content.
            envvar:MYPRIVKEY
     * "file:<PATH>?encrypted=[true|false]":
-        PATH is a file path to a file with unencrypted private key content.
+        PATH is a file path to a file with private key content. If
+        encrypted=true, the file is expected to have been created with
+        securesystemslib.keys.encrypt_key().
            file:path/to/file?encrypted=true
            file:/abs/path/to/file?encrypted=false
 
@@ -126,17 +145,10 @@ class SSlibSigner(Signer):
     ) -> "SSlibSigner":
         """Constructor for Signer to call
 
-        Arguments:
-            priv_key_uri: private key URI described in class doc
-            public_key: Key object.
+        Please refer to Signer.from_priv_key_uri() documentation.
 
-        Raises:
+        Additionally raises:
             OSError: Reading the file failed with "file:" URI
-            ValueError: URI is unsupported or environment variable was not set
-                with "envvar:" URIs
-
-        Returns:
-            SSlibSigner for the given private key URI.
         """
         if not isinstance(public_key, SSlibKey):
             raise ValueError(f"Expected SSlibKey for {priv_key_uri}")
@@ -176,17 +188,13 @@ class SSlibSigner(Signer):
     def sign(self, payload: bytes) -> Signature:
         """Signs a given payload by the key assigned to the SSlibSigner instance.
 
-        Arguments:
-            payload: The bytes to be signed.
+        Please see Signer.sign() documentation.
 
-        Raises:
+        Additionally raises:
             securesystemslib.exceptions.FormatError: Key argument is malformed.
             securesystemslib.exceptions.CryptoError, \
                 securesystemslib.exceptions.UnsupportedAlgorithmError:
                 Signing errors.
-
-        Returns:
-            Returns a "Signature" class instance.
         """
         sig_dict = sslib_keys.create_signature(self.key_dict, payload)
         return Signature(**sig_dict)
@@ -197,12 +205,6 @@ class GPGSigner(Signer):
 
     Provides a sign method to generate a cryptographic signature with gpg, using
     an RSA, DSA or EdDSA private key identified by the keyid on the instance.
-
-    GPGSigners should be instantiated with Signer.from_priv_key_uri().
-    Two private key URI schemes are supported:
-    * gpg:<HOMEDIR>:
-        HOMEDIR: Optional filesystem path to GPG home directory
-
     """
 
     def __init__(
