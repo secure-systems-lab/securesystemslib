@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=61.2", "setuptools_scm[toml]>=3.4.3"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
 
 [project]
 name = "securesystemslib"
@@ -53,5 +53,8 @@ include-package-data = true
 [tool.setuptools.packages.find]
 exclude = ["tests"] # debian
 namespaces = false
+
+[tool.hatch.version]
+source = "vcs"
 
 [tool.setuptools_scm]
