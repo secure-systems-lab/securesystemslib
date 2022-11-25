@@ -79,7 +79,7 @@ class Key:
         Key implementations must override this factory constructor that is used
         as a deserialization helper.
 
-        Users should call Key.from_dict(): it dispacthes to the actual subclass
+        Users should call Key.from_dict(): it dispatches to the actual subclass
         implementation based on supported keys in KEY_FOR_TYPE_AND_SCHEME.
 
         Raises:
@@ -95,18 +95,13 @@ class Key:
         key_impl = KEY_FOR_TYPE_AND_SCHEME[(keytype, scheme)]  # type: ignore
         return key_impl.from_dict(keyid, key_dict)
 
+    @abc.abstractmethod
     def to_dict(self) -> Dict[str, Any]:
         """Returns a serialization dict.
 
-        Key implementations may override this method. This method is a
-        deserialization helper.
+        Key implementations must override this serialization helper.
         """
-        return {
-            "keytype": self.keytype,
-            "scheme": self.scheme,
-            "keyval": self.keyval,
-            **self.unrecognized_fields,
-        }
+        raise NotImplementedError
 
     @abc.abstractmethod
     def verify_signature(self, signature: Signature, data: bytes) -> None:
@@ -140,11 +135,12 @@ class SSlibKey(Key):
     @classmethod
     def from_securesystemslib_key(cls, key_dict: Dict[str, Any]) -> "SSlibKey":
         """Constructor from classic securesystemslib keydict"""
+        # ensure possible private keys are not included in keyval
         return SSlibKey(
             key_dict["keyid"],
             key_dict["keytype"],
             key_dict["scheme"],
-            key_dict["keyval"],
+            {"public": key_dict["keyval"]["public"]},
         )
 
     @classmethod
@@ -154,6 +150,14 @@ class SSlibKey(Key):
         keyval = key_dict.pop("keyval")
         # All fields left in the key_dict are unrecognized.
         return cls(keyid, keytype, scheme, keyval, key_dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "keytype": self.keytype,
+            "scheme": self.scheme,
+            "keyval": self.keyval,
+            **self.unrecognized_fields,
+        }
 
     def verify_signature(self, signature: Signature, data: bytes) -> None:
         try:
