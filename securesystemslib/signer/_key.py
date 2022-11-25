@@ -148,6 +148,10 @@ class SSlibKey(Key):
         keytype = key_dict.pop("keytype")
         scheme = key_dict.pop("scheme")
         keyval = key_dict.pop("keyval")
+
+        if "public" not in keyval or not isinstance(keyval["public"], str):
+            raise ValueError(f"public key string required for scheme {scheme}")
+
         # All fields left in the key_dict are unrecognized.
         return cls(keyid, keytype, scheme, keyval, key_dict)
 

@@ -50,6 +50,23 @@ class TestKey(unittest.TestCase):
             self.assertIsInstance(key, key_impl)
             self.assertDictEqual(keydict, key.to_dict())
 
+    def test_sslib_key_from_dict_invalid(self):
+        """Test from_dict for invalid data"""
+        invalid_dicts = [
+            {"scheme": "ed25519", "keyval": {"public": "abc"}},
+            {"keytype": "ed25519", "keyval": {"public": "abc"}},
+            {"keytype": "ed25519", "scheme": "ed25519"},
+            {"keytype": "ed25519", "scheme": "ed25519", "keyval": {"x": "y"}},
+            {
+                "keytype": "ed25519",
+                "scheme": "ed25519",
+                "keyval": {"public": b"abc"},
+            },
+        ]
+        for keydict in invalid_dicts:
+            with self.assertRaises((KeyError, ValueError)):
+                Key.from_dict("aa", keydict)
+
     def test_key_verify_signature(self):
         sigdict = {
             "keyid": "e33221e745d40465d1efc0215d6db83e5fdb83ea16e1fb894d09d6d96c456f3b",
