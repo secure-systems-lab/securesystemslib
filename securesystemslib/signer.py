@@ -5,7 +5,7 @@ signing implementations and a couple of example implementations.
 
 """
 
-import abc
+from abc import ABCMeta, abstractmethod
 from typing import Any, Dict, Mapping, Optional
 
 import securesystemslib.gpg.functions as gpg
@@ -137,12 +137,10 @@ class GPGSignature(Signature):
         }
 
 
-class Signer:
+class Signer(metaclass=ABCMeta):
     """Signer interface created to support multiple signing implementations."""
 
-    __metaclass__ = abc.ABCMeta
-
-    @abc.abstractmethod
+    @abstractmethod
     def sign(self, payload: bytes) -> Signature:
         """Signs a given payload by the key assigned to the Signer instance.
 
