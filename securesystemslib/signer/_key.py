@@ -1,6 +1,6 @@
 """Key interface and the default implementations"""
-import abc
 import logging
+from abc import ABCMeta, abstractmethod
 from typing import Any, Dict, Optional, Tuple, Type
 
 import securesystemslib.keys as sslib_keys
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 KEY_FOR_TYPE_AND_SCHEME: Dict[Tuple[str, str], Type] = {}
 
 
-class Key:
+class Key(metaclass=ABCMeta):
     """Abstract class representing the public portion of a key.
 
     *All parameters named below are not just constructor arguments but also
@@ -36,8 +36,6 @@ class Key:
         TypeError: Invalid type for an argument.
     """
 
-    __metaclass__ = abc.ABCMeta
-
     def __init__(
         self,
         keyid: str,
@@ -54,10 +52,7 @@ class Key:
         self.keytype = keytype
         self.scheme = scheme
         self.keyval = keyval
-        if unrecognized_fields is None:
-            unrecognized_fields = {}
-
-        self.unrecognized_fields = unrecognized_fields
+        self.unrecognized_fields = unrecognized_fields or {}
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Key):
@@ -72,7 +67,7 @@ class Key:
         )
 
     @classmethod
-    @abc.abstractmethod
+    @abstractmethod
     def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "Key":
         """Creates ``Key`` object from a serialization dict
 
@@ -95,7 +90,7 @@ class Key:
         key_impl = KEY_FOR_TYPE_AND_SCHEME[(keytype, scheme)]  # type: ignore
         return key_impl.from_dict(keyid, key_dict)
 
-    @abc.abstractmethod
+    @abstractmethod
     def to_dict(self) -> Dict[str, Any]:
         """Returns a serialization dict.
 
@@ -103,7 +98,7 @@ class Key:
         """
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def verify_signature(self, signature: Signature, data: bytes) -> None:
         """Raises if verification of signature over data fails.
 
