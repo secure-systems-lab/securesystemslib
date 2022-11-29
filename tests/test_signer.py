@@ -7,7 +7,7 @@ import os
 import shutil
 import tempfile
 import unittest
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import securesystemslib.keys as KEYS
 from securesystemslib.exceptions import (
@@ -91,6 +91,73 @@ class TestKey(unittest.TestCase):
         key.verify_signature(sig, b"DATA")
         with self.assertRaises(UnverifiedSignatureError):
             key.verify_signature(sig, b"NOT DATA")
+
+    def test_unsupported_key(self):
+        keydict = {
+            "keytype": "custom",
+            "scheme": "ed25519",
+            "keyval": {
+                "public": "8ae43d22b8e0fbf4a48fa3490d31b4d389114f5dc1039c918f075427f4100759",
+            },
+        }
+        with self.assertRaises(ValueError):
+            Key.from_dict(
+                "e33221e745d40465d1efc0215d6db83e5fdb83ea16e1fb894d09d6d96c456f3b",
+                keydict,
+            )
+
+    def test_custom_key(self):
+        class CustomKey(SSlibKey):
+            """Fake keytype that actually uses ed25519 under the hood"""
+
+            @classmethod
+            def from_dict(
+                cls, keyid: str, key_dict: Dict[str, Any]
+            ) -> "CustomKey":
+                assert key_dict.pop("keytype") == "custom"
+                keytype = "ed25519"
+                scheme = key_dict.pop("scheme")
+                keyval = key_dict.pop("keyval")
+                return cls(keyid, keytype, scheme, keyval, key_dict)
+
+            def to_dict(self) -> Dict[str, Any]:
+                return {
+                    "keytype": "custom",
+                    "scheme": self.scheme,
+                    "keyval": self.keyval,
+                    **self.unrecognized_fields,
+                }
+
+        # register custom key type
+        KEY_FOR_TYPE_AND_SCHEME[("custom", "ed25519")] = CustomKey
+
+        # setup
+        sig = Signature.from_dict(
+            {
+                "keyid": "e33221e745d40465d1efc0215d6db83e5fdb83ea16e1fb894d09d6d96c456f3b",
+                "sig": "3fc91f5411a567d6a7f28b7fbb9ba6d60b1e2a1b64d8af0b119650015d86bb5a55e57c0e2c995a9b4a332b8f435703e934c0e6ce69fe6674a8ce68719394a40b",
+            }
+        )
+
+        keydict = {
+            "keytype": "custom",
+            "scheme": "ed25519",
+            "keyval": {
+                "public": "8ae43d22b8e0fbf4a48fa3490d31b4d389114f5dc1039c918f075427f4100759",
+            },
+        }
+        key = Key.from_dict(
+            "e33221e745d40465d1efc0215d6db83e5fdb83ea16e1fb894d09d6d96c456f3b",
+            keydict,
+        )
+
+        # test that CustomKey is used and that it works
+        self.assertIsInstance(key, CustomKey)
+        key.verify_signature(sig, b"DATA")
+        with self.assertRaises(UnverifiedSignatureError):
+            key.verify_signature(sig, b"NOT DATA")
+
+        del KEY_FOR_TYPE_AND_SCHEME[("custom", "ed25519")]
 
 
 class TestSigner(unittest.TestCase):
