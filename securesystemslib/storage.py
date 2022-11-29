@@ -12,7 +12,8 @@
   See LICENSE for licensing information.
 
 <Purpose>
-  Provides an interface for filesystem interactions, StorageBackendInterface.
+  Provides an interface, `StorageBackendInterface(typing.Protocol)` for storage
+  system interactions.
 """
 
 import errno
@@ -20,23 +21,28 @@ import logging
 import os
 import shutil
 import stat
-from abc import ABCMeta, abstractmethod
+import sys
+
 from contextlib import contextmanager
 from typing import IO, BinaryIO, Iterator, List, Optional
+if sys.version_info < (3, 8):
+    from typing_extensions import Protocol
+else:
+    from typing import Protocol
 
 from securesystemslib import exceptions
 
 logger = logging.getLogger(__name__)
 
 
-class StorageBackendInterface(metaclass=ABCMeta):
+class StorageBackendInterface(Protocol):
     """
     <Purpose>
-    Defines an interface for abstract storage operations which can be implemented
-    for a variety of storage solutions, such as remote and local filesystems.
+    Defines an interface for abstract storage operations which can be
+    implemented for a variety of storage solutions, such as remote and local
+    filesystems.
     """
 
-    @abstractmethod
     @contextmanager
     def get(self, filepath: str) -> Iterator[BinaryIO]:
         """
@@ -62,7 +68,6 @@ class StorageBackendInterface(metaclass=ABCMeta):
         """
         raise NotImplementedError  # pragma: no cover
 
-    @abstractmethod
     def put(
         self, fileobj: IO, filepath: str, restrict: Optional[bool] = False
     ) -> None:
@@ -94,7 +99,7 @@ class StorageBackendInterface(metaclass=ABCMeta):
         """
         raise NotImplementedError  # pragma: no cover
 
-    @abstractmethod
+
     def remove(self, filepath: str) -> None:
         """
         <Purpose>
@@ -112,7 +117,6 @@ class StorageBackendInterface(metaclass=ABCMeta):
         """
         raise NotImplementedError  # pragma: no cover
 
-    @abstractmethod
     def getsize(self, filepath: str) -> int:
         """
         <Purpose>
@@ -131,7 +135,6 @@ class StorageBackendInterface(metaclass=ABCMeta):
         """
         raise NotImplementedError  # pragma: no cover
 
-    @abstractmethod
     def create_folder(self, filepath: str) -> None:
         """
         <Purpose>
@@ -153,7 +156,6 @@ class StorageBackendInterface(metaclass=ABCMeta):
         """
         raise NotImplementedError  # pragma: no cover
 
-    @abstractmethod
     def list_folder(self, filepath: str) -> List[str]:
         """
         <Purpose>
@@ -174,7 +176,7 @@ class StorageBackendInterface(metaclass=ABCMeta):
         raise NotImplementedError  # pragma: no cover
 
 
-class FilesystemBackend(StorageBackendInterface):
+class FilesystemBackend():
     """
     <Purpose>
       A concrete implementation of StorageBackendInterface which interacts with
