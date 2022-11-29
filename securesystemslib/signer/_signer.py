@@ -33,6 +33,11 @@ class Signer:
         signer = Signer.from_priv_key_uri("envvar:MYPRIVKEY", pub_key)
         sig = signer.sign(b"data")
 
+    Note that signer implementations may raise errors (during both
+    Signer.from_priv_key_uri() and Signer.sign()) that are not documented here:
+    examples could include network errors or file read errors. Applications
+    should use generic try-except here if unexpected raises are not an option.
+
     See SIGNER_FOR_URI_SCHEME for supported private key URI schemes. The
     currently supported default schemes are:
     * envvar: see SSlibSigner for details
