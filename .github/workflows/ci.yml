@@ -30,7 +30,7 @@ jobs:
           - python-version: "3.11"
             os: ubuntu-latest
             toxenv: py311-test-gpg-fails
-          - python-version: "3.8"
+          - python-version: "3.11"
             os: ubuntu-latest
             toxenv: lint
 
