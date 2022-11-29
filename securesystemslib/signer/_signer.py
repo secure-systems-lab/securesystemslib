@@ -53,6 +53,17 @@ class Signer:
         # user will be asked for a passphrase for encrypted key
         uri2 = "file:keys/myenckey?encrypted=true"
         signer2 = Signer.from_priv_key_uri(uri2, pub_key2, sec_handler)
+
+    Applications can provide their own Signer and Key implementations:
+
+        from securesystemslib.signer import Signer, SIGNER_FOR_URI_SCHEME
+        from mylib import MySigner
+
+        SIGNER_FOR_URI_SCHEME[MySigner.MY_SCHEME] = MySigner
+
+    This way the application code using signer API continues to work with
+    default signers but now also uses the custom signer when the proper URI is
+    used.
     """
 
     __metaclass__ = abc.ABCMeta
