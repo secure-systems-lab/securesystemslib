@@ -7,6 +7,7 @@ import os
 import shutil
 import tempfile
 import unittest
+from typing import Optional
 
 import securesystemslib.keys as KEYS
 from securesystemslib.exceptions import (
@@ -20,9 +21,11 @@ from securesystemslib.gpg.functions import export_pubkey
 from securesystemslib.gpg.functions import verify_signature as verify_sig
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
+    SIGNER_FOR_URI_SCHEME,
     GPGSignature,
     GPGSigner,
     Key,
+    SecretsHandler,
     Signature,
     Signer,
     SSlibKey,
@@ -226,6 +229,37 @@ class TestSigner(unittest.TestCase):
                 sslib_signer.sign(self.DATA)
 
             scheme_dict["scheme"] = valid_scheme
+
+    def test_custom_signer(self):
+        # setup
+        key = self.keys[0]
+        pubkey = SSlibKey.from_securesystemslib_key(key)
+
+        class CustomSigner(SSlibSigner):
+            """Custom signer with a hard coded key"""
+
+            CUSTOM_SCHEME = "custom"
+
+            @classmethod
+            def from_priv_key_uri(
+                cls,
+                priv_key_uri: str,
+                public_key: Key,
+                secrets_handler: Optional[SecretsHandler] = None,
+            ) -> "CustomSigner":
+                return cls(key)
+
+        # register custom signer
+        SIGNER_FOR_URI_SCHEME[CustomSigner.CUSTOM_SCHEME] = CustomSigner
+
+        # test signing
+        signer = Signer.from_priv_key_uri("custom:foo", pubkey)
+        self.assertIsInstance(signer, CustomSigner)
+        sig = signer.sign(self.DATA)
+
+        pubkey.verify_signature(sig, self.DATA)
+        with self.assertRaises(UnverifiedSignatureError):
+            pubkey.verify_signature(sig, b"NOT DATA")
 
     def test_signature_from_to_dict(self):
         signature_dict = {
