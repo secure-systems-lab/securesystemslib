@@ -52,7 +52,11 @@ class Key(metaclass=ABCMeta):
         self.keytype = keytype
         self.scheme = scheme
         self.keyval = keyval
-        self.unrecognized_fields = unrecognized_fields or {}
+
+        if unrecognized_fields is None:
+            unrecognized_fields = {}
+
+        self.unrecognized_fields = unrecognized_fields
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Key):

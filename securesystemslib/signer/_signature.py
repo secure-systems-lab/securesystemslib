@@ -1,7 +1,7 @@
 """Signature container class"""
 
 import logging
-from typing import Any, Dict, Mapping, Optional
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -27,11 +27,15 @@ class Signature:
         self,
         keyid: str,
         sig: str,
-        unrecognized_fields: Optional[Mapping[str, Any]] = None,
+        unrecognized_fields: Optional[Dict[str, Any]] = None,
     ):
         self.keyid = keyid
         self.signature = sig
-        self.unrecognized_fields: Mapping[str, Any] = unrecognized_fields or {}
+
+        if unrecognized_fields is None:
+            unrecognized_fields = {}
+
+        self.unrecognized_fields = unrecognized_fields
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Signature):
