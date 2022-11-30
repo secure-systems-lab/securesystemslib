@@ -22,9 +22,9 @@ import os
 import shutil
 import stat
 import sys
-
 from contextlib import contextmanager
 from typing import IO, BinaryIO, Iterator, List, Optional
+
 if sys.version_info < (3, 8):
     from typing_extensions import Protocol
 else:
@@ -98,7 +98,6 @@ class StorageBackendInterface(Protocol):
           None
         """
         raise NotImplementedError  # pragma: no cover
-
 
     def remove(self, filepath: str) -> None:
         """
@@ -176,7 +175,7 @@ class StorageBackendInterface(Protocol):
         raise NotImplementedError  # pragma: no cover
 
 
-class FilesystemBackend():
+class FilesystemBackend:
     """
     <Purpose>
       A concrete implementation of StorageBackendInterface which interacts with
