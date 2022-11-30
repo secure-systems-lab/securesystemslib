@@ -47,6 +47,7 @@ crypto = ["cryptography>=37.0.0"]
 gcpkms = ["google-cloud-kms"]
 pynacl = ["pynacl>1.2.0"]
 PySPX = ["PySPX==0.5.0"]
+hsm = ["asn1crypto", "cryptography", "PyKCS11"]
 
 [tool.setuptools]
 include-package-data = true
