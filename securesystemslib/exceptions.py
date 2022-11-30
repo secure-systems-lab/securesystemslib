@@ -138,3 +138,12 @@ class StorageError(Error):
     backend."""
 
     pass  # pylint: disable=unnecessary-pass
+
+
+class UnverifiedSignatureError(Error):
+    """Signature could not be verified: either signature was incorrect or
+    something failed during process (see VerificationError)"""
+
+
+class VerificationError(UnverifiedSignatureError):
+    """Signature could not be verified because something failed in the process"""

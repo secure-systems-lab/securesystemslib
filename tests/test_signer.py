@@ -7,43 +7,266 @@ import os
 import shutil
 import tempfile
 import unittest
+from typing import Any, Dict, Optional
 
-import securesystemslib.formats
 import securesystemslib.keys as KEYS
-from securesystemslib.exceptions import FormatError, UnsupportedAlgorithmError
+from securesystemslib.exceptions import (
+    CryptoError,
+    FormatError,
+    UnsupportedAlgorithmError,
+    UnverifiedSignatureError,
+)
 from securesystemslib.gpg.constants import have_gpg
 from securesystemslib.gpg.functions import export_pubkey
 from securesystemslib.gpg.functions import verify_signature as verify_sig
 from securesystemslib.signer import (
+    KEY_FOR_TYPE_AND_SCHEME,
+    SIGNER_FOR_URI_SCHEME,
     GPGSignature,
     GPGSigner,
+    Key,
+    SecretsHandler,
     Signature,
+    Signer,
+    SSlibKey,
     SSlibSigner,
 )
 
 
-class TestSSlibSigner(
-    unittest.TestCase
-):  # pylint: disable=missing-class-docstring
+class TestKey(unittest.TestCase):
+    """Key tests. See many more tests in python-tuf test suite"""
+
+    def test_key_from_to_dict(self):
+        """Test to/from_dict for known keytype/scheme combos"""
+        for (keytype, scheme), key_impl in KEY_FOR_TYPE_AND_SCHEME.items():
+            keydict = {
+                "keytype": keytype,
+                "scheme": scheme,
+                "extra": "somedata",
+                "keyval": {
+                    "public": "pubkeyval",
+                    "foo": "bar",
+                },
+            }
+
+            key = Key.from_dict("aa", copy.deepcopy(keydict))
+            self.assertIsInstance(key, key_impl)
+            self.assertDictEqual(keydict, key.to_dict())
+
+    def test_sslib_key_from_dict_invalid(self):
+        """Test from_dict for invalid data"""
+        invalid_dicts = [
+            {"scheme": "ed25519", "keyval": {"public": "abc"}},
+            {"keytype": "ed25519", "keyval": {"public": "abc"}},
+            {"keytype": "ed25519", "scheme": "ed25519"},
+            {"keytype": "ed25519", "scheme": "ed25519", "keyval": {"x": "y"}},
+            {
+                "keytype": "ed25519",
+                "scheme": "ed25519",
+                "keyval": {"public": b"abc"},
+            },
+        ]
+        for keydict in invalid_dicts:
+            with self.assertRaises((KeyError, ValueError)):
+                Key.from_dict("aa", keydict)
+
+    def test_key_verify_signature(self):
+        sigdict = {
+            "keyid": "e33221e745d40465d1efc0215d6db83e5fdb83ea16e1fb894d09d6d96c456f3b",
+            "sig": "3fc91f5411a567d6a7f28b7fbb9ba6d60b1e2a1b64d8af0b119650015d86bb5a55e57c0e2c995a9b4a332b8f435703e934c0e6ce69fe6674a8ce68719394a40b",
+        }
+        keydict = {
+            "keytype": "ed25519",
+            "scheme": "ed25519",
+            "keyval": {
+                "public": "8ae43d22b8e0fbf4a48fa3490d31b4d389114f5dc1039c918f075427f4100759",
+            },
+        }
+        key = Key.from_dict(
+            "e33221e745d40465d1efc0215d6db83e5fdb83ea16e1fb894d09d6d96c456f3b",
+            keydict,
+        )
+        sig = Signature.from_dict(sigdict)
+
+        key.verify_signature(sig, b"DATA")
+        with self.assertRaises(UnverifiedSignatureError):
+            key.verify_signature(sig, b"NOT DATA")
+
+    def test_unsupported_key(self):
+        keydict = {
+            "keytype": "custom",
+            "scheme": "ed25519",
+            "keyval": {
+                "public": "8ae43d22b8e0fbf4a48fa3490d31b4d389114f5dc1039c918f075427f4100759",
+            },
+        }
+        with self.assertRaises(ValueError):
+            Key.from_dict(
+                "e33221e745d40465d1efc0215d6db83e5fdb83ea16e1fb894d09d6d96c456f3b",
+                keydict,
+            )
+
+    def test_custom_key(self):
+        class CustomKey(SSlibKey):
+            """Fake keytype that actually uses ed25519 under the hood"""
+
+            @classmethod
+            def from_dict(
+                cls, keyid: str, key_dict: Dict[str, Any]
+            ) -> "CustomKey":
+                assert key_dict.pop("keytype") == "custom"
+                keytype = "ed25519"
+                scheme = key_dict.pop("scheme")
+                keyval = key_dict.pop("keyval")
+                return cls(keyid, keytype, scheme, keyval, key_dict)
+
+            def to_dict(self) -> Dict[str, Any]:
+                return {
+                    "keytype": "custom",
+                    "scheme": self.scheme,
+                    "keyval": self.keyval,
+                    **self.unrecognized_fields,
+                }
+
+        # register custom key type
+        KEY_FOR_TYPE_AND_SCHEME[("custom", "ed25519")] = CustomKey
+
+        # setup
+        sig = Signature.from_dict(
+            {
+                "keyid": "e33221e745d40465d1efc0215d6db83e5fdb83ea16e1fb894d09d6d96c456f3b",
+                "sig": "3fc91f5411a567d6a7f28b7fbb9ba6d60b1e2a1b64d8af0b119650015d86bb5a55e57c0e2c995a9b4a332b8f435703e934c0e6ce69fe6674a8ce68719394a40b",
+            }
+        )
+
+        keydict = {
+            "keytype": "custom",
+            "scheme": "ed25519",
+            "keyval": {
+                "public": "8ae43d22b8e0fbf4a48fa3490d31b4d389114f5dc1039c918f075427f4100759",
+            },
+        }
+        key = Key.from_dict(
+            "e33221e745d40465d1efc0215d6db83e5fdb83ea16e1fb894d09d6d96c456f3b",
+            keydict,
+        )
+
+        # test that CustomKey is used and that it works
+        self.assertIsInstance(key, CustomKey)
+        key.verify_signature(sig, b"DATA")
+        with self.assertRaises(UnverifiedSignatureError):
+            key.verify_signature(sig, b"NOT DATA")
+
+        del KEY_FOR_TYPE_AND_SCHEME[("custom", "ed25519")]
+
+
+class TestSigner(unittest.TestCase):
+    """Test Signer and SSlibSigner functionality"""
+
     @classmethod
     def setUpClass(cls):
-        cls.rsakey_dict = KEYS.generate_rsa_key()
-        cls.ed25519key_dict = KEYS.generate_ed25519_key()
-        cls.ecdsakey_dict = KEYS.generate_ecdsa_key()
-        cls.sphincskey_dict = KEYS.generate_sphincs_key()
-        cls.DATA_STR = "SOME DATA REQUIRING AUTHENTICITY."
-        cls.DATA = securesystemslib.formats.encode_canonical(
-            cls.DATA_STR
-        ).encode("utf-8")
-
-    def test_sslib_sign(self):
-        dicts = [
-            self.rsakey_dict,
-            self.ecdsakey_dict,
-            self.ed25519key_dict,
-            self.sphincskey_dict,
+        cls.keys = [
+            KEYS.generate_rsa_key(),
+            KEYS.generate_ed25519_key(),
+            KEYS.generate_ecdsa_key(),
+            KEYS.generate_sphincs_key(),
         ]
-        for scheme_dict in dicts:
+        cls.DATA = b"DATA"
+
+        # pylint: disable=consider-using-with
+        cls.testdir = tempfile.TemporaryDirectory()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.testdir.cleanup()
+
+    def test_signer_sign_with_incorrect_uri(self):
+        pubkey = SSlibKey.from_securesystemslib_key(self.keys[0])
+        with self.assertRaises(ValueError):
+            # unknown uri
+            Signer.from_priv_key_uri("unknownscheme:x", pubkey)
+
+        with self.assertRaises(ValueError):
+            # env variable not defined
+            Signer.from_priv_key_uri("envvar:NONEXISTENTVAR", pubkey)
+
+        with self.assertRaises(ValueError):
+            # no "encrypted" param
+            Signer.from_priv_key_uri("file:path/to/privkey", pubkey)
+
+        with self.assertRaises(OSError):
+            # file not found
+            uri = "file:nonexistentfile?encrypted=false"
+            Signer.from_priv_key_uri(uri, pubkey)
+
+    def test_signer_sign_with_envvar_uri(self):
+        for key in self.keys:
+            # setup
+            pubkey = SSlibKey.from_securesystemslib_key(key)
+            os.environ["PRIVKEY"] = key["keyval"]["private"]
+
+            # test signing
+            signer = Signer.from_priv_key_uri("envvar:PRIVKEY", pubkey)
+            sig = signer.sign(self.DATA)
+
+            pubkey.verify_signature(sig, self.DATA)
+            with self.assertRaises(UnverifiedSignatureError):
+                pubkey.verify_signature(sig, b"NOT DATA")
+
+    def test_signer_sign_with_file_uri(self):
+        for key in self.keys:
+            # setup
+            pubkey = SSlibKey.from_securesystemslib_key(key)
+            # let teardownclass handle the file removal
+            with tempfile.NamedTemporaryFile(
+                dir=self.testdir.name, delete=False
+            ) as f:
+                f.write(key["keyval"]["private"].encode())
+
+            # test signing with unencrypted key
+            uri = f"file:{f.name}?encrypted=false"
+            signer = Signer.from_priv_key_uri(uri, pubkey)
+            sig = signer.sign(self.DATA)
+
+            pubkey.verify_signature(sig, self.DATA)
+            with self.assertRaises(UnverifiedSignatureError):
+                pubkey.verify_signature(sig, b"NOT DATA")
+
+    def test_signer_sign_with_enc_file_uri(self):
+        for key in self.keys:
+            # setup
+            pubkey = SSlibKey.from_securesystemslib_key(key)
+            privkey = KEYS.encrypt_key(key, "hunter2")
+            # let teardownclass handle the file removal
+            with tempfile.NamedTemporaryFile(
+                dir=self.testdir.name, delete=False
+            ) as f:
+                f.write(privkey.encode())
+
+            # test signing with encrypted key
+            def secrets_handler(secret: str) -> str:
+                if secret != "passphrase":
+                    raise ValueError("Only prepared to return a passphrase")
+                return "hunter2"
+
+            uri = f"file:{f.name}?encrypted=true"
+
+            signer = Signer.from_priv_key_uri(uri, pubkey, secrets_handler)
+            sig = signer.sign(self.DATA)
+
+            pubkey.verify_signature(sig, self.DATA)
+            with self.assertRaises(UnverifiedSignatureError):
+                pubkey.verify_signature(sig, b"NOT DATA")
+
+            # test wrong passphrase
+            def fake_handler(_) -> str:
+                return "12345"
+
+            with self.assertRaises(CryptoError):
+                signer = Signer.from_priv_key_uri(uri, pubkey, fake_handler)
+
+    def test_sslib_signer_sign(self):
+        for scheme_dict in self.keys:
             # Test generation of signatures.
             sslib_signer = SSlibSigner(scheme_dict)
             sig_obj = sslib_signer.sign(self.DATA)
@@ -73,6 +296,37 @@ class TestSSlibSigner(
                 sslib_signer.sign(self.DATA)
 
             scheme_dict["scheme"] = valid_scheme
+
+    def test_custom_signer(self):
+        # setup
+        key = self.keys[0]
+        pubkey = SSlibKey.from_securesystemslib_key(key)
+
+        class CustomSigner(SSlibSigner):
+            """Custom signer with a hard coded key"""
+
+            CUSTOM_SCHEME = "custom"
+
+            @classmethod
+            def from_priv_key_uri(
+                cls,
+                priv_key_uri: str,
+                public_key: Key,
+                secrets_handler: Optional[SecretsHandler] = None,
+            ) -> "CustomSigner":
+                return cls(key)
+
+        # register custom signer
+        SIGNER_FOR_URI_SCHEME[CustomSigner.CUSTOM_SCHEME] = CustomSigner
+
+        # test signing
+        signer = Signer.from_priv_key_uri("custom:foo", pubkey)
+        self.assertIsInstance(signer, CustomSigner)
+        sig = signer.sign(self.DATA)
+
+        pubkey.verify_signature(sig, self.DATA)
+        with self.assertRaises(UnverifiedSignatureError):
+            pubkey.verify_signature(sig, b"NOT DATA")
 
     def test_signature_from_to_dict(self):
         signature_dict = {
