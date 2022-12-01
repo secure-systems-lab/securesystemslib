@@ -15,12 +15,12 @@
   Provides an interface for filesystem interactions, StorageBackendInterface.
 """
 
-import abc
 import errno
 import logging
 import os
 import shutil
 import stat
+from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 from typing import IO, BinaryIO, Iterator, List, Optional
 
@@ -29,16 +29,14 @@ from securesystemslib import exceptions
 logger = logging.getLogger(__name__)
 
 
-class StorageBackendInterface:
+class StorageBackendInterface(metaclass=ABCMeta):
     """
     <Purpose>
     Defines an interface for abstract storage operations which can be implemented
     for a variety of storage solutions, such as remote and local filesystems.
     """
 
-    __metaclass__ = abc.ABCMeta
-
-    @abc.abstractmethod
+    @abstractmethod
     @contextmanager
     def get(self, filepath: str) -> Iterator[BinaryIO]:
         """
@@ -64,7 +62,7 @@ class StorageBackendInterface:
         """
         raise NotImplementedError  # pragma: no cover
 
-    @abc.abstractmethod
+    @abstractmethod
     def put(
         self, fileobj: IO, filepath: str, restrict: Optional[bool] = False
     ) -> None:
@@ -96,7 +94,7 @@ class StorageBackendInterface:
         """
         raise NotImplementedError  # pragma: no cover
 
-    @abc.abstractmethod
+    @abstractmethod
     def remove(self, filepath: str) -> None:
         """
         <Purpose>
@@ -114,7 +112,7 @@ class StorageBackendInterface:
         """
         raise NotImplementedError  # pragma: no cover
 
-    @abc.abstractmethod
+    @abstractmethod
     def getsize(self, filepath: str) -> int:
         """
         <Purpose>
@@ -133,7 +131,7 @@ class StorageBackendInterface:
         """
         raise NotImplementedError  # pragma: no cover
 
-    @abc.abstractmethod
+    @abstractmethod
     def create_folder(self, filepath: str) -> None:
         """
         <Purpose>
@@ -155,7 +153,7 @@ class StorageBackendInterface:
         """
         raise NotImplementedError  # pragma: no cover
 
-    @abc.abstractmethod
+    @abstractmethod
     def list_folder(self, filepath: str) -> List[str]:
         """
         <Purpose>
