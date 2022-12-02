@@ -1,8 +1,8 @@
 """Signer interface and the default implementations"""
 
-import abc
 import logging
 import os
+from abc import ABCMeta, abstractmethod
 from typing import Callable, Dict, Optional, Type
 from urllib import parse
 
@@ -25,7 +25,7 @@ SIGNER_FOR_URI_SCHEME: Dict[str, Type] = {}
 SecretsHandler = Callable[[str], str]
 
 
-class Signer:
+class Signer(metaclass=ABCMeta):
     """Signer interface that supports multiple signing implementations.
 
     Usage example:
@@ -71,9 +71,7 @@ class Signer:
     used.
     """
 
-    __metaclass__ = abc.ABCMeta
-
-    @abc.abstractmethod
+    @abstractmethod
     def sign(self, payload: bytes) -> Signature:
         """Signs a given payload by the key assigned to the Signer instance.
 
@@ -86,7 +84,7 @@ class Signer:
         raise NotImplementedError  # pragma: no cover
 
     @classmethod
-    @abc.abstractmethod
+    @abstractmethod
     def from_priv_key_uri(
         cls,
         priv_key_uri: str,
