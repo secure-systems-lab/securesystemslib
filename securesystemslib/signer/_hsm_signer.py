@@ -11,8 +11,12 @@ except ImportError:  # pragma: no cover
     CRYPTO_IMPORT_ERROR = "'cryptography' required"
 
 PYKCS11_IMPORT_ERROR = None
+PYKCS = None
 try:
     from PyKCS11 import PyKCS11
+
+    PYKCS = PyKCS11.PyKCS11Lib()
+    PYKCS.load()
 
 except ImportError:  # pragma: no cover
     PYKCS11_IMPORT_ERROR = "'PyKCS11' required"
@@ -35,8 +39,6 @@ class HSMSigner(Signer):
     supports ecdsa on SECG curves secp256r1 (NIST P-256) or secp384r1 (NIST P-384).
 
     Arguments:
-        hsm_session: An open and logged-in ``PyKCS11.Session`` to the token with the
-                private key.
         hsm_keyid: Key identifier on the token.
         public_key: The related public key instance.
 
@@ -46,10 +48,7 @@ class HSMSigner(Signer):
     """
 
     def __init__(
-        self,
-        hsm_session: "PyKCS11.Session",
-        hsm_keyid: int,
-        public_key: Key,
+        self, hsm_keyid: int, public_key: Key, secrets_handler: SecretsHandler
     ):
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
@@ -67,9 +66,9 @@ class HSMSigner(Signer):
             raise ValueError(f"unsupported scheme {public_key.scheme}")
 
         self._mechanism = supported_schemes[public_key.scheme]
-        self.hsm_session = hsm_session
         self.hsm_keyid = hsm_keyid
         self.public_key = public_key
+        self.secrets_handler = secrets_handler
 
     @classmethod
     def from_priv_key_uri(
@@ -93,9 +92,12 @@ class HSMSigner(Signer):
         Returns:
             Signature.
         """
+        slot_id = PYKCS.getSlotList(tokenPresent=True)[0]
+        session = PYKCS.openSession(slot_id, PyKCS11.CKF_RW_SESSION)
+        session.login(self.secrets_handler())
 
         # Search for ecdsa public keys with passed keyid on HSM
-        keys = self.hsm_session.findObjects(
+        keys = session.findObjects(
             [
                 (PyKCS11.CKA_CLASS, PyKCS11.CKO_PRIVATE_KEY),
                 (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_ECDSA),
@@ -107,7 +109,9 @@ class HSMSigner(Signer):
                 f"hsm_keyid must identify one {KEY_TYPE_ECDSA} key, found {len(keys)}"
             )
 
-        signature = self.hsm_session.sign(keys[0], payload, self._mechanism)
+        signature = session.sign(keys[0], payload, self._mechanism)
+        session.logout()
+        session.closeSession()
 
         # The PKCS11 signature octets correspond to the concatenation of the ECDSA
         # values r and s, both represented as an octet string of equal length of at

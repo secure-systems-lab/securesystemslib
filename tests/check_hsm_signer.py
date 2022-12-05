@@ -221,8 +221,7 @@ class TestHSM(unittest.TestCase):
         for hsm_keyid in self.hsm_keyids:
             public_key = self._from_hsm(session, hsm_keyid, keyid)
 
-            session.login(self.hsm_user_pin)  # Login for signing
-            signer = HSMSigner(session, hsm_keyid, public_key)
+            signer = HSMSigner(hsm_keyid, public_key, lambda: self.hsm_user_pin)
 
             # NOTE: HSMSigner supports CKM_ECDSA_SHA256 and CKM_ECDSA_SHA384
             # mechanisms. But SoftHSM only supports CKM_ECDSA. During testing we
