@@ -19,7 +19,7 @@ except ImportError:  # pragma: no cover
 # pylint: enable=wrong-import-position
 
 import binascii
-from typing import Optional, Tuple
+from typing import Optional
 
 from securesystemslib import KEY_TYPE_ECDSA
 from securesystemslib.exceptions import UnsupportedLibraryError
@@ -48,7 +48,7 @@ class HSMSigner(Signer):
     def __init__(
         self,
         hsm_session: "PyKCS11.Session",
-        hsm_keyid: Tuple[int, ...],
+        hsm_keyid: int,
         public_key: Key,
     ):
         if CRYPTO_IMPORT_ERROR:
@@ -99,7 +99,7 @@ class HSMSigner(Signer):
             [
                 (PyKCS11.CKA_CLASS, PyKCS11.CKO_PRIVATE_KEY),
                 (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_ECDSA),
-                (PyKCS11.CKA_ID, self.hsm_keyid),
+                (PyKCS11.CKA_ID, (self.hsm_keyid,)),
             ]
         )
         if len(keys) != 1:

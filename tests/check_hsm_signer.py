@@ -73,8 +73,8 @@ class TestHSM(unittest.TestCase):
         # Generate test ecdsa key pairs for curves secp256r1 and secp384r1 on test token
         cls.hsm_keyids = []
         for keyid, curve in (
-            ((0,), SECP256R1),
-            ((1,), SECP384R1),
+            (0, SECP256R1),
+            (1, SECP384R1),
         ):
 
             params = ECDomainParameters(
@@ -91,7 +91,7 @@ class TestHSM(unittest.TestCase):
                 (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_ECDSA),
                 (PyKCS11.CKA_EC_PARAMS, params),
                 (PyKCS11.CKA_LABEL, curve.name),
-                (PyKCS11.CKA_ID, keyid),
+                (PyKCS11.CKA_ID, (keyid,)),
             ]
             private_template = [
                 (PyKCS11.CKA_CLASS, PyKCS11.CKO_PRIVATE_KEY),
@@ -102,7 +102,7 @@ class TestHSM(unittest.TestCase):
                 (PyKCS11.CKA_SIGN, PyKCS11.CK_TRUE),
                 (PyKCS11.CKA_UNWRAP, PyKCS11.CK_FALSE),
                 (PyKCS11.CKA_LABEL, curve.name),
-                (PyKCS11.CKA_ID, keyid),
+                (PyKCS11.CKA_ID, (keyid,)),
             ]
 
             session.generateKeyPair(
@@ -153,7 +153,7 @@ class TestHSM(unittest.TestCase):
             [
                 (PyKCS11.CKA_CLASS, PyKCS11.CKO_PUBLIC_KEY),
                 (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_ECDSA),
-                (PyKCS11.CKA_ID, hsm_keyid),
+                (PyKCS11.CKA_ID, (hsm_keyid,)),
             ]
         )
 
