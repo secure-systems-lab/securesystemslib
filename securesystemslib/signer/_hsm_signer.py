@@ -33,7 +33,7 @@ _PYKCS11LIB = None
 
 
 def PYKCS11LIB():
-    global _PYKCS11LIB
+    global _PYKCS11LIB  # pylint: disable=global-statement
     if _PYKCS11LIB is None:
         _PYKCS11LIB = PyKCS11.PyKCS11Lib()
         _PYKCS11LIB.load()
@@ -96,11 +96,15 @@ class HSMSigner(Signer):
         if uri.scheme != cls.SCHEME:
             raise ValueError(f"HSMSigner does not support {priv_key_uri}")
 
+        if secrets_handler is None:
+            raise ValueError("HSMSigner requires a secrets handler")
+
         # For now, we only support keyid 2, i.e. PIV slot 9c (Digital Signature)
         # https://developers.yubico.com/PIV/Introduction/Certificate_slots.html
+        # https://developers.yubico.com/yubico-piv-tool/YKCS11/
         hsm_keyid = 2
 
-        return HSMSigner(hsm_keyid, public_key, secrets_handler)
+        return cls(hsm_keyid, public_key, secrets_handler)
 
     def sign(self, payload: bytes) -> Signature:
         """Signs payload with Hardware Security Module (HSM).
@@ -118,7 +122,7 @@ class HSMSigner(Signer):
         lib = PYKCS11LIB()
         slot_id = lib.getSlotList(tokenPresent=True)[0]
         session = lib.openSession(slot_id, PyKCS11.CKF_RW_SESSION)
-        session.login(self.secrets_handler())
+        session.login(self.secrets_handler("pin"))
 
         # Search for ecdsa public keys with passed keyid on HSM
         keys = session.findObjects(

@@ -226,11 +226,11 @@ class TestHSM(unittest.TestCase):
 
             if hsm_keyid == 2:
                 signer = Signer.from_priv_key_uri(
-                    "hsm:", public_key, lambda: self.hsm_user_pin
+                    "hsm:", public_key, lambda sec: self.hsm_user_pin
                 )
             else:
                 signer = HSMSigner(
-                    hsm_keyid, public_key, lambda: self.hsm_user_pin
+                    hsm_keyid, public_key, lambda sec: self.hsm_user_pin
                 )
 
             # NOTE: HSMSigner supports CKM_ECDSA_SHA256 and CKM_ECDSA_SHA384
