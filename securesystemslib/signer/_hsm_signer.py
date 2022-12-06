@@ -1,6 +1,20 @@
 """Hardware Security Module (HSM) Signer
 
+Uses PKCS#11/Cryptoki API to create signatures with HSMs (e.g. YubiKey) and to export
+the related public keys.
+
 """
+import binascii
+from contextlib import contextmanager
+from typing import Optional, Tuple
+from urllib import parse
+
+from securesystemslib import KEY_TYPE_ECDSA
+from securesystemslib.exceptions import UnsupportedLibraryError
+from securesystemslib.signer._key import Key, SSlibKey
+from securesystemslib.signer._signature import Signature
+from securesystemslib.signer._signer import SecretsHandler, Signer
+
 # pylint: disable=wrong-import-position
 CRYPTO_IMPORT_ERROR = None
 try:
@@ -15,14 +29,28 @@ try:
     from cryptography.hazmat.primitives.asymmetric.utils import (
         encode_dss_signature,
     )
-except ImportError:  # pragma: no cover
+
+    # TODO: Don't hardcode schemes
+    _SCHEME_FOR_CURVE = {
+        SECP256R1: "ecdsa-sha2-nistp256",
+        SECP384R1: "ecdsa-sha2-nistp384",
+    }
+    _CURVE_NAMES = [curve.name for curve in _SCHEME_FOR_CURVE]
+
+except ImportError:
     CRYPTO_IMPORT_ERROR = "'cryptography' required"
 
 PYKCS11_IMPORT_ERROR = None
 try:
     from PyKCS11 import PyKCS11
 
-except ImportError:  # pragma: no cover
+    # TODO: Don't hardcode schemes
+    _MECHANISM_FOR_SCHEME = {
+        "ecdsa-sha2-nistp256": PyKCS11.Mechanism(PyKCS11.CKM_ECDSA_SHA256),
+        "ecdsa-sha2-nistp384": PyKCS11.Mechanism(PyKCS11.CKM_ECDSA_SHA384),
+    }
+
+except ImportError:
     PYKCS11_IMPORT_ERROR = "'PyKCS11' required"
 
 ASN1_IMPORT_ERROR = None
@@ -36,20 +64,11 @@ except ImportError:
 # pylint: enable=wrong-import-position
 
 
-import binascii
-from typing import Optional
-from urllib import parse
-
-from securesystemslib import KEY_TYPE_ECDSA
-from securesystemslib.exceptions import UnsupportedLibraryError
-from securesystemslib.signer._key import Key, SSlibKey
-from securesystemslib.signer._signature import Signature
-from securesystemslib.signer._signer import SecretsHandler, Signer
-
 _PYKCS11LIB = None
 
 
 def PYKCS11LIB():
+    """Pseudo-singleton to load shared library using PYKCS11LIB envvar only once."""
     global _PYKCS11LIB  # pylint: disable=global-statement
     if _PYKCS11LIB is None:
         _PYKCS11LIB = PyKCS11.PyKCS11Lib()
@@ -61,23 +80,41 @@ def PYKCS11LIB():
 class HSMSigner(Signer):
     """Hardware Security Module (HSM) Signer.
 
-    HSMSigner uses the PKCS#11/Cryptoki API to sign on an HSM (e.g. YubiKey). It
-    supports ecdsa on SECG curves secp256r1 (NIST P-256) or secp384r1 (NIST P-384).
+    Supports signing schemes "ecdsa-sha2-nistp256" and "ecdsa-sha2-nistp384".
+
+    HSMSigner uses the first token it finds, if multiple tokens are available. They can
+    be instantiated with Signer.from_priv_key_uri(). These private key URI schemes are
+    supported:
+
+    * "hsm:":
+      Sign with key on PIV digital signature slot 9c.
+
+    Usage (w/o URI)::
+
+        key = HSMSigner.pubkey_from_hsm(
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        )
+        signer = HSMSigner(2, key, lambda sec: "USER PIN")
+        sig = signer.sign(b"DATA")
+        key.verify_signature(sig, b"DATA")
 
     Arguments:
         hsm_keyid: Key identifier on the token.
         public_key: The related public key instance.
+        secrets_handler: A function that returns the HSM user bin. The function
+                is passed the string "pin".
 
     Raises:
         UnsupportedLibraryError: ``PyKCS11`` and ``cryptography`` libraries not found.
         ValueError: ``public_key.scheme`` not supported.
     """
 
-    SCHEME = "hsm"
-    # For now, we only support keyid 2, i.e. PIV slot 9c (Digital Signature)
+    # See Yubico docs for PKCS keyid to PIV slot mapping
     # https://developers.yubico.com/PIV/Introduction/Certificate_slots.html
     # https://developers.yubico.com/yubico-piv-tool/YKCS11/
-    PIV_9C_KEYID = 2
+    SCHEME_KEYID = 2
+    SCHEME = "hsm"
+    SECRETS_HANDLER_MSG = "pin"
 
     def __init__(
         self, hsm_keyid: int, public_key: Key, secrets_handler: SecretsHandler
@@ -88,29 +125,78 @@ class HSMSigner(Signer):
         if PYKCS11_IMPORT_ERROR:
             raise UnsupportedLibraryError(PYKCS11_IMPORT_ERROR)
 
-        # TODO: Define as module level constant and don't hardcode scheme strings
-        supported_schemes = {
-            "ecdsa-sha2-nistp256": PyKCS11.Mechanism(PyKCS11.CKM_ECDSA_SHA256),
-            "ecdsa-sha2-nistp384": PyKCS11.Mechanism(PyKCS11.CKM_ECDSA_SHA384),
-        }
-
-        if public_key.scheme not in supported_schemes:
+        if public_key.scheme not in _MECHANISM_FOR_SCHEME:
             raise ValueError(f"unsupported scheme {public_key.scheme}")
 
-        self._mechanism = supported_schemes[public_key.scheme]
+        self._mechanism = _MECHANISM_FOR_SCHEME[public_key.scheme]
         self.hsm_keyid = hsm_keyid
         self.public_key = public_key
         self.secrets_handler = secrets_handler
 
     @staticmethod
-    def pubkey_from_hsm(hsm_keyid: int, sslib_keyid: str) -> SSlibKey:
-        """Export public key from HSM
+    @contextmanager
+    def _default_session():
+        """Context manager to handle default HSM session on reader slot 1."""
+        lib = PYKCS11LIB()
+        slots = lib.getSlotList(tokenPresent=True)
+        if not slots:
+            raise ValueError("could not find token")
 
-        Supports ecdsa on SECG curves secp256r1 (NIST P-256) or secp384r1 (NIST P-384).
+        session = lib.openSession(slots[0])
+        try:
+            yield session
+
+        finally:
+            session.closeSession()
+
+    @classmethod
+    def _find_key(
+        cls,
+        session: "PyKCS11.Session",
+        keyid: int,
+        key_type: Optional[int] = None,
+    ) -> int:
+        """Find ecdsa key on HSM."""
+        if key_type is None:
+            key_type = PyKCS11.CKO_PUBLIC_KEY
+
+        keys = session.findObjects(
+            [
+                (PyKCS11.CKA_CLASS, key_type),
+                (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_ECDSA),
+                (PyKCS11.CKA_ID, (keyid,)),
+            ]
+        )
+        if not keys:
+            raise ValueError(f"could not find {KEY_TYPE_ECDSA} key for {keyid}")
+
+        if len(keys) > 1:
+            raise ValueError(
+                f"found more than one {KEY_TYPE_ECDSA} key for {keyid}"
+            )
+
+        return keys[0]
+
+    @classmethod
+    def _find_key_values(
+        cls, session: "PyKCS11.Session", keyid: int
+    ) -> Tuple["ECDomainParameters", bytes]:
+        """Find ecdsa public key values on HSM."""
+        key = cls._find_key(session, keyid)
+        params, point = session.getAttributeValue(
+            key, [PyKCS11.CKA_EC_PARAMS, PyKCS11.CKA_EC_POINT]
+        )
+        return ECDomainParameters.load(bytes(params)), bytes(point)
+
+    @classmethod
+    def pubkey_from_hsm(
+        cls, sslib_keyid: str, hsm_keyid: Optional[int] = None
+    ) -> SSlibKey:
+        """Export public key from HSM.
 
         Arguments:
-            hsm_keyid: Key identifier on the token.
             sslib_keyid: Key identifier that is unique within the metadata it is used in.
+            hsm_keyid: Key identifier on the token. Default is PIV key slot 9c.
 
         Raises:
             UnsupportedLibraryError: ``PyKCS11``, ``cryptography`` or ``asn1crypto``
@@ -128,50 +214,22 @@ class HSMSigner(Signer):
         if ASN1_IMPORT_ERROR:
             raise UnsupportedLibraryError(ASN1_IMPORT_ERROR)
 
-        lib = PYKCS11LIB()
-        hsm_slot_id = lib.getSlotList(tokenPresent=True)[0]
-        session = lib.openSession(hsm_slot_id)
+        if hsm_keyid is None:
+            hsm_keyid = cls.SCHEME_KEYID
 
-        # Search for ecdsa public keys with passed keyid on HSM
-        keys = session.findObjects(
-            [
-                (PyKCS11.CKA_CLASS, PyKCS11.CKO_PUBLIC_KEY),
-                (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_ECDSA),
-                (PyKCS11.CKA_ID, (hsm_keyid,)),
-            ]
-        )
+        with cls._default_session() as session:
+            params, point = cls._find_key_values(session, hsm_keyid)
 
-        if len(keys) != 1:
+        if params.chosen.native not in _CURVE_NAMES:
             raise ValueError(
-                f"hsm_keyid must identify one {KEY_TYPE_ECDSA} key, found {len(keys)}"
-            )
-
-        # Extract public key domain parameters and point from HSM
-        hsm_params, hsm_point = session.getAttributeValue(
-            keys[0], [PyKCS11.CKA_EC_PARAMS, PyKCS11.CKA_EC_POINT]
-        )
-
-        params = ECDomainParameters.load(bytes(hsm_params))
-
-        session.closeSession()
-
-        # TODO: Define as module level constant and don't hardcode scheme strings
-        scheme_for_curve = {
-            SECP256R1: "ecdsa-sha2-nistp256",
-            SECP384R1: "ecdsa-sha2-nistp384",
-        }
-        curve_names = [curve.name for curve in scheme_for_curve]
-
-        if params.chosen.native not in curve_names:
-            raise ValueError(
-                f"found key on {params.chosen.native}, should be on one of {curve_names}"
+                f"found key on {params.chosen.native}, should be on one of {_CURVE_NAMES}"
             )
 
         # Create PEM from key
         curve = get_curve_for_oid(ObjectIdentifier(params.chosen.dotted))
         public_pem = (
             EllipticCurvePublicKey.from_encoded_point(
-                curve(), ECPoint().load(bytes(hsm_point)).native
+                curve(), ECPoint().load(point).native
             )
             .public_bytes(
                 serialization.Encoding.PEM,
@@ -183,7 +241,7 @@ class HSMSigner(Signer):
         return SSlibKey(
             sslib_keyid,
             KEY_TYPE_ECDSA,
-            scheme_for_curve[curve],
+            _SCHEME_FOR_CURVE[curve],
             {"public": public_pem},
         )
 
@@ -195,7 +253,7 @@ class HSMSigner(Signer):
         secrets_handler: Optional[SecretsHandler] = None,
     ) -> "HSMSigner":
         if not isinstance(public_key, SSlibKey):
-            raise ValueError(f"Expected SSlibKey for {priv_key_uri}")
+            raise ValueError(f"expected SSlibKey for {priv_key_uri}")
 
         uri = parse.urlparse(priv_key_uri)
 
@@ -205,7 +263,7 @@ class HSMSigner(Signer):
         if secrets_handler is None:
             raise ValueError("HSMSigner requires a secrets handler")
 
-        return cls(cls.PIV_9C_KEYID, public_key, secrets_handler)
+        return cls(cls.SCHEME_KEYID, public_key, secrets_handler)
 
     def sign(self, payload: bytes) -> Signature:
         """Signs payload with Hardware Security Module (HSM).
@@ -220,27 +278,14 @@ class HSMSigner(Signer):
         Returns:
             Signature.
         """
-        lib = PYKCS11LIB()
-        slot_id = lib.getSlotList(tokenPresent=True)[0]
-        session = lib.openSession(slot_id, PyKCS11.CKF_RW_SESSION)
-        session.login(self.secrets_handler("pin"))
 
-        # Search for ecdsa public keys with passed keyid on HSM
-        keys = session.findObjects(
-            [
-                (PyKCS11.CKA_CLASS, PyKCS11.CKO_PRIVATE_KEY),
-                (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_ECDSA),
-                (PyKCS11.CKA_ID, (self.hsm_keyid,)),
-            ]
-        )
-        if len(keys) != 1:
-            raise ValueError(
-                f"hsm_keyid must identify one {KEY_TYPE_ECDSA} key, found {len(keys)}"
+        with self._default_session() as session:
+            session.login(self.secrets_handler(self.SECRETS_HANDLER_MSG))
+            key = self._find_key(
+                session, self.hsm_keyid, PyKCS11.CKO_PRIVATE_KEY
             )
-
-        signature = session.sign(keys[0], payload, self._mechanism)
-        session.logout()
-        session.closeSession()
+            signature = session.sign(key, payload, self._mechanism)
+            session.logout()
 
         # The PKCS11 signature octets correspond to the concatenation of the ECDSA
         # values r and s, both represented as an octet string of equal length of at

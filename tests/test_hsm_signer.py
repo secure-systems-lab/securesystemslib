@@ -130,7 +130,7 @@ class TestHSM(unittest.TestCase):
         data = b"deadbeef"
 
         for hsm_keyid in [1, 2]:
-            public_key = HSMSigner.pubkey_from_hsm(hsm_keyid, keyid)
+            public_key = HSMSigner.pubkey_from_hsm(keyid, hsm_keyid)
 
             if hsm_keyid == 2:
                 signer = Signer.from_priv_key_uri(
