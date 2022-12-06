@@ -26,6 +26,9 @@ from securesystemslib import KEY_TYPE_ECDSA
 from securesystemslib.signer import HSMSigner, SSlibKey
 
 
+@unittest.skipUnless(
+    os.environ["PYKCS11LIB"], "set PYKCS11LIB to SoftHSM lib path"
+)
 class TestHSM(unittest.TestCase):
     """Test HSMSigner with SoftHSM
 

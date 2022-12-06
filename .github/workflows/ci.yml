@@ -52,5 +52,26 @@ jobs:
           python -m pip install --upgrade pip
           pip install --upgrade tox
 
+      - name:  Install system dependencies
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt-get install -y softhsm2
+            echo "PYKCS11LIB=/usr/lib/softhsm/libsofthsm2.so" >> $GITHUB_ENV
+
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            brew install softhsm
+            echo "PYKCS11LIB=$(brew --prefix softhsm)/lib/softhsm/libsofthsm2.so" >> $GITHUB_ENV
+
+          # TODO: Uncomment when testing on Windows
+          # elif [ "$RUNNER_OS" == "Windows" ]; then
+          #   choco install softhsm.install
+          #   echo "PYKCS11LIB=C:\SoftHSM2\lib\softhsm2-x64.dll" >> $GITHUB_ENV
+
+          else
+              echo "$RUNNER_OS not supported"
+              exit 1
+          fi
+
       - name: Run tox
         run: tox -e ${{ matrix.toxenv }}
