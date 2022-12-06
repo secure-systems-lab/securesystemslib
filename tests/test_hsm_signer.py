@@ -24,10 +24,11 @@ from PyKCS11 import PyKCS11
 import securesystemslib.hash
 from securesystemslib import KEY_TYPE_ECDSA
 from securesystemslib.signer import HSMSigner, SSlibKey
+from securesystemslib.signer._hsm_signer import PYKCS11LIB
 
 
 @unittest.skipUnless(
-    os.environ["PYKCS11LIB"], "set PYKCS11LIB to SoftHSM lib path"
+    os.environ.get("PYKCS11LIB"), "set PYKCS11LIB to SoftHSM lib path"
 )
 class TestHSM(unittest.TestCase):
     """Test HSMSigner with SoftHSM
@@ -57,16 +58,14 @@ class TestHSM(unittest.TestCase):
             cls.test_dir, "softhsm2.conf"
         )
 
-        # Initialize test token
-        cls.pkcs11 = PyKCS11.PyKCS11Lib()
-        cls.pkcs11.load()
         hsm_token_label = "Test SoftHSM"
         hsm_so_pin = "abcd"
 
-        hsm_slot_id = cls.pkcs11.getSlotList(tokenPresent=True)[0]
-        cls.pkcs11.initToken(hsm_slot_id, hsm_so_pin, hsm_token_label)
+        lib = PYKCS11LIB()
+        hsm_slot_id = lib.getSlotList(tokenPresent=True)[0]
+        lib.initToken(hsm_slot_id, hsm_so_pin, hsm_token_label)
 
-        session = cls.pkcs11.openSession(hsm_slot_id, PyKCS11.CKF_RW_SESSION)
+        session = PYKCS11LIB().openSession(hsm_slot_id, PyKCS11.CKF_RW_SESSION)
         session.login(hsm_so_pin, PyKCS11.CKU_SO)
         session.initPin(cls.hsm_user_pin)
         session.logout()
@@ -213,8 +212,9 @@ class TestHSM(unittest.TestCase):
             hasher.update(data)
             return hasher.digest()
 
-        hsm_slot_id = self.pkcs11.getSlotList(tokenPresent=True)[0]
-        session = self.pkcs11.openSession(hsm_slot_id)
+        lib = PYKCS11LIB()
+        hsm_slot_id = lib.getSlotList(tokenPresent=True)[0]
+        session = lib.openSession(hsm_slot_id)
 
         keyid = (
             "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
@@ -234,11 +234,7 @@ class TestHSM(unittest.TestCase):
             )
             sig = signer.sign(_pre_hash(data, public_key.scheme))
 
-            session.logout()  # Logout after signing
-
             public_key.verify_signature(sig, data)
-
-        session.closeSession()
 
 
 # Run the unit tests.

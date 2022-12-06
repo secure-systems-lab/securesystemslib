@@ -11,12 +11,9 @@ except ImportError:  # pragma: no cover
     CRYPTO_IMPORT_ERROR = "'cryptography' required"
 
 PYKCS11_IMPORT_ERROR = None
-PYKCS = None
+PYKCSLIB = None
 try:
     from PyKCS11 import PyKCS11
-
-    PYKCS = PyKCS11.PyKCS11Lib()
-    PYKCS.load()
 
 except ImportError:  # pragma: no cover
     PYKCS11_IMPORT_ERROR = "'PyKCS11' required"
@@ -30,6 +27,17 @@ from securesystemslib.exceptions import UnsupportedLibraryError
 from securesystemslib.signer._key import Key
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import SecretsHandler, Signer
+
+_PYKCS11LIB = None
+
+
+def PYKCS11LIB():
+    global _PYKCS11LIB
+    if _PYKCS11LIB is None:
+        _PYKCS11LIB = PyKCS11.PyKCS11Lib()
+        _PYKCS11LIB.load()
+
+    return _PYKCS11LIB
 
 
 class HSMSigner(Signer):
@@ -92,8 +100,9 @@ class HSMSigner(Signer):
         Returns:
             Signature.
         """
-        slot_id = PYKCS.getSlotList(tokenPresent=True)[0]
-        session = PYKCS.openSession(slot_id, PyKCS11.CKF_RW_SESSION)
+        lib = PYKCS11LIB()
+        slot_id = lib.getSlotList(tokenPresent=True)[0]
+        session = lib.openSession(slot_id, PyKCS11.CKF_RW_SESSION)
         session.login(self.secrets_handler())
 
         # Search for ecdsa public keys with passed keyid on HSM
