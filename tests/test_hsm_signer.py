@@ -23,7 +23,7 @@ from PyKCS11 import PyKCS11
 
 import securesystemslib.hash
 from securesystemslib import KEY_TYPE_ECDSA
-from securesystemslib.signer import HSMSigner, SSlibKey
+from securesystemslib.signer import HSMSigner, Signer, SSlibKey
 from securesystemslib.signer._hsm_signer import PYKCS11LIB
 
 
@@ -75,8 +75,8 @@ class TestHSM(unittest.TestCase):
         # Generate test ecdsa key pairs for curves secp256r1 and secp384r1 on test token
         cls.hsm_keyids = []
         for keyid, curve in (
-            (0, SECP256R1),
-            (1, SECP384R1),
+            (1, SECP256R1),
+            (2, SECP384R1),
         ):
 
             params = ECDomainParameters(
@@ -221,10 +221,17 @@ class TestHSM(unittest.TestCase):
         )
         data = b"deadbeef"
 
-        for hsm_keyid in self.hsm_keyids:
+        for hsm_keyid in [1, 2]:
             public_key = self._from_hsm(session, hsm_keyid, keyid)
 
-            signer = HSMSigner(hsm_keyid, public_key, lambda: self.hsm_user_pin)
+            if hsm_keyid == 2:
+                signer = Signer.from_priv_key_uri(
+                    "hsm:", public_key, lambda: self.hsm_user_pin
+                )
+            else:
+                signer = HSMSigner(
+                    hsm_keyid, public_key, lambda: self.hsm_user_pin
+                )
 
             # NOTE: HSMSigner supports CKM_ECDSA_SHA256 and CKM_ECDSA_SHA384
             # mechanisms. But SoftHSM only supports CKM_ECDSA. During testing we
@@ -235,6 +242,8 @@ class TestHSM(unittest.TestCase):
             sig = signer.sign(_pre_hash(data, public_key.scheme))
 
             public_key.verify_signature(sig, data)
+
+        session.closeSession()
 
 
 # Run the unit tests.

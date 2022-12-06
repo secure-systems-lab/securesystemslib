@@ -22,6 +22,7 @@ SIGNER_FOR_URI_SCHEME.update(
         SSlibSigner.ENVVAR_URI_SCHEME: SSlibSigner,
         SSlibSigner.FILE_URI_SCHEME: SSlibSigner,
         GCPSigner.SCHEME: GCPSigner,
+        HSMSigner.SCHEME: HSMSigner,
     }
 )
 

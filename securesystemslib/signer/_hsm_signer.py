@@ -21,10 +21,11 @@ except ImportError:  # pragma: no cover
 
 import binascii
 from typing import Optional
+from urllib import parse
 
 from securesystemslib import KEY_TYPE_ECDSA
 from securesystemslib.exceptions import UnsupportedLibraryError
-from securesystemslib.signer._key import Key
+from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import SecretsHandler, Signer
 
@@ -54,6 +55,8 @@ class HSMSigner(Signer):
         UnsupportedLibraryError: ``PyKCS11`` and ``cryptography`` libraries not found.
         ValueError: ``public_key.scheme`` not supported.
     """
+
+    SCHEME = "hsm"
 
     def __init__(
         self, hsm_keyid: int, public_key: Key, secrets_handler: SecretsHandler
@@ -85,7 +88,19 @@ class HSMSigner(Signer):
         public_key: Key,
         secrets_handler: Optional[SecretsHandler] = None,
     ) -> "HSMSigner":
-        raise NotImplementedError("Incompatible with private key URIs")
+        if not isinstance(public_key, SSlibKey):
+            raise ValueError(f"Expected SSlibKey for {priv_key_uri}")
+
+        uri = parse.urlparse(priv_key_uri)
+
+        if uri.scheme != cls.SCHEME:
+            raise ValueError(f"HSMSigner does not support {priv_key_uri}")
+
+        # For now, we only support keyid 2, i.e. PIV slot 9c (Digital Signature)
+        # https://developers.yubico.com/PIV/Introduction/Certificate_slots.html
+        hsm_keyid = 2
+
+        return HSMSigner(hsm_keyid, public_key, secrets_handler)
 
     def sign(self, payload: bytes) -> Signature:
         """Signs payload with Hardware Security Module (HSM).
