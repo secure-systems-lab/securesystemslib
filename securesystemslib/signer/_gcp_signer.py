@@ -1,9 +1,4 @@
-"""Signer interface and example interface implementations.
-
-The goal of this module is to provide a signing interface supporting multiple
-signing implementations and a couple of example implementations.
-
-"""
+"""Signer implementation for Google Cloud KMS"""
 
 import logging
 from typing import Optional
