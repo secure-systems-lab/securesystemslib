@@ -103,7 +103,8 @@ class HSMSigner(Signer):
     Arguments:
         hsm_keyid: Key identifier on the token.
         public_key: The related public key instance.
-        pin: The HSM user pin to login for signing.
+        pin_handler: A function that returns the HSM user login pin, needed for
+                signing. It receives the string argument "pin".
 
     Raises:
         UnsupportedLibraryError: ``PyKCS11`` and ``cryptography`` libraries not found.
@@ -117,7 +118,9 @@ class HSMSigner(Signer):
     SCHEME = "hsm"
     SECRETS_HANDLER_MSG = "pin"
 
-    def __init__(self, hsm_keyid: int, public_key: Key, pin: str):
+    def __init__(
+        self, hsm_keyid: int, public_key: Key, pin_handler: SecretsHandler
+    ):
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
 
@@ -130,7 +133,7 @@ class HSMSigner(Signer):
         self._mechanism = _MECHANISM_FOR_SCHEME[public_key.scheme]
         self.hsm_keyid = hsm_keyid
         self.public_key = public_key
-        self.pin = pin
+        self.pin_handler = pin_handler
 
     @staticmethod
     @contextmanager
@@ -262,8 +265,7 @@ class HSMSigner(Signer):
         if secrets_handler is None:
             raise ValueError("HSMSigner requires a secrets handler")
 
-        pin = secrets_handler(cls.SECRETS_HANDLER_MSG)
-        return cls(cls.SCHEME_KEYID, public_key, pin)
+        return cls(cls.SCHEME_KEYID, public_key, secrets_handler)
 
     def sign(self, payload: bytes) -> Signature:
         """Signs payload with Hardware Security Module (HSM).
@@ -278,9 +280,9 @@ class HSMSigner(Signer):
         Returns:
             Signature.
         """
-
+        pin = self.pin_handler(self.SECRETS_HANDLER_MSG)
         with self._default_session() as session:
-            session.login(self.pin)
+            session.login(pin)
             key = self._find_key(
                 session, self.hsm_keyid, PyKCS11.CKO_PRIVATE_KEY
             )

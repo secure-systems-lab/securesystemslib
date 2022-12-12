@@ -140,7 +140,7 @@ class TestHSM(unittest.TestCase):
 
         for hsm_keyid in [self.hsm_keyid, self.hsm_keyid_default]:
             key = HSMSigner.pubkey_from_hsm(self.sslib_keyid, hsm_keyid)
-            signer = HSMSigner(hsm_keyid, key, self.hsm_user_pin)
+            signer = HSMSigner(hsm_keyid, key, lambda sec: self.hsm_user_pin)
             sig = signer.sign(b"DATA")
             key.verify_signature(sig, b"DATA")
 
