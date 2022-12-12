@@ -89,14 +89,16 @@ class HSMSigner(Signer):
     * "hsm:":
       Sign with key on PIV digital signature slot 9c.
 
-    Usage (w/o URI)::
+    Usage::
 
-        key = HSMSigner.pubkey_from_hsm(
-            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-        )
-        signer = HSMSigner(2, key, lambda sec: "USER PIN")
+        # sign with PIV slot 9c, verify with existing public key
+        def pin_handler(secret: str) -> str:
+            return getpass(f"Enter {secret}: ")
+
+        signer = Signer.from_priv_key_uri("hsm:", public_key, pin_handler)
         sig = signer.sign(b"DATA")
-        key.verify_signature(sig, b"DATA")
+
+        public_key.verify_signature(sig, b"DATA")
 
     Arguments:
         hsm_keyid: Key identifier on the token.
@@ -193,7 +195,7 @@ class HSMSigner(Signer):
 
         Arguments:
             sslib_keyid: Key identifier that is unique within the metadata it is used in.
-            hsm_keyid: Key identifier on the token. Default is PIV key slot 9c.
+            hsm_keyid: Key identifier on the token. Default is 2 (meaning PIV key slot 9c).
 
         Raises:
             UnsupportedLibraryError: ``PyKCS11``, ``cryptography`` or ``asn1crypto``
