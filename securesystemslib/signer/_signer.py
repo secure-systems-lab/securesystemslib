@@ -13,8 +13,8 @@ from securesystemslib.signer._signature import GPGSignature, Signature
 
 logger = logging.getLogger(__name__)
 
-# NOTE dict for Signer dispatch defined here, but filled at end of file when
-# subclass definitions are available. Users can add Signer implementations.
+# NOTE Signer dispatch table is defined here so it's usable by Signer,
+# but is populated in __init__.py (and can be appended by users).
 SIGNER_FOR_URI_SCHEME: Dict[str, Type] = {}
 
 
@@ -271,10 +271,3 @@ class GPGSigner(Signer):
 
         sig_dict = gpg.create_signature(payload, self.keyid, self.homedir)
         return GPGSignature(**sig_dict)
-
-
-# Supported private key uri schemes and the Signers implementing them
-SIGNER_FOR_URI_SCHEME = {
-    SSlibSigner.ENVVAR_URI_SCHEME: SSlibSigner,
-    SSlibSigner.FILE_URI_SCHEME: SSlibSigner,
-}
