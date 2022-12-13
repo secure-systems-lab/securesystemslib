@@ -51,3 +51,4 @@ check-quote-consistency=yes
 
 [TYPECHECK]
 generated-members=shake_128s.*
+ignored-modules=PyKCS11
