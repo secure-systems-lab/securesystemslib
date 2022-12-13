@@ -65,8 +65,9 @@ class TestKMSKeys(unittest.TestCase):
         assign @jku.
         """
 
-        signer = GCPSigner.import_(self.gcp_id)
-        self.assertEqual(self.pubkey, signer.public_key)
+        uri, key = GCPSigner.import_(self.gcp_id)
+        self.assertEqual(key, self.pubkey)
+        self.assertEqual(uri, f"gcpkms:{self.gcp_id}")
 
 
 if __name__ == "__main__":

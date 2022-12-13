@@ -85,8 +85,12 @@ class GCPSigner(Signer):
         return cls(uri.path, public_key)
 
     @classmethod
-    def import_(cls, gcp_keyid: str):
-        """Load signer (including public key) from KMS"""
+    def import_(cls, gcp_keyid: str) -> Tuple[str, Key]:
+        """Load key and signer details from KMS
+
+        Returns the private key uri and the public key. This method should only
+        be called once per key: the uri and Key should be stored for later use.
+        """
         if GCP_IMPORT_ERROR:
             raise exceptions.UnsupportedLibraryError(GCP_IMPORT_ERROR)
 
@@ -104,7 +108,7 @@ class GCPSigner(Signer):
         keyid = _get_keyid(keytype, scheme, keyval)
         public_key = SSlibKey(keyid, keytype, scheme, keyval)
 
-        return cls(gcp_keyid, public_key)
+        return f"{cls.SCHEME}:{gcp_keyid}", public_key
 
     @staticmethod
     def _get_keytype_and_scheme(algorithm: int) -> Tuple[str, str]:
