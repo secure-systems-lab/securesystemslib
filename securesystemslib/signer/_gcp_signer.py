@@ -36,9 +36,14 @@ class GCPSigner(Signer):
     The signer uses "ambient" credentials: typically environment var
     GOOGLE_APPLICATION_CREDENTIALS that points to a file with valid
     credentials. These will be found by google.cloud.kms, see
-    https://cloud.google.com/docs/authentication/getting-started
-    (and https://github.com/google-github-actions/auth for the relevant
-    GitHub action).
+    https://cloud.google.com/docs/authentication/getting-started.
+    Some practical authentication options include:
+    * GitHub Action: https://github.com/google-github-actions/auth
+    * gcloud CLI: https://cloud.google.com/sdk/gcloud
+
+    The specific permissions that GCPSigner needs are:
+    * roles/cloudkms.signer for sign()
+    * roles/cloudkms.publicKeyViewer for import()
 
     Arguments:
         gcp_keyid: Fully qualified GCP KMS key name, like
