@@ -7,10 +7,19 @@ from securesystemslib.signer._signer import SecretsHandler, Signature, Signer
 
 
 class GPGSigner(Signer):
-    """A securesystemslib gpg implementation of the "Signer" interface.
+    """OpenPGP Signer
 
-    Provides a sign method to generate a cryptographic signature with gpg, using
-    an RSA, DSA or EdDSA private key identified by the keyid on the instance.
+    Runs command in ``GNUPG`` environment variable to sign, fallback commands are
+    ``gpg2`` and ``gpg``.
+
+    Supported signing schemes are: "pgp+rsa-pkcsv1.5", "pgp+dsa-fips-180-2" and
+    "pgp+eddsa-ed25519", with SHA-256 hashing.
+
+
+    Arguments:
+        keyid: GnuPG local user signing key id. If not passed, the default key is used.
+        homedir: GnuPG home directory path. If not passed, the default homedir is used.
+
     """
 
     def __init__(
@@ -42,33 +51,21 @@ class GPGSigner(Signer):
         return Signature.from_dict(sig_dict)
 
     def sign(self, payload: bytes) -> Signature:
-        """Signs a given payload by the key assigned to the GPGSigner instance.
-
-        Calls the gpg command line utility to sign the passed content with the
-        key identified by the passed keyid from the gpg keyring at the passed
-        homedir.
-
-        The executed base command is defined in
-        securesystemslib.gpg.constants.gpg_sign_command.
+        """Signs payload with ``gpg``.
 
         Arguments:
-            payload: The bytes to be signed.
+            payload: bytes to be signed.
 
         Raises:
-            securesystemslib.exceptions.FormatError:
-                If the keyid was passed and does not match
-                securesystemslib.formats.KEYID_SCHEMA.
-
-            ValueError: the gpg command failed to create a valid signature.
+            ValueError: The gpg command failed to create a valid signature.
             OSError: the gpg command is not present or non-executable.
-            securesystemslib.exceptions.UnsupportedLibraryError: the gpg
+            securesystemslib.exceptions.UnsupportedLibraryError: The gpg
                 command is not available, or the cryptography library is
                 not installed.
-            securesystemslib.gpg.exceptions.CommandError: the gpg command
+            securesystemslib.gpg.exceptions.CommandError: The gpg command
                 returned a non-zero exit code.
-            securesystemslib.gpg.exceptions.KeyNotFoundError: the used gpg
-                version is not fully supported and no public key can be found
-                for short keyid.
+            securesystemslib.gpg.exceptions.KeyNotFoundError: The used gpg
+                version is not fully supported.
 
         Returns:
             Signature.
