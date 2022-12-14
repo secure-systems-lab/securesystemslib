@@ -3,7 +3,7 @@
 
 from typing import Any, List
 
-from securesystemslib import exceptions, formats
+from securesystemslib import formats
 from securesystemslib.signer import Signature
 from securesystemslib.util import b64dec, b64enc
 
@@ -15,7 +15,7 @@ class Envelope:
     Attributes:
         payload: Arbitrary byte sequence of serialized body
         payload_type: string that identifies how to interpret payload
-        signatures: List of Signature and GPG Signature
+        signatures: List of Signature
 
     Methods:
         from_dict(cls, data):
@@ -65,16 +65,10 @@ class Envelope:
         payload = b64dec(data["payload"])
         payload_type = data["payloadType"]
 
-        signatures = []
-        for signature in data["signatures"]:
-            if formats.GPG_SIGNATURE_SCHEMA.matches(signature):
-                raise NotImplementedError
-
-            if formats.SIGNATURE_SCHEMA.matches(signature):
-                signatures.append(Signature.from_dict(signature))
-
-            else:
-                raise exceptions.FormatError("Wanted a 'Signature'.")
+        formats.SIGNATURES_SCHEMA.check_match(data["signatures"])
+        signatures = [
+            Signature.from_dict(signature) for signature in data["signatures"]
+        ]
 
         return cls(payload, payload_type, signatures)
 

@@ -16,8 +16,8 @@ class TestEnvelope(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.signature_dict = {
-            "keyid": "11fa391a0ed7a447cbfeb4b2667e286fc248f64d5e6d0eeed2e5e23f97f9f714",
-            "sig": "30460221009342e4566528fcecf6a7a5d53ebacdb1df151e242f55f8775883469cb01dbc6602210086b426cc826709acfa2c3f9214610cb0a832db94bbd266fd7c5939a48064a851",
+            "keyid": "11fa391a0ed7a447",
+            "sig": "30460221009342e4566528fcecf6a7a5",
         }
         cls.envelope_dict = {
             "payload": "aGVsbG8gd29ybGQ=",
@@ -27,22 +27,26 @@ class TestEnvelope(unittest.TestCase):
         cls.pae = b"DSSEv1 29 http://example.com/HelloWorld 11 hello world"
 
     def test_envelope_from_to_dict(self):
-        """Test envelope to_dict and from_dict methods"""
+        """Test envelope to_dict and from_dict methods."""
 
         envelope_dict = copy.deepcopy(self.envelope_dict)
 
         # create envelope object from its dict.
         envelope_obj = Envelope.from_dict(envelope_dict)
+        for signature in envelope_obj.signatures:
+             self.assertIsInstance(signature, Signature)
 
         # Assert envelope dict created by to_dict will be equal.
         self.assertDictEqual(self.envelope_dict, envelope_obj.to_dict())
 
-        # Assert TypeError on invalid signature
+        # Assert TypeError on invalid signature.
         envelope_dict["signatures"] = [""]
-        self.assertRaises(exceptions.FormatError, Envelope.from_dict, envelope_dict)
+        self.assertRaises(
+            exceptions.FormatError, Envelope.from_dict, envelope_dict
+        )
 
     def test_envelope_eq_(self):
-        """Test envelope equality"""
+        """Test envelope equality."""
 
         envelope_obj = Envelope.from_dict(copy.deepcopy(self.envelope_dict))
 
@@ -69,7 +73,7 @@ class TestEnvelope(unittest.TestCase):
         self.assertNotEqual(envelope_obj, envelope_obj_2)
 
     def test_preauthencoding(self):
-        """Test envelope Pre-Auth-Encoding"""
+        """Test envelope Pre-Auth-Encoding."""
 
         envelope_obj = Envelope.from_dict(copy.deepcopy(self.envelope_dict))
 
