@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
@@ -51,7 +51,7 @@ asn1 = ["asn1crypto"]
 pykcs11 = ["PyKCS11"]
 
 [tool.hatch.version]
-source = "vcs"
+path = "securesystemslib/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
