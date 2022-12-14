@@ -61,7 +61,6 @@ include = [
   "/tox.ini",
   "/pylintrc",
   "/mypy.ini",
-  "/MANIFEST.in",
   "/CHANGELOG.md",
   "/.coveragerc",
 ]
