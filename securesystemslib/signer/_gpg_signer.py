@@ -1,10 +1,9 @@
 """Signer implementation for OpenPGP """
-from typing import Optional
+from typing import Dict, Optional
 
 import securesystemslib.gpg.functions as gpg
 from securesystemslib.signer._key import Key
-from securesystemslib.signer._signature import GPGSignature
-from securesystemslib.signer._signer import Key, SecretsHandler, Signer
+from securesystemslib.signer._signer import SecretsHandler, Signature, Signer
 
 
 class GPGSigner(Signer):
@@ -29,7 +28,20 @@ class GPGSigner(Signer):
     ) -> "GPGSigner":
         raise NotImplementedError("Incompatible with private key URIs")
 
-    def sign(self, payload: bytes) -> GPGSignature:
+    @staticmethod
+    def _to_gpg_sig(sig: Signature) -> Dict:
+        """Helper to convert Signature -> internal gpg signature format."""
+        sig_dict = sig.to_dict()
+        sig_dict["signature"] = sig_dict.pop("sig")
+        return sig_dict
+
+    @staticmethod
+    def _from_gpg_sig(sig_dict: Dict) -> Signature:
+        """Helper to convert internal gpg signature format -> Signature."""
+        sig_dict["sig"] = sig_dict.pop("signature")
+        return Signature.from_dict(sig_dict)
+
+    def sign(self, payload: bytes) -> Signature:
         """Signs a given payload by the key assigned to the GPGSigner instance.
 
         Calls the gpg command line utility to sign the passed content with the
@@ -59,8 +71,8 @@ class GPGSigner(Signer):
                 for short keyid.
 
         Returns:
-            Returns a "GPGSignature" class instance.
+            Signature.
         """
-
-        sig_dict = gpg.create_signature(payload, self.keyid, self.homedir)
-        return GPGSignature(**sig_dict)
+        return self._from_gpg_sig(
+            gpg.create_signature(payload, self.keyid, self.homedir)
+        )
