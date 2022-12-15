@@ -58,18 +58,7 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
             FORMAT_ERROR_MSG,
         )
 
-        # Passing an invalid algorithm to generate() should raise
-        # 'securesystemslib.exceptions.FormatError'.
-        self.assertRaises(
-            securesystemslib.exceptions.FormatError,
-            KEYS.generate_rsa_key,
-            "bad_algorithm",
-        )
-
-        # Passing a string instead of integer for a bit value.
-        self.assertRaises(
-            securesystemslib.exceptions.FormatError, KEYS.generate_rsa_key, 123
-        )
+       
 
     def test_format_keyval_to_metadata(self):
         keyvalue = self.rsakey_dict["keyval"]
