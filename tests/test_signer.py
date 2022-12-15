@@ -17,11 +17,10 @@ from securesystemslib.exceptions import (
     UnverifiedSignatureError,
 )
 from securesystemslib.gpg.constants import have_gpg
-from securesystemslib.gpg.functions import export_pubkey
-from securesystemslib.gpg.functions import verify_signature as verify_sig
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
     SIGNER_FOR_URI_SCHEME,
+    GPGKey,
     GPGSigner,
     Key,
     SecretsHandler,
@@ -38,6 +37,9 @@ class TestKey(unittest.TestCase):
     def test_key_from_to_dict(self):
         """Test to/from_dict for known keytype/scheme combos"""
         for (keytype, scheme), key_impl in KEY_FOR_TYPE_AND_SCHEME.items():
+            if key_impl in [GPGKey]:  # these keys require additional fields
+                continue
+
             keydict = {
                 "keytype": keytype,
                 "scheme": scheme,
@@ -401,27 +403,36 @@ class TestGPGRSA(unittest.TestCase):
 
     def test_gpg_sign_and_verify_object_with_default_key(self):
         """Create a signature using the default key on the keyring."""
-        # pylint: disable=protected-access
-        signer = GPGSigner(homedir=self.gnupg_home)
-        signature = signer.sign(self.test_data)
 
-        signature_dict = GPGSigner._to_gpg_sig(signature)
-        key_data = export_pubkey(self.default_keyid, self.gnupg_home)
+        # Public key import requires a keyid, signer loading does not. Ignore the URI w/
+        # keyid returned here, and construct one w/o keyid below, to test default key.
+        _, public_key = GPGSigner.import_(
+            self.signing_subkey_keyid, self.gnupg_home
+        )
 
-        self.assertTrue(verify_sig(signature_dict, key_data, self.test_data))
-        self.assertFalse(verify_sig(signature_dict, key_data, self.wrong_data))
+        uri = f"gnupg:{self.gnupg_home}"
+        signer = Signer.from_priv_key_uri(uri, public_key)
+        sig = signer.sign(self.test_data)
+
+        public_key.verify_signature(sig, self.test_data)
+
+        with self.assertRaises(UnverifiedSignatureError):
+            self.assertFalse(public_key.verify_signature(sig, self.wrong_data))
 
     def test_gpg_sign_and_verify_object(self):
         """Create a signature using a specific key on the keyring."""
-        # pylint: disable=protected-access
-        signer = GPGSigner(self.signing_subkey_keyid, self.gnupg_home)
-        signature = signer.sign(self.test_data)
 
-        signature_dict = GPGSigner._to_gpg_sig(signature)
-        key_data = export_pubkey(self.signing_subkey_keyid, self.gnupg_home)
+        uri, public_key = GPGSigner.import_(
+            self.signing_subkey_keyid, self.gnupg_home
+        )
 
-        self.assertTrue(verify_sig(signature_dict, key_data, self.test_data))
-        self.assertFalse(verify_sig(signature_dict, key_data, self.wrong_data))
+        signer = Signer.from_priv_key_uri(uri, public_key)
+        sig = signer.sign(self.test_data)
+
+        public_key.verify_signature(sig, self.test_data)
+
+        with self.assertRaises(UnverifiedSignatureError):
+            self.assertFalse(public_key.verify_signature(sig, self.wrong_data))
 
     def test_gpg_signature_data_structure(self):
         """Test custom fields and legacy data structure in gpg signatures."""
