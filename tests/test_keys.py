@@ -816,31 +816,7 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
             123,
         )
 
-    def test_decrypt_key(self):
-        # Test valid arguments.
-        passphrase = "secret"
-        encrypted_key = KEYS.encrypt_key(self.rsakey_dict, passphrase)
-        decrypted_key = KEYS.decrypt_key(encrypted_key, passphrase)
-
-        self.assertTrue(
-            securesystemslib.formats.ANYKEY_SCHEMA.matches(decrypted_key)
-        )
-
-        # Test improperly formatted arguments.
-        self.assertRaises(
-            securesystemslib.exceptions.FormatError,
-            KEYS.decrypt_key,
-            8,
-            passphrase,
-        )
-
-        self.assertRaises(
-            securesystemslib.exceptions.FormatError,
-            KEYS.decrypt_key,
-            encrypted_key,
-            8,
-        )
-
+   
     def test_extract_pem(self):
         # Normal case.
         private_pem = KEYS.extract_pem(
@@ -857,16 +833,7 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
             securesystemslib.formats.PEMRSA_SCHEMA.matches(public_pem)
         )
 
-        # Test encrypted private pem
-        encrypted_private_pem = KEYS.create_rsa_encrypted_pem(private_pem, "pw")
-        encrypted_private_pem_stripped = KEYS.extract_pem(
-            encrypted_private_pem, private_pem=True
-        )
-        self.assertTrue(
-            securesystemslib.formats.PEMRSA_SCHEMA.matches(
-                encrypted_private_pem_stripped
-            )
-        )
+      
 
         # Test for an invalid PEM.
         pem_header = "-----BEGIN RSA PRIVATE KEY-----"
