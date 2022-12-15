@@ -37,48 +37,12 @@ DATA = securesystemslib.formats.encode_canonical(DATA_STR).encode("utf-8")
 class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
     @classmethod
     def setUpClass(cls):
-        cls.rsakey_dict = KEYS.generate_rsa_key()
+        
         cls.ed25519key_dict = KEYS.generate_ed25519_key()
         cls.ecdsakey_dict = KEYS.generate_ecdsa_key()
         cls.sphincskey_dict = KEYS.generate_sphincs_key()
 
-    def test_generate_rsa_key(self):
-        _rsakey_dict = KEYS.generate_rsa_key()  # pylint: disable=invalid-name
-
-        # Check if the format of the object returned by generate() corresponds
-        # to RSAKEY_SCHEMA format.
-        self.assertEqual(
-            None,
-            securesystemslib.formats.RSAKEY_SCHEMA.check_match(_rsakey_dict),
-            FORMAT_ERROR_MSG,
-        )
-
-        # Passing a bit value that is <2048 to generate() - should raise
-        # 'securesystemslib.exceptions.FormatError'.
-        self.assertRaises(
-            securesystemslib.exceptions.FormatError, KEYS.generate_rsa_key, 555
-        )
-
-        # Passing a string instead of integer for a bit value.
-        self.assertRaises(
-            securesystemslib.exceptions.FormatError,
-            KEYS.generate_rsa_key,
-            "bits",
-        )
-
-        # NOTE if random bit value >=2048 (not 4096) is passed generate(bits)
-        # does not raise any errors and returns a valid key.
-        self.assertTrue(
-            securesystemslib.formats.RSAKEY_SCHEMA.matches(
-                KEYS.generate_rsa_key(2048)
-            )
-        )
-        self.assertTrue(
-            securesystemslib.formats.RSAKEY_SCHEMA.matches(
-                KEYS.generate_rsa_key(4096)
-            )
-        )
-
+    
     def test_generate_ecdsa_key(self):
         _ecdsakey_dict = (  # pylint: disable=invalid-name
             KEYS.generate_ecdsa_key()
