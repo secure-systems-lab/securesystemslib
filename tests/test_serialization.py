@@ -57,13 +57,12 @@ class TestJSONSerialization(unittest.TestCase):
 
         # Assert DeserializationError on invalid json and class.
         with self.assertRaises(DeserializationError):
-            deserializer.deserialize(b"not a valid json", Envelope)
-
-        with self.assertRaises(DeserializationError):
-            deserializer.deserialize(self.test_bytes, "not a valid type")
+            deserializer.deserialize(b"not a valid json")
 
         # Assert Equality between deserialized envelope and test object.
-        envelope_obj = deserializer.deserialize(self.test_bytes, Envelope)
+        envelope_dict = deserializer.deserialize(self.test_bytes)
+        envelope_obj = Envelope.from_dict(envelope_dict)
+
         self.assertEqual(envelope_obj, self.test_obj)
 
     def test_serialization(self):
@@ -73,14 +72,15 @@ class TestJSONSerialization(unittest.TestCase):
         json_bytes = serializer.serialize(self.test_obj)
 
         deserializer = JSONDeserializer()
-        envelope_obj = deserializer.deserialize(json_bytes, Envelope)
+        envelope_dict = deserializer.deserialize(json_bytes)
+        envelope_obj = Envelope.from_dict(envelope_dict)
 
         # Assert Equality between original object and deserialized object.
         self.assertEqual(envelope_obj, self.test_obj)
 
 
-class TestSerializable(unittest.TestCase):
-    """Serializable Type Test Case."""
+class TestSerializationMixin(unittest.TestCase):
+    """SerializationMixin Test Case."""
 
     def setUp(self):
         self.storage_backend = FilesystemBackend()
