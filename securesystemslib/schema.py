@@ -748,7 +748,7 @@ class Object(Schema):
         """
 
         # Ensure valid arguments.
-        for key, schema in required.items():  # pylint: disable=unused-variable
+        for schema in required.values():
             if not isinstance(schema, Schema):
                 raise exceptions.FormatError(
                     "Expected Schema but" " got " + repr(schema)

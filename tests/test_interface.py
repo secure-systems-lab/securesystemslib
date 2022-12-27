@@ -17,25 +17,15 @@
   Unit test for 'interface.py'.
 """
 
-import datetime  # pylint: disable=unused-import
-import json  # pylint: disable=unused-import
 import os
 import shutil
 import stat
-import sys
 import tempfile
-import time  # pylint: disable=unused-import
 import unittest
+from unittest import mock
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
-
-# Use external backport 'mock' on versions under 3.3
-if sys.version_info >= (3, 3):
-    import unittest.mock as mock  # pylint: disable=consider-using-from-import
-
-else:
-    import mock
 
 from securesystemslib import (  # pylint: disable=wrong-import-position
     KEY_TYPE_ECDSA,

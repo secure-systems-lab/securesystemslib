@@ -120,7 +120,7 @@ class Modified_TestCase(unittest.TestCase):  # pylint: disable=invalid-name
         """Generate a 'random' path consisting of random n-length strings."""
 
         rand_path = "/" + self.random_string(length)
-        for i in range(2):  # pylint: disable=unused-variable
+        for _ in range(2):
             rand_path = os.path.join(rand_path, self.random_string(length))
 
         return rand_path
@@ -130,7 +130,7 @@ class Modified_TestCase(unittest.TestCase):  # pylint: disable=invalid-name
         """Generate a random string of specified length."""
 
         rand_str = ""
-        for letter in range(length):  # pylint: disable=unused-variable
+        for _ in range(length):
             rand_str += random.choice("abcdefABCDEF" + string.digits)  # nosec
 
         return rand_str

@@ -1069,11 +1069,7 @@ def _decrypt(file_contents, password):
     # specified so that the expected derived key is regenerated correctly.
     # Discard the old "salt" and "iterations" values, as we only need the old
     # derived key.
-    (
-        junk_old_salt,  # pylint: disable=unused-variable
-        junk_old_iterations,  # pylint: disable=unused-variable
-        symmetric_key,
-    ) = _generate_derived_key(password, salt, iterations)
+    _, _, symmetric_key = _generate_derived_key(password, salt, iterations)
 
     # Verify the hmac to ensure the ciphertext is valid and has not been altered.
     # See the encryption routine for why we use the encrypt-then-MAC approach.

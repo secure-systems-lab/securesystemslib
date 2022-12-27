@@ -29,18 +29,11 @@
   when explicitly invoked.
 """
 
-import inspect  # pylint: disable=unused-import
-import json  # pylint: disable=unused-import
 import os
 import shutil
-import sys
 import tempfile
 import unittest
-
-if sys.version_info >= (3, 3):
-    import unittest.mock as mock  # pylint: disable=consider-using-from-import
-else:
-    import mock
+from unittest import mock
 
 import securesystemslib.exceptions  # pylint: disable=wrong-import-position
 import securesystemslib.gpg.constants  # pylint: disable=wrong-import-position
