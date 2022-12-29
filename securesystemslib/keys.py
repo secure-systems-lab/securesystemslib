@@ -454,24 +454,21 @@ def format_keyval_to_metadata(keytype, scheme, key_value, private=False):
         # key in the returned dictionary, ensure the private key is actually
         # present in 'key_val' (a private key is optional for 'KEYVAL_SCHEMA'
         # dicts).
-        if "private" not in key_value:  # pylint: disable=no-else-raise
+        if "private" not in key_value:
             raise exceptions.FormatError(
-                "The required private key"
-                " is missing from: " + repr(key_value)
+                "The required private key is missing from: " + repr(key_value)
             )
 
-        else:
-            return {"keytype": keytype, "scheme": scheme, "keyval": key_value}
+        return {"keytype": keytype, "scheme": scheme, "keyval": key_value}
 
-    else:
-        public_key_value = {"public": key_value["public"]}
+    public_key_value = {"public": key_value["public"]}
 
-        return {
-            "keytype": keytype,
-            "scheme": scheme,
-            "keyid_hash_algorithms": settings.HASH_ALGORITHMS,
-            "keyval": public_key_value,
-        }
+    return {
+        "keytype": keytype,
+        "scheme": scheme,
+        "keyid_hash_algorithms": settings.HASH_ALGORITHMS,
+        "keyval": public_key_value,
+    }
 
 
 def format_metadata_to_key(
@@ -830,15 +827,14 @@ def verify_signature(
 
     # Verify that the KEYID in 'key_dict' matches the KEYID listed in the
     # 'signature'.
-    if key_dict["keyid"] != signature["keyid"]:  # pylint: disable=no-else-raise
+    if key_dict["keyid"] != signature["keyid"]:
         raise exceptions.CryptoError(
             "The KEYID ("
             " " + repr(key_dict["keyid"]) + " ) in the given key does not match"
             " the KEYID ( " + repr(signature["keyid"]) + " ) in the signature."
         )
 
-    else:
-        logger.debug("The KEYIDs of key_dict and the signature match.")
+    logger.debug("The KEYIDs of key_dict and the signature match.")
 
     # Using the public key belonging to 'key_dict'
     # (i.e., rsakey_dict['keyval']['public']), verify whether 'signature'
@@ -1235,20 +1231,19 @@ def extract_pem(pem, private_pem=False):
 
     except ValueError:
         # Be careful not to print private key material in exception message.
-        if not private_pem:  # pylint: disable=no-else-raise
+        if not private_pem:
             raise exceptions.FormatError(  # pylint: disable=raise-missing-from
-                "Required PEM"
-                " header " + repr(pem_header) + "\n not found in PEM"
-                " string: " + repr(pem)
+                "Required PEM header "
+                + repr(pem_header)
+                + "\n not found in PEM string: "
+                + repr(pem)
             )
 
-        else:
-            raise exceptions.FormatError(  # pylint: disable=raise-missing-from
-                "Required PEM"
-                " header "
-                + repr(pem_header)
-                + "\n not found in private PEM string."
-            )
+        raise exceptions.FormatError(  # pylint: disable=raise-missing-from
+            "Required PEM header "
+            + repr(pem_header)
+            + "\n not found in private PEM string."
+        )
 
     try:
         # Search for 'pem_footer' after the PEM header.
@@ -1256,20 +1251,19 @@ def extract_pem(pem, private_pem=False):
 
     except ValueError:
         # Be careful not to print private key material in exception message.
-        if not private_pem:  # pylint: disable=no-else-raise
+        if not private_pem:
             raise exceptions.FormatError(  # pylint: disable=raise-missing-from
-                "Required PEM"
-                " footer " + repr(pem_footer) + "\n not found in PEM"
-                " string " + repr(pem)
+                "Required PEM footer "
+                + repr(pem_footer)
+                + "\n not found in PEM string "
+                + repr(pem)
             )
 
-        else:
-            raise exceptions.FormatError(  # pylint: disable=raise-missing-from
-                "Required PEM"
-                " footer "
-                + repr(pem_footer)
-                + "\n not found in private PEM string."
-            )
+        raise exceptions.FormatError(  # pylint: disable=raise-missing-from
+            "Required PEM footer "
+            + repr(pem_footer)
+            + "\n not found in private PEM string."
+        )
 
     # Extract only the public portion of 'pem'.  Leading or trailing whitespace
     # is excluded.

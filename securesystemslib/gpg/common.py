@@ -210,7 +210,7 @@ def parse_pubkey_bundle(data):
             # - there must be least one User ID packet, or
             # - order and type of signatures, or
             # - disallow duplicate packets
-            if (  # pylint: disable=no-else-raise
+            if (
                 packet_type != PACKET_TYPE_PRIMARY_KEY
                 and not key_bundle[PACKET_TYPE_PRIMARY_KEY]["key"]
             ):
@@ -219,7 +219,7 @@ def parse_pubkey_bundle(data):
                     "got '{}'.".format(PACKET_TYPE_PRIMARY_KEY, packet_type)
                 )
 
-            elif (
+            if (
                 packet_type == PACKET_TYPE_PRIMARY_KEY
                 and key_bundle[PACKET_TYPE_PRIMARY_KEY]["key"]
             ):
@@ -228,7 +228,7 @@ def parse_pubkey_bundle(data):
             # Fully parse master key to fail early, e.g. if key is malformed
             # or not supported, but also retain original packet for subkey binding
             # signature verification
-            elif packet_type == PACKET_TYPE_PRIMARY_KEY:
+            if packet_type == PACKET_TYPE_PRIMARY_KEY:
                 key_bundle[PACKET_TYPE_PRIMARY_KEY] = {
                     "key": parse_pubkey_payload(bytearray(payload)),
                     "packet": packet,
