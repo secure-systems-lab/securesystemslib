@@ -17,7 +17,6 @@
   Test cases for test_ecdsa_keys.py.
 """
 
-import os  # pylint: disable=unused-import
 import unittest
 
 import securesystemslib.ecdsa_keys
@@ -153,10 +152,7 @@ class TestECDSA_keys(
 
         # Generate an RSA key so that we can verify that non-ECDSA keys are
         # rejected.
-        (
-            rsa_pem,
-            junk,  # pylint: disable=unused-variable
-        ) = securesystemslib.rsa_keys.generate_rsa_public_and_private()
+        rsa_pem, _ = securesystemslib.rsa_keys.generate_rsa_public_and_private()
 
         # Verify that a non-ECDSA key (via the PEM argument) is rejected.
         self.assertRaises(

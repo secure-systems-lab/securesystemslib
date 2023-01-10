@@ -21,7 +21,6 @@
 import io
 import logging
 import os
-import sys  # pylint: disable=unused-import
 import tempfile
 import unittest
 

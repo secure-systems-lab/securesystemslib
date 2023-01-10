@@ -597,16 +597,14 @@ class Integer(Schema):
         self._hi = hi
 
     def check_match(self, object):  # pylint: disable=redefined-builtin
-        if isinstance(  # pylint: disable=no-else-raise
-            object, bool
-        ) or not isinstance(object, int):
+        if isinstance(object, bool) or not isinstance(object, int):
             # We need to check for bool as a special case, since bool
             # is for historical reasons a subtype of int.
             raise exceptions.FormatError(
                 "Got " + repr(object) + " instead of an integer."
             )
 
-        elif not (self._lo <= object <= self._hi):
+        if not (self._lo <= object <= self._hi):
             int_range = "[" + repr(self._lo) + ", " + repr(self._hi) + "]."
             raise exceptions.FormatError(
                 repr(object) + " not in range " + int_range
@@ -748,7 +746,7 @@ class Object(Schema):
         """
 
         # Ensure valid arguments.
-        for key, schema in required.items():  # pylint: disable=unused-variable
+        for schema in required.values():
             if not isinstance(schema, Schema):
                 raise exceptions.FormatError(
                     "Expected Schema but" " got " + repr(schema)
@@ -886,9 +884,7 @@ class Struct(Schema):
         self._struct_name = struct_name
 
     def check_match(self, object):  # pylint: disable=redefined-builtin
-        if not isinstance(  # pylint: disable=no-else-raise
-            object, (list, tuple)
-        ):
+        if not isinstance(object, (list, tuple)):
             raise exceptions.FormatError(
                 "Expected "
                 + repr(self._struct_name)
@@ -896,12 +892,12 @@ class Struct(Schema):
                 + repr(object)
             )
 
-        elif len(object) < self._min:
+        if len(object) < self._min:
             raise exceptions.FormatError(
                 "Too few fields in " + self._struct_name
             )
 
-        elif len(object) > len(self._sub_schemas) and not self._allow_more:
+        if len(object) > len(self._sub_schemas) and not self._allow_more:
             raise exceptions.FormatError(
                 "Too many fields in " + self._struct_name
             )

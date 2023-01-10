@@ -450,10 +450,8 @@ def digests_are_equal(digest1: str, digest2: str) -> bool:
 
     are_equal = True
 
-    for element in range(  # pylint: disable=consider-using-enumerate
-        len(digest1)
-    ):
-        if digest1[element] != digest2[element]:
+    for val1, val2 in zip(digest1, digest2):
+        if val1 != val2:
             are_equal = False
 
     return are_equal

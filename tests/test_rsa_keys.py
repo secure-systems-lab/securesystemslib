@@ -393,9 +393,7 @@ class TestRSA_keys(
             rsa_key, passphrase
         )
 
-        decrypted_rsa_key = securesystemslib.rsa_keys.decrypt_key(  # pylint: disable=unused-variable
-            encrypted_rsa_key, passphrase
-        )
+        _ = securesystemslib.rsa_keys.decrypt_key(encrypted_rsa_key, passphrase)
 
         # Test for invalid arguments.
         self.assertRaises(

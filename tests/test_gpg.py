@@ -21,24 +21,17 @@
 
 import os
 import shutil
-import sys
 import tempfile
 import unittest
-
-if sys.version_info >= (3, 3):
-    from unittest.mock import (  # pylint: disable=no-name-in-module,import-error
-        patch,
-    )
-else:
-    from mock import patch  # pylint: disable=import-error
 
 # pylint: disable=wrong-import-position
 from collections import OrderedDict
 from copy import deepcopy
+from unittest.mock import patch
 
-import cryptography.hazmat.backends as backends  # pylint: disable=consider-using-from-import
 import cryptography.hazmat.primitives.hashes as hashing
-import cryptography.hazmat.primitives.serialization as serialization  # pylint: disable=consider-using-from-import
+from cryptography.hazmat import backends
+from cryptography.hazmat.primitives import serialization
 
 from securesystemslib import exceptions, process
 from securesystemslib.formats import ANY_PUBKEY_DICT_SCHEMA, GPG_PUBKEY_SCHEMA
@@ -62,12 +55,7 @@ from securesystemslib.gpg.constants import (
     have_gpg,
 )
 from securesystemslib.gpg.dsa import create_pubkey as dsa_create_pubkey
-
-# pylint: disable=unused-import
 from securesystemslib.gpg.eddsa import ED25519_SIG_LENGTH
-from securesystemslib.gpg.eddsa import create_pubkey as eddsa_create_pubkey
-
-# pylint: enable=unused-import
 from securesystemslib.gpg.exceptions import (
     CommandError,
     KeyExpirationError,

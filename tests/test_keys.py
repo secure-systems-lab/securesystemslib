@@ -175,30 +175,23 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
         del test_rsakey_dict["keyid"]
 
         # Call format_metadata_to_key by using the default value for keyid_hash_algorithms
-        (
-            rsakey_dict_from_meta_default,
-            junk,  # pylint: disable=unused-variable
-        ) = KEYS.format_metadata_to_key(test_rsakey_dict)
+        rsakey_formatted, _ = KEYS.format_metadata_to_key(test_rsakey_dict)
 
         # Check if the format of the object returned by calling this function with
         # default hash algorithms e.g. securesystemslib.settings.HASH_ALGORITHMS corresponds
         # to RSAKEY_SCHEMA format.
         self.assertTrue(
-            securesystemslib.formats.RSAKEY_SCHEMA.matches(
-                rsakey_dict_from_meta_default
-            ),
+            securesystemslib.formats.RSAKEY_SCHEMA.matches(rsakey_formatted),
             FORMAT_ERROR_MSG,
         )
 
         self.assertTrue(
-            securesystemslib.formats.KEY_SCHEMA.matches(
-                rsakey_dict_from_meta_default
-            ),
+            securesystemslib.formats.KEY_SCHEMA.matches(rsakey_formatted),
             FORMAT_ERROR_MSG,
         )
 
         # Call format_metadata_to_key by using custom value for keyid_hash_algorithms
-        rsakey_dict_from_meta_custom, junk = KEYS.format_metadata_to_key(
+        rsakey_dict_from_meta_custom, _ = KEYS.format_metadata_to_key(
             test_rsakey_dict, keyid_hash_algorithms=["sha384"]
         )
 
@@ -552,10 +545,7 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
     def test_import_rsakey_from_private_pem(self):
         # Try to import an rsakey from a valid PEM.
         private_pem = self.rsakey_dict["keyval"]["private"]
-
-        private_rsakey = KEYS.import_rsakey_from_private_pem(  # pylint: disable=unused-variable
-            private_pem
-        )
+        _ = KEYS.import_rsakey_from_private_pem(private_pem)
 
         # Test for invalid arguments.
         self.assertRaises(
@@ -681,16 +671,14 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
     def test_import_ecdsakey_from_private_pem(self):
         # Try to import an ecdsakey from a valid PEM.
         private_pem = self.ecdsakey_dict["keyval"]["private"]
-        ecdsakey = KEYS.import_ecdsakey_from_private_pem(  # pylint: disable=unused-variable
-            private_pem
-        )
+        _ = KEYS.import_ecdsakey_from_private_pem(private_pem)
 
         # Test for an encrypted PEM.
         scheme = "ecdsa-sha2-nistp256"
         encrypted_pem = securesystemslib.ecdsa_keys.create_ecdsa_encrypted_pem(
             private_pem, "password"
         )
-        private_ecdsakey = KEYS.import_ecdsakey_from_private_pem(  # pylint: disable=unused-variable
+        _ = KEYS.import_ecdsakey_from_private_pem(
             encrypted_pem.decode("utf-8"), scheme, "password"
         )
 

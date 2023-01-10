@@ -327,15 +327,11 @@ def verify_signature(public_key, scheme, signature, data):
             f"Failed to load PEM key {public_key}"
         ) from e
 
-    if not isinstance(  # pylint: disable=no-else-raise
-        ecdsa_key, ec.EllipticCurvePublicKey
-    ):
+    if not isinstance(ecdsa_key, ec.EllipticCurvePublicKey):
         raise exceptions.FormatError(
             "Invalid ECDSA public" " key: " + repr(public_key)
         )
-
-    else:
-        logger.debug("Loaded a valid ECDSA public key.")
+    logger.debug("Loaded a valid ECDSA public key.")
 
     # verify() raises an 'InvalidSignature' exception if 'signature'
     # is invalid.

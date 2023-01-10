@@ -19,18 +19,15 @@
 
 import logging
 import os
-import shutil  # pylint: disable=unused-import
 import stat
-import sys  # pylint: disable=unused-import
 import tempfile
 import timeit
 import unittest
 
-import securesystemslib.exceptions as exceptions  # pylint: disable=consider-using-from-import
 import securesystemslib.hash
 import securesystemslib.settings
-import securesystemslib.unittest_toolbox as unittest_toolbox  # pylint: disable=consider-using-from-import
 import securesystemslib.util
+from securesystemslib import exceptions, unittest_toolbox
 
 logger = logging.getLogger(__name__)
 
@@ -135,9 +132,6 @@ class TestUtil(
         filepath = self.make_temp_data_file()
 
         # Computing the length of the tempfile.
-        digest_object = securesystemslib.hash.digest_filename(  # pylint: disable=unused-variable
-            filepath, algorithm="sha256"
-        )
         file_length = os.path.getsize(filepath)
 
         # Test: Expected input.
