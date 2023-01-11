@@ -22,7 +22,6 @@ from securesystemslib.gpg.functions import verify_signature as verify_sig
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
     SIGNER_FOR_URI_SCHEME,
-    GPGSignature,
     GPGSigner,
     Key,
     SecretsHandler,
@@ -398,11 +397,11 @@ class TestGPGRSA(unittest.TestCase):
 
     def test_gpg_sign_and_verify_object_with_default_key(self):
         """Create a signature using the default key on the keyring."""
-
+        # pylint: disable=protected-access
         signer = GPGSigner(homedir=self.gnupg_home)
         signature = signer.sign(self.test_data)
 
-        signature_dict = signature.to_dict()
+        signature_dict = GPGSigner._to_gpg_sig(signature)
         key_data = export_pubkey(self.default_keyid, self.gnupg_home)
 
         self.assertTrue(verify_sig(signature_dict, key_data, self.test_data))
@@ -410,27 +409,28 @@ class TestGPGRSA(unittest.TestCase):
 
     def test_gpg_sign_and_verify_object(self):
         """Create a signature using a specific key on the keyring."""
-
+        # pylint: disable=protected-access
         signer = GPGSigner(self.signing_subkey_keyid, self.gnupg_home)
         signature = signer.sign(self.test_data)
 
-        signature_dict = signature.to_dict()
+        signature_dict = GPGSigner._to_gpg_sig(signature)
         key_data = export_pubkey(self.signing_subkey_keyid, self.gnupg_home)
 
         self.assertTrue(verify_sig(signature_dict, key_data, self.test_data))
         self.assertFalse(verify_sig(signature_dict, key_data, self.wrong_data))
 
-    def test_gpg_serialization(self):
-        """Tests from_dict and to_dict methods of GPGSignature."""
+    def test_gpg_signature_data_structure(self):
+        """Test custom fields and legacy data structure in gpg signatures."""
+        # pylint: disable=protected-access
+        signer = GPGSigner(homedir=self.gnupg_home)
+        sig = signer.sign(self.test_data)
+        self.assertIn("other_headers", sig.unrecognized_fields)
 
-        sig_dict = {
-            "keyid": "f4f90403af58eef6",
-            "signature": "c39f86e70e12e70e11d87eb7e3ab7d3b",
-            "other_headers": "d8f8a89b5d71f07b842a",
-        }
-
-        signature = GPGSignature.from_dict(sig_dict)
-        self.assertEqual(sig_dict, signature.to_dict())
+        sig_dict = GPGSigner._to_gpg_sig(sig)
+        self.assertIn("signature", sig_dict)
+        self.assertNotIn("sig", sig_dict)
+        sig2 = GPGSigner._from_gpg_sig(sig_dict)
+        self.assertEqual(sig, sig2)
 
 
 # Run the unit tests.
