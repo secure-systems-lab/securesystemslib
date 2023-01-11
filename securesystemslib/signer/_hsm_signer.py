@@ -11,6 +11,7 @@ from urllib import parse
 
 from securesystemslib import KEY_TYPE_ECDSA
 from securesystemslib.exceptions import UnsupportedLibraryError
+from securesystemslib.keys import _get_keyid
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import SecretsHandler, Signer
@@ -191,9 +192,7 @@ class HSMSigner(Signer):
         return ECDomainParameters.load(bytes(params)), bytes(point)
 
     @classmethod
-    def import_(
-        cls, sslib_keyid: str, hsm_keyid: Optional[int] = None
-    ) -> Tuple[str, SSlibKey]:
+    def import_(cls, hsm_keyid: Optional[int] = None) -> Tuple[str, SSlibKey]:
         """Import public key and signer details from HSM.
 
         Returns a private key URI (for Signer.from_priv_key_uri()) and a public
@@ -201,7 +200,6 @@ class HSMSigner(Signer):
         key should be stored for later use.
 
         Arguments:
-            sslib_keyid: Key identifier that is unique within the metadata it is used in.
             hsm_keyid: Key identifier on the token. Default is 2 (meaning PIV key slot 9c).
 
         Raises:
@@ -244,12 +242,11 @@ class HSMSigner(Signer):
             .decode()
         )
 
-        key = SSlibKey(
-            sslib_keyid,
-            KEY_TYPE_ECDSA,
-            _SCHEME_FOR_CURVE[curve],
-            {"public": public_pem},
-        )
+        keyval = {"public": public_pem}
+        scheme = _SCHEME_FOR_CURVE[curve]
+        keyid = _get_keyid(KEY_TYPE_ECDSA, scheme, keyval)
+        key = SSlibKey(keyid, KEY_TYPE_ECDSA, scheme, keyval)
+
         return "hsm:", key
 
     @classmethod
