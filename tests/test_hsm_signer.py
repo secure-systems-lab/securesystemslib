@@ -139,7 +139,7 @@ class TestHSM(unittest.TestCase):
         """Test HSM key export and signing."""
 
         for hsm_keyid in [self.hsm_keyid, self.hsm_keyid_default]:
-            key = HSMSigner.pubkey_from_hsm(self.sslib_keyid, hsm_keyid)
+            _, key = HSMSigner.import_(self.sslib_keyid, hsm_keyid)
             signer = HSMSigner(hsm_keyid, key, lambda sec: self.hsm_user_pin)
             sig = signer.sign(b"DATA")
             key.verify_signature(sig, b"DATA")
@@ -150,11 +150,9 @@ class TestHSM(unittest.TestCase):
     def test_hsm_uri(self):
         """Test HSM default key export and signing from URI."""
 
-        key = HSMSigner.pubkey_from_hsm(
-            self.sslib_keyid, self.hsm_keyid_default
-        )
+        uri, key = HSMSigner.import_(self.sslib_keyid, self.hsm_keyid_default)
         signer = Signer.from_priv_key_uri(
-            "hsm:", key, lambda sec: self.hsm_user_pin
+            uri, key, lambda sec: self.hsm_user_pin
         )
         sig = signer.sign(b"DATA")
         key.verify_signature(sig, b"DATA")

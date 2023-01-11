@@ -191,10 +191,14 @@ class HSMSigner(Signer):
         return ECDomainParameters.load(bytes(params)), bytes(point)
 
     @classmethod
-    def pubkey_from_hsm(
+    def import_(
         cls, sslib_keyid: str, hsm_keyid: Optional[int] = None
-    ) -> SSlibKey:
-        """Export public key from HSM.
+    ) -> Tuple[str, SSlibKey]:
+        """Import public key and signer details from HSM.
+
+        Returns a private key URI (for Signer.from_priv_key_uri()) and a public
+        key. import_() should be called once and the returned URI and public
+        key should be stored for later use.
 
         Arguments:
             sslib_keyid: Key identifier that is unique within the metadata it is used in.
@@ -240,12 +244,13 @@ class HSMSigner(Signer):
             .decode()
         )
 
-        return SSlibKey(
+        key = SSlibKey(
             sslib_keyid,
             KEY_TYPE_ECDSA,
             _SCHEME_FOR_CURVE[curve],
             {"public": public_pem},
         )
+        return "hsm:", key
 
     @classmethod
     def from_priv_key_uri(
