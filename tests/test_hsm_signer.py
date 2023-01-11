@@ -51,7 +51,6 @@ class TestHSM(unittest.TestCase):
     See .github/workflows/hsm.yml for how this can be done on Linux, macOS and Windows.
     """
 
-    sslib_keyid = "a" * 64  # Mock SSlibKey conform sha256 hex digest keyid
     hsm_keyid = 1
     hsm_keyid_default = 2
     hsm_user_pin = "123456"
@@ -139,7 +138,7 @@ class TestHSM(unittest.TestCase):
         """Test HSM key export and signing."""
 
         for hsm_keyid in [self.hsm_keyid, self.hsm_keyid_default]:
-            key = HSMSigner.pubkey_from_hsm(self.sslib_keyid, hsm_keyid)
+            _, key = HSMSigner.import_(hsm_keyid)
             signer = HSMSigner(hsm_keyid, key, lambda sec: self.hsm_user_pin)
             sig = signer.sign(b"DATA")
             key.verify_signature(sig, b"DATA")
@@ -150,11 +149,9 @@ class TestHSM(unittest.TestCase):
     def test_hsm_uri(self):
         """Test HSM default key export and signing from URI."""
 
-        key = HSMSigner.pubkey_from_hsm(
-            self.sslib_keyid, self.hsm_keyid_default
-        )
+        uri, key = HSMSigner.import_(self.hsm_keyid_default)
         signer = Signer.from_priv_key_uri(
-            "hsm:", key, lambda sec: self.hsm_user_pin
+            uri, key, lambda sec: self.hsm_user_pin
         )
         sig = signer.sign(b"DATA")
         key.verify_signature(sig, b"DATA")
