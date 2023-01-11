@@ -114,11 +114,11 @@ class GCPSigner(Signer):
         """Return keytype and scheme for the KMS algorithm enum"""
         keytypes_and_schemes = {
             CryptoKeyVersion.CryptoKeyVersionAlgorithm.EC_SIGN_P256_SHA256: (
-                "ecdsa-sha2-nistp256",
+                "ecdsa",
                 "ecdsa-sha2-nistp256",
             ),
             CryptoKeyVersion.CryptoKeyVersionAlgorithm.EC_SIGN_P384_SHA384: (
-                "ecdsa-sha2-nistp384",
+                "ecdsa",
                 "ecdsa-sha2-nistp384",
             ),
             CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PSS_2048_SHA256: (
