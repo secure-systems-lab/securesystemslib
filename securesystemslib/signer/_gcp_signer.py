@@ -66,7 +66,6 @@ class GCPSigner(Signer):
 
         self.hash_algorithm = self._get_hash_algorithm(public_key)
         self.gcp_keyid = gcp_keyid
-        self.priv_key_uri = f"{self.SCHEME}:{gcp_keyid}"
         self.public_key = public_key
         self.client = kms.KeyManagementServiceClient()
 
