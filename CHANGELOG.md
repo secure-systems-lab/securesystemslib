@@ -1,4 +1,29 @@
 # Changelog
+
+## securesystemslib v0.26.0
+
+### Added
+* Private key URI schemes for signer instantiation (#456)
+* Public key container class for signature verification (#456)
+* Post-quantum sphincs+ signing scheme (#427)
+* Hardware Security Module (HSM) signing (#472)
+* Google Cloud KMS signing (#442, #480)
+
+### Changed
+* Use pyproject.toml for build configuration (#253)
+* Use hatchling as build backend (#484)
+* Auto-format and lint all code (#439, #490)
+* Various CI and build improvements (#459, #460, #476, #493, #464)
+
+### Removed
+* Drop colorama optional dependency and colorized output support (#443)
+
+### Fixed
+* Don't shell out to gpg on import (#437)
+* Fix metaclass definition (#473)
+* Make GPGSigner signatures specification compliant (#486)
+
+
 ## securesystemslib v0.25.0
 
 ### Changed
