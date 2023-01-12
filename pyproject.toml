@@ -45,10 +45,9 @@ Issues = "https://github.com/secure-systems-lab/securesystemslib/issues"
 [project.optional-dependencies]
 crypto = ["cryptography>=37.0.0"]
 gcpkms = ["google-cloud-kms", "cryptography>=37.0.0"]
+hsm = ["asn1crypto", "cryptography>=37.0.0", "PyKCS11"]
 pynacl = ["pynacl>1.2.0"]
-PySPX = ["PySPX==0.5.0"]
-asn1 = ["asn1crypto"]
-pykcs11 = ["PyKCS11"]
+PySPX = ["PySPX>=0.5.0"]
 
 [tool.hatch.version]
 path = "securesystemslib/__init__.py"
