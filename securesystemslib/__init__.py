@@ -1,7 +1,7 @@
 # pylint: disable=missing-module-docstring
 import logging
 
-__version__ = "0.25.0"
+__version__ = "0.26.0"
 
 # Configure a basic 'securesystemslib' top-level logger with a StreamHandler
 # (print to console) and the WARNING log level (print messages of type
