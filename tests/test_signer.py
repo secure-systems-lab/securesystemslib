@@ -437,14 +437,17 @@ class TestGPGRSA(unittest.TestCase):
     def test_gpg_signature_data_structure(self):
         """Test custom fields and legacy data structure in gpg signatures."""
         # pylint: disable=protected-access
-        signer = GPGSigner(homedir=self.gnupg_home)
+        _, public_key = GPGSigner.import_(
+            self.signing_subkey_keyid, self.gnupg_home
+        )
+        signer = GPGSigner(public_key, homedir=self.gnupg_home)
         sig = signer.sign(self.test_data)
         self.assertIn("other_headers", sig.unrecognized_fields)
 
-        sig_dict = GPGSigner._to_gpg_sig(sig)
+        sig_dict = GPGSigner._sig_to_legacy_dict(sig)
         self.assertIn("signature", sig_dict)
         self.assertNotIn("sig", sig_dict)
-        sig2 = GPGSigner._from_gpg_sig(sig_dict)
+        sig2 = GPGSigner._sig_from_legacy_dict(sig_dict)
         self.assertEqual(sig, sig2)
 
 
