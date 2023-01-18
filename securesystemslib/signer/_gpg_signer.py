@@ -191,6 +191,7 @@ class GPGKey(Key):
                 )
         except (
             exceptions.FormatError,
+            exceptions.UnsupportedLibraryError,
             gpg_exceptions.KeyExpirationError,
         ) as e:
             logger.info("Key %s failed to verify sig: %s", self.keyid, str(e))
@@ -249,7 +250,7 @@ class GPGSigner(Signer):
             raise ValueError(f"GPGSigner does not support {priv_key_uri}")
 
         if secrets_handler is not None:
-            raise ValueError("GPGSigner does not support a secrets handler")
+            logger.warning("GPGSigner does not support a secrets handler")
 
         params = dict(parse.parse_qsl(uri.query))
         keyid = params.get("key")
