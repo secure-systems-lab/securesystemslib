@@ -35,6 +35,8 @@ from securesystemslib.gpg.functions import (
     verify_signature,
 )
 
+from securesystemslib.signer import GPGKey, GPGSigner, Signer
+
 
 class TestPublicInterfacesGPG(
     unittest.TestCase
@@ -47,17 +49,29 @@ class TestPublicInterfacesGPG(
 
     def test_gpg_functions(self):
         """Signing, key export and util functions must raise on missing gpg."""
-        with self.assertRaises(UnsupportedLibraryError) as ctx:
-            create_signature("bar")
-        self.assertEqual(NO_GPG_MSG, str(ctx.exception))
 
-        with self.assertRaises(UnsupportedLibraryError) as ctx:
-            export_pubkey("f00")
-        self.assertEqual(NO_GPG_MSG, str(ctx.exception))
+        # Hand-crafting a GPG public key and loading a signer works w/o gpg, but
+        # signing fails (see below).
+        mock_public_key = GPGKey(
+            "aa",
+            "rsa",
+            "pgp+rsa-pkcsv1.5",
+            ["pgp+SHA2"],
+            {"public": {"key": "value"}},
+        )
+        signer = Signer.from_priv_key_uri("gnupg:?id=abcd", mock_public_key)
 
-        with self.assertRaises(UnsupportedLibraryError) as ctx:
-            export_pubkeys(["f00"])
-        self.assertEqual(NO_GPG_MSG, str(ctx.exception))
+        # Run commands that require gpg and assert error plus message
+        for fn, args in (
+            (create_signature, ("bar",)),
+            (export_pubkey, ("f00",)),
+            (export_pubkeys, (["f00"],)),
+            (GPGSigner.import_, ("keyid",)),
+            (signer.sign, (b"data",)),
+        ):
+            with self.assertRaises(UnsupportedLibraryError) as ctx:
+                fn(*args)
+            self.assertEqual(NO_GPG_MSG, str(ctx.exception))
 
     def test_gpg_verify(self):
         """Signature verification does not require gpg to be installed on the host.
@@ -139,6 +153,10 @@ class TestPublicInterfacesGPG(
 
         for key, sig in key_signature_pairs:
             self.assertTrue(verify_signature(sig, key, data))
+            # pylint: disable=protected-access
+            GPGKey._from_legacy_dict(key).verify_signature(
+                GPGSigner._sig_from_legacy_dict(sig), data
+            )
 
 
 if __name__ == "__main__":

@@ -15,8 +15,10 @@ from securesystemslib.exceptions import (
     FormatError,
     UnsupportedAlgorithmError,
     UnverifiedSignatureError,
+    VerificationError,
 )
 from securesystemslib.gpg.constants import have_gpg
+from securesystemslib.gpg.exceptions import KeyExpirationError
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
     SIGNER_FOR_URI_SCHEME,
@@ -37,13 +39,11 @@ class TestKey(unittest.TestCase):
     def test_key_from_to_dict(self):
         """Test to/from_dict for known keytype/scheme combos"""
         for (keytype, scheme), key_impl in KEY_FOR_TYPE_AND_SCHEME.items():
-            if key_impl in [GPGKey]:  # these keys require additional fields
-                continue
-
             keydict = {
                 "keytype": keytype,
                 "scheme": scheme,
                 "extra": "somedata",
+                "hashes": ["only recognized by GPGKey"],
                 "keyval": {
                     "public": "pubkeyval",
                     "foo": "bar",
@@ -417,7 +417,7 @@ class TestGPGRSA(unittest.TestCase):
         public_key.verify_signature(sig, self.test_data)
 
         with self.assertRaises(UnverifiedSignatureError):
-            self.assertFalse(public_key.verify_signature(sig, self.wrong_data))
+            public_key.verify_signature(sig, self.wrong_data)
 
     def test_gpg_sign_and_verify_object(self):
         """Create a signature using a specific key on the keyring."""
@@ -432,9 +432,30 @@ class TestGPGRSA(unittest.TestCase):
         public_key.verify_signature(sig, self.test_data)
 
         with self.assertRaises(UnverifiedSignatureError):
-            self.assertFalse(public_key.verify_signature(sig, self.wrong_data))
+            public_key.verify_signature(sig, self.wrong_data)
 
-    def test_gpg_signature_data_structure(self):
+        public_key.subkeys[sig.keyid].creation_time = 1
+        public_key.subkeys[sig.keyid].validity_period = 1
+        with self.assertRaises(VerificationError) as ctx:
+            public_key.verify_signature(sig, self.test_data)
+
+        self.assertIsInstance(ctx.exception.__cause__, KeyExpirationError)
+
+    def test_gpg_signer_load_with_bad_scheme(self):
+        """Load from priv key uri with wrong uri scheme."""
+        key = GPGKey(
+            "aa", "rsa", "pgp+rsa-pkcsv1.5", ["pgp+SHA2"], {"public": "val"}
+        )
+        with self.assertRaises(ValueError):
+            GPGSigner.from_priv_key_uri("wrong:", key)
+
+    def test_gpg_signer_load_with_bad_key(self):
+        """Load from priv key uri with wrong pubkey type."""
+        key = SSlibKey("aa", "rsa", "rsassa-pss-sha256", {"public": "val"})
+        with self.assertRaises(ValueError):
+            GPGSigner.from_priv_key_uri("gnupg:", key)
+
+    def test_gpg_signature_legacy_data_structure(self):
         """Test custom fields and legacy data structure in gpg signatures."""
         # pylint: disable=protected-access
         _, public_key = GPGSigner.import_(
@@ -449,6 +470,63 @@ class TestGPGRSA(unittest.TestCase):
         self.assertNotIn("sig", sig_dict)
         sig2 = GPGSigner._sig_from_legacy_dict(sig_dict)
         self.assertEqual(sig, sig2)
+
+    def test_gpg_key_legacy_data_structure(self):
+        """Test legacy data structure conversion in gpg keys."""
+        # pylint: disable=protected-access
+        _, public_key = GPGSigner.import_(
+            self.signing_subkey_keyid, self.gnupg_home
+        )
+        legacy_fields = {"keyid", "type", "method"}
+        fields = {"keytype", "scheme"}
+
+        legacy_dict = public_key._to_legacy_dict()
+        for key in [legacy_dict] + list(legacy_dict["subkeys"].values()):
+            for field in legacy_fields:
+                self.assertIn(field, key)
+            for field in fields:
+                self.assertNotIn(field, key)
+
+        self.assertEqual(public_key, GPGKey._from_legacy_dict(legacy_dict))
+
+    def test_gpg_key_optional_fields(self):
+        """Test gpg public key from/to_dict with optional fields."""
+
+        keydict_base = {
+            "keytype": "rsa",
+            "scheme": "pgp+rsa-pkcsv1.5",
+            "hashes": ["pgp+SHA2"],
+            "keyval": {
+                "public": "pubkeyval",
+            },
+        }
+
+        for name, val in (
+            ("creation_time", 1),
+            ("validity_period", 1),
+            ("subkeys", {"bb": copy.deepcopy(keydict_base)}),
+        ):
+            keydict = copy.deepcopy(keydict_base)
+            keydict[name] = val
+            key = Key.from_dict("aa", copy.deepcopy(keydict))
+            self.assertIsNotNone(getattr(key, name))
+            self.assertDictEqual(keydict, key.to_dict(), name)
+
+    def test_gpg_key__eq__(self):
+        """Test GPGKey.__eq__() ."""
+        key1 = GPGKey(
+            "aa", "rsa", "pgp+rsa-pkcsv1.5", ["pgp+SHA2"], {"public": "val"}
+        )
+        key2 = copy.deepcopy(key1)
+        self.assertEqual(key1, key2)
+
+        key2.keyid = "bb"
+        self.assertNotEqual(key1, key2)
+
+        other_key = SSlibKey(
+            "aa", "rsa", "rsassa-pss-sha256", {"public": "val"}
+        )
+        self.assertNotEqual(key1, other_key)
 
 
 # Run the unit tests.
