@@ -268,7 +268,9 @@ class GPGSigner(Signer):
         return Signature.from_dict(sig_dict)
 
     @classmethod
-    def import_(cls, keyid: str, homedir=None) -> Tuple[str, Key]:
+    def import_(
+        cls, keyid: str, homedir: Optional[str] = None
+    ) -> Tuple[str, Key]:
         """Load key and signer details from GnuPG keyring
 
         Args:
