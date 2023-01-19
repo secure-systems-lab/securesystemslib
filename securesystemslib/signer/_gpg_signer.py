@@ -168,6 +168,7 @@ class GPGKey(Key):
             {
                 "keytype": self.keytype,
                 "scheme": self.scheme,
+                **self.unrecognized_fields,
             }
         )
 
