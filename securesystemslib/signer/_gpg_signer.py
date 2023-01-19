@@ -21,6 +21,7 @@ class GPGKey(Key):
 
     Attributes:
         keyid: Key identifier that is unique within the metadata it is used in.
+                It is also used to identify the GnuPG local user signing key.
         ketytype:  Key type, e.g. "rsa", "dsa" or "eddsa".
         scheme: Signing schemes, e.g. "pgp+rsa-pkcsv1.5", "pgp+dsa-fips-180-2",
                 "pgp+eddsa-ed25519".
@@ -212,12 +213,13 @@ class GPGSigner(Signer):
     GPGSigner can be instantiated with Signer.from_priv_key_uri(). These private key URI
     schemes are supported:
 
-    * "gnupg:[<GnuPG homedir>][?id=<keyid>]":
-        Signs with GnuPG key identified by keyid, in the keyring in home dir. If
-        homedir is not passed, the default homedir is used.
+    * "gnupg:[<GnuPG homedir>]":
+        Signs with GnuPG key in keyring in home dir. The signing key is
+        identified with the keyid of the passed public key. If homedir is not
+        passed, the default homedir is used.
 
     Arguments:
-        keyid: GnuPG local user signing key id. If not passed, the default key is used.
+        public_key: The related public key instance.
         homedir: GnuPG home directory path. If not passed, the default homedir is used.
 
     """
@@ -227,10 +229,8 @@ class GPGSigner(Signer):
     def __init__(
         self,
         public_key: Key,
-        keyid: Optional[str] = None,
         homedir: Optional[str] = None,
     ):
-        self.keyid = keyid
         self.homedir = homedir
         self.public_key = public_key
 
@@ -249,11 +249,9 @@ class GPGSigner(Signer):
         if uri.scheme != cls.SCHEME:
             raise ValueError(f"GPGSigner does not support {priv_key_uri}")
 
-        params = dict(parse.parse_qsl(uri.query))
-        keyid = params.get("key")
         homedir = uri.path or None
 
-        return cls(public_key, keyid, homedir)
+        return cls(public_key, homedir)
 
     @staticmethod
     def _sig_to_legacy_dict(sig: Signature) -> Dict:
@@ -281,7 +279,7 @@ class GPGSigner(Signer):
             Tuple of private key uri and the public key.
 
         """
-        uri = f"{cls.SCHEME}:{homedir or ''}{'?key=' + keyid}"
+        uri = f"{cls.SCHEME}:{homedir or ''}"
 
         public_key = (
             GPGKey._from_legacy_dict(  # pylint: disable=protected-access
@@ -311,5 +309,5 @@ class GPGSigner(Signer):
             Signature.
         """
         return self._sig_from_legacy_dict(
-            gpg.create_signature(payload, self.keyid, self.homedir)
+            gpg.create_signature(payload, self.public_key.keyid, self.homedir)
         )
