@@ -249,9 +249,6 @@ class GPGSigner(Signer):
         if uri.scheme != cls.SCHEME:
             raise ValueError(f"GPGSigner does not support {priv_key_uri}")
 
-        if secrets_handler is not None:
-            logger.warning("GPGSigner does not support a secrets handler")
-
         params = dict(parse.parse_qsl(uri.query))
         keyid = params.get("key")
         homedir = uri.path or None
