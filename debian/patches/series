@@ -1,1 +1,3 @@
-01_use_python3_interpreter_in_tests.diff
+01_rm_sphincs_tests.diff
+02_fix_py2_shebang.diff
+03_rm_vendored_gitignore.diff

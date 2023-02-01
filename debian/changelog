@@ -1,3 +1,25 @@
+python-securesystemslib (0.26.0-1) unstable; urgency=medium
+
+  * New upstream release includes among other things:
+    - A new flexible signing API with added support for Google Cloud KMS
+      signing, HSM signing, and Post-quantum signing schemes, see
+      https://theupdateframework.github.io/python-tuf/2023/01/24/securesystemslib-signer-api.html
+    - Removal of colorama and mock (test) dependencies
+    - Various fixes in the gpg subpackage
+    - And much more (see upstream CHANGELOG.md)
+
+  * d/control
+    - bump standards version to 4.6.2
+    - adopt upstream requirements changes
+  * d/patches:
+    - remove obsolete patches
+    - patch tests that require unavailable PySPX package
+    - other minor fixes suggested by lintian
+  * d/rules:
+    - export path to pkcs11 library for softhsm testing
+
+ -- Lukas Puehringer <lukas.puehringer@nyu.edu>  Tue, 31 Jan 2023 13:12:22 +0100
+
 python-securesystemslib (0.23.0-1) unstable; urgency=medium
 
   * New upstream release includes among other things:
