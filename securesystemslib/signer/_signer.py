@@ -153,7 +153,7 @@ class SSlibSigner(Signer):
     def from_priv_key_uri(
         cls,
         priv_key_uri: str,
-        public_key: Key,
+        public_key: SSlibKey,
         secrets_handler: Optional[SecretsHandler] = None,
     ) -> "SSlibSigner":
         """Constructor for Signer to call
