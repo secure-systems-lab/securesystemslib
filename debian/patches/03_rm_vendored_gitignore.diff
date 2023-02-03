@@ -1,0 +1,13 @@
+Description: Remove unneeded .gitignore from vendored package
+Author: Lukas Puehringer <lukas.puehringer@nyu.edu>
+Forwarded: not-needed
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: securesystemslib-0.26.0/securesystemslib/_vendor/ed25519/.gitignore
+===================================================================
+--- securesystemslib-0.26.0.orig/securesystemslib/_vendor/ed25519/.gitignore
++++ /dev/null
+@@ -1,3 +0,0 @@
+-*.pyc
+-.tox
+-*.egg-info

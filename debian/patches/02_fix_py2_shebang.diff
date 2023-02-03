@@ -1,0 +1,17 @@
+Description: Fix Python2 shebang
+  Python2 is no longer supported, fix obsolete
+  shebang.
+Author: Lukas Puehringer <lukas.puehringer@nyu.edu>
+Forwarded: https://github.com/secure-systems-lab/securesystemslib/issues/498
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: securesystemslib-0.26.0/securesystemslib/hash.py
+===================================================================
+--- securesystemslib-0.26.0.orig/securesystemslib/hash.py
++++ securesystemslib-0.26.0/securesystemslib/hash.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python2
++#!/usr/bin/env python
+ """
+ <Program Name>
+   hash.py
