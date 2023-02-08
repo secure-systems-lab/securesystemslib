@@ -16,9 +16,10 @@
   verifying signatures.
 """
 import logging
+import subprocess  # nosec
 import time
 
-from securesystemslib import exceptions, formats, process
+from securesystemslib import exceptions, formats
 from securesystemslib.gpg.common import (
     get_pubkey_bundle,
     parse_signature_packet,
@@ -125,12 +126,12 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
 
     command = gpg_sign_command(keyarg=keyarg, homearg=homearg)
 
-    gpg_process = process.run(
+    gpg_process = subprocess.run(
         command,
         input=content,
         check=False,
-        stdout=process.PIPE,
-        stderr=process.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         timeout=timeout,
     )
 
@@ -313,9 +314,12 @@ def export_pubkey(keyid, homedir=None, timeout=GPG_TIMEOUT):
     # TODO: Consider adopting command error handling from `create_signature`
     # above, e.g. in a common 'run gpg command' utility function
     command = gpg_export_pubkey_command(keyid=keyid, homearg=homearg)
-
-    gpg_process = process.run(
-        command, stdout=process.PIPE, stderr=process.PIPE, timeout=timeout
+    gpg_process = subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=timeout,
+        check=True,
     )
 
     key_packet = gpg_process.stdout
