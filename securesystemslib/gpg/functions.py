@@ -25,6 +25,7 @@ from securesystemslib.gpg.common import (
 )
 from securesystemslib.gpg.constants import (
     FULLY_SUPPORTED_MIN_VERSION,
+    GPG_TIMEOUT,
     NO_GPG_MSG,
     SHA256,
     gpg_export_pubkey_command,
@@ -127,6 +128,7 @@ def create_signature(content, keyid=None, homedir=None):
         check=False,
         stdout=process.PIPE,
         stderr=process.PIPE,
+        timeout=GPG_TIMEOUT,
     )
 
     # TODO: It's suggested to take a look at `--status-fd` for proper error
@@ -307,7 +309,9 @@ def export_pubkey(keyid, homedir=None):
     # TODO: Consider adopting command error handling from `create_signature`
     # above, e.g. in a common 'run gpg command' utility function
     command = gpg_export_pubkey_command(keyid=keyid, homearg=homearg)
-    gpg_process = process.run(command, stdout=process.PIPE, stderr=process.PIPE)
+    gpg_process = process.run(
+        command, stdout=process.PIPE, stderr=process.PIPE, timeout=GPG_TIMEOUT
+    )
 
     key_packet = gpg_process.stdout
     key_bundle = get_pubkey_bundle(key_packet, keyid)

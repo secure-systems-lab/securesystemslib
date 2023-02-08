@@ -44,6 +44,7 @@ from securesystemslib.gpg.common import (
     parse_signature_packet,
 )
 from securesystemslib.gpg.constants import (
+    GPG_TIMEOUT,
     PACKET_TYPE_PRIMARY_KEY,
     PACKET_TYPE_SUB_KEY,
     PACKET_TYPE_USER_ATTR,
@@ -218,14 +219,18 @@ class TestCommon(unittest.TestCase):
         # erroneous gpg data in tests below.
         keyid = "F557D0FF451DEF45372591429EA70BD13D883381"
         cmd = gpg_export_pubkey_command(keyid=keyid, homearg=homearg)
-        proc = process.run(cmd, stdout=process.PIPE, stderr=process.PIPE)
+        proc = process.run(
+            cmd, stdout=process.PIPE, stderr=process.PIPE, timeout=GPG_TIMEOUT
+        )
         self.raw_key_data = proc.stdout
         self.raw_key_bundle = parse_pubkey_bundle(self.raw_key_data)
 
         # Export pubkey bundle with expired key for key expiration tests
         keyid = "E8AC80C924116DABB51D4B987CB07D6D2C199C7C"
         cmd = gpg_export_pubkey_command(keyid=keyid, homearg=homearg)
-        proc = process.run(cmd, stdout=process.PIPE, stderr=process.PIPE)
+        proc = process.run(
+            cmd, stdout=process.PIPE, stderr=process.PIPE, timeout=GPG_TIMEOUT
+        )
         self.raw_expired_key_bundle = parse_pubkey_bundle(proc.stdout)
 
     def test_parse_pubkey_payload_errors(self):
