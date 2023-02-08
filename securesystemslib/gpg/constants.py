@@ -28,7 +28,7 @@ GPG_TIMEOUT = 10
 
 
 @functools.lru_cache(maxsize=3)
-def is_available_gnupg(gnupg: str) -> bool:
+def is_available_gnupg(gnupg: str, timeout=GPG_TIMEOUT) -> bool:
     """Returns whether gnupg points to a gpg binary."""
     gpg_version_cmd = gnupg + " --version"
     try:
@@ -36,7 +36,7 @@ def is_available_gnupg(gnupg: str) -> bool:
             gpg_version_cmd,
             stdout=process.PIPE,
             stderr=process.PIPE,
-            timeout=GPG_TIMEOUT,
+            timeout=timeout,
         )
         return True
     except (OSError, subprocess.TimeoutExpired):

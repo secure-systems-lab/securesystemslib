@@ -41,7 +41,7 @@ log = logging.getLogger(__name__)
 NO_CRYPTO_MSG = "GPG support requires the cryptography library"
 
 
-def create_signature(content, keyid=None, homedir=None):
+def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
     """
     <Purpose>
       Calls the gpg command line utility to sign the passed content with the key
@@ -66,6 +66,9 @@ def create_signature(content, keyid=None, homedir=None):
 
       homedir: (optional)
               Path to the gpg keyring. If not passed the default keyring is used.
+
+      timeout (optional):
+              gpg command timeout in seconds. Default is 10.
 
     <Exceptions>
       securesystemslib.exceptions.FormatError:
@@ -128,7 +131,7 @@ def create_signature(content, keyid=None, homedir=None):
         check=False,
         stdout=process.PIPE,
         stderr=process.PIPE,
-        timeout=GPG_TIMEOUT,
+        timeout=timeout,
     )
 
     # TODO: It's suggested to take a look at `--status-fd` for proper error
@@ -263,13 +266,14 @@ def verify_signature(signature_object, pubkey_info, content):
     )
 
 
-def export_pubkey(keyid, homedir=None):
+def export_pubkey(keyid, homedir=None, timeout=GPG_TIMEOUT):
     """Exports a public key from a GnuPG keyring.
 
     Arguments:
       keyid: An OpenPGP keyid in KEYID_SCHEMA format.
       homedir (optional): A path to the GnuPG home directory. If not set the
           default GnuPG home directory is used.
+      timeout (optional): gpg command timeout in seconds. Default is 10.
 
     Raises:
       ValueError: Keyid is not a string.
@@ -309,8 +313,9 @@ def export_pubkey(keyid, homedir=None):
     # TODO: Consider adopting command error handling from `create_signature`
     # above, e.g. in a common 'run gpg command' utility function
     command = gpg_export_pubkey_command(keyid=keyid, homearg=homearg)
+
     gpg_process = process.run(
-        command, stdout=process.PIPE, stderr=process.PIPE, timeout=GPG_TIMEOUT
+        command, stdout=process.PIPE, stderr=process.PIPE, timeout=timeout
     )
 
     key_packet = gpg_process.stdout
@@ -319,13 +324,14 @@ def export_pubkey(keyid, homedir=None):
     return key_bundle
 
 
-def export_pubkeys(keyids, homedir=None):
+def export_pubkeys(keyids, homedir=None, timeout=GPG_TIMEOUT):
     """Exports multiple public keys from a GnuPG keyring.
 
     Arguments:
       keyids: A list of OpenPGP keyids in KEYID_SCHEMA format.
       homedir (optional): A path to the GnuPG home directory. If not set the
           default GnuPG home directory is used.
+      timeout (optional): gpg command timeout in seconds. Default is 10.
 
     Raises:
       TypeError: Keyids is not iterable.
@@ -345,7 +351,7 @@ def export_pubkeys(keyids, homedir=None):
     """
     public_key_dict = {}
     for gpg_keyid in keyids:
-        public_key = export_pubkey(gpg_keyid, homedir=homedir)
+        public_key = export_pubkey(gpg_keyid, homedir=homedir, timeout=timeout)
         keyid = public_key["keyid"]
         public_key_dict[keyid] = public_key
 
