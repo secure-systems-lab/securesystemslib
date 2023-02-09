@@ -220,7 +220,7 @@ def generate_rsa_public_and_private(bits=_DEFAULT_RSA_KEY_BITS):
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
         encryption_algorithm=serialization.NoEncryption(),
-    )
+    ).strip()
 
     # Need to generate the public pem from the private key before serialization
     # to PEM.
@@ -228,7 +228,7 @@ def generate_rsa_public_and_private(bits=_DEFAULT_RSA_KEY_BITS):
     public_pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
-    )
+    ).strip()
 
     return public_pem.decode("utf-8"), private_pem.decode("utf-8")
 
@@ -582,7 +582,7 @@ def create_rsa_encrypted_pem(private_key, passphrase):
         encryption_algorithm=serialization.BestAvailableEncryption(
             passphrase.encode("utf-8")
         ),
-    )
+    ).strip()
 
     return encrypted_pem.decode()
 
@@ -705,7 +705,7 @@ def create_rsa_public_and_private_from_pem(pem, passphrase=None):
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
         encryption_algorithm=serialization.NoEncryption(),
-    )
+    ).strip()
 
     # Need to generate the public key from the private one before serializing
     # to PEM format.
@@ -713,7 +713,7 @@ def create_rsa_public_and_private_from_pem(pem, passphrase=None):
     public_pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
-    )
+    ).strip()
 
     return public_pem.decode(), private_pem.decode()
 

@@ -155,12 +155,12 @@ def generate_public_and_private(scheme="ecdsa-sha2-nistp256"):
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
         encryption_algorithm=serialization.NoEncryption(),
-    )
+    ).strip()
 
     public_pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
-    )
+    ).strip()
 
     return public_pem.decode("utf-8"), private_pem.decode("utf-8")
 
@@ -434,12 +434,12 @@ def create_ecdsa_public_and_private_from_pem(pem, password=None):
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
         encryption_algorithm=serialization.NoEncryption(),
-    )
+    ).strip()
 
     public = public.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
-    )
+    ).strip()
 
     return public.decode("utf-8"), private.decode("utf-8")
 
@@ -506,7 +506,7 @@ def create_ecdsa_encrypted_pem(private_pem, passphrase):
         encryption_algorithm=serialization.BestAvailableEncryption(
             passphrase.encode("utf-8")
         ),
-    )
+    ).strip()
 
     return encrypted_private_pem
 
