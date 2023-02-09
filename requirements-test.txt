@@ -1,7 +1,2 @@
 # additional test tools
-coverage
-mypy
-black
-isort
-pylint
-bandit
+coverage==7.1.0
