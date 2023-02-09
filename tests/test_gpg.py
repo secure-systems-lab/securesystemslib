@@ -33,7 +33,7 @@ import cryptography.hazmat.primitives.hashes as hashing
 from cryptography.hazmat import backends
 from cryptography.hazmat.primitives import serialization
 
-from securesystemslib import exceptions, process
+from securesystemslib import process
 from securesystemslib.formats import ANY_PUBKEY_DICT_SCHEMA, GPG_PUBKEY_SCHEMA
 from securesystemslib.gpg.common import (
     _assign_certified_key_info,
@@ -72,10 +72,7 @@ from securesystemslib.gpg.functions import (
 )
 from securesystemslib.gpg.rsa import create_pubkey as rsa_create_pubkey
 from securesystemslib.gpg.util import (
-    Version,
     get_hashing_class,
-    get_version,
-    is_version_fully_supported,
     parse_packet_header,
     parse_subpacket_header,
 )
@@ -99,19 +96,6 @@ class GPGTestUtils:
 @unittest.skipIf(not have_gpg(), "gpg not found")
 class TestUtil(unittest.TestCase):
     """Test util functions."""
-
-    def test_version_utils_return_types(self):
-        """Run dummy tests for coverage."""
-        self.assertTrue(isinstance(get_version(), Version))
-        self.assertTrue(isinstance(is_version_fully_supported(), bool))
-
-    def test_version_utils_error(self):
-        """Run dummy tests for coverage."""
-        with patch(
-            "securesystemslib.gpg.constants.have_gpg", return_value=False
-        ):
-            with self.assertRaises(exceptions.UnsupportedLibraryError):
-                get_version()
 
     def test_get_hashing_class(self):
         # Assert return expected hashing class
@@ -945,33 +929,6 @@ class TestGPGEdDSA(unittest.TestCase):
         # Check that the signature can be successfully verified
         key = export_pubkey(self.default_keyid, homedir=self.gnupg_home)
         self.assertTrue(verify_signature(signature, key, test_data))
-
-
-class TestVersion(unittest.TestCase):
-    """Tests for the Version utility class."""
-
-    def test_version_roundtrip_string(self):
-        """Version parses and formats strings correctly."""
-        for value, expected in [
-            ("1.3.0", Version(1, 3, 0)),
-            ("1.3.1", Version(1, 3, 1)),
-            ("1.3.22", Version(1, 3, 22)),
-        ]:
-            self.assertEqual(Version.from_string(value), expected)
-            self.assertEqual(str(expected), value)
-
-    def test_version_from_string_invalid(self):
-        """Version.from_string rejects invalid inputs."""
-        for value in [
-            "1.3",
-            "1.33.0",
-            "1.3.-1",
-            "1.3.1a",
-        ]:
-            with self.assertRaises(
-                ValueError, msg=f"expected error for input '{value}'"
-            ):
-                Version.from_string(value)
 
 
 if __name__ == "__main__":

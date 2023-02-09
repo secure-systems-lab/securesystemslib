@@ -15,9 +15,7 @@
   general-purpose utilities for binary data handling and pgp data parsing
 """
 import binascii
-import dataclasses
 import logging
-import re
 import struct
 
 CRYPTO = True
@@ -29,7 +27,7 @@ except ImportError:
     CRYPTO = False
 
 # pylint: disable=wrong-import-position
-from securesystemslib import exceptions, process
+from securesystemslib import exceptions
 from securesystemslib.gpg import constants
 from securesystemslib.gpg.exceptions import PacketParsingError
 
@@ -306,110 +304,6 @@ def parse_subpackets(data):
         position += subpacket_len
 
     return parsed_subpackets
-
-
-@dataclasses.dataclass(order=True)
-class Version:
-    """A version of GPG."""
-
-    major: int
-    minor: int
-    patch: int
-
-    VERSION_RE = re.compile(r"(\d)\.(\d)\.(\d+)")
-    EXAMPLE = "1.3.22"
-
-    @classmethod
-    def from_string(cls, value: str) -> "Version":
-        """
-        <Purpose>
-          Parses `value` as a `Version`.
-
-          Expects a version in the format `major.minor.patch`. `major` and `minor`
-          must be one-digit numbers; `patch` can be any integer.
-
-        <Arguments>
-          value:
-                  The version string to parse.
-
-        <Exceptions>
-          ValueError:
-                  If the version string is invalid.
-
-        <Returns>
-          Version
-        """
-        match = cls.VERSION_RE.fullmatch(value)
-        if not match:
-            raise ValueError(
-                f"Invalid version number '{value}'; "
-                f"expected MAJOR.MINOR.PATCH (e.g., '{cls.EXAMPLE}')"
-            )
-        major, minor, patch = map(int, match.groups())
-        return cls(major, minor, patch)
-
-    def __str__(self):
-        return f"{self.major}.{self.minor}.{self.patch}"
-
-
-def get_version() -> Version:
-    """
-    <Purpose>
-      Uses `gpg2 --version` to get the version info of the installed gpg2
-      and extracts and returns the version number.
-
-      The executed base command is defined in constants.gpg_version_command.
-
-    <Exceptions>
-      securesystemslib.exceptions.UnsupportedLibraryError:
-              If the gpg command is not available
-
-    <Side Effects>
-      Executes a command: constants.gpg_version_command.
-
-    <Returns>
-      Version of GPG.
-
-    """
-    if not constants.have_gpg():  # pragma: no cover
-        raise exceptions.UnsupportedLibraryError(constants.NO_GPG_MSG)
-
-    command = constants.gpg_version_command()
-    gpg_process = process.run(
-        command,
-        stdout=process.PIPE,
-        stderr=process.PIPE,
-        universal_newlines=True,
-    )
-
-    full_version_info = gpg_process.stdout
-    try:
-        match = Version.VERSION_RE.search(full_version_info)
-        if not match:
-            raise ValueError(
-                f"Couldn't find version number (ex. '{Version.EXAMPLE}') "
-                f"in the output of `{command}`:\n" + full_version_info
-            )
-        version = Version.from_string(match.group(0))
-    except ValueError as err:
-        raise exceptions.UnsupportedLibraryError(constants.NO_GPG_MSG) from err
-
-    return version
-
-
-def is_version_fully_supported():
-    """
-    <Purpose>
-      Compares the version of installed gpg2 with the minimal fully supported
-      gpg2 version (2.1.0).
-
-    <Returns>
-      True if the version returned by `get_version` is greater-equal
-      constants.FULLY_SUPPORTED_MIN_VERSION, False otherwise.
-
-    """
-    min_version = constants.FULLY_SUPPORTED_MIN_VERSION
-    return get_version() >= Version.from_string(min_version)
 
 
 def get_hashing_class(hash_algorithm_id):
