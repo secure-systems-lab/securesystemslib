@@ -221,8 +221,7 @@ class TestCommon(unittest.TestCase):
         cmd = gpg_export_pubkey_command(keyid=keyid, homearg=homearg)
         proc = subprocess.run(
             cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             timeout=GPG_TIMEOUT,
             check=True,
         )
@@ -234,8 +233,7 @@ class TestCommon(unittest.TestCase):
         cmd = gpg_export_pubkey_command(keyid=keyid, homearg=homearg)
         proc = subprocess.run(
             cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             timeout=GPG_TIMEOUT,
             check=True,
         )

@@ -34,8 +34,7 @@ def is_available_gnupg(gnupg: str, timeout=GPG_TIMEOUT) -> bool:
     try:
         subprocess.run(  # nosec
             gpg_version_cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             timeout=timeout,
             check=True,
         )

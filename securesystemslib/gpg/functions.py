@@ -130,8 +130,7 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
         command,
         input=content,
         check=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         timeout=timeout,
     )
 
@@ -316,8 +315,7 @@ def export_pubkey(keyid, homedir=None, timeout=GPG_TIMEOUT):
     command = gpg_export_pubkey_command(keyid=keyid, homearg=homearg)
     gpg_process = subprocess.run(  # nosec
         command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         timeout=timeout,
         check=True,
     )
