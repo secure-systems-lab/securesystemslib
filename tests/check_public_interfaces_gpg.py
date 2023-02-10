@@ -34,7 +34,6 @@ from securesystemslib.gpg.functions import (
     export_pubkeys,
     verify_signature,
 )
-from securesystemslib.gpg.util import get_version
 
 
 class TestPublicInterfacesGPG(
@@ -58,10 +57,6 @@ class TestPublicInterfacesGPG(
 
         with self.assertRaises(UnsupportedLibraryError) as ctx:
             export_pubkeys(["f00"])
-        self.assertEqual(NO_GPG_MSG, str(ctx.exception))
-
-        with self.assertRaises(UnsupportedLibraryError) as ctx:
-            get_version()
         self.assertEqual(NO_GPG_MSG, str(ctx.exception))
 
     def test_gpg_verify(self):
