@@ -18,19 +18,26 @@
 import functools
 import logging
 import os
+import shlex
 import subprocess  # nosec
-
-from securesystemslib import process
+from typing import List
 
 log = logging.getLogger(__name__)
 
+GPG_TIMEOUT = 10
+
 
 @functools.lru_cache(maxsize=3)
-def is_available_gnupg(gnupg: str) -> bool:
+def is_available_gnupg(gnupg: str, timeout=GPG_TIMEOUT) -> bool:
     """Returns whether gnupg points to a gpg binary."""
-    gpg_version_cmd = gnupg + " --version"
+    gpg_version_cmd = shlex.split(f"{gnupg} --version")
     try:
-        process.run(gpg_version_cmd, stdout=process.PIPE, stderr=process.PIPE)
+        subprocess.run(  # nosec
+            gpg_version_cmd,
+            capture_output=True,
+            timeout=timeout,
+            check=True,
+        )
         return True
     except (OSError, subprocess.TimeoutExpired):
         return False
@@ -61,9 +68,9 @@ def have_gpg() -> bool:
     return bool(gpg_command())
 
 
-def gpg_version_command() -> str:
+def gpg_version_command() -> List[str]:
     """Returns the command to get the current GPG version."""
-    return f"{gpg_command()} --version"
+    return shlex.split(f"{gpg_command()} --version")
 
 
 FULLY_SUPPORTED_MIN_VERSION = "2.1.0"
@@ -73,16 +80,16 @@ NO_GPG_MSG = (
 )
 
 
-def gpg_sign_command(keyarg: str, homearg: str) -> str:
+def gpg_sign_command(keyarg: str, homearg: str) -> List[str]:
     """Returns the command to use GPG to sign STDIN."""
-    return (
+    return shlex.split(
         f"{gpg_command()} --detach-sign --digest-algo SHA256 {keyarg} {homearg}"
     )
 
 
-def gpg_export_pubkey_command(homearg: str, keyid: str):
+def gpg_export_pubkey_command(homearg: str, keyid: str) -> List[str]:
     """Returns the GPG command to export a public key."""
-    return f"{gpg_command()} {homearg} --export {keyid}"
+    return shlex.split(f"{gpg_command()} {homearg} --export {keyid}")
 
 
 # See RFC4880 section 4.3. Packet Tags for a list of all packet types The
