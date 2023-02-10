@@ -32,7 +32,7 @@ def is_available_gnupg(gnupg: str, timeout=GPG_TIMEOUT) -> bool:
     """Returns whether gnupg points to a gpg binary."""
     gpg_version_cmd = shlex.split(f"{gnupg} --version")
     try:
-        subprocess.run(
+        subprocess.run(  # nosec
             gpg_version_cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
