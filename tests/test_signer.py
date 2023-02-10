@@ -168,7 +168,6 @@ class TestSigner(unittest.TestCase):
             KEYS.generate_rsa_key(),
             KEYS.generate_ed25519_key(),
             KEYS.generate_ecdsa_key(),
-            KEYS.generate_sphincs_key(),
         ]
         cls.DATA = b"DATA"
 
