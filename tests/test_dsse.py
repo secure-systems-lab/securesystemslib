@@ -11,7 +11,7 @@ from securesystemslib.exceptions import (
     UnsupportedAlgorithmError,
     VerificationError,
 )
-from securesystemslib.metadata import Envelope
+from securesystemslib.dsse import Envelope
 from securesystemslib.signer import Signature, SSlibKey, SSlibSigner
 
 
@@ -49,11 +49,6 @@ class TestEnvelope(unittest.TestCase):
 
         # Assert envelope dict created by to_dict will be equal.
         self.assertDictEqual(self.envelope_dict, envelope_obj.to_dict())
-
-        # Assert TypeError on invalid signature.
-        envelope_dict["signatures"] = [""]
-        with self.assertRaises(FormatError):
-            Envelope.from_dict(envelope_dict)
 
     def test_envelope_eq_(self):
         """Test envelope equality."""

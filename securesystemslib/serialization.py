@@ -13,7 +13,6 @@ from securesystemslib.util import persist_temp_file
 
 
 # TODO: Use typing.Protocol post python 3.7
-# See https://github.com/in-toto/securesystemslib/issues/10.
 class BaseDeserializer(metaclass=abc.ABCMeta):
     """Abstract base class for deserialization of objects."""
 

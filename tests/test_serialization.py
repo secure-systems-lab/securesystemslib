@@ -9,7 +9,7 @@ import tempfile
 import unittest
 
 from securesystemslib.exceptions import DeserializationError, SerializationError
-from securesystemslib.metadata import Envelope, EnvelopeJSONDeserializer
+from securesystemslib.dsse import Envelope, EnvelopeJSONDeserializer
 from securesystemslib.serialization import JSONDeserializer, JSONSerializer
 from securesystemslib.storage import FilesystemBackend
 

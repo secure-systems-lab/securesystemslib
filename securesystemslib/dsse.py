@@ -4,7 +4,7 @@
 import logging
 from typing import Any, Dict, List
 
-from securesystemslib import exceptions, formats
+from securesystemslib import exceptions
 from securesystemslib.serialization import (
     BaseDeserializer,
     BaseSerializer,
@@ -13,8 +13,8 @@ from securesystemslib.serialization import (
     JSONSerializer,
     SerializationMixin,
 )
+from securesystemslib._internal.utils import b64enc, b64dec
 from securesystemslib.signer import Key, Signature, Signer
-from securesystemslib.util import b64dec, b64enc
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +98,6 @@ class Envelope(SerializationMixin, JSONSerializable):
         payload = b64dec(data["payload"])
         payload_type = data["payloadType"]
 
-        formats.SIGNATURES_SCHEMA.check_match(data["signatures"])
         signatures = [
             Signature.from_dict(signature) for signature in data["signatures"]
         ]
@@ -150,12 +149,12 @@ class Envelope(SerializationMixin, JSONSerializable):
 
         Raises:
             ValueError: If "threshold" is not valid.
-            SignatureVerificationError: If the enclosed signatures do not pass
-                the verification.
+            VerificationError: If the enclosed signatures do not pass the
+                verification.
 
         Note:
             Mandating keyid in signatures and matching them with keyid of Key
-            in order to consider them for verification, is not a DSSE spec
+            in order to consider them for verification, is not DSSE spec
             compliant (Issue #416).
 
         Returns:
