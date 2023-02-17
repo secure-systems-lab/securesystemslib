@@ -55,7 +55,6 @@ class TestPublicInterfaces(
         shutil.rmtree(cls.temp_dir)
 
     def test_interface(self):
-
         with self.assertRaises(
             securesystemslib.exceptions.UnsupportedLibraryError
         ):

@@ -376,7 +376,6 @@ class TestRSA_keys(
         )
 
     def test_decrypt_key(self):
-
         # Test for valid arguments.
         global public_rsa  # pylint: disable=global-variable-not-assigned
         global private_rsa  # pylint: disable=global-variable-not-assigned

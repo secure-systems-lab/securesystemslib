@@ -180,7 +180,6 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
             for sub_key_full_keyid in list(
                 public_key_bundle.get("subkeys", {}).keys()
             ):
-
                 if sub_key_full_keyid.endswith(short_keyid.lower()):
                     signature["keyid"] = sub_key_full_keyid
                     break

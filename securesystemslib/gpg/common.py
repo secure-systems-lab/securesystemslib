@@ -828,7 +828,6 @@ def parse_signature_packet(  # pylint: disable=too-many-locals,too-many-branches
     for idx, subpacket_tuple in enumerate(
         unhashed_subpacket_info + hashed_subpacket_info
     ):
-
         # The idx indicates if the info is from the unhashed (first) or
         # hashed (second) of the above concatenated lists
         is_hashed = idx >= len(unhashed_subpacket_info)
