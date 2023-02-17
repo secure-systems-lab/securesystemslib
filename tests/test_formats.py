@@ -220,7 +220,7 @@ class TestFormats(unittest.TestCase):  # pylint: disable=missing-class-docstring
 
         # Iterate 'valid_schemas', ensuring each 'valid_schema' correctly matches
         # its respective 'schema_type'.
-        for (schema_type, valid_schema) in valid_schemas.values():
+        for schema_type, valid_schema in valid_schemas.values():
             if not schema_type.matches(  # pylint: disable=no-member
                 valid_schema
             ):
@@ -234,7 +234,7 @@ class TestFormats(unittest.TestCase):  # pylint: disable=missing-class-docstring
         # Test conditions for invalid schemas.
         # Set the 'valid_schema' of 'valid_schemas' to an invalid
         # value and test that it does not match 'schema_type'.
-        for (schema_type, valid_schema) in valid_schemas.values():
+        for schema_type, valid_schema in valid_schemas.values():
             invalid_schema = 0xBAD
 
             if isinstance(schema_type, securesystemslib.schema.Integer):

@@ -197,7 +197,6 @@ class TestInterfaceFunctions(
                 ),
             ]
         ):
-
             with self.assertRaises(
                 ValueError,
                 msg="(row {})".format(  # pylint: disable=consider-using-f-string
@@ -293,7 +292,6 @@ class TestInterfaceFunctions(
                 ),
             ]
         ):
-
             with self.assertRaises(
                 err,
                 msg="(row {})".format(  # pylint: disable=consider-using-f-string
@@ -455,7 +453,6 @@ class TestInterfaceFunctions(
                 ),
             ]
         ):
-
             with self.assertRaises(
                 ValueError,
                 msg="(row {})".format(  # pylint: disable=consider-using-f-string
@@ -564,7 +561,6 @@ class TestInterfaceFunctions(
                 ),
             ]
         ):
-
             with self.assertRaises(
                 err,
                 msg="(row {})".format(  # pylint: disable=consider-using-f-string
@@ -698,7 +694,6 @@ class TestInterfaceFunctions(
                 ),
             ]
         ):
-
             with self.assertRaises(
                 ValueError,
                 msg="(row {})".format(  # pylint: disable=consider-using-f-string
@@ -804,7 +799,6 @@ class TestInterfaceFunctions(
                 ),
             ]
         ):
-
             with self.assertRaises(
                 err,
                 msg="(row {})".format(  # pylint: disable=consider-using-f-string
@@ -881,7 +875,6 @@ class TestInterfaceFunctions(
                 ),
             ]
         ):
-
             assert_msg = (
                 "(row {})".format(  # pylint: disable=consider-using-f-string
                     idx
@@ -990,7 +983,6 @@ class TestInterfaceFunctions(
                 (self.path_ecdsa, KEY_TYPE_ECDSA, ECDSAKEY_SCHEMA),
             ]
         ):
-
             # Successfully import key per supported type, with ...
             # ... passed password
             key = import_privatekey_from_file(

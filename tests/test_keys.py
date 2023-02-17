@@ -300,7 +300,7 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
         self.assertRaises(
             securesystemslib.exceptions.UnsupportedAlgorithmError,
             KEYS.create_signature,
-            *args
+            *args,
         )
         self.rsakey_dict["scheme"] = valid_scheme
 
@@ -449,7 +449,7 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
         self.assertRaises(
             securesystemslib.exceptions.UnsupportedAlgorithmError,
             KEYS.verify_signature,
-            *args
+            *args,
         )
 
         # Restore
