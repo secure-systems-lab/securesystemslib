@@ -850,6 +850,17 @@ class TestInterfaceFunctions(
         """
         key_pw = "pw"
         expected_priv_mode = stat.S_IFREG | stat.S_IRUSR | stat.S_IWUSR
+        if os.name == "nt":
+            expected_priv_mode = (
+                stat.S_IFREG
+                | stat.S_IWUSR
+                | stat.S_IRUSR
+                | stat.S_IWGRP
+                | stat.S_IRGRP
+                | stat.S_IWOTH
+                | stat.S_IROTH
+            )
+
         for idx, (gen, gen_prompt, gen_plain, import_priv, schema) in enumerate(
             [
                 (
