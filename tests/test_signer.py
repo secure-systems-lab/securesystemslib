@@ -384,8 +384,10 @@ class TestGPGRSA(unittest.TestCase):
         )
 
         cls.test_dir = os.path.realpath(tempfile.mkdtemp())
-        cls.gnupg_home = os.path.join(cls.test_dir, "rsa")
-        shutil.copytree(gpg_keyring_path, cls.gnupg_home)
+        cls.gnupg_home = "rsa"
+        shutil.copytree(
+            gpg_keyring_path, os.path.join(cls.test_dir, cls.gnupg_home)
+        )
         os.chdir(cls.test_dir)
 
     @classmethod
