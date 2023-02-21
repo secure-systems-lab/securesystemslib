@@ -168,8 +168,10 @@ class TestSigner(unittest.TestCase):
             KEYS.generate_rsa_key(),
             KEYS.generate_ed25519_key(),
             KEYS.generate_ecdsa_key(),
-            KEYS.generate_sphincs_key(),
         ]
+        if os.name != "nt":
+            cls.keys.append(KEYS.generate_sphincs_key())
+
         cls.DATA = b"DATA"
 
         # pylint: disable=consider-using-with

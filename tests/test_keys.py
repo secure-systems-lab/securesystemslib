@@ -18,6 +18,7 @@
 """
 
 import copy
+import os
 import unittest
 
 import securesystemslib.ecdsa_keys
@@ -34,13 +35,33 @@ DATA_STR = "SOME DATA REQUIRING AUTHENTICITY."
 DATA = securesystemslib.formats.encode_canonical(DATA_STR).encode("utf-8")
 
 
+@unittest.skipIf(os.name == "nt", "PySPX n/a on Windows")
+class TestSphincsKeys(unittest.TestCase):
+    """Test create keys, sign and verify for sphincs keys."""
+
+    def test_sphincs_keys(self):
+        key = KEYS.generate_sphincs_key()
+        sig = KEYS.create_signature(key, b"data")
+        self.assertTrue(securesystemslib.formats.SIGNATURE_SCHEMA.matches(sig))
+
+        # Assert valid/invalid signature
+        self.assertTrue(KEYS.verify_signature(key, sig, b"data"))
+        self.assertFalse(KEYS.verify_signature(key, sig, b"not data"))
+
+        # Assert verificaiton failure for unsupported signing scheme
+        key["scheme"] = "invalid_scheme"
+        with self.assertRaises(
+            securesystemslib.exceptions.UnsupportedAlgorithmError
+        ):
+            KEYS.verify_signature(key, sig, b"data")
+
+
 class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
     @classmethod
     def setUpClass(cls):
         cls.rsakey_dict = KEYS.generate_rsa_key()
         cls.ed25519key_dict = KEYS.generate_ed25519_key()
         cls.ecdsakey_dict = KEYS.generate_ecdsa_key()
-        cls.sphincskey_dict = KEYS.generate_sphincs_key()
 
     def test_generate_rsa_key(self):
         _rsakey_dict = KEYS.generate_rsa_key()  # pylint: disable=invalid-name
@@ -267,7 +288,6 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
         # Creating a signature for 'DATA'.
         rsa_signature = KEYS.create_signature(self.rsakey_dict, DATA)
         ed25519_signature = KEYS.create_signature(self.ed25519key_dict, DATA)
-        sphincs_signature = KEYS.create_signature(self.sphincskey_dict, DATA)
 
         # Check format of output.
         self.assertEqual(
@@ -281,13 +301,6 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
             None,
             securesystemslib.formats.SIGNATURE_SCHEMA.check_match(
                 ed25519_signature
-            ),
-            FORMAT_ERROR_MSG,
-        )
-        self.assertEqual(
-            None,
-            securesystemslib.formats.SIGNATURE_SCHEMA.check_match(
-                sphincs_signature
             ),
             FORMAT_ERROR_MSG,
         )
@@ -344,7 +357,6 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
         rsa_signature = KEYS.create_signature(self.rsakey_dict, DATA)
         ed25519_signature = KEYS.create_signature(self.ed25519key_dict, DATA)
         ecdsa_signature = KEYS.create_signature(self.ecdsakey_dict, DATA)
-        sphincs_signature = KEYS.create_signature(self.sphincskey_dict, DATA)
 
         # Verifying the 'signature' of 'DATA'.
         verified = KEYS.verify_signature(self.rsakey_dict, rsa_signature, DATA)
@@ -367,24 +379,6 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
             DATA,
         )
         self.ed25519key_dict["scheme"] = valid_scheme
-
-        # Verifying the 'sphincs_signature' of 'DATA'.
-        verified = KEYS.verify_signature(
-            self.sphincskey_dict, sphincs_signature, DATA
-        )
-        self.assertTrue(verified, "Incorrect signature.")
-
-        # Verify that an invalid sphincs signature scheme is rejected.
-        valid_scheme = self.sphincskey_dict["scheme"]
-        self.sphincskey_dict["scheme"] = "invalid_scheme"
-        self.assertRaises(
-            securesystemslib.exceptions.UnsupportedAlgorithmError,
-            KEYS.verify_signature,
-            self.sphincskey_dict,
-            sphincs_signature,
-            DATA,
-        )
-        self.sphincskey_dict["scheme"] = valid_scheme
 
         # Verifying the 'ecdsa_signature' of 'DATA'.
         verified = KEYS.verify_signature(
@@ -428,11 +422,6 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
 
         verified = KEYS.verify_signature(
             self.ed25519key_dict, ed25519_signature, _DATA
-        )
-        self.assertFalse(verified, "Returned 'True' on an incorrect signature.")
-
-        verified = KEYS.verify_signature(
-            self.sphincskey_dict, sphincs_signature, _DATA
         )
         self.assertFalse(verified, "Returned 'True' on an incorrect signature.")
 
@@ -483,14 +472,6 @@ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
             self.ed25519key_dict, ed25519_signature, DATA
         )
         self.assertTrue(verified, "Incorrect signature.")
-
-        # Verify that sphincs fails if PySPX is not installed
-        KEYS.sphincs_keys.SPX_AVAIL = False  # Monkey patch availability
-        with self.assertRaises(
-            securesystemslib.exceptions.UnsupportedLibraryError
-        ):
-            KEYS.verify_signature(self.sphincskey_dict, sphincs_signature, DATA)
-        KEYS.sphincs_keys.SPX_AVAIL = True
 
         # Verify ecdsa key with HEX encoded keyval instead of PEM encoded keyval
         ecdsa_key = KEYS.generate_ecdsa_key()
