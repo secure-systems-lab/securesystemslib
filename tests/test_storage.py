@@ -17,11 +17,13 @@
 
 import os
 import shutil
+import stat
 import tempfile
 import unittest
+from pathlib import Path
 
-import securesystemslib.exceptions
 import securesystemslib.storage
+from securesystemslib.exceptions import StorageError
 
 
 class TestStorage(unittest.TestCase):  # pylint: disable=missing-class-docstring
@@ -40,42 +42,33 @@ class TestStorage(unittest.TestCase):  # pylint: disable=missing-class-docstring
         shutil.rmtree(self.temp_dir)
 
     def test_exceptions(self):
-        try:
-            with self.storage_backend.get("/none/existent/path") as file_object:
-                file_object.read()
-        except Exception as exc:  # pylint: disable=broad-except
-            self.assertIsInstance(exc, securesystemslib.exceptions.StorageError)
+        invalid_path = ""
+        non_existent_path = Path(self.temp_dir) / "not_existent"
+        self.assertFalse(non_existent_path.exists())
 
-        self.assertRaises(
-            securesystemslib.exceptions.StorageError,
-            self.storage_backend.put,
-            self.fileobj,
-            "/none/existent/path",
-        )
+        with self.assertRaises(StorageError):
+            with self.storage_backend.get(non_existent_path) as _:
+                pass
 
-        self.assertRaises(
-            securesystemslib.exceptions.StorageError,
-            self.storage_backend.getsize,
-            "/none/existent/path",
-        )
+        with self.assertRaises(StorageError):
+            self.storage_backend.getsize(non_existent_path)
 
-        self.assertRaises(
-            securesystemslib.exceptions.StorageError,
-            self.storage_backend.create_folder,
-            "/none/existent/path",
-        )
+        with self.assertRaises(StorageError):
+            self.storage_backend.list_folder(non_existent_path)
 
-        self.assertRaises(
-            securesystemslib.exceptions.StorageError,
-            self.storage_backend.create_folder,
-            "",
-        )
+        with self.assertRaises(StorageError):
+            self.storage_backend.create_folder(invalid_path)
 
-        self.assertRaises(
-            securesystemslib.exceptions.StorageError,
-            self.storage_backend.list_folder,
-            "/none/existent/path",
-        )
+    @unittest.skipIf(os.name == "nt", "n/a on Windows")
+    def test_permission_exceptions(self):
+        non_writable_path = Path(self.temp_dir) / "not_writable"
+        os.mkdir(non_writable_path, mode=stat.S_IRUSR)
+
+        with self.assertRaises(StorageError):
+            self.storage_backend.put(self.fileobj, non_writable_path / "new")
+
+        with self.assertRaises(StorageError):
+            self.storage_backend.create_folder(non_writable_path / "new")
 
     def test_files(self):
         with self.storage_backend.get(self.filepath) as get_fileobj:
@@ -117,3 +110,7 @@ class TestStorage(unittest.TestCase):  # pylint: disable=missing-class-docstring
         self.assertEqual(id(fb1), id(fb2))
         self.assertEqual(id(self.storage_backend), id(fb1))
         self.assertEqual(id(fb2), id(self.storage_backend))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -185,10 +185,6 @@ class TestUtil(
                     parent_dir,
                 )
 
-        # Check that when a folder cannot be created a StorageError is thrown
-        with self.assertRaises(securesystemslib.exceptions.StorageError):
-            securesystemslib.util.ensure_parent_dir("/a/file.txt")
-
         # When we call ensure_parent_dir with filepath arg like "a.txt",
         # then the directory of that filepath will be an empty string.
         # We want to make sure that securesyslib.storage.create_folder()

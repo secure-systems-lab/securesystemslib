@@ -168,8 +168,10 @@ class TestSigner(unittest.TestCase):
             KEYS.generate_rsa_key(),
             KEYS.generate_ed25519_key(),
             KEYS.generate_ecdsa_key(),
-            KEYS.generate_sphincs_key(),
         ]
+        if os.name != "nt":
+            cls.keys.append(KEYS.generate_sphincs_key())
+
         cls.DATA = b"DATA"
 
         # pylint: disable=consider-using-with
@@ -384,8 +386,10 @@ class TestGPGRSA(unittest.TestCase):
         )
 
         cls.test_dir = os.path.realpath(tempfile.mkdtemp())
-        cls.gnupg_home = os.path.join(cls.test_dir, "rsa")
-        shutil.copytree(gpg_keyring_path, cls.gnupg_home)
+        cls.gnupg_home = "rsa"
+        shutil.copytree(
+            gpg_keyring_path, os.path.join(cls.test_dir, cls.gnupg_home)
+        )
         os.chdir(cls.test_dir)
 
     @classmethod

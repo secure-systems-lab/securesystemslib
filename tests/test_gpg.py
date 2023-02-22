@@ -21,7 +21,6 @@
 
 import os
 import shutil
-import subprocess  # nosec
 import tempfile
 import unittest
 
@@ -44,7 +43,6 @@ from securesystemslib.gpg.common import (
     parse_signature_packet,
 )
 from securesystemslib.gpg.constants import (
-    GPG_TIMEOUT,
     PACKET_TYPE_PRIMARY_KEY,
     PACKET_TYPE_SUB_KEY,
     PACKET_TYPE_USER_ATTR,
@@ -52,7 +50,6 @@ from securesystemslib.gpg.constants import (
     SHA1,
     SHA256,
     SHA512,
-    gpg_export_pubkey_command,
     have_gpg,
 )
 from securesystemslib.gpg.dsa import create_pubkey as dsa_create_pubkey
@@ -209,35 +206,19 @@ class TestCommon(unittest.TestCase):
         gpg_keyring_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "gpg_keyrings", "rsa"
         )
-        homearg = (
-            "--homedir {}".format(  # pylint: disable=consider-using-f-string
-                gpg_keyring_path
-            ).replace("\\", "/")
-        )
 
-        # Load test raw public key bundle from rsa keyring, used to construct
-        # erroneous gpg data in tests below.
-        keyid = "F557D0FF451DEF45372591429EA70BD13D883381"
-        cmd = gpg_export_pubkey_command(keyid=keyid, homearg=homearg)
-        proc = subprocess.run(
-            cmd,
-            capture_output=True,
-            timeout=GPG_TIMEOUT,
-            check=True,
-        )
-        self.raw_key_data = proc.stdout
-        self.raw_key_bundle = parse_pubkey_bundle(self.raw_key_data)
+        # Load raw public key bundle data from fixtures
+        key = "F557D0FF451DEF45372591429EA70BD13D883381"
+        key_expired = "E8AC80C924116DABB51D4B987CB07D6D2C199C7C"
+        data = {}
+        for keyid in [key, key_expired]:
+            path = os.path.join(gpg_keyring_path, f"{keyid}.raw")
+            with open(path, "rb") as f:
+                data[keyid] = f.read()
 
-        # Export pubkey bundle with expired key for key expiration tests
-        keyid = "E8AC80C924116DABB51D4B987CB07D6D2C199C7C"
-        cmd = gpg_export_pubkey_command(keyid=keyid, homearg=homearg)
-        proc = subprocess.run(
-            cmd,
-            capture_output=True,
-            timeout=GPG_TIMEOUT,
-            check=True,
-        )
-        self.raw_expired_key_bundle = parse_pubkey_bundle(proc.stdout)
+        self.raw_key_data = data[key]
+        self.raw_key_bundle = parse_pubkey_bundle(data[key])
+        self.raw_expired_key_bundle = parse_pubkey_bundle(data[key_expired])
 
     def test_parse_pubkey_payload_errors(self):
         """Test parse_pubkey_payload errors with manually crafted data."""
@@ -604,8 +585,10 @@ class TestGPGRSA(unittest.TestCase):
         )
 
         self.test_dir = os.path.realpath(tempfile.mkdtemp())
-        self.gnupg_home = os.path.join(self.test_dir, "rsa")
-        shutil.copytree(gpg_keyring_path, self.gnupg_home)
+        self.gnupg_home = "rsa"
+        shutil.copytree(
+            gpg_keyring_path, os.path.join(self.test_dir, self.gnupg_home)
+        )
         os.chdir(self.test_dir)
 
     @classmethod
@@ -779,14 +762,14 @@ class TestGPGDSA(unittest.TestCase):
         # Create directory to run the tests without having everything blow up
         self.working_dir = os.getcwd()
         self.test_dir = os.path.realpath(tempfile.mkdtemp())
-        self.gnupg_home = os.path.join(self.test_dir, "dsa")
+        self.gnupg_home = "dsa"
 
         # Find keyrings
         keyrings = os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "gpg_keyrings", "dsa"
         )
 
-        shutil.copytree(keyrings, self.gnupg_home)
+        shutil.copytree(keyrings, os.path.join(self.test_dir, self.gnupg_home))
         os.chdir(self.test_dir)
 
     @classmethod
@@ -878,14 +861,14 @@ class TestGPGEdDSA(unittest.TestCase):
         # Create directory to run the tests without having everything blow up
         self.working_dir = os.getcwd()
         self.test_dir = os.path.realpath(tempfile.mkdtemp())
-        self.gnupg_home = os.path.join(self.test_dir, "dsa")
+        self.gnupg_home = "dsa"
 
         # Find keyrings
         keyrings = os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "gpg_keyrings", "eddsa"
         )
 
-        shutil.copytree(keyrings, self.gnupg_home)
+        shutil.copytree(keyrings, os.path.join(self.test_dir, self.gnupg_home))
         os.chdir(self.test_dir)
 
     @classmethod
