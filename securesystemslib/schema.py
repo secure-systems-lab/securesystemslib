@@ -72,8 +72,8 @@ class Schema:
             self.check_match(object)
         except exceptions.FormatError:
             return False
-        else:
-            return True
+
+        return True
 
     def check_match(self, object):  # pylint: disable=redefined-builtin
         """

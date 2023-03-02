@@ -354,8 +354,7 @@ def load_json_string(data: Union[str, bytes]) -> Any:
         message = "Cannot deserialize to a Python object: " + repr(data)
         raise exceptions.Error(message)  # pylint: disable=raise-missing-from
 
-    else:
-        return deserialized_object
+    return deserialized_object
 
 
 def load_json_file(
@@ -411,8 +410,7 @@ def load_json_file(
                 "Cannot deserialize to a" " Python object: " + filepath
             )
 
-        else:
-            return deserialized_object
+        return deserialized_object
 
 
 def digests_are_equal(digest1: str, digest2: str) -> bool:
