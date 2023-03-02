@@ -14,7 +14,7 @@ jobs:
     steps:
     - name: Check out repository
       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-    - name: Test if ed25519 upstream master HEAD is what we expect
+    - name: Test if ed25519 upstream main HEAD is what we expect
       id: test_ed25519
       run: |
         if output=$(securesystemslib/_vendor/test-ed25519-upstream.sh); then
@@ -28,7 +28,7 @@ jobs:
       if: ${{ steps.test_ed25519.outputs.result == '1' }}
       with:
         script: |
-          console.log("ed25519 upstream master has changed!")
+          console.log("ed25519 upstream main has changed!")
           console.log("${{ steps.test_ed25519.outputs.output }}")
           const repo = context.repo.owner + "/" + context.repo.repo
           const issues = await github.search.issuesAndPullRequests({
@@ -49,4 +49,3 @@ jobs:
                     "then update the expected hash in _vendor/test-ed25519-upstream.sh"
             })
           }
-
