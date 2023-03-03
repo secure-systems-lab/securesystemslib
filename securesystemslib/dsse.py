@@ -5,7 +5,7 @@ import logging
 from typing import Any, Dict, List
 
 from securesystemslib import exceptions
-from securesystemslib._internal.utils import b64enc, b64dec
+from securesystemslib._internal.utils import b64dec, b64enc
 from securesystemslib.signer import Key, Signature, Signer
 
 logger = logging.getLogger(__name__)
@@ -103,6 +103,9 @@ class Envelope:
     def verify(self, keys: List[Key], threshold: int) -> Dict[str, Key]:
         """Verify the payload with the provided Keys.
 
+        NOTE: This API is experimental and might change (see
+        secure-systems-lab/dsse#55)
+
         Arguments:
             keys: A list of public keys to verify the signatures.
             threshold: Number of signatures needed to pass the verification.
@@ -118,7 +121,8 @@ class Envelope:
             compliant (Issue #416).
 
         Returns:
-            accepted_keys: A dict of unique public keys.
+            A dict of the threshold of unique public keys that verified a
+            signature.
         """
 
         accepted_keys = {}
@@ -143,10 +147,9 @@ class Envelope:
                     accepted_keys[key.keyid] = key
                     break
                 except exceptions.UnverifiedSignatureError:
-                    # TODO: Log, Raise or continue with error?
                     continue
 
-            # Break, if amount of recognized_signer are more than threshold.
+            # Break, if amount of accepted_keys are more than threshold.
             if len(accepted_keys) >= threshold:
                 break
 

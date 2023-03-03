@@ -6,12 +6,12 @@ import copy
 import unittest
 
 import securesystemslib.keys as KEYS
+from securesystemslib.dsse import Envelope
 from securesystemslib.exceptions import (
     FormatError,
     UnsupportedAlgorithmError,
     VerificationError,
 )
-from securesystemslib.dsse import Envelope
 from securesystemslib.signer import Signature, SSlibKey, SSlibSigner
 
 

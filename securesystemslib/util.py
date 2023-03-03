@@ -17,8 +17,6 @@
   that tries to import a working json module, load_json_* functions, etc.
 """
 
-import base64
-import binascii
 import json
 import logging
 import os
