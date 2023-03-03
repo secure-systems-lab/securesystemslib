@@ -83,26 +83,34 @@ class HSMSigner(Signer):
 
     Supports signing schemes "ecdsa-sha2-nistp256" and "ecdsa-sha2-nistp384".
 
-    HSMSigner uses the first token it finds, if multiple tokens are available. They can
-    be instantiated with Signer.from_priv_key_uri(). These private key URI schemes are
-    supported:
+    HSMSigners should be instantiated with Signer.from_priv_key_uri() as in the usage
+    example below.
 
+    The private key URI scheme is: "hsm:<KEYID>?<FILTERS>" where both KEYID and
+    FILTERS are optional. Example URIs:
     * "hsm:":
-      Sign with key on PIV digital signature slot 9c.
+      Sign with a key with default keyid 2 (PIV digital signature slot 9c) on the
+      only token/smartcard available.
+    * "hsm:2?label=YubiKey+PIV+%2315835999":
+      Sign with key with keyid 2 (PIV slot 9c) on a token with label
+      "YubiKey+PIV+%2315835999"
 
     Usage::
+        # Store public key and URI for your HSM device for later use. By default
+        # slot 9c is selected.
+        uri, pubkey = HSMSigner.import_()
 
-        # sign with PIV slot 9c, verify with existing public key
+        # later, use the uri and pubkey to sign
         def pin_handler(secret: str) -> str:
             return getpass(f"Enter {secret}: ")
 
-        signer = Signer.from_priv_key_uri("hsm:", public_key, pin_handler)
+        signer = Signer.from_priv_key_uri(uri, pubkey, pin_handler)
         sig = signer.sign(b"DATA")
-
-        public_key.verify_signature(sig, b"DATA")
+        pubkey.verify_signature(sig, b"DATA")
 
     Arguments:
         hsm_keyid: Key identifier on the token.
+        token_filter: dictionary of token field names and values
         public_key: The related public key instance.
         pin_handler: A function that returns the HSM user login pin, needed for
                 signing. It receives the string argument "pin".
