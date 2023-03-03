@@ -6,7 +6,7 @@ the related public keys.
 """
 import binascii
 from contextlib import contextmanager
-from typing import Optional, Tuple
+from typing import Dict, Iterator, List, Optional, Tuple
 from urllib import parse
 
 from securesystemslib import KEY_TYPE_ECDSA
@@ -120,7 +120,11 @@ class HSMSigner(Signer):
     SECRETS_HANDLER_MSG = "pin"
 
     def __init__(
-        self, hsm_keyid: int, public_key: Key, pin_handler: SecretsHandler
+        self,
+        hsm_keyid: int,
+        token_filter: Dict[str, str],
+        public_key: Key,
+        pin_handler: SecretsHandler,
     ):
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
@@ -133,19 +137,40 @@ class HSMSigner(Signer):
 
         self._mechanism = _MECHANISM_FOR_SCHEME[public_key.scheme]
         self.hsm_keyid = hsm_keyid
+        self.token_filter = token_filter
         self.public_key = public_key
         self.pin_handler = pin_handler
 
     @staticmethod
     @contextmanager
-    def _default_session():
-        """Context manager to handle default HSM session on reader slot 1."""
-        lib = PYKCS11LIB()
-        slots = lib.getSlotList(tokenPresent=True)
-        if not slots:
-            raise ValueError("could not find token")
+    def _get_session(filters: Dict[str, str]) -> Iterator["PyKCS11.Session"]:
+        """Context manager to handle a HSM session.
 
-        session = lib.openSession(slots[0])
+        The slot/token is selected by filtering by token info fields.
+        ValueError is raised if not matching slot/token is not found, or if
+        more than one are found.
+        """
+        lib = PYKCS11LIB()
+        slots: List[int] = lib.getSlotList(tokenPresent=True)
+        matching_slots: List[int] = []
+        for slot in slots:
+            tokeninfo = lib.getTokenInfo(slot)
+            match = True
+            # all values in filters must match token fields
+            for key, value in filters.items():
+                tokenvalue: str = getattr(tokeninfo, key, "").strip()
+                if tokenvalue != value:
+                    match = False
+
+            if match:
+                matching_slots.append(slot)
+
+        if len(matching_slots) != 1:
+            raise ValueError(
+                f"Found {len(matching_slots)} slots/tokens matching filter {filters}"
+            )
+
+        session = lib.openSession(matching_slots[0])
         try:
             yield session
 
@@ -192,8 +217,39 @@ class HSMSigner(Signer):
         return ECDomainParameters.load(bytes(params)), bytes(point)
 
     @classmethod
-    def import_(cls, hsm_keyid: Optional[int] = None) -> Tuple[str, SSlibKey]:
+    def _build_token_filter(cls) -> Dict[str, str]:
+        """Builds a token filter for the found slot/token.
+
+        The filter will include 'label' if one is found on token.
+
+        raises ValueError if less or more than 1 token/slot is found
+        """
+
+        lib = PYKCS11LIB()
+        slots: List[int] = lib.getSlotList(tokenPresent=True)
+        if len(slots) != 1:
+            raise ValueError(f"Expected 1 token/slot, found {len(slots)}")
+        filters = {}
+        tokeninfo = lib.getTokenInfo(slots[0])
+        # other possible fields include manufacturerID, model and serialNumber
+        for key in ["label"]:
+            try:
+                filters[key] = getattr(tokeninfo, key).strip()
+            except AttributeError:
+                pass
+
+        return filters
+
+    @classmethod
+    def import_(
+        cls,
+        hsm_keyid: Optional[int] = None,
+        token_filter: Optional[Dict[str, str]] = None,
+    ) -> Tuple[str, SSlibKey]:
         """Import public key and signer details from HSM.
+
+        Either only one token/slot must be present when importing or a
+        token_filter must be provided.
 
         Returns a private key URI (for Signer.from_priv_key_uri()) and a public
         key. import_() should be called once and the returned URI and public
@@ -201,6 +257,9 @@ class HSMSigner(Signer):
 
         Arguments:
             hsm_keyid: Key identifier on the token. Default is 2 (meaning PIV key slot 9c).
+            token_filter: Dictionary of token field names and values used to
+                filter the correct slot/token. If no filter is provided one is built
+                from the fields found on the token.
 
         Raises:
             UnsupportedLibraryError: ``PyKCS11``, ``cryptography`` or ``asn1crypto``
@@ -221,7 +280,12 @@ class HSMSigner(Signer):
         if hsm_keyid is None:
             hsm_keyid = cls.SCHEME_KEYID
 
-        with cls._default_session() as session:
+        if token_filter is None:
+            token_filter = cls._build_token_filter()
+
+        uri = f"{cls.SCHEME}:{hsm_keyid}?{parse.urlencode(token_filter)}"
+
+        with cls._get_session(token_filter) as session:
             params, point = cls._find_key_values(session, hsm_keyid)
 
         if params.chosen.native not in _CURVE_NAMES:
@@ -247,7 +311,7 @@ class HSMSigner(Signer):
         keyid = _get_keyid(KEY_TYPE_ECDSA, scheme, keyval)
         key = SSlibKey(keyid, KEY_TYPE_ECDSA, scheme, keyval)
 
-        return "hsm:", key
+        return uri, key
 
     @classmethod
     def from_priv_key_uri(
@@ -264,10 +328,13 @@ class HSMSigner(Signer):
         if uri.scheme != cls.SCHEME:
             raise ValueError(f"HSMSigner does not support {priv_key_uri}")
 
+        keyid = int(uri.path) if uri.path else cls.SCHEME_KEYID
+        token_filter = dict(parse.parse_qsl(uri.query))
+
         if secrets_handler is None:
             raise ValueError("HSMSigner requires a secrets handler")
 
-        return cls(cls.SCHEME_KEYID, public_key, secrets_handler)
+        return cls(keyid, token_filter, public_key, secrets_handler)
 
     def sign(self, payload: bytes) -> Signature:
         """Signs payload with Hardware Security Module (HSM).
@@ -283,7 +350,7 @@ class HSMSigner(Signer):
             Signature.
         """
         pin = self.pin_handler(self.SECRETS_HANDLER_MSG)
-        with self._default_session() as session:
+        with self._get_session(self.token_filter) as session:
             session.login(pin)
             key = self._find_key(
                 session, self.hsm_keyid, PyKCS11.CKO_PRIVATE_KEY
