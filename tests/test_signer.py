@@ -448,9 +448,7 @@ class TestGPGRSA(unittest.TestCase):
 
     def test_gpg_signer_load_with_bad_scheme(self):
         """Load from priv key uri with wrong uri scheme."""
-        key = GPGKey(
-            "aa", "rsa", "pgp+rsa-pkcsv1.5", ["pgp+SHA2"], {"public": "val"}
-        )
+        key = GPGKey("aa", "rsa", "pgp+rsa-pkcsv1.5", {"public": "val"})
         with self.assertRaises(ValueError):
             GPGSigner.from_priv_key_uri("wrong:", key)
 
@@ -494,34 +492,9 @@ class TestGPGRSA(unittest.TestCase):
 
         self.assertEqual(public_key, GPGKey._from_legacy_dict(legacy_dict))
 
-    def test_gpg_key_optional_fields(self):
-        """Test gpg public key from/to_dict with optional fields."""
-
-        keydict_base = {
-            "keytype": "rsa",
-            "scheme": "pgp+rsa-pkcsv1.5",
-            "hashes": ["pgp+SHA2"],
-            "keyval": {
-                "public": "pubkeyval",
-            },
-        }
-
-        for name, val in (
-            ("creation_time", 1),
-            ("validity_period", 1),
-            ("subkeys", {"bb": copy.deepcopy(keydict_base)}),
-        ):
-            keydict = copy.deepcopy(keydict_base)
-            keydict[name] = val
-            key = Key.from_dict("aa", copy.deepcopy(keydict))
-            self.assertIsNotNone(getattr(key, name))
-            self.assertDictEqual(keydict, key.to_dict(), name)
-
     def test_gpg_key__eq__(self):
         """Test GPGKey.__eq__() ."""
-        key1 = GPGKey(
-            "aa", "rsa", "pgp+rsa-pkcsv1.5", ["pgp+SHA2"], {"public": "val"}
-        )
+        key1 = GPGKey("aa", "rsa", "pgp+rsa-pkcsv1.5", {"public": "val"})
         key2 = copy.deepcopy(key1)
         self.assertEqual(key1, key2)
 

@@ -56,7 +56,6 @@ class TestPublicInterfacesGPG(
             "aa",
             "rsa",
             "pgp+rsa-pkcsv1.5",
-            ["pgp+SHA2"],
             {"public": {"key": "value"}},
         )
         signer = Signer.from_priv_key_uri("gnupg:?id=abcd", mock_public_key)

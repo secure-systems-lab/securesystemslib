@@ -321,9 +321,7 @@ class TestPublicInterfaces(
 
     def test_signer(self):
         """Assert generic VerificationError from UnsupportedLibraryError."""
-        key = GPGKey(
-            "aa", "rsa", "pgp+rsa-pkcsv1.5", ["pgp+SHA2"], {"public": "val"}
-        )
+        key = GPGKey("aa", "rsa", "pgp+rsa-pkcsv1.5", {"public": "val"})
         sig = Signature("aa", "aaaaaaa", {"other_headers": "aaaaaa"})
         with self.assertRaises(VerificationError) as ctx:
             key.verify_signature(sig, b"data")
