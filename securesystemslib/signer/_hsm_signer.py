@@ -110,7 +110,7 @@ class HSMSigner(Signer):
 
     Arguments:
         hsm_keyid: Key identifier on the token.
-        token_filter: dictionary of token field names and values
+        token_filter: Dictionary of token field names and values
         public_key: The related public key instance.
         pin_handler: A function that returns the HSM user login pin, needed for
                 signing. It receives the string argument "pin".
@@ -159,10 +159,13 @@ class HSMSigner(Signer):
         more than one are found.
         """
         lib = PYKCS11LIB()
-        slots: List[int] = lib.getSlotList(tokenPresent=True)
-        matching_slots: List[int] = []
-        for slot in slots:
+        slots: List[int] = []
+        for slot in lib.getSlotList(tokenPresent=True):
             tokeninfo = lib.getTokenInfo(slot)
+            if not tokeninfo.flags & PyKCS11.CKF_TOKEN_INITIALIZED:
+                # useful for tests (softhsm always has an unitialized token)
+                continue
+
             match = True
             # all values in filters must match token fields
             for key, value in filters.items():
@@ -171,14 +174,14 @@ class HSMSigner(Signer):
                     match = False
 
             if match:
-                matching_slots.append(slot)
+                slots.append(slot)
 
-        if len(matching_slots) != 1:
+        if len(slots) != 1:
             raise ValueError(
-                f"Found {len(matching_slots)} slots/tokens matching filter {filters}"
+                f"Found {len(slots)} slots/tokens matching filter {filters}"
             )
 
-        session = lib.openSession(matching_slots[0])
+        session = lib.openSession(slots[0])
         try:
             yield session
 
@@ -234,7 +237,14 @@ class HSMSigner(Signer):
         """
 
         lib = PYKCS11LIB()
-        slots: List[int] = lib.getSlotList(tokenPresent=True)
+        slots: List[int] = []
+        for slot in lib.getSlotList(tokenPresent=True):
+            tokeninfo = lib.getTokenInfo(slot)
+            if not tokeninfo.flags & PyKCS11.CKF_TOKEN_INITIALIZED:
+                # useful for tests (softhsm always has an unitialized token)
+                continue
+            slots.append(slot)
+
         if len(slots) != 1:
             raise ValueError(f"Expected 1 token/slot, found {len(slots)}")
         filters = {}

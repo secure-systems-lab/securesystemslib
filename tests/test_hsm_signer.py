@@ -114,10 +114,8 @@ class TestHSM(unittest.TestCase):
         slot = lib.getSlotList(tokenPresent=True)[0]
         lib.initToken(slot, so_pin, token_label)
 
-        # suddenly there are two slots (why?), use label to filter in tests
         tokeninfo = lib.getTokenInfo(slot)
         cls.token_filter = {"label": getattr(tokeninfo, "label")}
-        print(cls.token_filter)
 
         session = PYKCS11LIB().openSession(slot, PyKCS11.CKF_RW_SESSION)
         session.login(so_pin, PyKCS11.CKU_SO)
@@ -156,6 +154,17 @@ class TestHSM(unittest.TestCase):
     def test_hsm_uri(self):
         """Test HSM default key export and signing from URI."""
 
+        # default import
+        uri, key = HSMSigner.import_()
+        signer = Signer.from_priv_key_uri(
+            uri, key, lambda sec: self.hsm_user_pin
+        )
+        sig = signer.sign(b"DATA")
+        key.verify_signature(sig, b"DATA")
+        with self.assertRaises(UnverifiedSignatureError):
+            key.verify_signature(sig, b"NOT DATA")
+
+        # Import with specified values
         uri, key = HSMSigner.import_(self.hsm_keyid_default, self.token_filter)
         signer = Signer.from_priv_key_uri(
             uri, key, lambda sec: self.hsm_user_pin
