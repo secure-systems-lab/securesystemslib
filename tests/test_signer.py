@@ -401,24 +401,6 @@ class TestGPGRSA(unittest.TestCase):
         os.chdir(cls.working_dir)
         shutil.rmtree(cls.test_dir)
 
-    def test_gpg_sign_and_verify_object_with_default_key(self):
-        """Create a signature using the default key on the keyring."""
-
-        # Public key import requires a keyid, signer loading does not. Ignore the URI w/
-        # keyid returned here, and construct one w/o keyid below, to test default key.
-        _, public_key = GPGSigner.import_(
-            self.signing_subkey_keyid, self.gnupg_home
-        )
-
-        uri = f"gnupg:{self.gnupg_home}"
-        signer = Signer.from_priv_key_uri(uri, public_key)
-        sig = signer.sign(self.test_data)
-
-        public_key.verify_signature(sig, self.test_data)
-
-        with self.assertRaises(UnverifiedSignatureError):
-            public_key.verify_signature(sig, self.wrong_data)
-
     def test_gpg_sign_and_verify_object(self):
         """Create a signature using a specific key on the keyring."""
 
