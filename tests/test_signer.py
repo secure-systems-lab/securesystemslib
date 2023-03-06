@@ -483,14 +483,16 @@ class TestGPGRSA(unittest.TestCase):
         legacy_fields = {"keyid", "type", "method"}
         fields = {"keytype", "scheme"}
 
-        legacy_dict = public_key._to_legacy_dict()
+        legacy_dict = GPGSigner._key_to_legacy_dict(public_key)
         for field in legacy_fields:
             self.assertIn(field, legacy_dict)
 
         for field in fields:
             self.assertNotIn(field, legacy_dict)
 
-        self.assertEqual(public_key, GPGKey._from_legacy_dict(legacy_dict))
+        self.assertEqual(
+            public_key, GPGSigner._key_from_legacy_dict(legacy_dict)
+        )
 
     def test_gpg_key__eq__(self):
         """Test GPGKey.__eq__() ."""

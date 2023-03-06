@@ -46,35 +46,15 @@ class GPGKey(Key):
             **self.unrecognized_fields,
         }
 
-    @classmethod
-    def _from_legacy_dict(cls, key_dict: Dict[str, Any]) -> "GPGKey":
-        """Create GPGKey from legacy dictionary representation."""
-
-        keyid = key_dict["keyid"]
-        keytype = key_dict["type"]
-        scheme = key_dict["method"]
-        keyval = key_dict["keyval"]
-
-        return cls(keyid, keytype, scheme, keyval)
-
-    def _to_legacy_dict(self) -> Dict[str, Any]:
-        """Returns legacy dictionary representation of self."""
-
-        return {
-            "keyid": self.keyid,
-            "type": self.keytype,
-            "method": self.scheme,
-            "hashes": [formats.GPG_HASH_ALGORITHM_STRING],
-            "keyval": self.keyval,
-        }
-
     def verify_signature(self, signature: Signature, data: bytes) -> None:
         try:
             if not gpg.verify_signature(
                 GPGSigner._sig_to_legacy_dict(  # pylint: disable=protected-access
                     signature
                 ),
-                self._to_legacy_dict(),
+                GPGSigner._key_to_legacy_dict(  # pylint: disable=protected-access
+                    self
+                ),
                 data,
             ):
                 raise exceptions.UnverifiedSignatureError(
@@ -155,6 +135,27 @@ class GPGSigner(Signer):
         sig_dict["sig"] = sig_dict.pop("signature")
         return Signature.from_dict(sig_dict)
 
+    @staticmethod
+    def _key_to_legacy_dict(key: GPGKey) -> Dict[str, Any]:
+        """Returns legacy dictionary representation of self."""
+        return {
+            "keyid": key.keyid,
+            "type": key.keytype,
+            "method": key.scheme,
+            "hashes": [formats.GPG_HASH_ALGORITHM_STRING],
+            "keyval": key.keyval,
+        }
+
+    @staticmethod
+    def _key_from_legacy_dict(key_dict: Dict[str, Any]) -> GPGKey:
+        """Create GPGKey from legacy dictionary representation."""
+        keyid = key_dict["keyid"]
+        keytype = key_dict["type"]
+        scheme = key_dict["method"]
+        keyval = key_dict["keyval"]
+
+        return GPGKey(keyid, keytype, scheme, keyval)
+
     @classmethod
     def import_(
         cls, keyid: str, homedir: Optional[str] = None
@@ -187,9 +188,7 @@ class GPGSigner(Signer):
         for key in raw_keys:
             if key["keyid"] == keyid:
                 # TODO: Raise here if key is expired, revoked, incapable, ...
-                public_key = GPGKey._from_legacy_dict(  # pylint: disable=protected-access
-                    key
-                )
+                public_key = cls._key_from_legacy_dict(key)
                 break
             keyids.append(key["keyid"])
 
@@ -219,6 +218,7 @@ class GPGSigner(Signer):
 
         Returns:
             Signature.
+
         """
         raw_sig = gpg.create_signature(
             payload, self.public_key.keyid, self.homedir
