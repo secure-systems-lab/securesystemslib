@@ -46,7 +46,6 @@ class GPGKey(Key):
         subkeys: Optional[Dict[str, "GPGKey"]] = None,
         unrecognized_fields: Optional[Dict[str, Any]] = None,
     ):
-
         super().__init__(keyid, keytype, scheme, keyval, unrecognized_fields)
 
         self.hashes = hashes
@@ -278,17 +277,35 @@ class GPGSigner(Signer):
             homedir: GnuPG home directory path. If not passed, the default homedir is
                     used.
 
+        Raises:
+            UnsupportedLibraryError: The gpg command or pyca/cryptography are
+                not available.
+            KeyNotFoundError: No key was found for the passed keyid.
+
         Returns:
             Tuple of private key uri and the public key.
 
         """
         uri = f"{cls.SCHEME}:{homedir or ''}"
 
-        public_key = (
-            GPGKey._from_legacy_dict(  # pylint: disable=protected-access
-                gpg.export_pubkey(keyid, homedir)
+        raw_key = gpg.export_pubkey(keyid, homedir)
+        raw_keys = [raw_key] + list(raw_key.pop("subkeys", {}).values())
+        keyids = []
+
+        for key in raw_keys:
+            if key["keyid"] == keyid:
+                # TODO: Raise here if key is expired, revoked, incapable, ...
+                public_key = GPGKey._from_legacy_dict(  # pylint: disable=protected-access
+                    key
+                )
+                break
+            keyids.append(key["keyid"])
+
+        else:
+            raise gpg_exceptions.KeyNotFoundError(
+                f"No exact match found for passed keyid"
+                f" {keyid}, found: {keyids}."
             )
-        )
 
         return (uri, public_key)
 
@@ -311,6 +328,13 @@ class GPGSigner(Signer):
         Returns:
             Signature.
         """
-        return self._sig_from_legacy_dict(
-            gpg.create_signature(payload, self.public_key.keyid, self.homedir)
+        raw_sig = gpg.create_signature(
+            payload, self.public_key.keyid, self.homedir
         )
+        if raw_sig["keyid"] != self.public_key.keyid:
+            raise ValueError(
+                f"The signing key {raw_sig['keyid']} does not"
+                f" match the attached public key {self.public_key.keyid}."
+            )
+
+        return self._sig_from_legacy_dict(raw_sig)

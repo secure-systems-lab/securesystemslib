@@ -18,7 +18,7 @@ from securesystemslib.exceptions import (
     VerificationError,
 )
 from securesystemslib.gpg.constants import have_gpg
-from securesystemslib.gpg.exceptions import KeyExpirationError
+from securesystemslib.gpg.exceptions import CommandError, KeyNotFoundError
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
     SIGNER_FOR_URI_SCHEME,
@@ -374,8 +374,8 @@ class TestGPGRSA(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.default_keyid = "8465A1E2E0FB2B40ADB2478E18FB3F537E0C8A17"
-        cls.signing_subkey_keyid = "C5A0ABE6EC19D0D65F85E2C39BE9DF5131D924E9"
+        cls.default_keyid = "8465a1e2e0fb2b40adb2478e18fb3f537e0c8a17"
+        cls.signing_subkey_keyid = "c5a0abe6ec19d0d65f85e2c39be9df5131d924e9"
 
         # Create directory to run the tests without having everything blow up.
         cls.working_dir = os.getcwd()
@@ -434,12 +434,35 @@ class TestGPGRSA(unittest.TestCase):
         with self.assertRaises(UnverifiedSignatureError):
             public_key.verify_signature(sig, self.wrong_data)
 
-        public_key.subkeys[sig.keyid].creation_time = 1
-        public_key.subkeys[sig.keyid].validity_period = 1
-        with self.assertRaises(VerificationError) as ctx:
+        sig.keyid = 123456
+        with self.assertRaises(VerificationError):
             public_key.verify_signature(sig, self.test_data)
 
-        self.assertIsInstance(ctx.exception.__cause__, KeyExpirationError)
+    def test_gpg_fail_sign_keyid_match(self):
+        """Fail signing because signature keyid does not match public key."""
+        uri, public_key = GPGSigner.import_(self.default_keyid, self.gnupg_home)
+        signer = Signer.from_priv_key_uri(uri, public_key)
+
+        # Fail because we imported main key, but gpg favors signing subkey
+        with self.assertRaises(ValueError):
+            signer.sign(self.test_data)
+
+    def test_gpg_fail_import_keyid_match(self):
+        """Fail key import because passed keyid does not match returned key."""
+
+        # gpg exports the right key, but we require an exact keyid match
+        non_matching_keyid = self.default_keyid.upper()
+        with self.assertRaises(KeyNotFoundError):
+            GPGSigner.import_(non_matching_keyid, self.gnupg_home)
+
+    def test_gpg_fail_sign_expired_key(self):
+        """Signing fails with non-zero exit code if key is expired."""
+        expired_key = "e8ac80c924116dabb51d4b987cb07d6d2c199c7c"
+
+        uri, public_key = GPGSigner.import_(expired_key, self.gnupg_home)
+        signer = Signer.from_priv_key_uri(uri, public_key)
+        with self.assertRaises(CommandError):
+            signer.sign(self.test_data)
 
     def test_gpg_signer_load_with_bad_scheme(self):
         """Load from priv key uri with wrong uri scheme."""
@@ -481,11 +504,11 @@ class TestGPGRSA(unittest.TestCase):
         fields = {"keytype", "scheme"}
 
         legacy_dict = public_key._to_legacy_dict()
-        for key in [legacy_dict] + list(legacy_dict["subkeys"].values()):
-            for field in legacy_fields:
-                self.assertIn(field, key)
-            for field in fields:
-                self.assertNotIn(field, key)
+        for field in legacy_fields:
+            self.assertIn(field, legacy_dict)
+
+        for field in fields:
+            self.assertNotIn(field, legacy_dict)
 
         self.assertEqual(public_key, GPGKey._from_legacy_dict(legacy_dict))
 
