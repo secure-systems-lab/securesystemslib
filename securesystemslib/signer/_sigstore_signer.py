@@ -83,7 +83,7 @@ class SigstoreKey(Key):
         }
 
     def verify_signature(self, signature: Signature, data: bytes) -> None:
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable=import-outside-toplevel,import-error
         try:
             from sigstore.verify import VerificationMaterials, Verifier
             from sigstore.verify.policy import Identity
