@@ -41,6 +41,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from securesystemslib.exceptions import (
+    UnsupportedLibraryError,
     UnverifiedSignatureError,
     VerificationError,
 )
@@ -50,6 +51,8 @@ from securesystemslib.signer._signer import (
     Signature,
     Signer,
 )
+
+IMPORT_ERROR = "sigstore library required to use 'sigstore-oidc' keys"
 
 logger = logging.getLogger(__name__)
 
@@ -80,9 +83,13 @@ class SigstoreKey(Key):
         }
 
     def verify_signature(self, signature: Signature, data: bytes) -> None:
-        from sigstore.verify import VerificationMaterials, Verifier
-        from sigstore.verify.policy import Identity
-        from sigstore_protobuf_specs.dev.sigstore.bundle.v1 import Bundle
+        # pylint: disable=import-outside-toplevel
+        try:
+            from sigstore.verify import VerificationMaterials, Verifier
+            from sigstore.verify.policy import Identity
+            from sigstore_protobuf_specs.dev.sigstore.bundle.v1 import Bundle
+        except ImportError as e:
+            raise UnsupportedLibraryError(IMPORT_ERROR) from e
 
         verifier = Verifier.production()
         identity = Identity(
@@ -150,7 +157,11 @@ class SigstoreSigner(Signer):
             ``Signature` interface, which expect the attribute to be of type `str`.
 
         """
-        from sigstore.sign import Signer as _Signer
+        # pylint: disable=import-outside-toplevel
+        try:
+            from sigstore.sign import Signer as _Signer
+        except ImportError as e:
+            raise UnsupportedLibraryError(IMPORT_ERROR) from e
 
         signer = _Signer.production()
         result = signer.sign(io.BytesIO(payload), self._token)

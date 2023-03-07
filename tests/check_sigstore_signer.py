@@ -8,7 +8,7 @@ only run when explicitly invoked in a suited environment.
 import os
 import unittest
 
-from sigstore.oidc import detect_credential
+from sigstore.oidc import detect_credential  # pylint: disable=import-error
 
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
