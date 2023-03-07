@@ -96,6 +96,7 @@ class HSMSigner(Signer):
       "YubiKey+PIV+%2315835999"
 
     Usage::
+
         # Store public key and URI for your HSM device for later use. By default
         # slot 9c is selected.
         uri, pubkey = HSMSigner.import_()
@@ -150,13 +151,10 @@ class HSMSigner(Signer):
         self.pin_handler = pin_handler
 
     @staticmethod
-    @contextmanager
-    def _get_session(filters: Dict[str, str]) -> Iterator["PyKCS11.Session"]:
-        """Context manager to handle a HSM session.
+    def _find_pkcs_slot(filters: Dict[str, str]) -> int:
+        """Return the PKCS slot with initialized token that matches filter
 
-        The slot/token is selected by filtering by token info fields.
-        ValueError is raised if not matching slot/token is not found, or if
-        more than one are found.
+        Raises ValueError if more or less than 1 PKCS slot is found.
         """
         lib = PYKCS11LIB()
         slots: List[int] = []
@@ -178,13 +176,24 @@ class HSMSigner(Signer):
 
         if len(slots) != 1:
             raise ValueError(
-                f"Found {len(slots)} slots/tokens matching filter {filters}"
+                f"Found {len(slots)} cryptographic tokens matching filter {filters}"
             )
 
-        session = lib.openSession(slots[0])
+        return slots[0]
+
+    @staticmethod
+    @contextmanager
+    def _get_session(filters: Dict[str, str]) -> Iterator["PyKCS11.Session"]:
+        """Context manager to handle a HSM session.
+
+        The cryptographic token is selected by filtering by token info fields.
+        ValueError is raised if matching token is not found, or if more
+        than one are found.
+        """
+        slot = HSMSigner._find_pkcs_slot(filters)
+        session = PYKCS11LIB().openSession(slot)
         try:
             yield session
-
         finally:
             session.closeSession()
 
@@ -229,26 +238,18 @@ class HSMSigner(Signer):
 
     @classmethod
     def _build_token_filter(cls) -> Dict[str, str]:
-        """Builds a token filter for the found slot/token.
+        """Builds a token filter for the found cryptographic token.
 
         The filter will include 'label' if one is found on token.
 
-        raises ValueError if less or more than 1 token/slot is found
+        raises ValueError if less or more than 1 token is found
         """
 
         lib = PYKCS11LIB()
-        slots: List[int] = []
-        for slot in lib.getSlotList(tokenPresent=True):
-            tokeninfo = lib.getTokenInfo(slot)
-            if not tokeninfo.flags & PyKCS11.CKF_TOKEN_INITIALIZED:
-                # useful for tests (softhsm always has an unitialized token)
-                continue
-            slots.append(slot)
+        slot = cls._find_pkcs_slot({})
+        tokeninfo = lib.getTokenInfo(slot)
 
-        if len(slots) != 1:
-            raise ValueError(f"Expected 1 token/slot, found {len(slots)}")
         filters = {}
-        tokeninfo = lib.getTokenInfo(slots[0])
         # other possible fields include manufacturerID, model and serialNumber
         for key in ["label"]:
             try:
@@ -266,8 +267,8 @@ class HSMSigner(Signer):
     ) -> Tuple[str, SSlibKey]:
         """Import public key and signer details from HSM.
 
-        Either only one token/slot must be present when importing or a
-        token_filter must be provided.
+        Either only one cryptographic token must be present when importing or a
+        token_filter that matches a single token must be provided.
 
         Returns a private key URI (for Signer.from_priv_key_uri()) and a public
         key. import_() should be called once and the returned URI and public
@@ -276,15 +277,14 @@ class HSMSigner(Signer):
         Arguments:
             hsm_keyid: Key identifier on the token. Default is 2 (meaning PIV key slot 9c).
             token_filter: Dictionary of token field names and values used to
-                filter the correct slot/token. If no filter is provided one is built
-                from the fields found on the token.
+                filter the correct cryptographic token. If no filter is
+                provided one is built from the fields found on the token.
 
         Raises:
             UnsupportedLibraryError: ``PyKCS11``, ``cryptography`` or ``asn1crypto``
                     libraries not found.
-            ValueError: No compatible key for ``hsm_keyid`` found on HSM.
+            ValueError: A matching HSM device could not be found.
             PyKCS11.PyKCS11Error: Various HSM communication errors.
-
         """
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
