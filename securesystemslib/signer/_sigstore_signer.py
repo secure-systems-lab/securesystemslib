@@ -40,7 +40,10 @@ import io
 import logging
 from typing import Any, Dict, Optional
 
-from securesystemslib import exceptions
+from securesystemslib.exceptions import (
+    UnverifiedSignatureError,
+    VerificationError,
+)
 from securesystemslib.signer._signer import (
     Key,
     SecretsHandler,
@@ -97,15 +100,15 @@ class SigstoreKey(Key):
                 logger.info(
                     "Key %s failed to verify sig: %s", self.keyid, result.reason
                 )
-                raise exceptions.UnverifiedSignatureError(
+                raise UnverifiedSignatureError(
                     f"Failed to verify signature by {self.keyid}"
                 )
-        except exceptions.UnverifiedSignatureError:
+        except UnverifiedSignatureError:
             raise
 
         except Exception as e:
             logger.info("Key %s failed to verify sig: %s", self.keyid, str(e))
-            raise exceptions.VerificationError(
+            raise VerificationError(
                 f"Unknown failure to verify signature by {self.keyid}"
             ) from e
 
