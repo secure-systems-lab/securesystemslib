@@ -88,21 +88,16 @@ class SigstoreKey(Key):
             from sigstore.verify import VerificationMaterials, Verifier
             from sigstore.verify.policy import Identity
             from sigstore_protobuf_specs.dev.sigstore.bundle.v1 import Bundle
-        except ImportError as e:
-            raise UnsupportedLibraryError(IMPORT_ERROR) from e
 
-        verifier = Verifier.production()
-        identity = Identity(
-            identity=self.keyval["identity"], issuer=self.keyval["issuer"]
-        )
-
-        signature_bundle = Bundle().from_dict(signature.signature)
-        verification_materials = VerificationMaterials.from_bundle(
-            input_=io.BytesIO(data), bundle=signature_bundle, offline=True
-        )
-
-        try:
-            result = verifier.verify(verification_materials, identity)
+            verifier = Verifier.production()
+            identity = Identity(
+                identity=self.keyval["identity"], issuer=self.keyval["issuer"]
+            )
+            bundle = Bundle().from_dict(signature.signature)
+            materials = VerificationMaterials.from_bundle(
+                input_=io.BytesIO(data), bundle=bundle, offline=True
+            )
+            result = verifier.verify(materials, identity)
             if not result:
                 logger.info(
                     "Key %s failed to verify sig: %s", self.keyid, result.reason
