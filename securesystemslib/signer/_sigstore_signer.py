@@ -93,7 +93,7 @@ class SigstoreKey(Key):
             identity = Identity(
                 identity=self.keyval["identity"], issuer=self.keyval["issuer"]
             )
-            bundle = Bundle().from_dict(signature.signature)
+            bundle = Bundle().from_dict(signature.unrecognized_fields["bundle"])
             materials = VerificationMaterials.from_bundle(
                 input_=io.BytesIO(data), bundle=bundle, offline=True
             )
@@ -146,10 +146,7 @@ class SigstoreSigner(Signer):
         Returns:
             Signature.
 
-            NOTE: The ``signature`` attribute of the returned object
-            contains the ``dict`` representation of a sigstore ``Bundle`.
-            This is incompatible with the TUF specification and the
-            ``Signature` interface, which expect the attribute to be of type `str`.
+            NOTE: The relevant data is in `unrecognized_fields["bundle"]`.
 
         """
         # pylint: disable=import-outside-toplevel
@@ -160,6 +157,11 @@ class SigstoreSigner(Signer):
 
         signer = _Signer.production()
         result = signer.sign(io.BytesIO(payload), self._token)
-        # TODO: Ask upstream if they can make this public.
-        sig = result._to_bundle().to_dict()  # pylint: disable=protected-access
-        return Signature(self.public_key.keyid, sig)
+        # TODO: Ask upstream if they can make this public
+        bundle = result._to_bundle()  # pylint: disable=protected-access
+
+        return Signature(
+            self.public_key.keyid,
+            bundle.message_signature.signature.hex(),
+            {"bundle": bundle.to_dict()},
+        )
