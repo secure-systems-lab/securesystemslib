@@ -58,7 +58,10 @@ logger = logging.getLogger(__name__)
 
 
 class SigstoreKey(Key):
-    """Sigstore verifier."""
+    """Sigstore verifier.
+
+    NOTE: unstable API - routines and metadata formats may change!
+    """
 
     @classmethod
     def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "SigstoreKey":
@@ -84,6 +87,7 @@ class SigstoreKey(Key):
 
     def verify_signature(self, signature: Signature, data: bytes) -> None:
         # pylint: disable=import-outside-toplevel,import-error
+        result = None
         try:
             from sigstore.verify import VerificationMaterials, Verifier
             from sigstore.verify.policy import Identity
@@ -98,15 +102,6 @@ class SigstoreKey(Key):
                 input_=io.BytesIO(data), bundle=bundle, offline=True
             )
             result = verifier.verify(materials, identity)
-            if not result:
-                logger.info(
-                    "Key %s failed to verify sig: %s", self.keyid, result.reason
-                )
-                raise UnverifiedSignatureError(
-                    f"Failed to verify signature by {self.keyid}"
-                )
-        except UnverifiedSignatureError:
-            raise
 
         except Exception as e:
             logger.info("Key %s failed to verify sig: %s", self.keyid, str(e))
@@ -114,9 +109,22 @@ class SigstoreKey(Key):
                 f"Unknown failure to verify signature by {self.keyid}"
             ) from e
 
+        if not result:
+            logger.info(
+                "Key %s failed to verify sig: %s",
+                self.keyid,
+                getattr(result, "reason", ""),
+            )
+            raise UnverifiedSignatureError(
+                f"Failed to verify signature by {self.keyid}"
+            )
+
 
 class SigstoreSigner(Signer):
-    """Sigstore signer."""
+    """Sigstore signer.
+
+    NOTE: unstable API - routines and metadata formats may change!
+    """
 
     def __init__(self, token: str, public_key: Key):
         # TODO: Vet public key
