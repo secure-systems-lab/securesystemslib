@@ -15,13 +15,14 @@ from securesystemslib.exceptions import (
     FormatError,
     UnsupportedAlgorithmError,
     UnverifiedSignatureError,
+    VerificationError,
 )
 from securesystemslib.gpg.constants import have_gpg
-from securesystemslib.gpg.functions import export_pubkey
-from securesystemslib.gpg.functions import verify_signature as verify_sig
+from securesystemslib.gpg.exceptions import CommandError, KeyNotFoundError
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
     SIGNER_FOR_URI_SCHEME,
+    GPGKey,
     GPGSigner,
     Key,
     SecretsHandler,
@@ -42,6 +43,7 @@ class TestKey(unittest.TestCase):
                 "keytype": keytype,
                 "scheme": scheme,
                 "extra": "somedata",
+                "hashes": ["only recognized by GPGKey"],
                 "keyval": {
                     "public": "pubkeyval",
                     "foo": "bar",
@@ -372,8 +374,8 @@ class TestGPGRSA(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.default_keyid = "8465A1E2E0FB2B40ADB2478E18FB3F537E0C8A17"
-        cls.signing_subkey_keyid = "C5A0ABE6EC19D0D65F85E2C39BE9DF5131D924E9"
+        cls.default_keyid = "8465a1e2e0fb2b40adb2478e18fb3f537e0c8a17"
+        cls.signing_subkey_keyid = "c5a0abe6ec19d0d65f85e2c39be9df5131d924e9"
 
         # Create directory to run the tests without having everything blow up.
         cls.working_dir = os.getcwd()
@@ -399,42 +401,112 @@ class TestGPGRSA(unittest.TestCase):
         os.chdir(cls.working_dir)
         shutil.rmtree(cls.test_dir)
 
-    def test_gpg_sign_and_verify_object_with_default_key(self):
-        """Create a signature using the default key on the keyring."""
-        # pylint: disable=protected-access
-        signer = GPGSigner(homedir=self.gnupg_home)
-        signature = signer.sign(self.test_data)
-
-        signature_dict = GPGSigner._to_gpg_sig(signature)
-        key_data = export_pubkey(self.default_keyid, self.gnupg_home)
-
-        self.assertTrue(verify_sig(signature_dict, key_data, self.test_data))
-        self.assertFalse(verify_sig(signature_dict, key_data, self.wrong_data))
-
     def test_gpg_sign_and_verify_object(self):
         """Create a signature using a specific key on the keyring."""
-        # pylint: disable=protected-access
-        signer = GPGSigner(self.signing_subkey_keyid, self.gnupg_home)
-        signature = signer.sign(self.test_data)
 
-        signature_dict = GPGSigner._to_gpg_sig(signature)
-        key_data = export_pubkey(self.signing_subkey_keyid, self.gnupg_home)
+        uri, public_key = GPGSigner.import_(
+            self.signing_subkey_keyid, self.gnupg_home
+        )
 
-        self.assertTrue(verify_sig(signature_dict, key_data, self.test_data))
-        self.assertFalse(verify_sig(signature_dict, key_data, self.wrong_data))
+        signer = Signer.from_priv_key_uri(uri, public_key)
+        sig = signer.sign(self.test_data)
 
-    def test_gpg_signature_data_structure(self):
+        public_key.verify_signature(sig, self.test_data)
+
+        with self.assertRaises(UnverifiedSignatureError):
+            public_key.verify_signature(sig, self.wrong_data)
+
+        sig.keyid = 123456
+        with self.assertRaises(VerificationError):
+            public_key.verify_signature(sig, self.test_data)
+
+    def test_gpg_fail_sign_keyid_match(self):
+        """Fail signing because signature keyid does not match public key."""
+        uri, public_key = GPGSigner.import_(self.default_keyid, self.gnupg_home)
+        signer = Signer.from_priv_key_uri(uri, public_key)
+
+        # Fail because we imported main key, but gpg favors signing subkey
+        with self.assertRaises(ValueError):
+            signer.sign(self.test_data)
+
+    def test_gpg_fail_import_keyid_match(self):
+        """Fail key import because passed keyid does not match returned key."""
+
+        # gpg exports the right key, but we require an exact keyid match
+        non_matching_keyid = self.default_keyid.upper()
+        with self.assertRaises(KeyNotFoundError):
+            GPGSigner.import_(non_matching_keyid, self.gnupg_home)
+
+    def test_gpg_fail_sign_expired_key(self):
+        """Signing fails with non-zero exit code if key is expired."""
+        expired_key = "e8ac80c924116dabb51d4b987cb07d6d2c199c7c"
+
+        uri, public_key = GPGSigner.import_(expired_key, self.gnupg_home)
+        signer = Signer.from_priv_key_uri(uri, public_key)
+        with self.assertRaises(CommandError):
+            signer.sign(self.test_data)
+
+    def test_gpg_signer_load_with_bad_scheme(self):
+        """Load from priv key uri with wrong uri scheme."""
+        key = GPGKey("aa", "rsa", "pgp+rsa-pkcsv1.5", {"public": "val"})
+        with self.assertRaises(ValueError):
+            GPGSigner.from_priv_key_uri("wrong:", key)
+
+    def test_gpg_signer_load_with_bad_key(self):
+        """Load from priv key uri with wrong pubkey type."""
+        key = SSlibKey("aa", "rsa", "rsassa-pss-sha256", {"public": "val"})
+        with self.assertRaises(ValueError):
+            GPGSigner.from_priv_key_uri("gnupg:", key)
+
+    def test_gpg_signature_legacy_data_structure(self):
         """Test custom fields and legacy data structure in gpg signatures."""
         # pylint: disable=protected-access
-        signer = GPGSigner(homedir=self.gnupg_home)
+        _, public_key = GPGSigner.import_(
+            self.signing_subkey_keyid, self.gnupg_home
+        )
+        signer = GPGSigner(public_key, homedir=self.gnupg_home)
         sig = signer.sign(self.test_data)
         self.assertIn("other_headers", sig.unrecognized_fields)
 
-        sig_dict = GPGSigner._to_gpg_sig(sig)
+        sig_dict = GPGSigner._sig_to_legacy_dict(sig)
         self.assertIn("signature", sig_dict)
         self.assertNotIn("sig", sig_dict)
-        sig2 = GPGSigner._from_gpg_sig(sig_dict)
+        sig2 = GPGSigner._sig_from_legacy_dict(sig_dict)
         self.assertEqual(sig, sig2)
+
+    def test_gpg_key_legacy_data_structure(self):
+        """Test legacy data structure conversion in gpg keys."""
+        # pylint: disable=protected-access
+        _, public_key = GPGSigner.import_(
+            self.signing_subkey_keyid, self.gnupg_home
+        )
+        legacy_fields = {"keyid", "type", "method"}
+        fields = {"keytype", "scheme"}
+
+        legacy_dict = GPGSigner._key_to_legacy_dict(public_key)
+        for field in legacy_fields:
+            self.assertIn(field, legacy_dict)
+
+        for field in fields:
+            self.assertNotIn(field, legacy_dict)
+
+        self.assertEqual(
+            public_key, GPGSigner._key_from_legacy_dict(legacy_dict)
+        )
+
+    def test_gpg_key__eq__(self):
+        """Test GPGKey.__eq__() ."""
+        key1 = GPGKey("aa", "rsa", "pgp+rsa-pkcsv1.5", {"public": "val"})
+        key2 = copy.deepcopy(key1)
+        self.assertEqual(key1, key2)
+
+        key2.keyid = "bb"
+        self.assertNotEqual(key1, key2)
+
+        other_key = SSlibKey(
+            "aa", "rsa", "rsassa-pss-sha256", {"public": "val"}
+        )
+        self.assertNotEqual(key1, other_key)
 
 
 # Run the unit tests.

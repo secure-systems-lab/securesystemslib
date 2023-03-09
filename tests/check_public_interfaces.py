@@ -41,6 +41,11 @@ import securesystemslib.gpg.functions  # pylint: disable=wrong-import-position
 import securesystemslib.gpg.util  # pylint: disable=wrong-import-position
 import securesystemslib.interface  # pylint: disable=wrong-import-position
 import securesystemslib.keys  # pylint: disable=wrong-import-position
+from securesystemslib.exceptions import (
+    UnsupportedLibraryError,
+    VerificationError,
+)
+from securesystemslib.signer import GPGKey, Signature
 
 
 class TestPublicInterfaces(
@@ -313,6 +318,14 @@ class TestPublicInterfaces(
         with self.assertRaises(expected_error) as ctx:
             securesystemslib.gpg.functions.export_pubkey("f00")
         self.assertEqual(expected_error_msg, str(ctx.exception))
+
+    def test_signer(self):
+        """Assert generic VerificationError from UnsupportedLibraryError."""
+        key = GPGKey("aa", "rsa", "pgp+rsa-pkcsv1.5", {"public": "val"})
+        sig = Signature("aa", "aaaaaaa", {"other_headers": "aaaaaa"})
+        with self.assertRaises(VerificationError) as ctx:
+            key.verify_signature(sig, b"data")
+        self.assertIsInstance(ctx.exception.__cause__, UnsupportedLibraryError)
 
 
 if __name__ == "__main__":

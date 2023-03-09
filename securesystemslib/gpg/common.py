@@ -635,7 +635,7 @@ def get_pubkey_bundle(data, keyid):
     ):
         if public_key and public_key["keyid"].endswith(keyid.lower()):
             if idx > 1:
-                log.warning(
+                log.debug(
                     "Exporting master key '{}' including subkeys '{}' for"  # pylint: disable=logging-format-interpolation,consider-using-f-string
                     " passed keyid '{}'.".format(
                         master_public_key["keyid"],

@@ -1,32 +1,107 @@
 """Signer implementation for OpenPGP """
-from typing import Dict, Optional
 
-import securesystemslib.gpg.functions as gpg
+import logging
+from typing import Any, Dict, Optional, Tuple
+from urllib import parse
+
+from securesystemslib import exceptions, formats
+from securesystemslib.gpg import exceptions as gpg_exceptions
+from securesystemslib.gpg import functions as gpg
 from securesystemslib.signer._key import Key
 from securesystemslib.signer._signer import SecretsHandler, Signature, Signer
+
+logger = logging.getLogger(__name__)
+
+
+class GPGKey(Key):
+    """OpenPGP Key.
+
+    *All parameters named below are not just constructor arguments but also
+    instance attributes.*
+
+    Attributes:
+        keyid: Key identifier that is unique within the metadata it is used in.
+                It is also used to identify the GnuPG local user signing key.
+        ketytype:  Key type, e.g. "rsa", "dsa" or "eddsa".
+        scheme: Signing schemes, e.g. "pgp+rsa-pkcsv1.5", "pgp+dsa-fips-180-2",
+                "pgp+eddsa-ed25519".
+        keyval: Opaque key content.
+        unrecognized_fields: Dictionary of all attributes that are not managed
+            by Securesystemslib
+    """
+
+    @classmethod
+    def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "GPGKey":
+        keytype = key_dict.pop("keytype")
+        scheme = key_dict.pop("scheme")
+        keyval = key_dict.pop("keyval")
+
+        return cls(keyid, keytype, scheme, keyval, key_dict)
+
+    def to_dict(self) -> Dict:
+        return {
+            "keytype": self.keytype,
+            "scheme": self.scheme,
+            "keyval": self.keyval,
+            **self.unrecognized_fields,
+        }
+
+    def verify_signature(self, signature: Signature, data: bytes) -> None:
+        try:
+            if not gpg.verify_signature(
+                GPGSigner._sig_to_legacy_dict(  # pylint: disable=protected-access
+                    signature
+                ),
+                GPGSigner._key_to_legacy_dict(  # pylint: disable=protected-access
+                    self
+                ),
+                data,
+            ):
+                raise exceptions.UnverifiedSignatureError(
+                    f"Failed to verify signature by {self.keyid}"
+                )
+        except (
+            exceptions.FormatError,
+            exceptions.UnsupportedLibraryError,
+        ) as e:
+            logger.info("Key %s failed to verify sig: %s", self.keyid, str(e))
+            raise exceptions.VerificationError(
+                f"Unknown failure to verify signature by {self.keyid}"
+            ) from e
 
 
 class GPGSigner(Signer):
     """OpenPGP Signer
 
-    Runs command in ``GNUPG`` environment variable to sign, fallback commands are
+    Runs command in ``GNUPG`` environment variable to sign. Fallback commands are
     ``gpg2`` and ``gpg``.
 
     Supported signing schemes are: "pgp+rsa-pkcsv1.5", "pgp+dsa-fips-180-2" and
     "pgp+eddsa-ed25519", with SHA-256 hashing.
 
+    GPGSigner can be instantiated with Signer.from_priv_key_uri(). These private key URI
+    schemes are supported:
+
+    * "gnupg:[<GnuPG homedir>]":
+        Signs with GnuPG key in keyring in home dir. The signing key is
+        identified with the keyid of the passed public key. If homedir is not
+        passed, the default homedir is used.
 
     Arguments:
-        keyid: GnuPG local user signing key id. If not passed, the default key is used.
+        public_key: The related public key instance.
         homedir: GnuPG home directory path. If not passed, the default homedir is used.
 
     """
 
+    SCHEME = "gnupg"
+
     def __init__(
-        self, keyid: Optional[str] = None, homedir: Optional[str] = None
+        self,
+        public_key: Key,
+        homedir: Optional[str] = None,
     ):
-        self.keyid = keyid
         self.homedir = homedir
+        self.public_key = public_key
 
     @classmethod
     def from_priv_key_uri(
@@ -35,41 +110,123 @@ class GPGSigner(Signer):
         public_key: Key,
         secrets_handler: Optional[SecretsHandler] = None,
     ) -> "GPGSigner":
-        raise NotImplementedError("Incompatible with private key URIs")
+        if not isinstance(public_key, GPGKey):
+            raise ValueError(f"expected GPGKey for {priv_key_uri}")
+
+        uri = parse.urlparse(priv_key_uri)
+
+        if uri.scheme != cls.SCHEME:
+            raise ValueError(f"GPGSigner does not support {priv_key_uri}")
+
+        homedir = uri.path or None
+
+        return cls(public_key, homedir)
 
     @staticmethod
-    def _to_gpg_sig(sig: Signature) -> Dict:
-        """Helper to convert Signature -> internal gpg signature format."""
+    def _sig_to_legacy_dict(sig: Signature) -> Dict:
+        """Helper to convert Signature to internal gpg signature dict format."""
         sig_dict = sig.to_dict()
         sig_dict["signature"] = sig_dict.pop("sig")
         return sig_dict
 
     @staticmethod
-    def _from_gpg_sig(sig_dict: Dict) -> Signature:
-        """Helper to convert internal gpg signature format -> Signature."""
+    def _sig_from_legacy_dict(sig_dict: Dict) -> Signature:
+        """Helper to convert internal gpg signature format to Signature."""
         sig_dict["sig"] = sig_dict.pop("signature")
         return Signature.from_dict(sig_dict)
 
+    @staticmethod
+    def _key_to_legacy_dict(key: GPGKey) -> Dict[str, Any]:
+        """Returns legacy dictionary representation of self."""
+        return {
+            "keyid": key.keyid,
+            "type": key.keytype,
+            "method": key.scheme,
+            "hashes": [formats.GPG_HASH_ALGORITHM_STRING],
+            "keyval": key.keyval,
+        }
+
+    @staticmethod
+    def _key_from_legacy_dict(key_dict: Dict[str, Any]) -> GPGKey:
+        """Create GPGKey from legacy dictionary representation."""
+        keyid = key_dict["keyid"]
+        keytype = key_dict["type"]
+        scheme = key_dict["method"]
+        keyval = key_dict["keyval"]
+
+        return GPGKey(keyid, keytype, scheme, keyval)
+
+    @classmethod
+    def import_(
+        cls, keyid: str, homedir: Optional[str] = None
+    ) -> Tuple[str, Key]:
+        """Load key and signer details from GnuPG keyring.
+
+        NOTE: Information about the key validity (expiration, revocation, etc.)
+        is discarded at import and not considered when verifying a signature.
+
+        Args:
+            keyid: GnuPG local user signing key id.
+            homedir: GnuPG home directory path. If not passed, the default homedir is
+                    used.
+
+        Raises:
+            UnsupportedLibraryError: The gpg command or pyca/cryptography are
+                not available.
+            KeyNotFoundError: No key was found for the passed keyid.
+
+        Returns:
+            Tuple of private key uri and the public key.
+
+        """
+        uri = f"{cls.SCHEME}:{homedir or ''}"
+
+        raw_key = gpg.export_pubkey(keyid, homedir)
+        raw_keys = [raw_key] + list(raw_key.pop("subkeys", {}).values())
+        keyids = []
+
+        for key in raw_keys:
+            if key["keyid"] == keyid:
+                # TODO: Raise here if key is expired, revoked, incapable, ...
+                public_key = cls._key_from_legacy_dict(key)
+                break
+            keyids.append(key["keyid"])
+
+        else:
+            raise gpg_exceptions.KeyNotFoundError(
+                f"No exact match found for passed keyid"
+                f" {keyid}, found: {keyids}."
+            )
+
+        return (uri, public_key)
+
     def sign(self, payload: bytes) -> Signature:
-        """Signs payload with ``gpg``.
+        """Signs payload with GnuPG.
 
         Arguments:
             payload: bytes to be signed.
 
         Raises:
-            ValueError: The gpg command failed to create a valid signature.
-            OSError: the gpg command is not present or non-executable.
-            securesystemslib.exceptions.UnsupportedLibraryError: The gpg
-                command is not available, or the cryptography library is
-                not installed.
-            securesystemslib.gpg.exceptions.CommandError: The gpg command
-                returned a non-zero exit code.
-            securesystemslib.gpg.exceptions.KeyNotFoundError: The used gpg
-                version is not fully supported.
+            ValueError: gpg command failed to create a valid signature.
+            OSError: gpg command is not present or non-executable.
+            securesystemslib.exceptions.UnsupportedLibraryError: gpg command is not
+                available, or the cryptography library is not installed.
+            securesystemslib.gpg.exceptions.CommandError: gpg command returned a
+                non-zero exit code.
+            securesystemslib.gpg.exceptions.KeyNotFoundError: gpg version is not fully
+                supported.
 
         Returns:
             Signature.
+
         """
-        return self._from_gpg_sig(
-            gpg.create_signature(payload, self.keyid, self.homedir)
+        raw_sig = gpg.create_signature(
+            payload, self.public_key.keyid, self.homedir
         )
+        if raw_sig["keyid"] != self.public_key.keyid:
+            raise ValueError(
+                f"The signing key {raw_sig['keyid']} does not"
+                f" match the attached public key {self.public_key.keyid}."
+            )
+
+        return self._sig_from_legacy_dict(raw_sig)
