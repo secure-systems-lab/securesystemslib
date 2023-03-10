@@ -15,6 +15,7 @@ from securesystemslib.signer._signer import (
     Signer,
     SSlibSigner,
 )
+from securesystemslib.signer._sigstore_signer import SigstoreKey, SigstoreSigner
 
 # Register supported private key uri schemes and the Signers implementing them
 SIGNER_FOR_URI_SCHEME.update(
