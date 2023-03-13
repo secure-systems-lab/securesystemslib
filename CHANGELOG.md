@@ -1,5 +1,31 @@
 # Changelog
 
+## securesystemslib v0.27.0
+
+### Added
+* EXPERIMENTAL DSSE implementation (#487)
+* EXPERIMENTAL sigstore signer and verifier (#522)
+* Minimal TUF/in-toto spec-compliant GPG verifier (#488)
+* API-typical 'import' and 'from URI' GPG signer methods (#488)
+
+### Changed
+* Require public key in GPG signer and disallow subkey signatures (#488)
+* Increase GPG subprocess timeout (#502)
+* Rename default branch to 'main' (#523)
+* Make HSM signer URI configurable (#526)
+* Allow tox to skip virtual HSM tests (#528)
+* Strip PEM keys to compute keyids consistently (#453)
+
+### Removed
+* Internal GPG version utils (#504)
+* Custom subprocess interface (#505)
+* Vendored ssl module (#506)
+
+### Fixed
+* Windows compatibility issues and re-enable Windows CI (#518)
+* GPG subprocess timeout configurability (#502)
+
+
 ## securesystemslib v0.26.0
 
 ### Added
