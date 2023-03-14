@@ -1,39 +1,10 @@
 """Signer implementation for project sigstore.
 
-Example:
-```python
-from securesystemslib.signer import SigstoreSigner, SigstoreKey
-
-# Create public key
-identity = "luk.puehringer@gmail.com"  # change, unless you know my password
-issuer = "https://github.com/login/oauth"
-public_key = SigstoreKey.from_dict(
-    "abcdefg",
-    {
-        "keytype": "sigstore-oidc",
-        "scheme": "Fulcio",
-        "keyval": {
-            "issuer": issuer,
-            "identity": identity,
-        },
-    },
-)
-
-# Create signer from URI -- requires sign-in with GitHub in a browser
-signer = SigstoreSigner.from_priv_key_uri("sigstore:?ambient=false", public_key)
-
-# Sign
-signature = signer.sign(b"data")
-
-# Verify
-public_key.verify_signature(signature, b"data")
-```
-
 """
 
 import io
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 from urllib import parse
 
 from securesystemslib.exceptions import (
@@ -41,6 +12,8 @@ from securesystemslib.exceptions import (
     UnverifiedSignatureError,
     VerificationError,
 )
+from securesystemslib.formats import encode_canonical
+from securesystemslib.hash import digest
 from securesystemslib.signer._signer import (
     Key,
     SecretsHandler,
@@ -58,6 +31,9 @@ class SigstoreKey(Key):
 
     NOTE: unstable API - routines and metadata formats may change!
     """
+
+    DEFAULT_KEY_TYPE = "sigstore-oidc"
+    DEFAULT_SCHEME = "Fulcio"
 
     @classmethod
     def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "SigstoreKey":
@@ -125,13 +101,28 @@ class SigstoreSigner(Signer):
     Unstable ``SigstoreSigner`` currently requires opt-in via
     ``securesystemslib.signer.SIGNER_FOR_URI_SCHEME``.
 
-    The private key URI scheme is: "sigstore:?<PARAMS>" where PARAMS is
-    optional and toggles ambient credential usage.
-    Example URIs:
+    Usage::
+
+        identity = "luk.puehringer@gmail.com"  # change, unless you know pw
+        issuer = "https://github.com/login/oauth"
+
+        # Create signer URI and public key for identity and issuer
+        uri, public_key = SigstoreSigner.import_(identity, issuer, ambient=False)
+
+        # Load signer from URI -- requires browser login with GitHub
+        signer = SigstoreSigner.from_priv_key_uri(uri, public_key)
+
+        # Sign with signer and verify public key
+        signature = signer.sign(b"data")
+        public_key.verify_signature(signature, b"data")
+
+    The private key URI scheme is "sigstore:?<PARAMS>", where PARAMS is
+    optional and toggles ambient credential usage. Example URIs:
+
     * "sigstore:":
-      Sign with ambient credentials.
+        Sign with ambient credentials.
     * "sigstore:?ambient=false":
-      Sign with OAuth2 + OpenID via browser login.
+        Sign with OAuth2 + OpenID via browser login.
 
     Arguments:
         token: The OIDC identity token used for signing.
@@ -182,6 +173,51 @@ class SigstoreSigner(Signer):
             token = detect_credential()
 
         return cls(token, public_key)
+
+    @classmethod
+    def _get_uri(cls, ambient: bool) -> str:
+        return f"{cls.SCHEME}:{'' if ambient else '?ambient=false'}"
+
+    @classmethod
+    def _get_keyid(cls, keytype: str, scheme, keyval: Dict[str, Any]) -> str:
+        """Compute keyid as hexdigest over canonical json representation of key.
+
+        NOTE: Not compatible with ``securesystemslib.keys._get_keyid()``
+        """
+        data = encode_canonical(
+            {
+                "keytype": keytype,
+                "scheme": scheme,
+                "keyval": keyval,
+            }
+        ).encode("utf-8")
+        hasher = digest()
+        hasher.update(data)
+        return hasher.hexdigest()
+
+    @classmethod
+    def import_(
+        cls, identity: str, issuer: str, ambient: bool = True
+    ) -> Tuple[str, SigstoreKey]:
+        """Create public key and signer URI.
+
+        Returns a private key URI (for Signer.from_priv_key_uri()) and a public
+        key. import_() should be called once and the returned URI and public
+        key should be stored for later use.
+
+        Arguments:
+            identity: The OIDC identity used to create a signing token.
+            issuer: The OIDC issuer URL used to create a signing token.
+            ambient: Toggle usage of ambient credentials in returned URI.
+        """
+        keytype = SigstoreKey.DEFAULT_KEY_TYPE
+        scheme = SigstoreKey.DEFAULT_SCHEME
+        keyval = {"identity": identity, "issuer": issuer}
+        keyid = cls._get_keyid(keytype, scheme, keyval)
+        key = SigstoreKey(keyid, keytype, scheme, keyval)
+        uri = cls._get_uri(ambient)
+
+        return uri, key
 
     def sign(self, payload: bytes) -> Signature:
         """Signs payload using the OIDC token on the signer instance.
