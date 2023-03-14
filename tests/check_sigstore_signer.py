@@ -8,11 +8,11 @@ only run when explicitly invoked in a suited environment.
 import os
 import unittest
 
-from sigstore.oidc import detect_credential  # pylint: disable=import-error
-
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
+    SIGNER_FOR_URI_SCHEME,
     Key,
+    Signer,
     SigstoreKey,
     SigstoreSigner,
 )
@@ -22,6 +22,8 @@ KEY_FOR_TYPE_AND_SCHEME.update(
         ("sigstore-oidc", "Fulcio"): SigstoreKey,
     }
 )
+
+SIGNER_FOR_URI_SCHEME.update({SigstoreSigner.SCHEME: SigstoreSigner})
 
 
 class TestSigstoreSigner(unittest.TestCase):
@@ -36,9 +38,6 @@ class TestSigstoreSigner(unittest.TestCase):
     """
 
     def test_sign(self):
-        token = detect_credential()
-        self.assertIsNotNone(token, "ambient credentials required")
-
         identity = os.getenv("CERT_ID")
         self.assertIsNotNone(identity, "certificate identity required")
 
@@ -56,8 +55,7 @@ class TestSigstoreSigner(unittest.TestCase):
                 },
             },
         )
-
-        signer = SigstoreSigner(token, public_key)
+        signer = Signer.from_priv_key_uri("sigstore:", public_key)
         sig = signer.sign(b"data")
         public_key.verify_signature(sig, b"data")
 

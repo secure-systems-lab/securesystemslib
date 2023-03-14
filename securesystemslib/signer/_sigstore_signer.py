@@ -2,9 +2,7 @@
 
 Example:
 ```python
-from sigstore.oidc import Issuer
-
-from securesystemslib.signer import SigstoreKey, SigstoreSigner
+from securesystemslib.signer import SigstoreSigner, SigstoreKey
 
 # Create public key
 identity = "luk.puehringer@gmail.com"  # change, unless you know my password
@@ -21,17 +19,14 @@ public_key = SigstoreKey.from_dict(
     },
 )
 
-# Create signer
-issuer = Issuer.production()
-token = issuer.identity_token()  # requires sign in with GitHub in a browser
-signer = SigstoreSigner(token, public_key)
+# Create signer from URI -- requires sign-in with GitHub in a browser
+signer = SigstoreSigner.from_priv_key_uri("sigstore:?ambient=false", public_key)
 
 # Sign
 signature = signer.sign(b"data")
 
 # Verify
 public_key.verify_signature(signature, b"data")
-
 ```
 
 """
@@ -39,6 +34,7 @@ public_key.verify_signature(signature, b"data")
 import io
 import logging
 from typing import Any, Dict, Optional
+from urllib import parse
 
 from securesystemslib.exceptions import (
     UnsupportedLibraryError,
@@ -124,7 +120,28 @@ class SigstoreSigner(Signer):
     """Sigstore signer.
 
     NOTE: unstable API - routines and metadata formats may change!
+
+    All signers should be instantiated with ``Signer.from_priv_key_uri()``.
+    Unstable ``SigstoreSigner`` currently requires opt-in via
+    ``securesystemslib.signer.SIGNER_FOR_URI_SCHEME``.
+
+    The private key URI scheme is: "sigstore:?<PARAMS>" where PARAMS is
+    optional and toggles ambient credential usage.
+    Example URIs:
+    * "sigstore:":
+      Sign with ambient credentials.
+    * "sigstore:?ambient=false":
+      Sign with OAuth2 + OpenID via browser login.
+
+    Arguments:
+        token: The OIDC identity token used for signing.
+        public_key: The related public key instance.
+
+    Raises:
+        UnsupportedLibraryError: sigstore library not found.
     """
+
+    SCHEME = "sigstore"
 
     def __init__(self, token: str, public_key: Key):
         # TODO: Vet public key
@@ -140,7 +157,31 @@ class SigstoreSigner(Signer):
         public_key: Key,
         secrets_handler: Optional[SecretsHandler] = None,
     ) -> "SigstoreSigner":
-        raise NotImplementedError()
+        # pylint: disable=import-outside-toplevel
+        try:
+            from sigstore.oidc import Issuer, detect_credential
+        except ImportError as e:
+            raise UnsupportedLibraryError(IMPORT_ERROR) from e
+
+        if not isinstance(public_key, SigstoreKey):
+            raise ValueError(f"expected SigstoreKey for {priv_key_uri}")
+
+        uri = parse.urlparse(priv_key_uri)
+
+        if uri.scheme != cls.SCHEME:
+            raise ValueError(f"SigstoreSigner does not support {priv_key_uri}")
+
+        params = dict(parse.parse_qsl(uri.query))
+
+        if params.get("ambient") == "false":
+            # TODO: Restrict oauth flow to use identity/issuer from public_key
+            # TODO: Use secrets_handler for identity_token() secret arg
+            issuer = Issuer.production()
+            token = issuer.identity_token()
+        else:
+            token = detect_credential()
+
+        return cls(token, public_key)
 
     def sign(self, payload: bytes) -> Signature:
         """Signs payload using the OIDC token on the signer instance.
