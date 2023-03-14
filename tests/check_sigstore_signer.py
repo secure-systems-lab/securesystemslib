@@ -40,10 +40,10 @@ class TestSigstoreSigner(unittest.TestCase):
         self.assertIsNotNone(token, "ambient credentials required")
 
         identity = os.getenv("CERT_ID")
-        self.assertIsNotNone(token, "certificate identity required")
+        self.assertIsNotNone(identity, "certificate identity required")
 
         issuer = os.getenv("CERT_ISSUER")
-        self.assertIsNotNone(token, "OIDC issuer required")
+        self.assertIsNotNone(issuer, "OIDC issuer required")
 
         public_key = Key.from_dict(
             "abcdef",
