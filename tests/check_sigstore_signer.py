@@ -14,7 +14,7 @@ from securesystemslib.signer import (
     SigstoreSigner,
 )
 
-SIGNER_FOR_URI_SCHEME.update({SigstoreSigner.SCHEME: SigstoreSigner})
+SIGNER_FOR_URI_SCHEME[SigstoreSigner.SCHEME] = SigstoreSigner
 
 
 class TestSigstoreSigner(unittest.TestCase):
