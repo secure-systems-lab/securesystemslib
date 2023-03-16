@@ -8,20 +8,13 @@ only run when explicitly invoked in a suited environment.
 import os
 import unittest
 
-from sigstore.oidc import detect_credential  # pylint: disable=import-error
-
 from securesystemslib.signer import (
-    KEY_FOR_TYPE_AND_SCHEME,
-    Key,
-    SigstoreKey,
+    SIGNER_FOR_URI_SCHEME,
+    Signer,
     SigstoreSigner,
 )
 
-KEY_FOR_TYPE_AND_SCHEME.update(
-    {
-        ("sigstore-oidc", "Fulcio"): SigstoreKey,
-    }
-)
+SIGNER_FOR_URI_SCHEME[SigstoreSigner.SCHEME] = SigstoreSigner
 
 
 class TestSigstoreSigner(unittest.TestCase):
@@ -36,28 +29,14 @@ class TestSigstoreSigner(unittest.TestCase):
     """
 
     def test_sign(self):
-        token = detect_credential()
-        self.assertIsNotNone(token, "ambient credentials required")
-
         identity = os.getenv("CERT_ID")
-        self.assertIsNotNone(token, "certificate identity required")
-
+        self.assertIsNotNone(identity, "certificate identity required")
         issuer = os.getenv("CERT_ISSUER")
-        self.assertIsNotNone(token, "OIDC issuer required")
+        self.assertIsNotNone(issuer, "OIDC issuer required")
 
-        public_key = Key.from_dict(
-            "abcdef",
-            {
-                "keytype": "sigstore-oidc",
-                "scheme": "Fulcio",
-                "keyval": {
-                    "issuer": issuer,
-                    "identity": identity,
-                },
-            },
-        )
+        uri, public_key = SigstoreSigner.import_(identity, issuer)
+        signer = Signer.from_priv_key_uri(uri, public_key)
 
-        signer = SigstoreSigner(token, public_key)
         sig = signer.sign(b"data")
         public_key.verify_signature(sig, b"data")
 
