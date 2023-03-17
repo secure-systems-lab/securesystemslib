@@ -11,6 +11,7 @@ permissions: {}
 jobs:
   test-sigstore:
     runs-on: ubuntu-latest
+    if: github.repository_owner == 'secure-systems-lab' # only run upstream
 
     permissions:
       id-token: 'write' # ambient credential is used to sign
@@ -35,3 +36,25 @@ jobs:
           export CERT_ID=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/.github/workflows/test-sigstore.yml@${GITHUB_REF}
           export CERT_ISSUER=https://token.actions.githubusercontent.com
           tox -e sigstore
+
+      - name: File an issue on failure
+        if: ${{ failure() }}
+        uses: actions/github-script@98814c53be79b1d30f795b907e553d8679345975
+        with:
+          script: |
+              const repo = context.repo.owner + "/" + context.repo.repo
+              const issues = await github.rest.search.issuesAndPullRequests({
+                q: "Sigstore+tests+failed+in:title+state:open+type:issue+repo:" + repo,
+              })
+              if (issues.data.total_count > 0) {
+                console.log("Issue open already, not creating.")
+              } else {
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: "Sigstore tests failed",
+                  body: "Hey, it seems Sigstore tests have failed, please see - [workflow run](" +
+                        "https://github.com/" + repo + "/actions/runs/" + context.runId + ")"
+                })
+                console.log("New issue created.")
+              }
