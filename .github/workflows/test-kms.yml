@@ -9,6 +9,7 @@ permissions: {}
 jobs:
   test-kms:
     runs-on: ubuntu-latest
+    if: github.repository_owner == 'secure-systems-lab' # only run upstream
 
     permissions:
       id-token: 'write' # for OIDC auth for GCP authentication
