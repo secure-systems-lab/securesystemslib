@@ -65,8 +65,9 @@ jobs:
             echo "PYKCS11LIB=$(brew --prefix softhsm)/lib/softhsm/libsofthsm2.so" >> $GITHUB_ENV
 
           elif [ "$RUNNER_OS" == "Windows" ]; then
-            choco install softhsm.install
-            echo "PYKCS11LIB=C:\SoftHSM2\lib\softhsm2-x64.dll" >> $GITHUB_ENV
+            echo "Skipping HSM tests on Windows"
+            # see https://github.com/secure-systems-lab/securesystemslib/issues/520
+
 
           else
               echo "$RUNNER_OS not supported"
