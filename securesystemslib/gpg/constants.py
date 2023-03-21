@@ -20,7 +20,7 @@ import logging
 import os
 import shlex
 import subprocess  # nosec
-from typing import List
+from typing import List, Optional
 
 log = logging.getLogger(__name__)
 
@@ -28,8 +28,11 @@ GPG_TIMEOUT = 10
 
 
 @functools.lru_cache(maxsize=3)
-def is_available_gnupg(gnupg: str, timeout=GPG_TIMEOUT) -> bool:
+def is_available_gnupg(gnupg: str, timeout: Optional[int] = None) -> bool:
     """Returns whether gnupg points to a gpg binary."""
+    if timeout is None:
+        timeout = GPG_TIMEOUT
+
     gpg_version_cmd = shlex.split(f"{gnupg} --version")
     try:
         subprocess.run(  # nosec
