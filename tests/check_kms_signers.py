@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 This module confirms that signing using KMS keys works.
 

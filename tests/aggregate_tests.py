@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 <Program Name>
   aggregate_tests.py
