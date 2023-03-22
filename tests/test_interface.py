@@ -276,13 +276,6 @@ class TestInterfaceFunctions(
                     CryptoError,
                     "Password was not given but private key is encrypted",
                 ),
-                # Error on encrypted but bad pw passed
-                (
-                    [fn_encrypted],
-                    {"password": "bad pw"},
-                    CryptoError,
-                    "Bad decrypt. Incorrect password?",
-                ),
                 # Error on pw and prompt
                 (
                     [fn_default],
@@ -306,6 +299,18 @@ class TestInterfaceFunctions(
                     err_msg, ctx.exception, idx
                 ),
             )
+
+        # Error on encrypted but bad pw passed
+        # NOTE: for some key+pw combos the error differs, see pyca/cryptography#8563
+        with self.assertRaises(CryptoError) as ctx:
+            import_rsa_privatekey_from_file(fn_encrypted, password="bad pw")
+
+        error = str(ctx.exception)
+        self.assertTrue(
+            "Bad decrypt. Incorrect password?" in error
+            or "Could not deserialize key data" in error,
+            f"unexpected: {error}",
+        )
 
         # Error on encrypted but bad pw prompted
         err_msg = "Password was not given but private key is encrypted"
