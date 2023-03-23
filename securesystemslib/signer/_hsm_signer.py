@@ -11,6 +11,7 @@ from urllib import parse
 
 from securesystemslib import KEY_TYPE_ECDSA
 from securesystemslib.exceptions import UnsupportedLibraryError
+from securesystemslib.hash import digest
 from securesystemslib.keys import _get_keyid
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
@@ -44,13 +45,6 @@ except ImportError:
 PYKCS11_IMPORT_ERROR = None
 try:
     from PyKCS11 import PyKCS11
-
-    # TODO: Don't hardcode schemes
-    _MECHANISM_FOR_SCHEME = {
-        "ecdsa-sha2-nistp256": PyKCS11.Mechanism(PyKCS11.CKM_ECDSA_SHA256),
-        "ecdsa-sha2-nistp384": PyKCS11.Mechanism(PyKCS11.CKM_ECDSA_SHA384),
-    }
-
 except ImportError:
     PYKCS11_IMPORT_ERROR = "'PyKCS11' required"
 
@@ -141,10 +135,12 @@ class HSMSigner(Signer):
         if PYKCS11_IMPORT_ERROR:
             raise UnsupportedLibraryError(PYKCS11_IMPORT_ERROR)
 
-        if public_key.scheme not in _MECHANISM_FOR_SCHEME:
+        if public_key.scheme not in [
+            "ecdsa-sha2-nistp256",
+            "ecdsa-sha2-nistp384",
+        ]:
             raise ValueError(f"unsupported scheme {public_key.scheme}")
 
-        self._mechanism = _MECHANISM_FOR_SCHEME[public_key.scheme]
         self.hsm_keyid = hsm_keyid
         self.token_filter = token_filter
         self.public_key = public_key
@@ -367,13 +363,18 @@ class HSMSigner(Signer):
         Returns:
             Signature.
         """
+
+        hasher = digest(algorithm=f"sha{self.public_key.scheme[-3:]}")
+        hasher.update(payload)
+
         pin = self.pin_handler(self.SECRETS_HANDLER_MSG)
         with self._get_session(self.token_filter) as session:
             session.login(pin)
             key = self._find_key(
                 session, self.hsm_keyid, PyKCS11.CKO_PRIVATE_KEY
             )
-            signature = session.sign(key, payload, self._mechanism)
+            mechanism = PyKCS11.Mechanism(PyKCS11.CKM_ECDSA)
+            signature = session.sign(key, hasher.digest(), mechanism)
             session.logout()
 
         # The PKCS11 signature octets correspond to the concatenation of the ECDSA
