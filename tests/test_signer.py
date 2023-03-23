@@ -76,6 +76,14 @@ class TestKey(unittest.TestCase):
         ed25519_pub = (
             "8ae43d22b8e0fbf4a48fa3490d31b4d389114f5dc1039c918f075427f4100759"
         )
+        rsa_keyid = (
+            "42ebff629238b4e82224500e7467f5a1b6b36a924edf08774b8c6f335f9e0558"
+        )
+        rsa_pub = "-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAqeiMhYUsT8HDG3BgB9A6\nowJxE3bgS0/D5bgoeOIuxWEs4yH0CrXuxjeqaDtkLvGuDIWBWg+EEkGCteFgu5un\nlM8SXHjk7hm/3j8AQDhBURUflHNmjzfdEx7KV7nLsFG9TTQD8u0lP5vU5CUk4gN1\n3erNJSo1ML+gid8MxdYe9joN7y+F2NVLlm8JFM7HraGoeVUnRxQIayUv+8cMkkel\nrAAqLuP0NMbiO2dczkrnxaQ7QOP+MJwnjQTYWUCcNWJZ3iNAmDLvqxiQd3WR1Q/x\nX/wCmx0Kyg1uORzLaWvnY+YWws6kkUNv7wHDqy97XZtvQexNw/X0ASlwSZrUyLGf\nufciColhmSZVfZEzGDpong64CiL3q9GLb9NDMapQAE1OAdm0ljRvroPaaUU/Zd+6\nIOJyy4Q4TbhdG6gimCddNWt2mjCCHZ8EQvNz3d9UphFavPBzG7yuQHcceBhJlIzA\nOpV6+SeusNocVwKJAJgbxScCzfDtzTDPsDtjfx/r4x/ZAgMBAAE=\n-----END PUBLIC KEY-----"
+        ecdsa_keyid = (
+            "e5a520cfb1a23cd6b782e07433098160c4568eaa168dfed96a5495933f44ac82"
+        )
+        ecdsa_pub = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEy0u6kHCv3K1VHRgjlhqOlsGErHKo\nImWN7eN0zITHimJTiAUYvNEjM8LpGzEwtvNfspWuxVHlqjBM852aDVao3w==\n-----END PUBLIC KEY-----"
 
         # keyid, keytype, scheme, pub, sig
         key_sig_data = [
@@ -85,6 +93,90 @@ class TestKey(unittest.TestCase):
                 "ed25519",
                 ed25519_pub,
                 "3fc91f5411a567d6a7f28b7fbb9ba6d60b1e2a1b64d8af0b119650015d86bb5a55e57c0e2c995a9b4a332b8f435703e934c0e6ce69fe6674a8ce68719394a40b",
+            ),
+            (
+                rsa_keyid,
+                "rsa",
+                "rsassa-pss-sha224",
+                rsa_pub,
+                "50874de0a5557dd0689a6d4bca1811ae4ec7d2c22af91bc66b9474ea0c520f5c9fbe57639dc2ef05fda289cd6595f86444375e811fe54a511100461adb0a579e465a1b372e77ff0774f596d38c94075a507bab427e9eb283ec5227f2c1b569cb8d514a104cd6a72081bf54635a13e966099a4d4d003a876370349334ddea6b0a916b79f509af33f136827b3de1293e17f33763ecad770ac0895a4a89f4c73ab5a8febd41939bca9f1a19076b3c1b9a3bf666b4e8c98e0375586af018e16bbd0d5b0aa3a127f382dc5571484272e79fb74d392f83b83ee72032bb2e9dc494816f5e9598ad9ecfd2f54128bd41684e008296f1d89af20eb6dfe30668fa9aa7c855922108ae10c866ca01cc267a390b4172effddfa7c5f5528da13ef2cb16aeed4baaabfa9824157468d03062185199652494da5440ce0c878311f350f4cfc84d1ae776f3ea0d513c6508244af4cc8d6ddd33bd6bb2a9421b0fffdfb0c0e94eaf603769656762f8e4699955aa947b79a1147aa0943d47373705d8cb31d474d94558",
+            ),
+            (
+                rsa_keyid,
+                "rsa",
+                "rsassa-pss-sha256",
+                rsa_pub,
+                "0d8d2bf80c5fdc1e94579c8f64502448f001c03032e481b56bf3bde08a3de188bdaa6d3cb74522b91e3da7851cb48675ee346aa9d13da53108f3a2033369a67168cbfe865d7a20f24d7f698d49092cbea63709a0041f4097193eacb79ff06c17a2e5c30fb4cad58d94e8f8b70c53e95b17d4f683f8dc0c6cd92d81ac3608c41dd0937062b5871730f41aaa4afe367fb7a41fe9b31ead331952d1cc66b40176ff302107537eeecd21aebcd13d65a120ed8c403892ac4a67bc0eb60574e50040770563cf64bb09156c1ca781c70789666ae42f90565649d6ed8712e8dc6c6f9d8e05d64f935a96b3da19d17033ae34cadb179a4c8bf792340ed2db5a4a8bed3e0f7eec6daf6db6947750b67834f6204decf8df39e5acef448de76125144505208197c50f3c1e5352bdbb7e9259f8d391e52dc6231e00544ddc592c5b4cdcdc91175087a7d77fcee0a802b604adb72794854a5e6eaeeaac8c629666bd13a936581121c9190b001afc4522300ba59323c140ec2b1444f62ea02225df9f721fcce887",
+            ),
+            (
+                rsa_keyid,
+                "rsa",
+                "rsassa-pss-sha384",
+                rsa_pub,
+                "5547ef93f31e20693b67fc5e5e69615ec36dd84c4921618a8892ea8565ffc5297776d7d6f6d1a8947589908f800c24096a6a02fe0c3ae19ac41a7ae5e13ced60b93932c87606a403be9ecab40f17d6a07e31b5a47ad3889ece114300474cb3888eb4e5558f050e78ca671ea2f541f5bb5ecd62622c29c7ba294878f456f7cffcf7c6c7ee266c7432d3d70ca552b09f77938f3b6c14c9222b2abeb4e7ac80b2c4050155ed085572fd536e495ec57e9131be306b814f49d3d4e62e56cd0f26d6e01f56f4d2d780642b2630f68c0593bcbfcb4f406ca565a92b5864fc49a7bc5ff656d9bb7fac69341955285ae55dc52c4697ad66c3d154fe1abae5bbb3e1a158a662b9b40e0227ca92a0f11145f584ac5229e2f6c8d42b2c584344a81c9f76f7064efc1cf0767db93c8d4ced725f5318fe45fbed97c147095fb67facad8eafde349f401d935802cb1c5134392aa358154e8edbe7c7c7c20770fb812503f801ce921bcc0a622ac500faface62fb3cc0e74d77960704f6ed51b83000bac32570dfcf",
+            ),
+            (
+                rsa_keyid,
+                "rsa",
+                "rsassa-pss-sha512",
+                rsa_pub,
+                "42f4cdbcb3d2853992111291f9d477be55ee5222fa3e77741c2065df18fa54287e1ded7dd5aed66db248e855ab24ed3177df40baffdb8e3e3b14bff6fd086d8deab4e0a2005e160ff94c43259594cab1e9a6e14c066bcde3c1c3a3d4b2caf2a31043305fdf066bdfc91d7e5c6f0fee0cb25fa4808af7a58b0e2f38a2867aa26e27dafb4cb4495d0d061185ffce439c2829eba14ace54b3042168bf16f2d970e28d83d565bd4c6d7fd5070c92207d0d4979be34f29d339a01fc179d4a85e7dd14a319f6de7593bd2c1e3e45f785ff4e5085d5ede9b571ce1cc851e9aa2c81851f257a0461a7d47a55b100a3e2ad0a28d1386b5a5e58963758e44099ee198c4e1d9826c71546e2e9eff3710eb8a5d2f847e821d61fadf1447d90885d1bc6e32572306773b0d36a40b470bfec0a27fd5c8e6f2d9fd947e507e4c80156d454880a27f76da0aa20344e19ed1d37d8ee3c8b125bdbd0a779718f3fcf63b5935445e74656060f54289ba00061c21bbc900dc926c447d6c09978f2f28208a8ddfd085bdb",
+            ),
+            (
+                rsa_keyid,
+                "rsa",
+                "rsa-pkcs1v15-sha224",
+                rsa_pub,
+                "73f90f9125b3f3c09a39b1085d5fb4bb4fafe1a8831b149c0eb12d0a7fb6d115e45121d1059a321c1628f2e81e78fbac8c72b22e21fb41de35abf8977f68245b97b906f8cc96f770b5667153c73e6bc980b29d1c3a3955ea20e6e3ddf6376055195fee10c3c6230c39929231d8c14a586dadb7dffc4350ffa194b3365d135cf26d0cb07cd09cdc30e05dda60f5529d69795e134039cb722b41825df50699a9e61ecfb6401be8fd3957dd191ad9cdfe3e880468228456f8077b67d9a26a4db0fbebcdfa97a3689ba86930066810a2eaba0433eab9b790522ba5581eb7883f4413374c4f0e4298f771bb16d7593d12db5562e0076e853b4f1ba2286b44ea03f353960311d125b7a1cb3da05800555605ba224d09e1528c30edf4936539cdf161e109a34c8b3403b274c9e279ab0518bfe3c49c6a8c6a60e949b6cd70151f3dd918077df49a3b3a226ec1b7f1c4784588169f09e650c01b5d9f4aae2965b822d509dfaac62c1d98518e8d1a51ad1c7745cb97c25522a6fa759a9f8e7e70b09454e5",
+            ),
+            (
+                rsa_keyid,
+                "rsa",
+                "rsa-pkcs1v15-sha256",
+                rsa_pub,
+                "60d0e95c55d34af072b4ebde3733a04abf40f3b1c49cd7824ce7b33379fa7aa774fc9289a053ffeaaadc19ca08df7105c25f28c902c5b0bd8a4ec3d62a1a2da4494875784dd8dc97a02f17816d69aae758e5e390e46461422d8ff185e7ae27ebdebc00617dbe7eafb01afbbda99a8c92dcb6db3d1b50111a25621f20be182f9bba4285ea0b35f0e61271998be18ffaf2163bac03633adfc5950c44623af68f9ec7942962f9c28715124220e560e8e84e419050b208d003776022a7f14716df510b5d702e61e261f446ed9cc48d812293bfdb0b4c2ef6345d699cf39f07233a63940bf51e8db27e4a91b34b1f1ae5c26ba61e85c2ac59bb00cde3efe4eb33a8b1bb50061b1218fc34c844eaf51fc01c3f688725f41c6710c0237ffc3ea88b4aa21cfb3b7c6cafe7c39ba61f2b3d25b1587c9c0695f7bb2ffd20879cc0f0c060282593459ca5977d819a305ce0610ba444517d5164bcb6a2cdbf3170e63bcaaf2d73d13909352fc15ac9394ea1487529c6105c25730cc20103deb254b323a87b6c",
+            ),
+            (
+                rsa_keyid,
+                "rsa",
+                "rsa-pkcs1v15-sha384",
+                rsa_pub,
+                "7f40f90509ce82cc41e14ab8acdca473b11bcad2805d08af1e65795e4da95d238409f490e84ca0a5fff517633241096585076b75bfac79f8ae38a225917fc00519b64a0d12ff52a3351642f5a44d61d12281369212b2f77a1db085baad7e1917816a516a1d10c975ae35c5f7e3276df6a9108062e57b997b2e0ce66643c12eb97db310e97b828065afab9609571e6f1ec96be82c556c63a5b01b40f5232f760d9c559a4bf441ca467f9a68c6567bd17afb5d67d0718e2a3f54a7b99e9775266de2b79bb354c22325e9cd26f1e1702080bf4ce361b7d574e5e69485f8e7d10576ce54912a877b663daf2b51eab4200ecb4a80e9702ef4ce75b564ad0dc5adc168f7aa214cbcc76e0972f171623a45c4fbedd4cb1eec395c41a8f65313add6f1867662f4f36b0e49b05effcae0bad20b39511cd4e2b2901808222053e331aa2c45a8388c7bfe7e09df27c79a2689c3a564f22c3eee0354ec73d07d7345c6779e47beca877e10c9b38ac137f62059b2eefa19d6ac091c5e8d16e236754d5602a149",
+            ),
+            (
+                rsa_keyid,
+                "rsa",
+                "rsa-pkcs1v15-sha512",
+                rsa_pub,
+                "28f1f467473ac067f1c0582aee76ccbaab65e28bb64d9649d5e39814a897280347aaa36fb10011053e60795e82e2fb11f8c30282b96066e381ba7deb852f32c7f476bf6c91065e898ce28e5e6861296e707b5e292fbce8521b7d7762c7cbed3b9a648379f629c626c40cbf5b65d05bb96239174c69e82bc792d81e58d95af4b6089fdbebf39747c1d32a7bcdf2b259b0e927d8da7b4bc33e9a8de288513f606c46cdb27423df9cf71bfd516da9a688b080233b06ff84d43486c2262255036b38eb8b913b79d48e2f8f2dc98c52c41db24a41105e96f0549d6e8c89016473bde6de99d9905a1831fb3691a481e47a82af3b58cdc3b9485b5115e70f48e2b370be2377b67509a62c36ad30b9d40de01732f7ad389030ae944ad1d7a5f0ede3896faf2e9543ea762cadc2495f6cc2132aad0511c0e7dd0b81d9725fa3f5ad33ddbb6b62323b035e2ceaffb7777ccdd5cbed3443b0c84b21da035c55edb5f337b6f085aa1c5591780b42a0268485d4028e79805337175907ef8b0581d1541584f445",
+            ),
+            (
+                ecdsa_keyid,
+                "ecdsa",
+                "ecdsa-sha2-nistp256",
+                ecdsa_pub,
+                "30450220790c990af320a0d4ad95f0a4b81bfaa659bb70967bae67c25bfd29539f81497d022100dec2dfd1119b9b1213a4fdebcfece8c94ee2275f40b59904d0888bcb2db8ea87",
+            ),
+            (
+                ecdsa_keyid,
+                "ecdsa",
+                "ecdsa-sha2-nistp384",
+                ecdsa_pub,
+                "3045022075248f7b9fb3b6446a662c73dd220cfbe3c3f1f913cdd5f7568562bfb86506d802210082319199d4a35062c20d8f9dbc619dfb535dd98e81f27e3cbfb2a7302ac14e80",
+            ),
+            (
+                ecdsa_keyid,
+                "ecdsa-sha2-nistp256",
+                "ecdsa-sha2-nistp256",
+                ecdsa_pub,
+                "3045022100f0ceebf17074f778f8a598fdb351f3303865038b9abe4ac7bb91b31c0f29b1f702201f4a8ab33694560a98fbcf61e73776dd4ae0a743ecbec85feab0c6b1070e5fb3",
+            ),
+            (
+                ecdsa_keyid,
+                "ecdsa-sha2-nistp384",
+                "ecdsa-sha2-nistp384",
+                ecdsa_pub,
+                "3045022100c697f7c159bab2f1083650d52061508b7d06d9a0504ad6b5f89daba87665346102203f41da0c93f333fcec5e0ac5eb663653998bc5689912f22c89ff53eb89da10c2",
             ),
         ]
         for keyid, keytype, scheme, pub, sig in key_sig_data:
