@@ -5,7 +5,6 @@ import os
 import shutil
 import tempfile
 import unittest
-from unittest.mock import patch
 
 from asn1crypto.keys import (  # pylint: disable=import-error
     ECDomainParameters,
@@ -15,32 +14,13 @@ from cryptography.hazmat.primitives.asymmetric.ec import SECP256R1, SECP384R1
 from PyKCS11 import PyKCS11
 
 from securesystemslib.exceptions import UnverifiedSignatureError
-from securesystemslib.hash import digest
 from securesystemslib.signer import HSMSigner, Signer
 from securesystemslib.signer._hsm_signer import PYKCS11LIB
-
-_orig_sign = HSMSigner.sign
-
-
-def _sign(self, data):
-    """Wraps HSMSigner sign method for testing
-
-    HSMSigner supports CKM_ECDSA_SHA256 and CKM_ECDSA_SHA384 mechanisms. But SoftHSM
-    only supports CKM_ECDSA. For testing we patch the HSMSigner mechanism attribute and
-    pre-hash the data.
-    """
-    self._mechanism = PyKCS11.Mechanism(  # pylint: disable=protected-access
-        PyKCS11.CKM_ECDSA
-    )
-    hasher = digest(algorithm=f"sha{self.public_key.scheme[-3:]}")
-    hasher.update(data)
-    return _orig_sign(self, hasher.digest())
 
 
 @unittest.skipUnless(
     os.environ.get("PYKCS11LIB"), "set PYKCS11LIB to SoftHSM lib path"
 )
-@patch.object(HSMSigner, "sign", _sign)
 class TestHSM(unittest.TestCase):
     """Test HSMSigner with SoftHSM
 
