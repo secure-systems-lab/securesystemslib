@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Test HSMSigner
 """
 import os

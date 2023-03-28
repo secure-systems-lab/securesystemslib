@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 <Program Name>
   check_public_interfaces_gpg.py

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """Test cases for "metadata.py". """
 
 import copy
