@@ -317,13 +317,21 @@ class TestPublicInterfaces(
             securesystemslib.gpg.functions.export_pubkey("f00")
         self.assertEqual(expected_error_msg, str(ctx.exception))
 
-    def test_signer(self):
+    def test_signer_verify(self):
         """Assert generic VerificationError from UnsupportedLibraryError."""
-        key = GPGKey("aa", "rsa", "pgp+rsa-pkcsv1.5", {"public": "val"})
-        sig = Signature("aa", "aaaaaaa", {"other_headers": "aaaaaa"})
-        with self.assertRaises(VerificationError) as ctx:
-            key.verify_signature(sig, b"data")
-        self.assertIsInstance(ctx.exception.__cause__, UnsupportedLibraryError)
+        keyid = "aa"
+        sig = Signature(keyid, "aaaaaaaa", {"other_headers": "aaaaaa"})
+
+        keys = [
+            GPGKey(keyid, "rsa", "pgp+rsa-pkcsv1.5", {"public": "val"}),
+        ]
+
+        for key in keys:
+            with self.assertRaises(VerificationError) as ctx:
+                key.verify_signature(sig, b"data")
+            self.assertIsInstance(
+                ctx.exception.__cause__, UnsupportedLibraryError
+            )
 
 
 if __name__ == "__main__":
