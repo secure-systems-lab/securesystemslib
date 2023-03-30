@@ -141,8 +141,6 @@ TEXT_SCHEMA = SCHEMA.AnyString()
 HASHALGORITHMS_SCHEMA = SCHEMA.ListOf(
     SCHEMA.OneOf(
         [
-            SCHEMA.String("md5"),
-            SCHEMA.String("sha1"),
             SCHEMA.String("sha224"),
             SCHEMA.String("sha256"),
             SCHEMA.String("sha384"),
@@ -252,12 +250,8 @@ ANYKEYLIST_SCHEMA = SCHEMA.ListOf(ANYKEY_SCHEMA)
 # RSA signature schemes.
 RSA_SCHEME_SCHEMA = SCHEMA.OneOf(
     [
-        SCHEMA.RegularExpression(
-            r"rsassa-pss-(md5|sha1|sha224|sha256|sha384|sha512)"
-        ),
-        SCHEMA.RegularExpression(
-            r"rsa-pkcs1v15-(md5|sha1|sha224|sha256|sha384|sha512)"
-        ),
+        SCHEMA.RegularExpression(r"rsassa-pss-(sha224|sha256|sha384|sha512)"),
+        SCHEMA.RegularExpression(r"rsa-pkcs1v15-(sha224|sha256|sha384|sha512)"),
     ]
 )
 

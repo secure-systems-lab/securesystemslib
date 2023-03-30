@@ -41,8 +41,6 @@ try:
 
     # Dictionary of `pyca/cryptography` supported hash algorithms.
     PYCA_DIGEST_OBJECTS_CACHE = {
-        "md5": _pyca_hashes.MD5,
-        "sha1": _pyca_hashes.SHA1,
         "sha224": _pyca_hashes.SHA224,
         "sha256": _pyca_hashes.SHA256,
         "sha384": _pyca_hashes.SHA384,
@@ -142,7 +140,7 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
 
     <Arguments>
       algorithm:
-        The hash algorithm (e.g., 'md5', 'sha1', 'sha256').
+        The hash algorithm (e.g., 'sha256', 'sha512').
 
       hash_library:
         The crypto library to use for the given hash algorithm (e.g., 'hashlib').
@@ -230,7 +228,7 @@ def digest_fileobject(
         to update the hash of a digest object to be returned.
 
       algorithm:
-        The hash algorithm (e.g., 'md5', 'sha1', 'sha256').
+        The hash algorithm (e.g., 'sha256', 'sha512').
 
       hash_library:
         The library providing the hash algorithms (e.g., 'hashlib').
@@ -329,7 +327,7 @@ def digest_filename(
         The filename belonging to the file object to be used.
 
       algorithm:
-        The hash algorithm (e.g., 'md5', 'sha1', 'sha256').
+        The hash algorithm (e.g., 'sha256', 'sha512').
 
       hash_library:
         The library providing the hash algorithms (e.g., 'hashlib').

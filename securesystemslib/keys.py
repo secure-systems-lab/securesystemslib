@@ -73,14 +73,10 @@ _DEFAULT_RSA_KEY_BITS = 3072
 
 
 RSA_SIGNATURE_SCHEMES = [
-    "rsassa-pss-md5",
-    "rsassa-pss-sha1",
     "rsassa-pss-sha224",
     "rsassa-pss-sha256",
     "rsassa-pss-sha384",
     "rsassa-pss-sha512",
-    "rsa-pkcs1v15-md5",
-    "rsa-pkcs1v15-sha1",
     "rsa-pkcs1v15-sha224",
     "rsa-pkcs1v15-sha256",
     "rsa-pkcs1v15-sha384",
