@@ -43,7 +43,7 @@ from securesystemslib.exceptions import (
     UnsupportedLibraryError,
     VerificationError,
 )
-from securesystemslib.signer import GPGKey, Signature
+from securesystemslib.signer import GPGKey, Key, Signature
 
 
 class TestPublicInterfaces(
@@ -332,6 +332,35 @@ class TestPublicInterfaces(
             self.assertIsInstance(
                 ctx.exception.__cause__, UnsupportedLibraryError
             )
+
+    def test_signer_ed25519_fallback(self):
+        """Assert ed25519 signature verification works in pure Python."""
+        data = b"The quick brown fox jumps over the lazy dog"
+        keyid = "aaa"
+        sig = Signature.from_dict(
+            {
+                "keyid": keyid,
+                "sig": "2ec7a5e295fa6265e10f3da7f1a432e7742f041f081b4faecab3a12bf0fc8f366c919c90c267e9ed1dfdeb7a7556b959a96dd0dcfea17da358622d39af36bf09",
+            }
+        )
+
+        key = Key.from_dict(
+            keyid,
+            {
+                "keytype": "ed25519",
+                "scheme": "ed25519",
+                "keyval": {
+                    "public": "beb75c268206554e963c45dcbf3c004140d1cb69bbfe9370ef736f19388c9b26"
+                },
+            },
+        )
+
+        self.assertIsNone(key.verify_signature(sig, data))
+
+        with self.assertRaises(
+            securesystemslib.exceptions.UnverifiedSignatureError
+        ):
+            key.verify_signature(sig, b"NOT DATA")
 
 
 if __name__ == "__main__":
