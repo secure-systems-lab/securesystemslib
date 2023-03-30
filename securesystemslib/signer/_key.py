@@ -175,6 +175,7 @@ class SSlibKey(Key):
             exceptions.CryptoError,
             exceptions.FormatError,
             exceptions.UnsupportedAlgorithmError,
+            exceptions.UnsupportedLibraryError,
         ) as e:
             logger.info("Key %s failed to verify sig: %s", self.keyid, str(e))
             raise exceptions.VerificationError(
