@@ -43,7 +43,8 @@ from securesystemslib.exceptions import (
     UnsupportedLibraryError,
     VerificationError,
 )
-from securesystemslib.signer import GPGKey, Key, Signature
+from securesystemslib.signer import GPGKey, Key, Signature, SSlibKey
+from securesystemslib.signer._sigstore_signer import SigstoreKey
 
 
 class TestPublicInterfaces(
@@ -324,13 +325,21 @@ class TestPublicInterfaces(
 
         keys = [
             GPGKey(keyid, "rsa", "pgp+rsa-pkcsv1.5", {"public": "val"}),
+            SSlibKey(keyid, "rsa", "rsa-pkcs1v15-sha512", {"public": "val"}),
+            SigstoreKey(
+                keyid,
+                "sigstore-oidc",
+                "Fulcio",
+                {"identity": "val", "issuer": "val"},
+            ),
         ]
 
         for key in keys:
             with self.assertRaises(VerificationError) as ctx:
                 key.verify_signature(sig, b"data")
+
             self.assertIsInstance(
-                ctx.exception.__cause__, UnsupportedLibraryError
+                ctx.exception.__cause__, (UnsupportedLibraryError, ImportError)
             )
 
     def test_signer_ed25519_fallback(self):
