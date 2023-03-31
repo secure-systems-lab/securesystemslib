@@ -12,8 +12,6 @@ from securesystemslib.exceptions import (
     UnverifiedSignatureError,
     VerificationError,
 )
-from securesystemslib.formats import encode_canonical
-from securesystemslib.hash import digest
 from securesystemslib.signer._signer import (
     Key,
     SecretsHandler,
@@ -177,23 +175,6 @@ class SigstoreSigner(Signer):
     @classmethod
     def _get_uri(cls, ambient: bool) -> str:
         return f"{cls.SCHEME}:{'' if ambient else '?ambient=false'}"
-
-    @classmethod
-    def _get_keyid(cls, keytype: str, scheme, keyval: Dict[str, Any]) -> str:
-        """Compute keyid as hexdigest over canonical json representation of key.
-
-        NOTE: Not compatible with ``securesystemslib.keys._get_keyid()``
-        """
-        data = encode_canonical(
-            {
-                "keytype": keytype,
-                "scheme": scheme,
-                "keyval": keyval,
-            }
-        ).encode("utf-8")
-        hasher = digest()
-        hasher.update(data)
-        return hasher.hexdigest()
 
     @classmethod
     def import_(
