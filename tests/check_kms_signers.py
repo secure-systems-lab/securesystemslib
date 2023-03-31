@@ -23,7 +23,7 @@ class TestKMSKeys(unittest.TestCase):
     """Test that KMS keys can be used to sign."""
 
     pubkey = Key.from_dict(
-        "218611b80052667026c221f8774249b0f6b8b310d30a5c45a3b878aa3a02f39e",
+        "ab45d8d98992a4128efaea284c7ef0459557db199aeadf237ae41b915b9b5a1c",
         {
             "keytype": "ecdsa",
             "scheme": "ecdsa-sha2-nistp256",

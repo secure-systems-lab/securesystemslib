@@ -12,7 +12,6 @@ from urllib import parse
 from securesystemslib import KEY_TYPE_ECDSA
 from securesystemslib.exceptions import UnsupportedLibraryError
 from securesystemslib.hash import digest
-from securesystemslib.keys import _get_keyid
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import SecretsHandler, Signer
@@ -322,7 +321,7 @@ class HSMSigner(Signer):
 
         keyval = {"public": public_pem}
         scheme = _SCHEME_FOR_CURVE[curve]
-        keyid = _get_keyid(KEY_TYPE_ECDSA, scheme, keyval)
+        keyid = cls._get_keyid(KEY_TYPE_ECDSA, scheme, keyval)
         key = SSlibKey(keyid, KEY_TYPE_ECDSA, scheme, keyval)
 
         return uri, key
