@@ -32,19 +32,11 @@ class GPGKey(Key):
 
     @classmethod
     def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "GPGKey":
-        keytype = key_dict.pop("keytype")
-        scheme = key_dict.pop("scheme")
-        keyval = key_dict.pop("keyval")
-
+        keytype, scheme, keyval = cls._from_dict(key_dict)
         return cls(keyid, keytype, scheme, keyval, key_dict)
 
     def to_dict(self) -> Dict:
-        return {
-            "keytype": self.keytype,
-            "scheme": self.scheme,
-            "keyval": self.keyval,
-            **self.unrecognized_fields,
-        }
+        return self._to_dict()
 
     def verify_signature(self, signature: Signature, data: bytes) -> None:
         try:
