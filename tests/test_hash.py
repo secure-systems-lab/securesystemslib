@@ -50,8 +50,6 @@ class TestHash(unittest.TestCase):  # pylint: disable=missing-class-docstring
         self, test_func
     ):  # pylint: disable=missing-function-docstring
         algorithms = [
-            "md5",
-            "sha1",
             "sha224",
             "sha256",
             "sha384",
@@ -96,18 +94,6 @@ class TestHash(unittest.TestCase):  # pylint: disable=missing-class-docstring
                 "4a0d129873403037c2cd9b9048203687f6233fb6738956e0349bd4320fec3e90",
                 "2b68156e70f71280f7ad021f74620446ee49613a7ed34f5220da7b1dbae9adb2",
                 "2b68156e70f71280f7ad021f74620446ee49613a7ed34f5220da7b1dbae9adb2",
-            ],
-            "md5": [
-                "d41d8cd98f00b204e9800998ecf8427e",
-                "0cc175b9c0f1b6a831c399e269772661",
-                "f034e93091235adbb5d2781908e2b313",
-                "f034e93091235adbb5d2781908e2b313",
-            ],
-            "sha1": [
-                "da39a3ee5e6b4b0d3255bfef95601890afd80709",
-                "86f7e437faa5a7fce15d1ddcb9eaeaea377667b8",
-                "d7bfa42fc62b697bf6cf1cda9af1fb7f40a27817",
-                "d7bfa42fc62b697bf6cf1cda9af1fb7f40a27817",
             ],
             "sha224": [
                 "d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f",
@@ -155,12 +141,6 @@ class TestHash(unittest.TestCase):  # pylint: disable=missing-class-docstring
             self._do_algorithm_update, "blake2b-256"
         )
 
-    def test_md5_update(self):
-        self._run_with_all_hash_libraries(self._do_algorithm_update, "md5")
-
-    def test_sha1_update(self):
-        self._run_with_all_hash_libraries(self._do_algorithm_update, "sha1")
-
     def test_sha224_update(self):
         self._run_with_all_hash_libraries(self._do_algorithm_update, "sha224")
 
@@ -193,8 +173,6 @@ class TestHash(unittest.TestCase):  # pylint: disable=missing-class-docstring
         self, library, algorithm
     ):  # pylint: disable=missing-function-docstring
         digest_sizes = {
-            "md5": 16,
-            "sha1": 20,
             "sha224": 28,
             "sha256": 32,
             "sha384": 48,

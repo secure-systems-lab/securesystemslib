@@ -108,49 +108,33 @@ class TestFormats(unittest.TestCase):  # pylint: disable=missing-class-docstring
             ),
             "RSA_SCHEME_SCHEMA_RSASSA_PSS": (
                 securesystemslib.formats.RSA_SCHEME_SCHEMA,
-                "rsassa-pss-md5",
+                "rsassa-pss-sha224",
             ),
             "RSA_SCHEME_SCHEMA_RSASSA_PSS_2": (
                 securesystemslib.formats.RSA_SCHEME_SCHEMA,
-                "rsassa-pss-sha1",
+                "rsassa-pss-sha256",
             ),
             "RSA_SCHEME_SCHEMA_RSASSA_PSS_3": (
                 securesystemslib.formats.RSA_SCHEME_SCHEMA,
-                "rsassa-pss-sha224",
-            ),
-            "RSA_SCHEME_SCHEMA_RSASSA_PSS_4": (
-                securesystemslib.formats.RSA_SCHEME_SCHEMA,
-                "rsassa-pss-sha256",
-            ),
-            "RSA_SCHEME_SCHEMA_RSASSA_PSS_5": (
-                securesystemslib.formats.RSA_SCHEME_SCHEMA,
                 "rsassa-pss-sha384",
             ),
-            "RSA_SCHEME_SCHEMA_RSASSA_PSS_6": (
+            "RSA_SCHEME_SCHEMA_RSASSA_PSS_4": (
                 securesystemslib.formats.RSA_SCHEME_SCHEMA,
                 "rsassa-pss-sha512",
             ),
             "RSA_SCHEME_SCHEMA_PKCS1v15": (
                 securesystemslib.formats.RSA_SCHEME_SCHEMA,
-                "rsa-pkcs1v15-md5",
+                "rsa-pkcs1v15-sha224",
             ),
             "RSA_SCHEME_SCHEMA_PKCS1v15_2": (
                 securesystemslib.formats.RSA_SCHEME_SCHEMA,
-                "rsa-pkcs1v15-sha1",
+                "rsa-pkcs1v15-sha256",
             ),
             "RSA_SCHEME_SCHEMA_PKCS1v15_3": (
                 securesystemslib.formats.RSA_SCHEME_SCHEMA,
-                "rsa-pkcs1v15-sha224",
-            ),
-            "RSA_SCHEME_SCHEMA_PKCS1v15_4": (
-                securesystemslib.formats.RSA_SCHEME_SCHEMA,
-                "rsa-pkcs1v15-sha256",
-            ),
-            "RSA_SCHEME_SCHEMA_PKCS1v15_5": (
-                securesystemslib.formats.RSA_SCHEME_SCHEMA,
                 "rsa-pkcs1v15-sha384",
             ),
-            "RSA_SCHEME_SCHEMA_PKCS1v15_6": (
+            "RSA_SCHEME_SCHEMA_PKCS1v15_4": (
                 securesystemslib.formats.RSA_SCHEME_SCHEMA,
                 "rsa-pkcs1v15-sha512",
             ),
