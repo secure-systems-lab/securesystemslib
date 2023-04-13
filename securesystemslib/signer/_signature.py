@@ -3,6 +3,8 @@
 import logging
 from typing import Any, Dict, Optional
 
+from securesystemslib._internal.utils import b64dec, b64enc
+
 logger = logging.getLogger(__name__)
 
 
@@ -48,6 +50,31 @@ class Signature:
         )
 
     @classmethod
+    def from_base64_dict(cls, signature_dict: Dict) -> "Signature":
+        """Creates a Signature object from its JSON/dict representation
+        containing base64 encoded signature.
+
+        Arguments:
+            signature_dict:
+                A dict containing a valid keyid and a signature.
+                Note that the fields in it should be named "keyid" and "sig"
+                respectively.
+
+        Raises:
+            KeyError: If any of the "keyid" and "sig" fields are missing from
+                the signature_dict.
+
+        Side Effect:
+            Destroys the metadata dict passed by reference.
+
+        Returns:
+            A "Signature" instance.
+        """
+
+        signature_dict["sig"] = b64dec(signature_dict["sig"]).decode("utf-8")
+        return cls.from_dict(signature_dict)
+
+    @classmethod
     def from_dict(cls, signature_dict: Dict) -> "Signature":
         """Creates a Signature object from its JSON/dict representation.
 
@@ -79,5 +106,15 @@ class Signature:
         return {
             "keyid": self.keyid,
             "sig": self.signature,
+            **self.unrecognized_fields,
+        }
+
+    def to_base64_dict(self) -> Dict:
+        """Returns the JSON-serializable dictionary representation of self
+        containing base64 encoded signature."""
+
+        return {
+            "keyid": self.keyid,
+            "sig": b64enc(self.signature.encode("utf-8")),
             **self.unrecognized_fields,
         }

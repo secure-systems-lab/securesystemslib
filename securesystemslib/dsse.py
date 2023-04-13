@@ -59,7 +59,8 @@ class Envelope:
         payload_type = data["payloadType"]
 
         signatures = [
-            Signature.from_dict(signature) for signature in data["signatures"]
+            Signature.from_base64_dict(signature)
+            for signature in data["signatures"]
         ]
 
         return cls(payload, payload_type, signatures)
@@ -71,7 +72,7 @@ class Envelope:
             "payload": b64enc(self.payload),
             "payloadType": self.payload_type,
             "signatures": [
-                signature.to_dict() for signature in self.signatures
+                signature.to_base64_dict() for signature in self.signatures
             ],
         }
 
