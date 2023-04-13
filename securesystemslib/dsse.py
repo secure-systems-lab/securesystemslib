@@ -58,22 +58,26 @@ class Envelope:
         payload = b64dec(data["payload"])
         payload_type = data["payloadType"]
 
-        signatures = [
-            Signature.from_base64_dict(signature)
-            for signature in data["signatures"]
-        ]
+        signatures = []
+        for signature in data["signatures"]:
+            signature["sig"] = b64dec(signature["sig"]).decode("utf-8")
+            signatures.append(Signature.from_dict(signature))
 
         return cls(payload, payload_type, signatures)
 
     def to_dict(self) -> dict:
         """Returns the JSON-serializable dictionary representation of self."""
 
+        signatures = []
+        for signature in self.signatures:
+            sig_dict = signature.to_dict()
+            sig_dict["sig"] = b64enc(sig_dict["sig"].encode("utf-8"))
+            signatures.append(sig_dict)
+
         return {
             "payload": b64enc(self.payload),
             "payloadType": self.payload_type,
-            "signatures": [
-                signature.to_base64_dict() for signature in self.signatures
-            ],
+            "signatures": signatures,
         }
 
     def pae(self) -> bytes:

@@ -453,15 +453,6 @@ class TestSigner(unittest.TestCase):
 
         self.assertDictEqual(signature_dict, sig_obj.to_dict())
 
-    def test_signature_from_to_base64_dict(self):
-        signature_dict = {
-            "sig": "MzA0NjAyMjEwMDkzNDJlNDU2NjUyOGZjZWNmNmE3YTVkNTNlYmFjZGIxZGYxNTFlMjQyZjU1Zjg3NzU4ODM0NjljYjAxZGJjNjYwMjIxMDA4NmI0MjZjYzgyNjcwOWFjZmEyYzNmOTIxNDYxMGNiMGE4MzJkYjk0YmJkMjY2ZmQ3YzU5MzlhNDgwNjRhODUx",
-            "keyid": "11fa391a0ed7a447cbfeb4b2667e286fc248f64d5e6d0eeed2e5e23f97f9f714",
-        }
-        sig_obj = Signature.from_base64_dict(copy.copy(signature_dict))
-
-        self.assertDictEqual(signature_dict, sig_obj.to_base64_dict())
-
     def test_signature_eq_(self):
         signature_dict = {
             "sig": "30460221009342e4566528fcecf6a7a5d53ebacdb1df151e242f55f8775883469cb01dbc6602210086b426cc826709acfa2c3f9214610cb0a832db94bbd266fd7c5939a48064a851",
