@@ -26,7 +26,7 @@ class TestEnvelope(unittest.TestCase):
 
         cls.signature_dict = {
             "keyid": "11fa391a0ed7a447",
-            "sig": "MzA0NjAyMjEwMDkzNDJlNDU2NjUyOGZjZWNmNmE3YTU=",
+            "sig": "MEYCIQCTQuRWZSj87PanpQ==",
         }
         cls.envelope_dict = {
             "payload": "aGVsbG8gd29ybGQ=",
