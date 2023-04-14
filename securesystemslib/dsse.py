@@ -1,7 +1,6 @@
 """Dead Simple Signing Envelope
 """
 
-import binascii
 import logging
 from typing import Any, Dict, List
 
@@ -61,9 +60,7 @@ class Envelope:
 
         signatures = []
         for signature in data["signatures"]:
-            signature["sig"] = binascii.hexlify(
-                b64dec(signature["sig"])
-            ).decode("utf-8")
+            signature["sig"] = b64dec(signature["sig"]).hex()
             signatures.append(Signature.from_dict(signature))
 
         return cls(payload, payload_type, signatures)
@@ -74,7 +71,7 @@ class Envelope:
         signatures = []
         for signature in self.signatures:
             sig_dict = signature.to_dict()
-            sig_dict["sig"] = b64enc(binascii.unhexlify(sig_dict["sig"]))
+            sig_dict["sig"] = b64enc(bytes.fromhex(sig_dict["sig"]))
             signatures.append(sig_dict)
 
         return {
