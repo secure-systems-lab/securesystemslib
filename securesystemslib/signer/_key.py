@@ -101,6 +101,32 @@ class Key(metaclass=ABCMeta):
         """
         raise NotImplementedError
 
+    def _to_dict(self) -> Dict[str, Any]:
+        """Serialization helper to add base Key fields to a dict.
+
+        Key implementations may call this in their to_dict, which they must
+        still provide, in order to avoid unnoticed serialization accidents.
+        """
+        return {
+            "keytype": self.keytype,
+            "scheme": self.scheme,
+            "keyval": self.keyval,
+            **self.unrecognized_fields,
+        }
+
+    @staticmethod
+    def _from_dict(key_dict: Dict[str, Any]) -> Tuple[str, str, Dict[str, Any]]:
+        """Deserialization helper to pop base Key fields off the dict.
+
+        Key implementations may call this in their from_dict, in order to parse
+        out common fields. But they have to create the Key instance themselves.
+        """
+        keytype = key_dict.pop("keytype")
+        scheme = key_dict.pop("scheme")
+        keyval = key_dict.pop("keyval")
+
+        return keytype, scheme, keyval
+
     @abstractmethod
     def verify_signature(self, signature: Signature, data: bytes) -> None:
         """Raises if verification of signature over data fails.
@@ -143,9 +169,7 @@ class SSlibKey(Key):
 
     @classmethod
     def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "SSlibKey":
-        keytype = key_dict.pop("keytype")
-        scheme = key_dict.pop("scheme")
-        keyval = key_dict.pop("keyval")
+        keytype, scheme, keyval = cls._from_dict(key_dict)
 
         if "public" not in keyval or not isinstance(keyval["public"], str):
             raise ValueError(f"public key string required for scheme {scheme}")
@@ -154,12 +178,7 @@ class SSlibKey(Key):
         return cls(keyid, keytype, scheme, keyval, key_dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            "keytype": self.keytype,
-            "scheme": self.scheme,
-            "keyval": self.keyval,
-            **self.unrecognized_fields,
-        }
+        return self._to_dict()
 
     def verify_signature(self, signature: Signature, data: bytes) -> None:
         try:

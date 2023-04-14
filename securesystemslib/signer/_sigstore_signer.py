@@ -35,9 +35,7 @@ class SigstoreKey(Key):
 
     @classmethod
     def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "SigstoreKey":
-        keytype = key_dict.pop("keytype")
-        scheme = key_dict.pop("scheme")
-        keyval = key_dict.pop("keyval")
+        keytype, scheme, keyval = cls._from_dict(key_dict)
 
         for content in ["identity", "issuer"]:
             if content not in keyval or not isinstance(keyval[content], str):
@@ -48,12 +46,7 @@ class SigstoreKey(Key):
         return cls(keyid, keytype, scheme, keyval, key_dict)
 
     def to_dict(self) -> Dict:
-        return {
-            "keytype": self.keytype,
-            "scheme": self.scheme,
-            "keyval": self.keyval,
-            **self.unrecognized_fields,
-        }
+        return self._to_dict()
 
     def verify_signature(self, signature: Signature, data: bytes) -> None:
         # pylint: disable=import-outside-toplevel,import-error
