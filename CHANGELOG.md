@@ -1,5 +1,27 @@
 # Changelog
 
+## securesystemslib v0.28.0
+
+### Added
+* Signer: auto-keyid helper (#557)
+* Signer: de/serialization helpers (#558)
+* Signer: tests (#555, #556)
+* Sigstore Signer: import methods (#535)
+
+### Changed
+* HSMSigner: pre-hash data (#548)
+* GCP Signer, HSM Signer: auto-keyid computation (#557)
+* DSSE: serialize signature data as base64 for compliance (#565)
+
+### Removed
+* Obsolete shebangs (#544, #545)
+* Outdated schemes: md5, sha1 (#554)
+
+### Fixed
+* Various test and CI fixes (#538, #541, #542, #543, #546)
+* Minor SSlibKey.verify_signature error handling bug (#556)
+
+
 ## securesystemslib v0.27.0
 
 ### Added
