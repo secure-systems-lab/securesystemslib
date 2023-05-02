@@ -141,7 +141,6 @@ class SigstoreSigner(Signer):
     ) -> "SigstoreSigner":
         # pylint: disable=import-outside-toplevel
         try:
-            from sigstore._internal.oidc import DEFAULT_AUDIENCE
             from sigstore.oidc import Issuer, detect_credential
         except ImportError as e:
             raise UnsupportedLibraryError(IMPORT_ERROR) from e
@@ -162,9 +161,7 @@ class SigstoreSigner(Signer):
             issuer = Issuer.production()
             token = issuer.identity_token()
         else:
-            # Use internal default audience value just like the sigstore cli
-            # TODO: Do not use non-public sigstore global DEFAULT_AUDIENCE!
-            token = detect_credential(DEFAULT_AUDIENCE)
+            token = detect_credential()
 
         return cls(token, public_key)
 
