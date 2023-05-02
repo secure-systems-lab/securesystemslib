@@ -15,6 +15,7 @@ jobs:
 
     permissions:
       id-token: 'write' # ambient credential is used to sign
+      issues: 'write' # for filing an issue on failure
 
     steps:
       - name: Checkout securesystemslib

@@ -48,7 +48,7 @@ gcpkms = ["google-cloud-kms", "cryptography>=37.0.0"]
 hsm = ["asn1crypto", "cryptography>=37.0.0", "PyKCS11"]
 pynacl = ["pynacl>1.2.0"]
 PySPX = ["PySPX>=0.5.0"]
-sigstore = ["sigstore"]
+sigstore = ["sigstore!=1.1.2"]
 
 [tool.hatch.version]
 path = "securesystemslib/__init__.py"
