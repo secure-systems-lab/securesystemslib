@@ -64,3 +64,13 @@ include = [
   "/CHANGELOG.md",
   "/.coveragerc",
 ]
+
+[tool.black]
+line-length=80
+extend-exclude="_vendor"
+
+[tool.isort]
+profile="black"
+line_length=80
+known_first_party = ["securesystemslib"]
+extend_skip_glob=["*/_vendor/*"]
