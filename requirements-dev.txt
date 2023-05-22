@@ -2,6 +2,7 @@
 # requirements for local testing with tox, and also for the running test suite
 # or individual tests manually
 tox
+pre-commit
 -r requirements.txt
 -r requirements-test.txt
 -r requirements-lint.txt
