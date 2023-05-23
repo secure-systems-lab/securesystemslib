@@ -3,7 +3,7 @@
 """
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from securesystemslib.exceptions import (
     UnsupportedLibraryError,
@@ -25,6 +25,17 @@ _SHAKE_SEED_LEN = 48
 logger = logging.getLogger(__name__)
 
 
+def generate_spx_key_pair() -> Tuple[bytes, bytes]:
+    """Generate SPHINCS+ key pair and return public and private bytes."""
+    if SPX_IMPORT_ERROR:
+        raise UnsupportedLibraryError(SPX_IMPORT_ERROR)
+
+    seed = os.urandom(_SHAKE_SEED_LEN)
+    public, private = shake_128s.generate_keypair(seed)
+
+    return public, private
+
+
 class SpxKey(Key):
     """SPHINCS+ verifier."""
 
@@ -35,6 +46,18 @@ class SpxKey(Key):
     def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "SpxKey":
         keytype, scheme, keyval = cls._from_dict(key_dict)
         return cls(keyid, keytype, scheme, keyval, key_dict)
+
+    @classmethod
+    def from_bytes(cls, public: bytes) -> "SpxKey":
+        """Create SpxKey instance from public key bytes."""
+        keytype = cls.DEFAULT_KEY_TYPE
+        scheme = cls.DEFAULT_SCHEME
+        keyval = {"public": public.hex()}
+
+        keyid = SpxSigner._get_keyid(  # pylint: disable=protected-access
+            keytype, scheme, keyval
+        )
+        return cls(keyid, keytype, scheme, keyval)
 
     def to_dict(self) -> Dict[str, Any]:
         return self._to_dict()
@@ -67,7 +90,9 @@ class SpxSigner(Signer):
 
     Usage::
 
-        signer = SpxSigner.new_()
+        public_bytes, private_bytes = generate_spx_key_pair()
+        public_key = SpxKey.from_bytes(public_bytes)
+        signer = SpxSigner(private_bytes, public_key)
         signature = signer.sign(b"payload")
 
         # Use public_key.to_dict() / Key.from_dict() to transport public key data
@@ -79,28 +104,6 @@ class SpxSigner(Signer):
     def __init__(self, private: bytes, public: SpxKey):
         self.private_key = private
         self.public_key = public
-
-    @classmethod
-    def new_(cls) -> "SpxSigner":
-        """Generate new SPHINCS+ key pair and return as SpxSigner.
-
-        NOTE: The Signer API is still experimental and key generation in
-        particular (see #466).
-        """
-        if SPX_IMPORT_ERROR:
-            raise UnsupportedLibraryError(SPX_IMPORT_ERROR)
-
-        seed = os.urandom(_SHAKE_SEED_LEN)
-        public, private = shake_128s.generate_keypair(seed)
-
-        keytype = SpxKey.DEFAULT_KEY_TYPE
-        scheme = SpxKey.DEFAULT_SCHEME
-        keyval = {"public": public.hex()}
-
-        keyid = cls._get_keyid(keytype, scheme, keyval)
-        public_key = SpxKey(keyid, keytype, scheme, keyval)
-
-        return cls(private, public_key)
 
     @classmethod
     def from_priv_key_uri(

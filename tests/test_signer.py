@@ -30,6 +30,7 @@ from securesystemslib.signer import (
     SpxSigner,
     SSlibKey,
     SSlibSigner,
+    generate_spx_key_pair,
 )
 
 
@@ -647,7 +648,9 @@ class TestSphincs(unittest.TestCase):
         """sphincs signer smoketest."""
 
         # Test create/sign/verify
-        signer = SpxSigner.new_()
+        public_bytes, private_bytes = generate_spx_key_pair()
+        public_key = SpxKey.from_bytes(public_bytes)
+        signer = SpxSigner(private_bytes, public_key)
         sig = signer.sign(b"data")
         self.assertIsNone(signer.public_key.verify_signature(sig, b"data"))
         with self.assertRaises(UnverifiedSignatureError):
