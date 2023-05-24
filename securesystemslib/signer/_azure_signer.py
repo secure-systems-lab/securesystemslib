@@ -54,17 +54,16 @@ class AzureSigner(Signer):
         self.signature_algorithm = self._get_signature_algorithm(key_vault_key)
 
     @staticmethod
-    def _get_signature_algorithm(key: KeyVaultKey) -> SignatureAlgorithm:
-        key_curve_name = keyVaultKey.key.crv
-        match key_curve_name:
-            case KeyCurveName.p_256:
-                return SignatureAlgorithm.es256
-            case KeyCurveName.p_384:
-                return SignatureAlgorithm.es384
-            case KeyCurveName.p_521:
-                return SignatureAlgorithm.es512
-            case _:
-                print("unsupported curve supplied")
+    def _get_signature_algorithm(kvk: KeyVaultKey) -> SignatureAlgorithm:
+        key_curve_name = kvk.key.crv
+        if key_curve_name == KeyCurveName.p_256:
+            return SignatureAlgorithm.es256
+        elif KeyCurveName.p_384:
+            return SignatureAlgorithm.es384
+        elif KeyCurveName.p_521:
+            return SignatureAlgorithm.es512
+        else:
+            print("unsupported curve supplied")
 
     @classmethod
     def from_priv_key_uri(
