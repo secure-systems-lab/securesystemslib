@@ -3,11 +3,15 @@
 from typing import Optional
 from urllib import parse
 
+import logging
+from azure.core.exceptions import HttpResponseError
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.keys import (
     KeyClient,
-    KeyVaultKey
+    KeyVaultKey,
+    KeyCurveName
 )
+from azure.keyvault.keys.crypto import CryptographyClient
 from securesystemslib.signer._key import Key
 from securesystemslib.signer._signer import (
     SecretsHandler,
@@ -15,6 +19,8 @@ from securesystemslib.signer._signer import (
     Signer,
 )
 from azure.keyvault.keys.crypto import SignatureAlgorithm
+
+logger = logging.getLogger(__name__)
 
 class AzureSigner(Signer):
     """Azure Key Vault Signer
@@ -40,19 +46,32 @@ class AzureSigner(Signer):
     def __init__(self, az_keyvaultid: str, az_keyid: str):
         self.az_keyid = az_keyid
         credential = DefaultAzureCredential()
-
+ 
         # az vault is on form: azurekms:// but key client expects https://
         vault_url = az_keyvaultid.replace("azurekms:", "https:")
+        self.key_vault_key = self._create_key_vault_key(self.az_keyid, vault_url, credential)
+        self.signature_algorithm = self._get_signature_algorithm(self.key_vault_key)
+        self.crypto_client = self._create_crypto_client(credential, self.key_vault_key)
 
-        key_client = KeyClient(vault_url=vault_url, credential=credential)
-        self.key_client = key_client
-
-        key_vault_key = key_client.get_key(az_keyid)
-        crypto_client = CryptographyClient(key_vault_key, credential=credential)
-
-        self.crypto_client = crypto_client
-        self.signature_algorithm = self._get_signature_algorithm(key_vault_key)
-
+    @staticmethod
+    def _create_key_vault_key(az_keyid: str, vault_url: str, cred: DefaultAzureCredential) -> KeyVaultKey:
+        try:
+            key_client = KeyClient(vault_url=vault_url, credential=cred)
+            return key_client.get_key(az_keyid)
+        except (
+            HttpResponseError,
+        ) as e:
+            logger.info("Key %s failed to create key client from key: %s", az_keyid, str(e))
+        
+    @staticmethod
+    def _create_crypto_client(cred: DefaultAzureCredential, kv_key: KeyVaultKey) -> CryptographyClient:
+        try:
+            return CryptographyClient(kv_key, credential=cred)
+        except (
+            HttpResponseError,
+        ) as e:
+            logger.info("Key %s failed to create key client from key: %s", az_keyid, str(e))
+        
     @staticmethod
     def _get_signature_algorithm(kvk: KeyVaultKey) -> SignatureAlgorithm:
         key_curve_name = kvk.key.crv
@@ -94,4 +113,4 @@ class AzureSigner(Signer):
 
         result = self.crypto_client.sign(SignatureAlgorithm.es256, payload)
 
-        return Signature(result.keyid, result.signature.hex())
+        return Signature(result.key_id, result.signature.hex())
