@@ -15,4 +15,3 @@ env/*
 tests/htmlcov/*
 .DS_Store
 .python-version
-.pre-commit-config.yaml
