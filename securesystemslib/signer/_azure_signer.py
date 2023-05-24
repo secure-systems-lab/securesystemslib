@@ -1,9 +1,18 @@
 """Signer implementation for Azure Key Vault"""
 
+from typing import Optional
+from urllib import parse
+
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.keys import (
     KeyClient,
     KeyVaultKey
+)
+from securesystemslib.signer._key import Key
+from securesystemslib.signer._signer import (
+    SecretsHandler,
+    Signature,
+    Signer,
 )
 from azure.keyvault.keys.crypto import SignatureAlgorithm
 
@@ -30,7 +39,7 @@ class AzureSigner(Signer):
 
     def __init__(self, az_keyvaultid: str, az_keyid: str):
         self.az_keyid = az_keyid
-        self.public_key = public_key
+        #self.public_key = public_key
 
         credential = DefaultAzureCredential()
         key_client = KeyClient(vault_url=az_keyvaultid, credential=credential)
