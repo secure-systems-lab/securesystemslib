@@ -1,9 +1,18 @@
 """Signer implementation for Azure Key Vault"""
 
+from typing import Optional
+from urllib import parse
+
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.keys import (
     KeyClient,
     KeyVaultKey
+)
+from securesystemslib.signer._key import Key
+from securesystemslib.signer._signer import (
+    SecretsHandler,
+    Signature,
+    Signer,
 )
 from azure.keyvault.keys.crypto import SignatureAlgorithm
 
@@ -30,10 +39,12 @@ class AzureSigner(Signer):
 
     def __init__(self, az_keyvaultid: str, az_keyid: str):
         self.az_keyid = az_keyid
-        self.public_key = public_key
-
         credential = DefaultAzureCredential()
-        key_client = KeyClient(vault_url=az_keyvaultid, credential=credential)
+
+        # az vault is on form: azurekms:// but key client expects https://
+        vault_url = az_keyvaultid.replace("azurekms:", "https:")
+
+        key_client = KeyClient(vault_url=vault_url, credential=credential)
         self.key_client = key_client
 
         key_vault_key = key_client.get_key(az_keyid)
@@ -67,7 +78,7 @@ class AzureSigner(Signer):
         if uri.scheme != cls.SCHEME:
             raise ValueError(f"AzureSigner does not support {priv_key_uri}")
 
-        return cls(uri.path, public_key)
+        return cls(priv_key_uri, public_key)
 
     def sign(self, payload: bytes) -> Signature:
         """Signs payload with Azure Key Vault.
