@@ -161,7 +161,9 @@ class SigstoreSigner(Signer):
             issuer = Issuer.production()
             token = issuer.identity_token()
         else:
-            token = detect_credential()
+            # Note: this method signature only works with sigstore-python 1.1.2:
+            # dependencies must be updated when changing this
+            token = detect_credential("sigstore")
 
         return cls(token, public_key)
 
