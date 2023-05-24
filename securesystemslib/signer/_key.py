@@ -145,7 +145,7 @@ class Key(metaclass=ABCMeta):
 
 
 class SSlibKey(Key):
-    """Key implementation for RSA, Ed25519, ECDSA and Sphincs keys"""
+    """Key implementation for RSA, Ed25519, ECDSA keys"""
 
     def to_securesystemslib_key(self) -> Dict[str, Any]:
         """Internal helper, returns a classic securesystemslib keydict"""
