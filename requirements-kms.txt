@@ -1,1 +1,3 @@
 google-cloud-kms
+azure-identity
+azure-keyvault-keys

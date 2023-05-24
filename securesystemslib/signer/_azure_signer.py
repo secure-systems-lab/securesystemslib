@@ -38,7 +38,7 @@ class AzureSigner(Signer):
 
         key_vault_key = key_client.get_key(az_keyid)
         crypto_client = CryptographyClient(key_vault_key, credential=credential)
-        
+
         self.crypto_client = crypto_client
         self.signature_algorithm = self._get_signature_algorithm(key_vault_key)
 
@@ -82,6 +82,6 @@ class AzureSigner(Signer):
             Signature.
         """
 
-        result = crypto_client.sign(SignatureAlgorithm.es256, payload)
+        result = self.crypto_client.sign(SignatureAlgorithm.es256, payload)
 
         return Signature(result.keyid, result.signature.hex())
