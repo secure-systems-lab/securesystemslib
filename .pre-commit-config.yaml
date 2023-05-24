@@ -1,6 +1,7 @@
 # Automatically run checks over changed files prior to `git commit`.
 # Required one-time setup:
 #
+#   pip install pre-commit
 #   pre-commit install
 #
 # See https://pre-commit.com for details.
