@@ -64,8 +64,6 @@ class AzureSigner(Signer):
     ) -> "AzureSigner":
         uri = parse.urlparse(priv_key_uri)
 
-        print("fsn test test")
-
         if uri.scheme != cls.SCHEME:
             raise ValueError(f"AzureSigner does not support {priv_key_uri}")
 
