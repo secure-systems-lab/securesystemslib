@@ -11,7 +11,8 @@ from azure.identity import DefaultAzureCredential
 from azure.keyvault.keys import (
     KeyClient,
     KeyVaultKey,
-    KeyCurveName
+    KeyCurveName,
+    KeyType,
 )
 from azure.keyvault.keys.crypto import (
     CryptographyClient,
@@ -30,19 +31,20 @@ from securesystemslib.signer._signer import (
 
 logger = logging.getLogger(__name__)
 
+class UnsupportedKeyType(Exception):
+    pass
+
 class AzureSigner(Signer):
     """Azure Key Vault Signer
 
     This Signer uses Azure Key Vault to sign.
-
-    The specific permissions that AzureSigner needs are:
-    * todo:add roles
+    Currently this signer only supports signing with EC keys.
+    RSA support will be added in a separate pull request.
 
     Arguments:
         az_keyvaultid: Fully qualified Azure Key Vault name, like
             azurekms://<vault-name>.vault.azure.net
-        az_keyid: Fully qualified Azure Key Vault key name, like
-            azurekms://<vault-name>.vault.azure.net/<key-name>
+        az_keyid: Azure Key Vault key name
 
     Raises:
         Various errors from azure.identity
@@ -52,14 +54,17 @@ class AzureSigner(Signer):
     SCHEME = "azurekms"
 
     def __init__(self, az_keyvaultid: str, az_keyid: str):
-        credential = DefaultAzureCredential()
-        # az vault is on form: azurekms:// but key client expects https://
-        vault_url = az_keyvaultid.replace("azurekms:", "https:")
+        try:
+            credential = DefaultAzureCredential()
+            # az vault is on form: azurekms:// but key client expects https://
+            vault_url = az_keyvaultid.replace("azurekms:", "https:")
 
-        key_vault_key = self._create_key_vault_key(credential, az_keyid, vault_url)
-        self.signature_algorithm = self._get_signature_algorithm(key_vault_key)
-        self.hash_algorithm = self._get_hash_algorithm(key_vault_key)
-        self.crypto_client = self._create_crypto_client(credential, key_vault_key)
+            key_vault_key = self._create_key_vault_key(credential, az_keyid, vault_url)
+            self.signature_algorithm = self._get_signature_algorithm(key_vault_key)
+            self.hash_algorithm = self._get_hash_algorithm(key_vault_key)
+            self.crypto_client = self._create_crypto_client(credential, key_vault_key)
+        except UnsupportedKeyType as e:
+            logger.info("Key %s has unsupported key type or unsupported elliptic curve")
 
     @staticmethod
     def _create_key_vault_key(cred: DefaultAzureCredential, az_keyid: str, vault_url: str) -> KeyVaultKey:
@@ -82,6 +87,10 @@ class AzureSigner(Signer):
 
     @staticmethod
     def _get_signature_algorithm(kvk: KeyVaultKey) -> SignatureAlgorithm:
+        key_type = kvk.key.kty
+        if key_type != KeyType.ec and key_type != KeyType.ec_hsm:
+            logger.info("only EC keys are supported for now")
+            raise UnsupportedKeyType("Supplied key must be an EC key")
         key_curve_name = kvk.key.crv
         if key_curve_name == KeyCurveName.p_256:
             return SignatureAlgorithm.es256
@@ -90,7 +99,7 @@ class AzureSigner(Signer):
         elif KeyCurveName.p_521:
             return SignatureAlgorithm.es512
         else:
-            print("unsupported curve supplied")
+            raise UnsupportedKeyType("Unsupported curve supplied by key")
 
     @staticmethod
     def _get_hash_algorithm(kvk: KeyVaultKey) -> str:
@@ -102,7 +111,7 @@ class AzureSigner(Signer):
         elif KeyCurveName.p_521:
             return "sha512"
         else:
-            print("unsupported curve supplied")
+            logger.info("unsupported curve supplied")
             # trigger UnsupportedAlgorithm if appropriate
             _ = sslib_hash.digest("")
 
