@@ -15,6 +15,7 @@ from azure.keyvault.keys.crypto import (
     CryptographyClient,
     SignatureAlgorithm
 )
+import securesystemslib.hash as sslib_hash
 from securesystemslib.signer._key import Key
 from securesystemslib.signer._signer import (
     SecretsHandler,
@@ -49,9 +50,10 @@ class AzureSigner(Signer):
         credential = DefaultAzureCredential()
         # az vault is on form: azurekms:// but key client expects https://
         vault_url = az_keyvaultid.replace("azurekms:", "https:")
-        
+
         key_vault_key = self._create_key_vault_key(credential, az_keyid, vault_url)
         self.signature_algorithm = self._get_signature_algorithm(key_vault_key)
+        self.hash_algorithm = self._get_hash_algorithm(key_vault_key)
         self.crypto_client = self._create_crypto_client(credential, key_vault_key)
 
     @staticmethod
@@ -63,7 +65,7 @@ class AzureSigner(Signer):
             HttpResponseError,
         ) as e:
             logger.info("Key %s failed to create key client from credentials, key ID, and Vault URL: %s", az_keyid, str(e))
-        
+
     @staticmethod
     def _create_crypto_client(cred: DefaultAzureCredential, kv_key: KeyVaultKey) -> CryptographyClient:
         try:
@@ -72,7 +74,7 @@ class AzureSigner(Signer):
             HttpResponseError,
         ) as e:
             logger.info("Key %s failed to create crypto client from credentials and KeyVaultKey: %s", az_keyid, str(e))
-        
+
     @staticmethod
     def _get_signature_algorithm(kvk: KeyVaultKey) -> SignatureAlgorithm:
         key_curve_name = kvk.key.crv
@@ -84,6 +86,20 @@ class AzureSigner(Signer):
             return SignatureAlgorithm.es512
         else:
             print("unsupported curve supplied")
+
+    @staticmethod
+    def _get_hash_algorithm(kvk: KeyVaultKey) -> str:
+        key_curve_name = kvk.key.crv
+        if key_curve_name == KeyCurveName.p_256:
+            return "sha256"
+        elif KeyCurveName.p_384:
+            return "sha384"
+        elif KeyCurveName.p_521:
+            return "sha512"
+        else:
+            print("unsupported curve supplied")
+            # trigger UnsupportedAlgorithm if appropriate
+            _ = sslib_hash.digest("")
 
     @classmethod
     def from_priv_key_uri(
@@ -112,6 +128,9 @@ class AzureSigner(Signer):
             Signature.
         """
 
-        response = self.crypto_client.sign(self.signature_algorithm, payload)
+        hasher = sslib_hash.digest(self.hash_algorithm)
+        hasher.update(payload)
+        digest = hasher.digest()
+        response = self.crypto_client.sign(self.signature_algorithm, digest)
 
         return Signature(response.key_id, response.signature.hex())
