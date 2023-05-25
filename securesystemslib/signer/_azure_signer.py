@@ -1,5 +1,7 @@
 """Signer implementation for Azure Key Vault"""
 
+import binascii
+
 from typing import Optional
 from urllib import parse
 
@@ -15,6 +17,10 @@ from azure.keyvault.keys.crypto import (
     CryptographyClient,
     SignatureAlgorithm
 )
+from cryptography.hazmat.primitives.asymmetric.utils import (
+    encode_dss_signature,
+)
+import securesystemslib.hash as sslib_hash
 from securesystemslib.signer._key import Key
 from securesystemslib.signer._signer import (
     SecretsHandler,
@@ -49,9 +55,10 @@ class AzureSigner(Signer):
         credential = DefaultAzureCredential()
         # az vault is on form: azurekms:// but key client expects https://
         vault_url = az_keyvaultid.replace("azurekms:", "https:")
-        
+
         key_vault_key = self._create_key_vault_key(credential, az_keyid, vault_url)
         self.signature_algorithm = self._get_signature_algorithm(key_vault_key)
+        self.hash_algorithm = self._get_hash_algorithm(key_vault_key)
         self.crypto_client = self._create_crypto_client(credential, key_vault_key)
 
     @staticmethod
@@ -63,7 +70,7 @@ class AzureSigner(Signer):
             HttpResponseError,
         ) as e:
             logger.info("Key %s failed to create key client from credentials, key ID, and Vault URL: %s", az_keyid, str(e))
-        
+
     @staticmethod
     def _create_crypto_client(cred: DefaultAzureCredential, kv_key: KeyVaultKey) -> CryptographyClient:
         try:
@@ -72,7 +79,7 @@ class AzureSigner(Signer):
             HttpResponseError,
         ) as e:
             logger.info("Key %s failed to create crypto client from credentials and KeyVaultKey: %s", az_keyid, str(e))
-        
+
     @staticmethod
     def _get_signature_algorithm(kvk: KeyVaultKey) -> SignatureAlgorithm:
         key_curve_name = kvk.key.crv
@@ -84,6 +91,20 @@ class AzureSigner(Signer):
             return SignatureAlgorithm.es512
         else:
             print("unsupported curve supplied")
+
+    @staticmethod
+    def _get_hash_algorithm(kvk: KeyVaultKey) -> str:
+        key_curve_name = kvk.key.crv
+        if key_curve_name == KeyCurveName.p_256:
+            return "sha256"
+        elif KeyCurveName.p_384:
+            return "sha384"
+        elif KeyCurveName.p_521:
+            return "sha512"
+        else:
+            print("unsupported curve supplied")
+            # trigger UnsupportedAlgorithm if appropriate
+            _ = sslib_hash.digest("")
 
     @classmethod
     def from_priv_key_uri(
@@ -112,6 +133,27 @@ class AzureSigner(Signer):
             Signature.
         """
 
-        response = self.crypto_client.sign(self.signature_algorithm, payload)
+        hasher = sslib_hash.digest(self.hash_algorithm)
+        hasher.update(payload)
+        digest = hasher.digest()
+        response = self.crypto_client.sign(self.signature_algorithm, digest)
 
-        return Signature(response.key_id, response.signature.hex())
+        # This code is copied from:
+        # https://github.com/secure-systems-lab/securesystemslib/blob/135567fa04f10d0c6a4cd32eb45ce736e1f50a93/securesystemslib/signer/_hsm_signer.py#L379
+        #
+        # The PKCS11 signature octets correspond to the concatenation of the
+        # ECDSA values r and s, both represented as an octet string of equal
+        # length of at most nLen with the most significant byte first (i.e.
+        # big endian)
+        # https://docs.oasis-open.org/pkcs11/pkcs11-curr/v3.0/cs01/pkcs11-curr-v3.0-cs01.html#_Toc30061178
+        r_s_len = int(len(response.signature) / 2)
+        r = int.from_bytes(response.signature[:r_s_len], byteorder="big")
+        s = int.from_bytes(response.signature[r_s_len:], byteorder="big")
+
+        # Create an ASN.1 encoded Dss-Sig-Value to be used with
+        # pyca/cryptography
+        dss_sig_value = binascii.hexlify(encode_dss_signature(r, s)).decode(
+            "ascii"
+        )
+
+        return Signature(response.key_id, dss_sig_value)
