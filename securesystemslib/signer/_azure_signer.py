@@ -1,5 +1,7 @@
 """Signer implementation for Azure Key Vault"""
 
+import binascii
+
 from typing import Optional
 from urllib import parse
 
@@ -14,6 +16,9 @@ from azure.keyvault.keys import (
 from azure.keyvault.keys.crypto import (
     CryptographyClient,
     SignatureAlgorithm
+)
+from cryptography.hazmat.primitives.asymmetric.utils import (
+    encode_dss_signature,
 )
 import securesystemslib.hash as sslib_hash
 from securesystemslib.signer._key import Key
@@ -133,4 +138,22 @@ class AzureSigner(Signer):
         digest = hasher.digest()
         response = self.crypto_client.sign(self.signature_algorithm, digest)
 
-        return Signature(response.key_id, response.signature.hex())
+        # This code is copied from:
+        # https://github.com/secure-systems-lab/securesystemslib/blob/135567fa04f10d0c6a4cd32eb45ce736e1f50a93/securesystemslib/signer/_hsm_signer.py#L379
+        #
+        # The PKCS11 signature octets correspond to the concatenation of the
+        # ECDSA values r and s, both represented as an octet string of equal
+        # length of at most nLen with the most significant byte first (i.e.
+        # big endian)
+        # https://docs.oasis-open.org/pkcs11/pkcs11-curr/v3.0/cs01/pkcs11-curr-v3.0-cs01.html#_Toc30061178
+        r_s_len = int(len(response.signature) / 2)
+        r = int.from_bytes(response.signature[:r_s_len], byteorder="big")
+        s = int.from_bytes(response.signature[r_s_len:], byteorder="big")
+
+        # Create an ASN.1 encoded Dss-Sig-Value to be used with
+        # pyca/cryptography
+        dss_sig_value = binascii.hexlify(encode_dss_signature(r, s)).decode(
+            "ascii"
+        )
+
+        return Signature(response.key_id, dss_sig_value)
