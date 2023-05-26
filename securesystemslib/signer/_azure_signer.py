@@ -6,15 +6,6 @@ from typing import Optional, Tuple
 from urllib import parse
 
 import logging
-from cryptography.hazmat.primitives.asymmetric.utils import (
-    encode_dss_signature,
-)
-from cryptography.hazmat.primitives.asymmetric import (
-    ec,
-)
-from cryptography.hazmat.primitives.serialization import (
-    Encoding, PublicFormat
-)
 import securesystemslib.hash as sslib_hash
 from securesystemslib.signer._key import Key
 from securesystemslib.signer._signer import (
@@ -37,6 +28,15 @@ try:
     from azure.keyvault.keys.crypto import (
         CryptographyClient,
         SignatureAlgorithm
+    )
+    from cryptography.hazmat.primitives.asymmetric.utils import (
+        encode_dss_signature,
+    )
+    from cryptography.hazmat.primitives.asymmetric import (
+        ec,
+    )
+    from cryptography.hazmat.primitives.serialization import (
+        Encoding, PublicFormat
     )
 except ImportError:
     AZURE_IMPORT_ERROR = (
