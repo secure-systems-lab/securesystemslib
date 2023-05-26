@@ -58,7 +58,7 @@ class AzureSigner(Signer):
     Arguments:
         az_key_uri: Fully qualified Azure Key Vault name, like
             azurekms://<vault-name>.vault.azure.net/<key-name>
-        public_key: Azure Key Vault key name
+        public_key: public key object
 
     Raises:
         Various errors from azure.identity
