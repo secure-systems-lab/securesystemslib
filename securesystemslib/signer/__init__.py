@@ -17,6 +17,11 @@ from securesystemslib.signer._signer import (
     SSlibSigner,
 )
 from securesystemslib.signer._sigstore_signer import SigstoreKey, SigstoreSigner
+from securesystemslib.signer._spx_signer import (
+    SpxKey,
+    SpxSigner,
+    generate_spx_key_pair,
+)
 
 # Register supported private key uri schemes and the Signers implementing them
 SIGNER_FOR_URI_SCHEME.update(
@@ -46,7 +51,7 @@ KEY_FOR_TYPE_AND_SCHEME.update(
         ("rsa", "rsa-pkcs1v15-sha256"): SSlibKey,
         ("rsa", "rsa-pkcs1v15-sha384"): SSlibKey,
         ("rsa", "rsa-pkcs1v15-sha512"): SSlibKey,
-        ("sphincs", "sphincs-shake-128s"): SSlibKey,
+        ("sphincs", "sphincs-shake-128s"): SpxKey,
         ("rsa", "pgp+rsa-pkcsv1.5"): GPGKey,
         ("dsa", "pgp+dsa-fips-180-2"): GPGKey,
         ("eddsa", "pgp+eddsa-ed25519"): GPGKey,
