@@ -83,9 +83,6 @@ class AzureSigner(Signer):
             raise e
 
     @staticmethod
-
-
-    @staticmethod
     def _vault_url_and_key(az_key_uri: str) -> Tuple[str, str]:
             # Extract the vault uri and key name.
             # Format is: azurekms://<vault-name>.vault.azure.net/<key-name>
