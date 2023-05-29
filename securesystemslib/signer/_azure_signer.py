@@ -107,8 +107,8 @@ class AzureSigner(Signer):
 
     @staticmethod
     def _get_key_vault_key(
-        cred: DefaultAzureCredential, az_keyid: str, vault_url: str
-    ) -> KeyVaultKey:
+        cred: "DefaultAzureCredential", az_keyid: str, vault_url: str
+    ) -> "KeyVaultKey":
         try:
             key_client = KeyClient(vault_url=vault_url, credential=cred)
             return key_client.get_key(az_keyid)
@@ -121,8 +121,8 @@ class AzureSigner(Signer):
 
     @staticmethod
     def _create_crypto_client(
-        cred: DefaultAzureCredential, kv_key: KeyVaultKey
-    ) -> CryptographyClient:
+        cred: "DefaultAzureCredential", kv_key: "KeyVaultKey"
+    ) -> "CryptographyClient":
         try:
             return CryptographyClient(kv_key, credential=cred)
         except (HttpResponseError,) as e:
@@ -133,7 +133,7 @@ class AzureSigner(Signer):
             )
 
     @staticmethod
-    def _get_signature_algorithm(kvk: KeyVaultKey) -> SignatureAlgorithm:
+    def _get_signature_algorithm(kvk: "KeyVaultKey") -> "SignatureAlgorithm":
         key_type = kvk.key.kty
         if key_type not in (KeyType.ec, KeyType.ec_hsm):
             logger.info("only EC keys are supported for now")
@@ -149,7 +149,7 @@ class AzureSigner(Signer):
         raise UnsupportedKeyType("Unsupported curve supplied by key")
 
     @staticmethod
-    def _get_hash_algorithm(kvk: KeyVaultKey) -> str:
+    def _get_hash_algorithm(kvk: "KeyVaultKey") -> str:
         crv = kvk.key.crv
         if crv == KeyCurveName.p_256:
             return "sha256"
