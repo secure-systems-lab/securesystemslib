@@ -6,6 +6,7 @@ from typing import Optional, Tuple
 from urllib import parse
 
 import securesystemslib.hash as sslib_hash
+from securesystemslib.exceptions import UnsupportedLibraryError
 from securesystemslib.signer._key import Key
 from securesystemslib.signer._signer import (
     SecretsHandler,
@@ -67,9 +68,9 @@ class AzureSigner(Signer):
 
     SCHEME = "azurekms"
 
-    def __init__(self, az_key_uri: str, public_key: str):
+    def __init__(self, az_key_uri: str, _: str):
         if AZURE_IMPORT_ERROR:
-            raise exceptions.UnsupportedLibraryError(AZURE_IMPORT_ERROR)
+            raise UnsupportedLibraryError(AZURE_IMPORT_ERROR)
 
         try:
             credential = DefaultAzureCredential()
@@ -134,43 +135,43 @@ class AzureSigner(Signer):
     @staticmethod
     def _get_signature_algorithm(kvk: KeyVaultKey) -> SignatureAlgorithm:
         key_type = kvk.key.kty
-        if key_type != KeyType.ec and key_type != KeyType.ec_hsm:
+        if key_type not in (KeyType.ec, KeyType.ec_hsm):
             logger.info("only EC keys are supported for now")
             raise UnsupportedKeyType("Supplied key must be an EC key")
         crv = kvk.key.crv
         if crv == KeyCurveName.p_256:
             return SignatureAlgorithm.es256
-        elif crv == KeyCurveName.p_384:
+        if crv == KeyCurveName.p_384:
             return SignatureAlgorithm.es384
-        elif crv == KeyCurveName.p_521:
+        if crv == KeyCurveName.p_521:
             return SignatureAlgorithm.es512
-        else:
-            raise UnsupportedKeyType("Unsupported curve supplied by key")
+
+        raise UnsupportedKeyType("Unsupported curve supplied by key")
 
     @staticmethod
     def _get_hash_algorithm(kvk: KeyVaultKey) -> str:
         crv = kvk.key.crv
         if crv == KeyCurveName.p_256:
             return "sha256"
-        elif crv == KeyCurveName.p_384:
+        if crv == KeyCurveName.p_384:
             return "sha384"
-        elif crv == KeyCurveName.p_521:
+        if crv == KeyCurveName.p_521:
             return "sha512"
-        else:
-            logger.info(f"unsupported curve supplied {kvk.key.crv}")
-            # trigger UnsupportedAlgorithm if appropriate
-            _ = sslib_hash.digest("")
+
+        logger.info("unsupported curve supplied %s", kvk.key.crv)
+        # trigger UnsupportedAlgorithm if appropriate
+        _ = sslib_hash.digest("")
 
     @staticmethod
     def _get_keytype_and_scheme(crv: str) -> Tuple[str, str]:
         if crv == KeyCurveName.p_256:
             return "ecdsa", "ecdsa-sha2-nistp256"
-        elif crv == KeyCurveName.p_384:
+        if crv == KeyCurveName.p_384:
             return "ecdsa", "ecdsa-sha2-nistp384"
-        elif crv == KeyCurveName.p_521:
+        if crv == KeyCurveName.p_521:
             return "ecdsa", "ecdsa-sha2-nistp521"
-        else:
-            raise UnsupportedKeyType("Unsupported curve supplied by key")
+
+        raise UnsupportedKeyType("Unsupported curve supplied by key")
 
     @classmethod
     def from_priv_key_uri(
@@ -194,7 +195,7 @@ class AzureSigner(Signer):
         be called once per key: the uri and Key should be stored for later use.
         """
         if AZURE_IMPORT_ERROR:
-            raise exceptions.UnsupportedLibraryError(AZURE_IMPORT_ERROR)
+            raise UnsupportedLibraryError(AZURE_IMPORT_ERROR)
 
         vault_url, key_name = cls._vault_url_and_key(az_key_uri)
         credential = DefaultAzureCredential()
@@ -206,13 +207,13 @@ class AzureSigner(Signer):
             )
 
         if key_vault_key.key.crv == KeyCurveName.p_256:
-            crv = ec.SECP256R1()
+            crv: ec.EllipticCurve = ec.SECP256R1()
         elif key_vault_key.key.crv == KeyCurveName.p_384:
             crv = ec.SECP384R1()
         elif key_vault_key.key.crv == KeyCurveName.p_521:
             crv = ec.SECP521R1()
         else:
-            raise UnsupportedKeyType(f"Unsupported curve type {kvk.key.crv}")
+            raise UnsupportedKeyType(f"Unsupported curve type {crv}")
 
         # Key is in JWK format, create a curve from it with the parameters
         x = int.from_bytes(key_vault_key.key.x, byteorder="big")
