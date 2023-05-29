@@ -1,11 +1,10 @@
 """Signer implementation for Azure Key Vault"""
 
 import binascii
-
+import logging
 from typing import Optional, Tuple
 from urllib import parse
 
-import logging
 import securesystemslib.hash as sslib_hash
 from securesystemslib.signer._key import Key
 from securesystemslib.signer._signer import (
@@ -21,22 +20,21 @@ try:
     from azure.identity import DefaultAzureCredential
     from azure.keyvault.keys import (
         KeyClient,
-        KeyVaultKey,
         KeyCurveName,
         KeyType,
+        KeyVaultKey,
     )
     from azure.keyvault.keys.crypto import (
         CryptographyClient,
-        SignatureAlgorithm
+        SignatureAlgorithm,
     )
+    from cryptography.hazmat.primitives.asymmetric import ec
     from cryptography.hazmat.primitives.asymmetric.utils import (
         encode_dss_signature,
     )
-    from cryptography.hazmat.primitives.asymmetric import (
-        ec,
-    )
     from cryptography.hazmat.primitives.serialization import (
-        Encoding, PublicFormat
+        Encoding,
+        PublicFormat,
     )
 except ImportError:
     AZURE_IMPORT_ERROR = (
@@ -45,8 +43,10 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+
 class UnsupportedKeyType(Exception):
     pass
+
 
 class AzureSigner(Signer):
     """Azure Key Vault Signer
@@ -74,46 +74,62 @@ class AzureSigner(Signer):
         try:
             credential = DefaultAzureCredential()
             vault_url, key_name = self._vault_url_and_key(az_key_uri)
-            key_vault_key = self._get_key_vault_key(credential, key_name, vault_url)
-            self.signature_algorithm = self._get_signature_algorithm(key_vault_key)
+            key_vault_key = self._get_key_vault_key(
+                credential, key_name, vault_url
+            )
+            self.signature_algorithm = self._get_signature_algorithm(
+                key_vault_key
+            )
             self.hash_algorithm = self._get_hash_algorithm(key_vault_key)
-            self.crypto_client = self._create_crypto_client(credential, key_vault_key)
+            self.crypto_client = self._create_crypto_client(
+                credential, key_vault_key
+            )
         except UnsupportedKeyType as e:
-            logger.info("Key %s has unsupported key type or unsupported elliptic curve")
+            logger.info(
+                "Key %s has unsupported key type or unsupported elliptic curve"
+            )
             raise e
 
     @staticmethod
     def _vault_url_and_key(az_key_uri: str) -> Tuple[str, str]:
-            # Extract the vault uri and key name.
-            # Format is: azurekms://<vault-name>.vault.azure.net/<key-name>
-            (az_vault_uri, az_key_name) = az_key_uri.rsplit("/", 1)
+        # Extract the vault uri and key name.
+        # Format is: azurekms://<vault-name>.vault.azure.net/<key-name>
+        (az_vault_uri, az_key_name) = az_key_uri.rsplit("/", 1)
 
-            if not az_vault_uri.startswith("azurekms://"):
-                raise ValueError(f"Invalid key URI {az_key_uri}")
+        if not az_vault_uri.startswith("azurekms://"):
+            raise ValueError(f"Invalid key URI {az_key_uri}")
 
-            # az vault is on form: azurekms:// but key client expects https://
-            vault_url = az_vault_uri.replace("azurekms:", "https:")
+        # az vault is on form: azurekms:// but key client expects https://
+        vault_url = az_vault_uri.replace("azurekms:", "https:")
 
-            return vault_url, az_key_name
+        return vault_url, az_key_name
 
     @staticmethod
-    def _get_key_vault_key(cred: DefaultAzureCredential, az_keyid: str, vault_url: str) -> KeyVaultKey:
+    def _get_key_vault_key(
+        cred: DefaultAzureCredential, az_keyid: str, vault_url: str
+    ) -> KeyVaultKey:
         try:
             key_client = KeyClient(vault_url=vault_url, credential=cred)
             return key_client.get_key(az_keyid)
-        except (
-            HttpResponseError,
-        ) as e:
-            logger.info("Key %s failed to create key client from credentials, key ID, and Vault URL: %s", az_keyid, str(e))
+        except (HttpResponseError,) as e:
+            logger.info(
+                "Key %s failed to create key client from credentials, key ID, and Vault URL: %s",
+                az_keyid,
+                str(e),
+            )
 
     @staticmethod
-    def _create_crypto_client(cred: DefaultAzureCredential, kv_key: KeyVaultKey) -> CryptographyClient:
+    def _create_crypto_client(
+        cred: DefaultAzureCredential, kv_key: KeyVaultKey
+    ) -> CryptographyClient:
         try:
             return CryptographyClient(kv_key, credential=cred)
-        except (
-            HttpResponseError,
-        ) as e:
-            logger.info("Key %s failed to create crypto client from credentials and KeyVaultKey: %s", az_keyid, str(e))
+        except (HttpResponseError,) as e:
+            logger.info(
+                "Key %s failed to create crypto client from credentials and KeyVaultKey: %s",
+                az_keyid,
+                str(e),
+            )
 
     @staticmethod
     def _get_signature_algorithm(kvk: KeyVaultKey) -> SignatureAlgorithm:
@@ -185,7 +201,9 @@ class AzureSigner(Signer):
         key_vault_key = cls._get_key_vault_key(credential, key_name, vault_url)
 
         if key_vault_key.key.kty != "EC-HSM":
-            raise UnsupportedKeyType(f"Unsupported key type {key_vault_key.key.kty}")
+            raise UnsupportedKeyType(
+                f"Unsupported key type {key_vault_key.key.kty}"
+            )
 
         if key_vault_key.key.crv == KeyCurveName.p_256:
             crv = ec.SECP256R1()
@@ -197,13 +215,14 @@ class AzureSigner(Signer):
             raise UnsupportedKeyType(f"Unsupported curve type {kvk.key.crv}")
 
         # Key is in JWK format, create a curve from it with the parameters
-        x = int.from_bytes(key_vault_key.key.x, byteorder='big')
-        y = int.from_bytes(key_vault_key.key.y, byteorder='big')
+        x = int.from_bytes(key_vault_key.key.x, byteorder="big")
+        y = int.from_bytes(key_vault_key.key.y, byteorder="big")
 
         cpub = ec.EllipticCurvePublicNumbers(x, y, crv)
         pub_key = cpub.public_key()
-        pem = pub_key.public_bytes(Encoding.PEM,
-                                   PublicFormat.SubjectPublicKeyInfo)
+        pem = pub_key.public_bytes(
+            Encoding.PEM, PublicFormat.SubjectPublicKeyInfo
+        )
 
         keytype, scheme = cls._get_keytype_and_scheme(key_vault_key.key.crv)
         keyval = {"public": pem.decode("utf-8")}
@@ -211,7 +230,6 @@ class AzureSigner(Signer):
         public_key = SSlibKey(keyid, keytype, scheme, keyval)
 
         return az_key_uri, public_key
-
 
     def sign(self, payload: bytes) -> Signature:
         """Signs payload with Azure Key Vault.

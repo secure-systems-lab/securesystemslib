@@ -7,13 +7,11 @@ def main():
     azure_key_id = "tsa-leaf"
 
     data = ("data" * 8).encode("utf-8")
-    signer = AzureSigner.from_priv_key_uri(
-        azure_key_vault,
-        azure_key_id
-    )
+    signer = AzureSigner.from_priv_key_uri(azure_key_vault, azure_key_id)
     sig = signer.sign(data)
 
     print(sig)
+
 
 if __name__ == "__main__":
     main()
