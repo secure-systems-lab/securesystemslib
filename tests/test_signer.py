@@ -11,7 +11,6 @@ import securesystemslib.keys as KEYS
 from securesystemslib.exceptions import (
     CryptoError,
     FormatError,
-    UnsupportedAlgorithmError,
     UnverifiedSignatureError,
     VerificationError,
 )
@@ -390,25 +389,17 @@ class TestSigner(unittest.TestCase):
             )
             self.assertTrue(verified, "Incorrect signature.")
 
-            # Removing private key from "scheme_dict".
-            private = scheme_dict["keyval"]["private"]
-            scheme_dict["keyval"]["private"] = ""
-            sslib_signer.key_dict = scheme_dict
+            # Assert error for invalid private key data
+            bad_private = copy.deepcopy(scheme_dict)
+            bad_private["keyval"]["private"] = ""
+            with self.assertRaises(ValueError):
+                SSlibSigner(bad_private)
 
-            with self.assertRaises((ValueError, FormatError)):
-                sslib_signer.sign(self.DATA)
-
-            scheme_dict["keyval"]["private"] = private
-
-            # Test for invalid signature scheme.
-            valid_scheme = scheme_dict["scheme"]
-            scheme_dict["scheme"] = "invalid_scheme"
-            sslib_signer = SSlibSigner(scheme_dict)
-
-            with self.assertRaises((UnsupportedAlgorithmError, FormatError)):
-                sslib_signer.sign(self.DATA)
-
-            scheme_dict["scheme"] = valid_scheme
+            # Assert error for invalid scheme
+            invalid_scheme = copy.deepcopy(scheme_dict)
+            invalid_scheme["scheme"] = "invalid_scheme"
+            with self.assertRaises(ValueError):
+                SSlibSigner(invalid_scheme)
 
     def test_custom_signer(self):
         # setup
