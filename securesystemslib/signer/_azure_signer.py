@@ -19,12 +19,7 @@ AZURE_IMPORT_ERROR = None
 try:
     from azure.core.exceptions import HttpResponseError
     from azure.identity import DefaultAzureCredential
-    from azure.keyvault.keys import (
-        KeyClient,
-        KeyCurveName,
-        KeyType,
-        KeyVaultKey,
-    )
+    from azure.keyvault.keys import KeyClient, KeyCurveName, KeyVaultKey
     from azure.keyvault.keys.crypto import (
         CryptographyClient,
         SignatureAlgorithm,
@@ -117,7 +112,7 @@ class AzureSigner(Signer):
         except (HttpResponseError,) as e:
             logger.info(
                 "Key %s failed to create crypto client from credentials and KeyVaultKey: %s",
-                az_keyid,
+                kv_key,
                 str(e),
             )
 
@@ -193,7 +188,9 @@ class AzureSigner(Signer):
             raise UnsupportedLibraryError(AZURE_IMPORT_ERROR)
 
         credential = DefaultAzureCredential()
-        key_vault_key = cls._get_key_vault_key(credential, az_vault_name, az_key_name)
+        key_vault_key = cls._get_key_vault_key(
+            credential, az_vault_name, az_key_name
+        )
 
         if key_vault_key.key.kty != "EC-HSM":
             raise UnsupportedKeyType(
