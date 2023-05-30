@@ -89,6 +89,7 @@ class AzureSigner(Signer):
         vault_name: str,
         key_name: str,
     ) -> "KeyVaultKey":
+        """Return KeyVaultKey created from the Vault name and key name"""
         vault_url = f"https://{vault_name}.vault.azure.net/"
 
         try:
@@ -108,6 +109,7 @@ class AzureSigner(Signer):
         cred: "DefaultAzureCredential",
         kv_key: "KeyVaultKey",
     ) -> "CryptographyClient":
+        """Return CryptographyClient created Azure credentials and a KeyVaultKey"""
         try:
             return CryptographyClient(kv_key, credential=cred)
         except (HttpResponseError,) as e:
@@ -120,6 +122,7 @@ class AzureSigner(Signer):
 
     @staticmethod
     def _get_signature_algorithm(public_key: "Key") -> "SignatureAlgorithm":
+        """Return SignatureAlgorithm after parsing the public key"""
         if public_key.keytype != "ecdsa":
             logger.info("only EC keys are supported for now")
             raise UnsupportedKeyType("Supplied key must be an EC key")
@@ -139,6 +142,7 @@ class AzureSigner(Signer):
 
     @staticmethod
     def _get_hash_algorithm(public_key: "Key") -> str:
+        """Return the hash algorithm used by the public key"""
         # Format is "ecdsa-sha2-nistp256"
         comps = public_key.scheme.split("-")
         if len(comps) != 3:
