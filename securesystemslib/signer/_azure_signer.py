@@ -101,6 +101,7 @@ class AzureSigner(Signer):
                 key_name,
                 str(e),
             )
+            raise e
 
     @staticmethod
     def _create_crypto_client(
@@ -115,6 +116,7 @@ class AzureSigner(Signer):
                 kv_key,
                 str(e),
             )
+            raise e
 
     @staticmethod
     def _get_signature_algorithm(public_key: "Key") -> "SignatureAlgorithm":
