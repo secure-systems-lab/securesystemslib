@@ -184,6 +184,7 @@ class AzureSigner(Signer):
         return cls(az_key_uri, public_key)
 
     @classmethod
+    # pylint: disable=too-many-locals
     def import_(cls, az_vault_name: str, az_key_name: str) -> Tuple[str, Key]:
         """Load key and signer details from KMS
 
@@ -210,7 +211,9 @@ class AzureSigner(Signer):
         elif key_vault_key.key.crv == KeyCurveName.p_521:
             crv = ec.SECP521R1()
         else:
-            raise UnsupportedKeyType(f"Unsupported curve type {crv}")
+            raise UnsupportedKeyType(
+                f"Unsupported curve type {key_vault_key.key.crv}"
+            )
 
         # Key is in JWK format, create a curve from it with the parameters
         x = int.from_bytes(key_vault_key.key.x, byteorder="big")
