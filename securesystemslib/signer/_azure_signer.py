@@ -58,7 +58,7 @@ class AzureSigner(Signer):
 
     Arguments:
         az_key_uri: Fully qualified Azure Key Vault name, like
-            azurekms://<vault-name>.vault.azure.net/<key-name>
+            https://<vault-name>.vault.azure.net/<key-name>
         public_key: public key object
 
     Raises:
@@ -74,10 +74,7 @@ class AzureSigner(Signer):
 
         try:
             credential = DefaultAzureCredential()
-            vault_url, key_name = self._vault_url_and_key(az_key_uri)
-            key_vault_key = self._get_key_vault_key(
-                credential, key_name, vault_url
-            )
+            key_vault_key = self._get_key_vault_key(credential, az_key_uri)
             self.signature_algorithm = self._get_signature_algorithm(
                 key_vault_key
             )
@@ -92,36 +89,27 @@ class AzureSigner(Signer):
             raise e
 
     @staticmethod
-    def _vault_url_and_key(az_key_uri: str) -> Tuple[str, str]:
-        # Extract the vault uri and key name.
-        # Format is: azurekms://<vault-name>.vault.azure.net/<key-name>
-        (az_vault_uri, az_key_name) = az_key_uri.rsplit("/", 1)
-
-        if not az_vault_uri.startswith("azurekms://"):
-            raise ValueError(f"Invalid key URI {az_key_uri}")
-
-        # az vault is on form: azurekms:// but key client expects https://
-        vault_url = az_vault_uri.replace("azurekms:", "https:")
-
-        return vault_url, az_key_name
-
-    @staticmethod
     def _get_key_vault_key(
-        cred: "DefaultAzureCredential", az_keyid: str, vault_url: str
+        cred: "DefaultAzureCredential",
+        az_key_uri: str,
     ) -> "KeyVaultKey":
+        # Format is: https://<vault-name>.vault.azure.net/<key-name>
+        (vault_url, key_name) = az_key_uri.rsplit("/", 1)
+
         try:
             key_client = KeyClient(vault_url=vault_url, credential=cred)
-            return key_client.get_key(az_keyid)
+            return key_client.get_key(key_name)
         except (HttpResponseError,) as e:
             logger.info(
                 "Key %s failed to create key client from credentials, key ID, and Vault URL: %s",
-                az_keyid,
+                az_key_uri,
                 str(e),
             )
 
     @staticmethod
     def _create_crypto_client(
-        cred: "DefaultAzureCredential", kv_key: "KeyVaultKey"
+        cred: "DefaultAzureCredential",
+        kv_key: "KeyVaultKey",
     ) -> "CryptographyClient":
         try:
             return CryptographyClient(kv_key, credential=cred)
@@ -185,10 +173,11 @@ class AzureSigner(Signer):
         if uri.scheme != cls.SCHEME:
             raise ValueError(f"AzureSigner does not support {priv_key_uri}")
 
-        return cls(priv_key_uri, public_key)
+        az_key_uri = priv_key_uri.replace("azurekms:", "https:")
+        return cls(az_key_uri, public_key)
 
     @classmethod
-    def import_(cls, az_key_uri: str) -> Tuple[str, Key]:
+    def import_(cls, az_vault_name: str, az_key_name: str) -> Tuple[str, Key]:
         """Load key and signer details from KMS
 
         Returns the private key uri and the public key. This method should only
@@ -197,9 +186,10 @@ class AzureSigner(Signer):
         if AZURE_IMPORT_ERROR:
             raise UnsupportedLibraryError(AZURE_IMPORT_ERROR)
 
-        vault_url, key_name = cls._vault_url_and_key(az_key_uri)
+        priv_key_uri = f"azurekms://{az_vault_name}.vault.azure.net/{az_key_name}"
+        az_key_uri = priv_key_uri.replace("azurekms:", "https:")
         credential = DefaultAzureCredential()
-        key_vault_key = cls._get_key_vault_key(credential, key_name, vault_url)
+        key_vault_key = cls._get_key_vault_key(credential, az_key_uri)
 
         if key_vault_key.key.kty != "EC-HSM":
             raise UnsupportedKeyType(
@@ -230,7 +220,7 @@ class AzureSigner(Signer):
         keyid = cls._get_keyid(keytype, scheme, keyval)
         public_key = SSlibKey(keyid, keytype, scheme, keyval)
 
-        return az_key_uri, public_key
+        return priv_key_uri, public_key
 
     def sign(self, payload: bytes) -> Signature:
         """Signs payload with Azure Key Vault.
