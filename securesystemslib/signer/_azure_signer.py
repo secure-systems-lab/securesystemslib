@@ -58,7 +58,7 @@ class AzureSigner(Signer):
 
     Arguments:
         az_key_uri: Fully qualified Azure Key Vault name, like
-            https://<vault-name>.vault.azure.net/<key-name>
+            https://<vault-name>.vault.azure.net/keys/<key-name>/<version>
         public_key: public key object
 
     Raises:
@@ -68,20 +68,20 @@ class AzureSigner(Signer):
 
     SCHEME = "azurekms"
 
-    def __init__(self, az_key_uri: str, _: str):
+    def __init__(self, az_key_uri: str, public_key: Key):
         if AZURE_IMPORT_ERROR:
             raise UnsupportedLibraryError(AZURE_IMPORT_ERROR)
 
         try:
-            credential = DefaultAzureCredential()
-            key_vault_key = self._get_key_vault_key(credential, az_key_uri)
+            cred = DefaultAzureCredential()
+            self.crypto_client = CryptographyClient(
+                az_key_uri,
+                credential=cred,
+            )
             self.signature_algorithm = self._get_signature_algorithm(
-                key_vault_key
+                public_key,
             )
-            self.hash_algorithm = self._get_hash_algorithm(key_vault_key)
-            self.crypto_client = self._create_crypto_client(
-                credential, key_vault_key
-            )
+            self.hash_algorithm = self._get_hash_algorithm(public_key)
         except UnsupportedKeyType as e:
             logger.info(
                 "Key %s has unsupported key type or unsupported elliptic curve"
@@ -91,18 +91,19 @@ class AzureSigner(Signer):
     @staticmethod
     def _get_key_vault_key(
         cred: "DefaultAzureCredential",
-        az_key_uri: str,
+        vault_name: str,
+        key_name: str,
     ) -> "KeyVaultKey":
-        # Format is: https://<vault-name>.vault.azure.net/<key-name>
-        (vault_url, key_name) = az_key_uri.rsplit("/", 1)
+        vault_url = f"https://{vault_name}.vault.azure.net/"
 
         try:
             key_client = KeyClient(vault_url=vault_url, credential=cred)
             return key_client.get_key(key_name)
         except (HttpResponseError,) as e:
             logger.info(
-                "Key %s failed to create key client from credentials, key ID, and Vault URL: %s",
-                az_key_uri,
+                "Key %s/%s failed to create key client from credentials, key ID, and Vault URL: %s",
+                vault_name,
+                key_name,
                 str(e),
             )
 
@@ -121,34 +122,39 @@ class AzureSigner(Signer):
             )
 
     @staticmethod
-    def _get_signature_algorithm(kvk: "KeyVaultKey") -> "SignatureAlgorithm":
-        key_type = kvk.key.kty
-        if key_type not in (KeyType.ec, KeyType.ec_hsm):
+    def _get_signature_algorithm(public_key: "Key") -> "SignatureAlgorithm":
+        if public_key.keytype != "ecdsa":
             logger.info("only EC keys are supported for now")
             raise UnsupportedKeyType("Supplied key must be an EC key")
-        crv = kvk.key.crv
-        if crv == KeyCurveName.p_256:
+        # Format is "ecdsa-sha2-nistp256"
+        comps = public_key.scheme.split("-")
+        if len(comps) != 3:
+            raise UnsupportedKeyType("Invalid scheme found")
+
+        if comps[2] == "nistp256":
             return SignatureAlgorithm.es256
-        if crv == KeyCurveName.p_384:
+        if comps[2] == "nistp384":
             return SignatureAlgorithm.es384
-        if crv == KeyCurveName.p_521:
+        if comps[2] == "nistp521":
             return SignatureAlgorithm.es512
 
         raise UnsupportedKeyType("Unsupported curve supplied by key")
 
     @staticmethod
-    def _get_hash_algorithm(kvk: "KeyVaultKey") -> str:
-        crv = kvk.key.crv
-        if crv == KeyCurveName.p_256:
+    def _get_hash_algorithm(public_key: "Key") -> str:
+        # Format is "ecdsa-sha2-nistp256"
+        comps = public_key.scheme.split("-")
+        if len(comps) != 3:
+            raise UnsupportedKeyType("Invalid scheme found")
+
+        if comps[2] == "nistp256":
             return "sha256"
-        if crv == KeyCurveName.p_384:
+        if comps[2] == "nistp384":
             return "sha384"
-        if crv == KeyCurveName.p_521:
+        if comps[2] == "nistp521":
             return "sha512"
 
-        logger.info("unsupported curve supplied %s", kvk.key.crv)
-        # trigger UnsupportedAlgorithm if appropriate
-        _ = sslib_hash.digest("")
+        raise UnsupportedKeyType("Unsupported curve supplied by key")
 
     @staticmethod
     def _get_keytype_and_scheme(crv: str) -> Tuple[str, str]:
@@ -186,10 +192,8 @@ class AzureSigner(Signer):
         if AZURE_IMPORT_ERROR:
             raise UnsupportedLibraryError(AZURE_IMPORT_ERROR)
 
-        priv_key_uri = f"azurekms://{az_vault_name}.vault.azure.net/{az_key_name}"
-        az_key_uri = priv_key_uri.replace("azurekms:", "https:")
         credential = DefaultAzureCredential()
-        key_vault_key = cls._get_key_vault_key(credential, az_key_uri)
+        key_vault_key = cls._get_key_vault_key(credential, az_vault_name, az_key_name)
 
         if key_vault_key.key.kty != "EC-HSM":
             raise UnsupportedKeyType(
@@ -219,6 +223,7 @@ class AzureSigner(Signer):
         keyval = {"public": pem.decode("utf-8")}
         keyid = cls._get_keyid(keytype, scheme, keyval)
         public_key = SSlibKey(keyid, keytype, scheme, keyval)
+        priv_key_uri = key_vault_key.key.kid.replace("https:", "azurekms:")
 
         return priv_key_uri, public_key
 
