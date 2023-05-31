@@ -34,7 +34,7 @@ try:
     )
 except ImportError:
     AZURE_IMPORT_ERROR = (
-        "azure-cloud-kms library required to sign with Azure Cloud keys."
+        "Signing with Azure Key Vault requires azure-identity, azure-keyvault-keys and cryptography."
     )
 
 logger = logging.getLogger(__name__)
