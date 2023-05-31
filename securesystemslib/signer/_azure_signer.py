@@ -1,6 +1,5 @@
 """Signer implementation for Azure Key Vault"""
 
-import binascii
 import logging
 from typing import Optional, Tuple
 from urllib import parse
@@ -33,9 +32,7 @@ try:
         PublicFormat,
     )
 except ImportError:
-    AZURE_IMPORT_ERROR = (
-        "Signing with Azure Key Vault requires azure-identity, azure-keyvault-keys and cryptography."
-    )
+    AZURE_IMPORT_ERROR = "Signing with Azure Key Vault requires azure-identity, azure-keyvault-keys and cryptography."
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +47,12 @@ class AzureSigner(Signer):
     This Signer uses Azure Key Vault to sign.
     Currently this signer only supports signing with EC keys.
     RSA support will be added in a separate pull request.
+
+    The specific permissions that AzureSigner needs are:
+    * "Key Vault Crypto User" for import() and sign()
+
+    See https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-guide?tabs=azure-cli
+    for a list of all built-in Azure Key Vault roles
 
     Arguments:
         az_key_uri: Fully qualified Azure Key Vault name, like
@@ -265,8 +268,6 @@ class AzureSigner(Signer):
 
         # Create an ASN.1 encoded Dss-Sig-Value to be used with
         # pyca/cryptography
-        dss_sig_value = binascii.hexlify(encode_dss_signature(r, s)).decode(
-            "ascii"
-        )
+        dss_sig_value = encode_dss_signature(r, s).hex()
 
         return Signature(response.key_id, dss_sig_value)
