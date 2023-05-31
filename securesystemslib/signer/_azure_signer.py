@@ -199,7 +199,7 @@ class AzureSigner(Signer):
             credential, az_vault_name, az_key_name
         )
 
-        if key_vault_key.key.kty != "EC-HSM":
+        if not key_vault_key.key.kty.startswith("EC"):
             raise UnsupportedKeyType(
                 f"Unsupported key type {key_vault_key.key.kty}"
             )
