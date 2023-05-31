@@ -3,10 +3,14 @@ import logging
 from abc import ABCMeta, abstractmethod
 from typing import Any, Dict, Optional, Tuple, Type, cast
 
-from securesystemslib import exceptions
 from securesystemslib._vendor.ed25519.ed25519 import (
     SignatureMismatch,
     checkvalid,
+)
+from securesystemslib.exceptions import (
+    UnsupportedLibraryError,
+    UnverifiedSignatureError,
+    VerificationError,
 )
 from securesystemslib.signer._signature import Signature
 
@@ -250,65 +254,84 @@ class SSlibKey(Key):
         return padding
 
     def verify_signature(self, signature: Signature, data: bytes) -> None:
-        try:
-            if signature.keyid != self.keyid:
-                raise ValueError(
-                    f"keyid mismatch: 'key id: {self.keyid}"
-                    f" != signature keyid: {signature.keyid}'"
-                )
-            sig = bytes.fromhex(signature.signature)
+        if signature.keyid != self.keyid:
+            raise VerificationError from ValueError(
+                f"keyid mismatch: 'key id: {self.keyid}"
+                f" != signature keyid: {signature.keyid}'"
+            )
 
-            if CRYPTO_IMPORT_ERROR:
-                if self.scheme == "ed25519":
-                    public_bytes = bytes.fromhex(self.keyval["public"])
-                    checkvalid(sig, data, public_bytes)
-                    return
+        sig = bytes.fromhex(signature.signature)
 
-                raise exceptions.UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
+        if CRYPTO_IMPORT_ERROR:
+            try:
+                if self.scheme != "ed25519":
+                    raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
 
-            key: PublicKeyTypes
-            if self.scheme in [
-                "rsassa-pss-sha224",
-                "rsassa-pss-sha256",
-                "rsassa-pss-sha384",
-                "rsassa-pss-sha512",
-                "rsa-pkcs1v15-sha224",
-                "rsa-pkcs1v15-sha256",
-                "rsa-pkcs1v15-sha384",
-                "rsa-pkcs1v15-sha512",
-            ]:
-                key = cast(RSAPublicKey, self._from_pem())
-                padding_name, hash_name = self.scheme.split("-")[1:]
-                hash_algorithm = self._get_hash_algorithm(hash_name)
-                padding = self._get_rsa_padding(padding_name, hash_algorithm)
-                key.verify(sig, data, padding, hash_algorithm)
-
-            elif self.scheme in ["ecdsa-sha2-nistp256", "ecdsa-sha2-nistp384"]:
-                key = cast(EllipticCurvePublicKey, self._from_pem())
-                hash_name = f"sha{self.scheme[-3:]}"
-                hash_algorithm = self._get_hash_algorithm(hash_name)
-                signature_algorithm = ECDSA(hash_algorithm)
-                key.verify(sig, data, signature_algorithm)
-
-            elif self.scheme in ["ed25519"]:
                 public_bytes = bytes.fromhex(self.keyval["public"])
-                key = Ed25519PublicKey.from_public_bytes(public_bytes)
-                key.verify(sig, data)
+                checkvalid(sig, data, public_bytes)
 
-            else:
-                raise ValueError(f"unknown scheme '{self.scheme}'")
-
-        # Workaround for 'except (SignatureMismatch, InvalidSignature)' to
-        # conditionally evaluate the optional 'InvalidSignature':
-        except Exception as e:
-            if isinstance(e, SignatureMismatch) or (
-                not CRYPTO_IMPORT_ERROR and isinstance(e, InvalidSignature)
-            ):
-                raise exceptions.UnverifiedSignatureError(
+            except SignatureMismatch as e:
+                raise UnverifiedSignatureError(
                     f"Failed to verify signature by {self.keyid}"
                 ) from e
 
-            logger.info("Key %s failed to verify sig: %s", self.keyid, str(e))
-            raise exceptions.VerificationError(
-                f"Unknown failure to verify signature by {self.keyid}"
-            ) from e
+            except Exception as e:
+                logger.info(
+                    "Key %s failed to verify sig: %s", self.keyid, str(e)
+                )
+                raise VerificationError(
+                    f"Unknown failure to verify signature by {self.keyid}"
+                ) from e
+
+        else:
+            try:
+                key: PublicKeyTypes
+                if self.scheme in [
+                    "rsassa-pss-sha224",
+                    "rsassa-pss-sha256",
+                    "rsassa-pss-sha384",
+                    "rsassa-pss-sha512",
+                    "rsa-pkcs1v15-sha224",
+                    "rsa-pkcs1v15-sha256",
+                    "rsa-pkcs1v15-sha384",
+                    "rsa-pkcs1v15-sha512",
+                ]:
+                    key = cast(RSAPublicKey, self._from_pem())
+                    padding_name, hash_name = self.scheme.split("-")[1:]
+                    hash_algorithm = self._get_hash_algorithm(hash_name)
+                    padding = self._get_rsa_padding(
+                        padding_name, hash_algorithm
+                    )
+                    key.verify(sig, data, padding, hash_algorithm)
+
+                elif self.scheme in [
+                    "ecdsa-sha2-nistp256",
+                    "ecdsa-sha2-nistp384",
+                ]:
+                    key = cast(EllipticCurvePublicKey, self._from_pem())
+                    hash_name = f"sha{self.scheme[-3:]}"
+                    hash_algorithm = self._get_hash_algorithm(hash_name)
+                    signature_algorithm = ECDSA(hash_algorithm)
+                    key.verify(sig, data, signature_algorithm)
+
+                elif self.scheme in ["ed25519"]:
+                    public_bytes = bytes.fromhex(self.keyval["public"])
+                    key = Ed25519PublicKey.from_public_bytes(public_bytes)
+                    key.verify(sig, data)
+
+                else:
+                    raise ValueError(f"unknown scheme '{self.scheme}'")
+
+                # the actual switch for cryptography calls goes here
+            except InvalidSignature as e:
+                raise UnverifiedSignatureError(
+                    f"Failed to verify signature by {self.keyid}"
+                ) from e
+
+            except Exception as e:
+                logger.info(
+                    "Key %s failed to verify sig: %s", self.keyid, str(e)
+                )
+                raise VerificationError(
+                    f"Unknown failure to verify signature by {self.keyid}"
+                ) from e
