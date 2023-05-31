@@ -121,7 +121,7 @@ class AzureSigner(Signer):
             raise e
 
     @staticmethod
-    def _get_signature_algorithm(public_key: "Key") -> "SignatureAlgorithm":
+    def _get_signature_algorithm(public_key: Key) -> "SignatureAlgorithm":
         """Return SignatureAlgorithm after parsing the public key"""
         if public_key.keytype != "ecdsa":
             logger.info("only EC keys are supported for now")
