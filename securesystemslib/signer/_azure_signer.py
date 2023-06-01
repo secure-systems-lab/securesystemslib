@@ -85,6 +85,7 @@ class AzureSigner(Signer):
                 "Key %s has unsupported key type or unsupported elliptic curve"
             )
             raise e
+        self.public_key = public_key
 
     @staticmethod
     def _get_key_vault_key(
@@ -270,4 +271,4 @@ class AzureSigner(Signer):
         # pyca/cryptography
         dss_sig_value = encode_dss_signature(r, s).hex()
 
-        return Signature(response.key_id, dss_sig_value)
+        return Signature(self.public_key.keyid, dss_sig_value)
