@@ -377,8 +377,29 @@ class TestSigner(unittest.TestCase):
             with self.assertRaises(CryptoError):
                 signer = Signer.from_priv_key_uri(uri, pubkey, fake_handler)
 
-    def test_sslib_signer_sign(self):
-        for scheme_dict in self.keys:
+    def test_sslib_signer_sign_all_schemes(self):
+        rsa_key, ed25519_key, ecdsa_key = self.keys
+        keys = []
+        for scheme in [
+            "rsassa-pss-sha224",
+            "rsassa-pss-sha256",
+            "rsassa-pss-sha384",
+            "rsassa-pss-sha512",
+            "rsa-pkcs1v15-sha224",
+            "rsa-pkcs1v15-sha256",
+            "rsa-pkcs1v15-sha384",
+            "rsa-pkcs1v15-sha512",
+        ]:
+            key = copy.deepcopy(rsa_key)
+            key["scheme"] = scheme
+            keys.append(key)
+
+        self.assertEqual(ecdsa_key["scheme"], "ecdsa-sha2-nistp256")
+        self.assertEqual(ed25519_key["scheme"], "ed25519")
+        keys += [ecdsa_key, ed25519_key]
+
+        # Test sign/verify for each supported scheme
+        for scheme_dict in keys:
             # Test generation of signatures.
             sslib_signer = SSlibSigner(scheme_dict)
             sig_obj = sslib_signer.sign(self.DATA)
@@ -389,6 +410,9 @@ class TestSigner(unittest.TestCase):
             )
             self.assertTrue(verified, "Incorrect signature.")
 
+    def test_sslib_signer_errors(self):
+        # Test basic initialization errors for each keytype
+        for scheme_dict in self.keys:
             # Assert error for invalid private key data
             bad_private = copy.deepcopy(scheme_dict)
             bad_private["keyval"]["private"] = ""
