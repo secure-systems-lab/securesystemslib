@@ -5,6 +5,7 @@ import os
 import shutil
 import tempfile
 import unittest
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 import securesystemslib.keys as KEYS
@@ -32,6 +33,8 @@ from securesystemslib.signer import (
     generate_spx_key_pair,
 )
 from securesystemslib.signer._utils import compute_default_keyid
+
+PEMS_DIR = Path(__file__).parent / "data" / "pems"
 
 
 class TestKey(unittest.TestCase):
@@ -278,6 +281,44 @@ class TestKey(unittest.TestCase):
             key.verify_signature(sig, b"NOT DATA")
 
         del KEY_FOR_TYPE_AND_SCHEME[("custom", "ed25519")]
+
+
+class TestSSlibKey(unittest.TestCase):
+    """SSlibKey tests."""
+
+    def test_from_file(self):
+        """Test load PEM/subjectPublicKeyInfo files for each SSlibKey keytype"""
+        test_data = [
+            (
+                "rsa",
+                "rsassa-pss-sha256",
+                "2f685fa7546f1856b123223ab086b3def14c89d24eef18f49c32508c2f60e241",
+            ),
+            (
+                "ecdsa",
+                "ecdsa-sha2-nistp256",
+                "50d7e110ad65f3b2dba5c3cfc8c5ca259be9774cc26be3410044ffd4be3aa5f3",
+            ),
+            (
+                "ed25519",
+                "ed25519",
+                "c6d8bf2e4f48b41ac2ce8eca21415ca8ef68c133b47fc33df03d4070a7e1e9cc",
+            ),
+        ]
+
+        for keytype, default_scheme, default_keyid in test_data:
+            key = SSlibKey.from_file(PEMS_DIR / f"{keytype}_public.pem")
+            self.assertEqual(key.keytype, keytype)
+            self.assertEqual(key.scheme, default_scheme)
+            self.assertEqual(key.keyid, default_keyid)
+
+        key = SSlibKey.from_file(
+            PEMS_DIR / "rsa_public.pem",
+            scheme="rsa-pkcs1v15-sha224",
+            keyid="abcdef",
+        )
+        self.assertEqual(key.scheme, "rsa-pkcs1v15-sha224")
+        self.assertEqual(key.keyid, "abcdef")
 
 
 class TestSigner(unittest.TestCase):

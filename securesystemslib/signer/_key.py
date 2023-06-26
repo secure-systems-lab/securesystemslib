@@ -13,6 +13,7 @@ from securesystemslib.exceptions import (
     VerificationError,
 )
 from securesystemslib.signer._signature import Signature
+from securesystemslib.signer._utils import compute_default_keyid
 
 CRYPTO_IMPORT_ERROR = None
 try:
@@ -41,7 +42,11 @@ try:
         SHA512,
         HashAlgorithm,
     )
-    from cryptography.hazmat.primitives.serialization import load_pem_public_key
+    from cryptography.hazmat.primitives.serialization import (
+        Encoding,
+        PublicFormat,
+        load_pem_public_key,
+    )
 except ImportError:
     CRYPTO_IMPORT_ERROR = "'pyca/cryptography' library required"
 
@@ -227,6 +232,111 @@ class SSlibKey(Key):
         """
         public_bytes = self.keyval["public"].encode("utf-8")
         return load_pem_public_key(public_bytes)
+
+    @staticmethod
+    def _get_keytype_for_crypto_key(public_key: "PublicKeyTypes") -> str:
+        """Helper to return keytype for pyca/cryptography public key."""
+        if isinstance(public_key, RSAPublicKey):
+            return "rsa"
+
+        if isinstance(public_key, EllipticCurvePublicKey):
+            return "ecdsa"
+
+        if isinstance(public_key, Ed25519PublicKey):
+            return "ed25519"
+
+        raise ValueError(f"unsupported 'public_key' type {type(public_key)}")
+
+    @staticmethod
+    def _get_default_scheme(keytype: str) -> str:
+        """Helper to return default scheme for keytype."""
+        if keytype == "rsa":
+            return "rsassa-pss-sha256"
+
+        if keytype == "ecdsa":
+            return "ecdsa-sha2-nistp256"
+
+        if keytype == "ed25519":
+            return "ed25519"
+
+        raise ValueError(f"unsupported 'keytype' {keytype}")
+
+    @classmethod
+    def _from_crypto_public_key(
+        cls,
+        public_key: "PublicKeyTypes",
+        keyid: Optional[str],
+        scheme: Optional[str],
+    ) -> "SSlibKey":
+        """Helper to create SSlibKey from pyca/cryptography public key.
+
+        NOTE: keytype (rsa, ecdsa, ed25519) assessed automatically. Defaults
+        exist for keyid and scheme, if not passed.
+
+        FIXME: also used in CryptoSigner keygen implementations, which requires
+        protected access. Should we make it public, or refactor and move to
+        an internal utils method?
+        """
+        keytype = cls._get_keytype_for_crypto_key(public_key)
+        if not scheme:
+            scheme = cls._get_default_scheme(keytype)
+
+        if keytype in ["rsa", "ecdsa"]:
+            pem: bytes = public_key.public_bytes(
+                encoding=Encoding.PEM, format=PublicFormat.SubjectPublicKeyInfo
+            )
+            public_key_value = pem.decode()
+
+        else:  # ed25519
+            raw: bytes = public_key.public_bytes(
+                encoding=Encoding.Raw, format=PublicFormat.Raw
+            )
+            public_key_value = raw.hex()
+
+        keyval = {"public": public_key_value}
+
+        if not keyid:
+            keyid = compute_default_keyid(keytype, scheme, keyval)
+
+        return SSlibKey(keyid, keytype, scheme, keyval)
+
+    @classmethod
+    def from_file(
+        cls,
+        path: str,
+        scheme: Optional[str] = None,
+        keyid: Optional[str] = None,
+    ) -> "SSlibKey":
+        """Load SSlibKey from PEM.
+
+        NOTE: pyca/cryptography is used to decode the PEM payload. The expected
+        (and tested) format is subjectPublicKeyInfo (RFC 5280). Other formats
+        may but are not guaranteed to work.
+
+        Args:
+            path: Path to public key file.
+            scheme: SSlibKey signing scheme. Defaults are "rsassa-pss-sha256",
+                "ecdsa-sha2-nistp256", and "ed25519" according to the keytype
+            keyid: Key identifier. If not passed, a default keyid is computed.
+
+        Raises:
+            UnsupportedLibraryError: pyca/cryptography not installed
+            ValueError: Key type not supported
+            ValueError, \
+                    cryptography.exceptions.UnsupportedAlgorithm:
+                pyca/cryptography deserialization failed
+
+        Returns:
+            SSlibKey
+
+        """
+        if CRYPTO_IMPORT_ERROR:
+            raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
+
+        with open(path, "rb") as f:
+            pem = f.read()
+        public_key = load_pem_public_key(pem)
+        return cls._from_crypto_public_key(public_key, keyid, scheme)
 
     @staticmethod
     def _get_hash_algorithm(name: str) -> "HashAlgorithm":
