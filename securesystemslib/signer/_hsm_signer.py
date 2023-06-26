@@ -15,6 +15,7 @@ from securesystemslib.hash import digest
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import SecretsHandler, Signer
+from securesystemslib.signer._utils import compute_default_keyid
 
 # pylint: disable=wrong-import-position
 CRYPTO_IMPORT_ERROR = None
@@ -321,7 +322,7 @@ class HSMSigner(Signer):
 
         keyval = {"public": public_pem}
         scheme = _SCHEME_FOR_CURVE[curve]
-        keyid = cls._get_keyid(KEY_TYPE_ECDSA, scheme, keyval)
+        keyid = compute_default_keyid(KEY_TYPE_ECDSA, scheme, keyval)
         key = SSlibKey(keyid, KEY_TYPE_ECDSA, scheme, keyval)
 
         return uri, key

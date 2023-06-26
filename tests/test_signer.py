@@ -31,6 +31,7 @@ from securesystemslib.signer import (
     SSlibSigner,
     generate_spx_key_pair,
 )
+from securesystemslib.signer._utils import compute_default_keyid
 
 
 class TestKey(unittest.TestCase):
@@ -642,24 +643,25 @@ class TestGPGRSA(unittest.TestCase):
 
 
 class TestUtils(unittest.TestCase):
-    """Test Signer utility methods."""
+    """Test utility methods."""
 
-    def test_get_keyid(self):
-        # pylint: disable=protected-access
+    def test_compute_default_keyid(self):
         self.assertEqual(
-            Signer._get_keyid("rsa", "rsassa-pss-sha256", {"public": "abcd"}),
+            compute_default_keyid(
+                "rsa", "rsassa-pss-sha256", {"public": "abcd"}
+            ),
             "7b56b88ae790729d4e359d3fc5e889f1e0669a2e71a12d00e87473870c73fbcf",
         )
 
         # Unsupported keys can have default keyids too
         self.assertEqual(
-            Signer._get_keyid("foo", "bar", {"baz": "qux"}),
+            compute_default_keyid("foo", "bar", {"baz": "qux"}),
             "e3471be0598305190ba82f6f8043f4df52f3fbe471fdc187223bd9ade92abebb",
         )
 
         # Invalid keys cannot
         with self.assertRaises(FormatError):
-            Signer._get_keyid("foo", "bar", {"baz": 1.1})
+            compute_default_keyid("foo", "bar", {"baz": 1.1})
 
 
 @unittest.skipIf(os.name == "nt", "PySPX n/a on Windows")

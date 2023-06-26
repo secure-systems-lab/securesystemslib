@@ -8,8 +8,6 @@ from urllib import parse
 
 import securesystemslib.keys as sslib_keys
 from securesystemslib.exceptions import UnsupportedLibraryError
-from securesystemslib.formats import encode_canonical
-from securesystemslib.hash import digest
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 
@@ -152,20 +150,6 @@ class Signer(metaclass=ABCMeta):
         return signer.from_priv_key_uri(
             priv_key_uri, public_key, secrets_handler
         )
-
-    @staticmethod
-    def _get_keyid(keytype: str, scheme, keyval: Dict[str, Any]) -> str:
-        """Get keyid as sha256 hexdigest of the cjson representation of key fields."""
-        data = encode_canonical(
-            {
-                "keytype": keytype,
-                "scheme": scheme,
-                "keyval": keyval,
-            }
-        ).encode("utf-8")
-        hasher = digest("sha256")
-        hasher.update(data)
-        return hasher.hexdigest()
 
 
 class SSlibSigner(Signer):

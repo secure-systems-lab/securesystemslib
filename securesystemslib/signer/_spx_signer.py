@@ -13,6 +13,7 @@ from securesystemslib.exceptions import (
 from securesystemslib.signer._key import Key
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import SecretsHandler, Signer
+from securesystemslib.signer._utils import compute_default_keyid
 
 SPX_IMPORT_ERROR = None
 try:
@@ -54,7 +55,7 @@ class SpxKey(Key):
         scheme = cls.DEFAULT_SCHEME
         keyval = {"public": public.hex()}
 
-        keyid = SpxSigner._get_keyid(  # pylint: disable=protected-access
+        keyid = compute_default_keyid(  # pylint: disable=protected-access
             keytype, scheme, keyval
         )
         return cls(keyid, keytype, scheme, keyval)
