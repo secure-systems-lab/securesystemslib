@@ -220,7 +220,11 @@ class SSlibKey(Key):
         return self._to_dict()
 
     def _from_pem(self) -> "PublicKeyTypes":
-        """Helper to load public key instance from PEM-formatted keyval."""
+        """Helper to load public key instance from PEM-formatted keyval.
+
+        # FIXME: Sounds like it's an SSlibKey factory, but isn't. Should think
+        of a better name or refactor _verify!
+        """
         public_bytes = self.keyval["public"].encode("utf-8")
         return load_pem_public_key(public_bytes)
 
