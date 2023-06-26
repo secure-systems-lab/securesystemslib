@@ -51,6 +51,7 @@ from securesystemslib.signer import (
     SpxSigner,
     SSlibKey,
 )
+from securesystemslib.signer._signer import CryptoSigner
 from securesystemslib.signer._sigstore_signer import SigstoreKey
 
 
@@ -311,6 +312,17 @@ class TestPublicInterfaces(
         """Assert raise UnsupportedLibraryError on SSlibKey.from_file()."""
         with self.assertRaises(UnsupportedLibraryError):
             SSlibKey.from_file("should/fail/before/file/open")
+
+    def test_crypto_signer_from_priv_key_uri(self):
+        """Assert raise UnsupportedLibraryError on SSlibKey.from_file()."""
+
+        public_key = SSlibKey(
+            "aa", "rsa", "rsa-pkcs1v15-sha512", {"public": "val"}
+        )
+        with self.assertRaises(UnsupportedLibraryError):
+            CryptoSigner.from_priv_key_uri(
+                "file:should/fail/before/urlparse", public_key, None
+            )
 
     def test_signer_verify(self):
         """Assert generic VerificationError from UnsupportedLibraryError."""

@@ -251,6 +251,8 @@ class SSlibSigner(Signer):
 class CryptoSigner(Signer, metaclass=ABCMeta):
     """Base class for PYCA/cryptography Signer implementations."""
 
+    FILE_URI_SCHEME = "file"
+
     def __init__(self, public_key: SSlibKey):
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
@@ -289,14 +291,78 @@ class CryptoSigner(Signer, metaclass=ABCMeta):
         raise ValueError(f"unsupported keytype: {public_key.keytype}")
 
     @classmethod
+    def _from_pem(
+        cls, private_pem: bytes, secret: Optional[bytes], public_key: SSlibKey
+    ):
+        """Helper factory to create CryptoSigner from private PEM."""
+        private_key = load_pem_private_key(private_pem, secret)
+
+        if public_key.keytype == "rsa":
+            return RSASigner(public_key, cast(RSAPrivateKey, private_key))
+
+        if public_key.keytype == "ecdsa":
+            return ECDSASigner(
+                public_key, cast(EllipticCurvePrivateKey, private_key)
+            )
+
+        if public_key.keytype == "ed25519":
+            return Ed25519Signer(
+                public_key, cast(Ed25519PrivateKey, private_key)
+            )
+
+        raise ValueError(f"unsupported keytype: {public_key.keytype}")
+
+    @classmethod
     def from_priv_key_uri(
         cls,
         priv_key_uri: str,
         public_key: Key,
         secrets_handler: Optional[SecretsHandler] = None,
-    ) -> "Signer":
-        # Do not raise NotImplementedError to appease pylint for all subclasses
-        raise RuntimeError("use SSlibSigner.from_priv_key_uri")
+    ) -> "SSlibSigner":
+        """Constructor for Signer to call
+
+        Please refer to Signer.from_priv_key_uri() documentation.
+
+        NOTE: pyca/cryptography is used to deserialize the key data. The
+        expected (and tested) encoding/format is PEM/PKCS8. Other formats may
+        but are not guaranteed to work.
+
+        Additionally raises:
+            UnsupportedLibraryError: pyca/cryptography not installed
+            OSError: file cannot be read
+            ValueError: various errors passed arguments
+            ValueError, TypeError, \
+                    cryptography.exceptions.UnsupportedAlgorithm:
+                pyca/cryptography deserialization failed
+
+        """
+        if CRYPTO_IMPORT_ERROR:
+            raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
+
+        if not isinstance(public_key, SSlibKey):
+            raise ValueError(f"Expected SSlibKey for {priv_key_uri}")
+
+        uri = parse.urlparse(priv_key_uri)
+
+        if uri.scheme != cls.FILE_URI_SCHEME:
+            raise ValueError(f"SSlibSigner does not support {priv_key_uri}")
+
+        params = dict(parse.parse_qsl(uri.query))
+
+        if "encrypted" not in params:
+            raise ValueError(f"{uri.scheme} requires 'encrypted' parameter")
+
+        secret = None
+        if params["encrypted"] != "false":
+            if not secrets_handler:
+                raise ValueError("encrypted key requires a secrets handler")
+
+            secret = secrets_handler("passphrase").encode()
+
+        with open(uri.path, "rb") as f:
+            private_pem = f.read()
+
+        return cls._from_pem(private_pem, secret, public_key)
 
 
 class RSASigner(CryptoSigner):

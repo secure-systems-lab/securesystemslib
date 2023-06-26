@@ -32,6 +32,7 @@ from securesystemslib.signer import (
     SSlibSigner,
     generate_spx_key_pair,
 )
+from securesystemslib.signer._signer import CryptoSigner
 from securesystemslib.signer._utils import compute_default_keyid
 
 PEMS_DIR = Path(__file__).parent / "data" / "pems"
@@ -728,6 +729,63 @@ class TestSphincs(unittest.TestCase):
                 signer.public_key.keyid, signer.public_key.to_dict()
             ),
         )
+
+
+class TestCryptoSigner(unittest.TestCase):
+    """CryptoSigner tests"""
+
+    def test_from_priv_key_uri(self):
+        """Test load and use PEM/PKCS#8 files for each sslib keytype"""
+        test_data = [
+            (
+                "rsa",
+                "rsassa-pss-sha256",
+                "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwhX6rioiL/cX5Ys32InF\nU52H8tL14QeX0tacZdb+AwcH6nIh97h3RSHvGD7Xy6uaMRmGldAnSVYwJHqoJ5j2\nynVzU/RFpr+6n8Ps0QFg5GmlEqZboFjLbS0bsRQcXXnqJNsVLEPT3ULvu1rFRbWz\nAMFjNtNNk5W/u0GEzXn3D03jIdhD8IKAdrTRf0VMD9TRCXLdMmEU2vkf1NVUnOTb\n/dRX5QA8TtBylVnouZknbavQ0J/pPlHLfxUgsKzodwDlJmbPG9BWwXqQCmP0DgOG\nNIZ1X281MOBaGbkNVEuntNjCSaQxQjfALVVU5NAfal2cwMINtqaoc7Wa+TWvpFEI\nWwIDAQAB\n-----END PUBLIC KEY-----\n",
+            ),
+            (
+                "ecdsa",
+                "ecdsa-sha2-nistp256",
+                "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcLYSZyFGeKdWNt5dWFbnv6N9NyHC\noUNLcG6GZIxLwN8Q8MUdHdOOxGkDnyBRSJpIZ/r/oDECSTwfCYhdogweLA==\n-----END PUBLIC KEY-----\n",
+            ),
+            (
+                "ed25519",
+                "ed25519",
+                "4f66dabebcf30628963786001984c0b75c175cdcf3bc4855933a2628f0cd0a0f",
+            ),
+        ]
+
+        signer_backup = SIGNER_FOR_URI_SCHEME[CryptoSigner.FILE_URI_SCHEME]
+        SIGNER_FOR_URI_SCHEME[CryptoSigner.FILE_URI_SCHEME] = CryptoSigner
+
+        for keytype, scheme, public_key_value in test_data:
+            for encrypted in [True, False]:
+                if encrypted:
+                    file_name = f"{keytype}_private_encrypted.pem"
+                    parameter = "true"
+
+                    def handler(_):
+                        return "hunter2"
+
+                else:
+                    file_name = f"{keytype}_private.pem"
+                    parameter = "false"
+                    handler = None
+
+                uri = f"file:{PEMS_DIR / file_name}?encrypted={parameter}"
+                public_key = SSlibKey(
+                    "abcdefg", keytype, scheme, {"public": public_key_value}
+                )
+                signer = Signer.from_priv_key_uri(uri, public_key, handler)
+                self.assertIsInstance(signer, CryptoSigner)
+
+                sig = signer.sign(b"DATA")
+                self.assertIsNone(
+                    signer.public_key.verify_signature(sig, b"DATA")
+                )
+                with self.assertRaises(UnverifiedSignatureError):
+                    signer.public_key.verify_signature(sig, b"NOT DATA")
+
+        SIGNER_FOR_URI_SCHEME[CryptoSigner.FILE_URI_SCHEME] = signer_backup
 
 
 # Run the unit tests.
