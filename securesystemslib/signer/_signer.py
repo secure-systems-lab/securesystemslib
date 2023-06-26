@@ -15,7 +15,11 @@ CRYPTO_IMPORT_ERROR = None
 try:
     from cryptography.hazmat.primitives.asymmetric.ec import (
         ECDSA,
+        SECP256R1,
         EllipticCurvePrivateKey,
+    )
+    from cryptography.hazmat.primitives.asymmetric.ec import (
+        generate_private_key as generate_ec_private_key,
     )
     from cryptography.hazmat.primitives.asymmetric.ed25519 import (
         Ed25519PrivateKey,
@@ -29,6 +33,9 @@ try:
     from cryptography.hazmat.primitives.asymmetric.rsa import (
         AsymmetricPadding,
         RSAPrivateKey,
+    )
+    from cryptography.hazmat.primitives.asymmetric.rsa import (
+        generate_private_key as generate_rsa_private_key,
     )
     from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
     from cryptography.hazmat.primitives.hashes import (
@@ -387,6 +394,38 @@ class RSASigner(CryptoSigner):
         self._algorithm = self._get_hash_algorithm(hash_name)
         self._padding = self._get_rsa_padding(padding_name, self._algorithm)
 
+    @classmethod
+    def generate(
+        cls,
+        keyid: Optional[str] = None,
+        scheme: Optional[str] = "rsassa-pss-sha256",
+        size: int = 3072,
+    ) -> "RSASigner":
+        """Generate new key pair as rsa signer.
+
+        Args:
+            keyid: Key identifier. If not passed, a default keyid is computed.
+            scheme: RSA signing scheme. Default is "rsassa-pss-sha256".
+            size: RSA key size in bits. Default is 3072.
+
+        Raises:
+            UnsupportedLibraryError: pyca/cryptography not installed
+
+        Returns:
+            RSASigner
+        """
+        if CRYPTO_IMPORT_ERROR:
+            raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
+
+        private_key = generate_rsa_private_key(
+            public_exponent=65537,
+            key_size=size,
+        )
+        public_key = SSlibKey._from_crypto_public_key(  # pylint: disable=protected-access
+            private_key.public_key(), keyid, scheme
+        )
+        return cls(public_key, private_key)
+
     @staticmethod
     def _get_hash_algorithm(name: str) -> "HashAlgorithm":
         """Helper to return hash algorithm for name."""
@@ -440,6 +479,31 @@ class ECDSASigner(CryptoSigner):
         sig = self._private_key.sign(payload, self._signature_algorithm)
         return Signature(self.public_key.keyid, sig.hex())
 
+    @classmethod
+    def generate(
+        cls,
+        keyid: Optional[str] = None,
+    ) -> "ECDSASigner":
+        """Generate new key pair as "ecdsa-sha2-nistp256" signer.
+
+        Args:
+            keyid: Key identifier. If not passed, a default keyid is computed.
+
+        Raises:
+            UnsupportedLibraryError: pyca/cryptography not installed
+
+        Returns:
+            ECDSASigner
+        """
+        if CRYPTO_IMPORT_ERROR:
+            raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
+
+        private_key = generate_ec_private_key(SECP256R1())
+        public_key = SSlibKey._from_crypto_public_key(  # pylint: disable=protected-access
+            private_key.public_key(), keyid, "ecdsa-sha2-nistp256"
+        )
+        return cls(public_key, private_key)
+
 
 class Ed25519Signer(CryptoSigner):
     """pyca/cryptography ecdsa signer implementation"""
@@ -454,3 +518,28 @@ class Ed25519Signer(CryptoSigner):
     def sign(self, payload: bytes) -> Signature:
         sig = self._private_key.sign(payload)
         return Signature(self.public_key.keyid, sig.hex())
+
+    @classmethod
+    def generate(
+        cls,
+        keyid: Optional[str] = None,
+    ) -> "Ed25519Signer":
+        """Generate new key pair as "ed25519" signer.
+
+        Args:
+            keyid: Key identifier. If not passed, a default keyid is computed.
+
+        Raises:
+            UnsupportedLibraryError: pyca/cryptography not installed
+
+        Returns:
+            ED25519Signer
+        """
+        if CRYPTO_IMPORT_ERROR:
+            raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
+
+        private_key = Ed25519PrivateKey.generate()
+        public_key = SSlibKey._from_crypto_public_key(  # pylint: disable=protected-access
+            private_key.public_key(), keyid, "ed25519"
+        )
+        return cls(public_key, private_key)

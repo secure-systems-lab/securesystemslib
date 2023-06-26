@@ -44,8 +44,11 @@ from securesystemslib.exceptions import (
     VerificationError,
 )
 from securesystemslib.signer import (
+    ECDSASigner,
+    Ed25519Signer,
     GPGKey,
     Key,
+    RSASigner,
     Signature,
     SpxKey,
     SpxSigner,
@@ -323,6 +326,12 @@ class TestPublicInterfaces(
             CryptoSigner.from_priv_key_uri(
                 "file:should/fail/before/urlparse", public_key, None
             )
+
+    def test_signer_generate(self):
+        """Assert raise UnsupportedLibraryError on CryptoSigner.generate()."""
+        for signer_class in [RSASigner, Ed25519Signer, ECDSASigner]:
+            with self.assertRaises(UnsupportedLibraryError):
+                signer_class.generate()
 
     def test_signer_verify(self):
         """Assert generic VerificationError from UnsupportedLibraryError."""

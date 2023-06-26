@@ -20,9 +20,12 @@ from securesystemslib.gpg.exceptions import CommandError, KeyNotFoundError
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
     SIGNER_FOR_URI_SCHEME,
+    ECDSASigner,
+    Ed25519Signer,
     GPGKey,
     GPGSigner,
     Key,
+    RSASigner,
     SecretsHandler,
     Signature,
     Signer,
@@ -786,6 +789,23 @@ class TestCryptoSigner(unittest.TestCase):
                     signer.public_key.verify_signature(sig, b"NOT DATA")
 
         SIGNER_FOR_URI_SCHEME[CryptoSigner.FILE_URI_SCHEME] = signer_backup
+
+    def test_generate(self):
+        """Test generate and use signer (key pair) for each sslib keytype"""
+        test_data = [
+            (RSASigner, "rsa", "rsassa-pss-sha256"),
+            (ECDSASigner, "ecdsa", "ecdsa-sha2-nistp256"),
+            (Ed25519Signer, "ed25519", "ed25519"),
+        ]
+        for signer_class, keytype, default_scheme in test_data:
+            signer = signer_class.generate()
+            self.assertEqual(signer.public_key.keytype, keytype)
+            self.assertEqual(signer.public_key.scheme, default_scheme)
+
+            sig = signer.sign(b"DATA")
+            self.assertIsNone(signer.public_key.verify_signature(sig, b"DATA"))
+            with self.assertRaises(UnverifiedSignatureError):
+                signer.public_key.verify_signature(sig, b"NOT DATA")
 
 
 # Run the unit tests.
