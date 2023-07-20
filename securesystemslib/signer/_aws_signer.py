@@ -53,7 +53,6 @@ class AWSSigner(Signer):
         self.key_id = key_id
         self.public_key = public_key
         self.client = boto3.client("kms")
-        self.aws_key_spec = self.client.get_public_key(KeyId=self.key_id)["KeySpec"]
 
     @classmethod
     def from_priv_key_uri(
@@ -83,12 +82,7 @@ class AWSSigner(Signer):
         client = boto3.client("kms")
         request = client.get_public_key(KeyId=aws_key_id)
         kms_pubkey = serialization.load_der_public_key(request["PublicKey"])
-        # if isinstance(kms_pubkey, rsa.RSAPublicKey):
-        #     keytype = "rsa"
-        # elif isinstance(kms_pubkey, ec.EllipticCurvePublicKey):
-        #     keytype = "ecdsa"
-        # else:
-        #     raise TypeError(f"Unexpected key type: {type(kms_pubkey)}")
+
         key_spec = request["KeySpec"]
         public_key_pem = kms_pubkey.public_bytes(
             encoding=serialization.Encoding.PEM,
@@ -103,7 +97,6 @@ class AWSSigner(Signer):
         keyval = {"public": public_key_pem}
         keyid = cls._get_keyid(keytype, scheme, keyval)
         public_key = SSlibKey(keyid, keytype, scheme, keyval)
-
         return f"{cls.SCHEME}:{aws_key_id}", public_key
 
     @staticmethod
@@ -117,6 +110,9 @@ class AWSSigner(Signer):
         Returns:
         Tuple[str, str]: Tuple containing key type and signing scheme
         """
+        default_rsa_keytype_and_scheme = [
+                ("rsa", "rsassa-pss-sha256")
+            ]
         keytype_and_scheme = {
             "ECC_NIST_P256": [
                 ("ecdsa", "ECDSA_SHA_256"),
@@ -124,38 +120,14 @@ class AWSSigner(Signer):
             "ECC_NIST_P384": [
                 ("ecdsa", "ECDSA_SHA_384"),
             ],
-            "RSA_2048": [
-                ("rsa", "RSASSA_PSS_SHA_256"),
-                ("rsa", "RSASSA_PSS_SHA_384"),
-                ("rsa", "RSASSA_PSS_SHA_512"),
-                ("rsa", "RSASSA_PKCS1_V1_5_SHA_256"),
-                ("rsa", "RSASSA_PKCS1_V1_5_SHA_384"),
-                ("rsa", "RSASSA_PKCS1_V1_5_SHA_512"),
-            ],
-            "RSA_3072": [
-                ("rsa", "RSASSA_PSS_SHA_256"),
-                ("rsa", "RSASSA_PSS_SHA_384"),
-                ("rsa", "RSASSA_PSS_SHA_512"),
-                ("rsa", "RSASSA_PKCS1_V1_5_SHA_256"),
-                ("rsa", "RSASSA_PKCS1_V1_5_SHA_384"),
-                ("rsa", "RSASSA_PKCS1_V1_5_SHA_512"),
-            ],
-            "RSA_4096": [
-                ("rsa", "RSASSA_PSS_SHA_256"),
-                ("rsa", "RSASSA_PSS_SHA_384"),
-                ("rsa", "RSASSA_PSS_SHA_512"),
-                ("rsa", "RSASSA_PKCS1_V1_5_SHA_256"),
-                ("rsa", "RSASSA_PKCS1_V1_5_SHA_384"),
-                ("rsa", "RSASSA_PKCS1_V1_5_SHA_512"),
-            ],
+            "RSA_2048": default_rsa_keytype_and_scheme,
+            "RSA_3072": default_rsa_keytype_and_scheme,
+            "RSA_4096": default_rsa_keytype_and_scheme,
         }
         keytype_and_scheme_list = keytype_and_scheme.get(key_spec)
-        
+
         if keytype_and_scheme_list is None or len(keytype_and_scheme_list) == 0:
             raise KeyError(f"Unsupported key type: {key_spec}")
-
-        # Currently, the function returns the first compatible key type and scheme.
-        # This could be extended if more flexibility is needed.
         return keytype_and_scheme_list[0]
 
     @staticmethod
@@ -198,19 +170,36 @@ class AWSSigner(Signer):
         Returns:
             Signature.
         """
+        sslib_signing_algos = ["ecdsa-sha2-nistp256",
+                               "ecdsa-sha2-nistp384",
+                               "ecdsa-sha2-nistp512",
+                               "rsassa-pss-sha256",
+                               "rsassa-pss-sha384",
+                               "rsassa-pss-sha512",
+                               "rsa-pkcs1v15-sha256",
+                               "rsa-pkcs1v15-sha384",
+                               "rsa-pkcs1v15-sha512"]
+        aws_signing_algos = ["ECDSA_SHA_256",
+                             "ECDSA_SHA_384",
+                             "ECDSA_SHA_512",
+                             "RSASSA_PSS_SHA_256",
+                             "RSASSA_PSS_SHA_384",
+                             "RSASSA_PSS_SHA_512",
+                             "RSASSA_PKCS1_V1_5_SHA_256",
+                             "RSASSA_PKCS1_V1_5_SHA_384","RSASSA_PKCS1_V1_5_SHA_512"]
         try:
-            
-            _, signing_scheme = self._get_keytype_and_scheme(self.aws_key_spec)
+            for ssl, aws in zip(sslib_signing_algos, aws_signing_algos):
+                if ssl == self.public_key.scheme:
+                    signing_scheme = aws
+                    self.public_key.scheme = ssl
             request = self.client.sign(
                 KeyId=self.key_id,
                 Message=payload,
                 MessageType="RAW",
                 SigningAlgorithm=signing_scheme
             )
-
             hasher = sslib_hash.digest(self.hash_algorithm)
             hasher.update(payload)
-
             logger.debug("signing response %s", request)
             response = request["Signature"]
             logger.debug("signing response %s", response)

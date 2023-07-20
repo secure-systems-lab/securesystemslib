@@ -58,7 +58,7 @@ class TestAWSKMSKeys(unittest.TestCase):
 
         uri, key = AWSSigner.import_(self.aws_id)
         print(key.__dict__)
-        print('')
+        print("")
         print(self.pubkey.__dict__)
         self.assertEqual(key.keytype, self.pubkey.keytype)
         self.assertEqual(uri, f"awskms:{self.aws_id}")
