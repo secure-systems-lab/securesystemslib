@@ -184,7 +184,8 @@ class AWSSigner(Signer):
                              "RSASSA_PSS_SHA_384",
                              "RSASSA_PSS_SHA_512",
                              "RSASSA_PKCS1_V1_5_SHA_256",
-                             "RSASSA_PKCS1_V1_5_SHA_384","RSASSA_PKCS1_V1_5_SHA_512"]
+                             "RSASSA_PKCS1_V1_5_SHA_384",
+                             "RSASSA_PKCS1_V1_5_SHA_512"]
         try:
             for ssl, aws in zip(sslib_signing_algos, aws_signing_algos):
                 if ssl == self.public_key.scheme:
