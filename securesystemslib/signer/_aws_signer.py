@@ -5,8 +5,6 @@ from typing import Optional, Tuple
 from urllib import parse
 
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.asymmetric import ec
 import securesystemslib.hash as sslib_hash
 from securesystemslib.exceptions import UnsupportedLibraryError
 from securesystemslib import exceptions
