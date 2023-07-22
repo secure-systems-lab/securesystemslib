@@ -29,21 +29,44 @@ class AWSSigner(Signer):
     """
     AWS Key Management Service Signer
 
-    This Signer uses AWS KMS to sign. This signer supports signing with RSA and EC keys.
+    This Signer uses AWS KMS to sign. This signer supports signing with RSA and EC keys uses "ambient" credentials: typically environment variables such as AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_SESSION_TOKEN (if necessary). These will be recognized by the boto3 SDK, which underlies the aws_kms Python module.
+    
+    Note: For more details on AWS authentication, refer to the AWS Command Line Interface User Guide:
+    https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html.
+
+    Some practical authentication options include:
+    AWS CLI: https://aws.amazon.com/cli/
+    AWS SDKs: https://aws.amazon.com/tools/
+    The specific permissions that AWS KMS signer needs are:
+
+    kms:Sign for the sign()
+    kms:GetPublicKey for the import()
 
     Arguments:
-        key_id: AWS KMS key id
-        public_key: The related public key instance
+        key_id (str): AWS KMS key ID.
+        public_key (Key): Related public key instance.
 
     Raises:
-        UnsupportedAlgorithmError: The payload hash algorithm is unsupported.
-        UnsupportedLibraryError: google.cloud.kms was not found
-        Various errors from botocore.exceptions
+        UnsupportedAlgorithmError: If the payload hash algorithm is unsupported.
+        BotoCoreError, ClientError: Errors from the botocore.exceptions library.
     """
 
     SCHEME = "awskms"
 
     def __init__(self, key_id: str, public_key: Key):
+        """
+        Initializer for the AWSSigner class.
+        
+        This initializer also establishes a connection with AWS KMS and retrieves
+        necessary information about the key to be used for signing.
+
+        Arguments:
+            key_id (str): AWS KMS key ID.
+            public_key (Key): Related public key instance.
+        
+        Raises:
+            UnsupportedLibraryError: If necessary libraries for AWS KMS are not available.
+        """
         if AWS_IMPORT_ERROR:
             raise UnsupportedLibraryError(AWS_IMPORT_ERROR)
 
@@ -69,10 +92,17 @@ class AWSSigner(Signer):
     @classmethod
     def import_(cls, aws_key_id: str, local_scheme: str) -> Tuple[str, Key]:
         """
-        Load key and signer details from AWS KMS
+        Loads a key and signer details from AWS KMS.
 
         Returns the private key uri and the public key. This method should only
         be called once per key: the uri and Key should be stored for later use.
+        
+        Arguments:
+            aws_key_id (str): AWS KMS key ID.
+            local_scheme (str): Local scheme to use.
+        
+        Returns:
+        Tuple[str, Key]: A tuple where the first element is a string representing the private key URI and the second element is an instance of the public key.
         """
         if AWS_IMPORT_ERROR:
             raise UnsupportedLibraryError(AWS_IMPORT_ERROR)
@@ -112,11 +142,11 @@ class AWSSigner(Signer):
         str: AWS signing algorithm if get_aws_signing_scheme is True.
         """
         keytypes_and_schemes = {
-            "ECDSA_SHA_384": (
-                "ecdsa", "ecdsa-sha2-nistp384"
-            ),
             "ECDSA_SHA_256": (
                 "ecdsa", "ecdsa-sha2-nistp256"
+            ),
+            "ECDSA_SHA_384": (
+                "ecdsa", "ecdsa-sha2-nistp384"
             ),
             "ECDSA_SHA_512": (
                 "ecdsa", "ecdsa-sha2-nistp512"
@@ -164,7 +194,7 @@ class AWSSigner(Signer):
         Returns the correct AWS signing algorithm for RSA keys.
 
         Arguments:
-        keytypes_and_schemes (dict): A description of this argument.
+            keytypes_and_schemes (dict): A mapping of AWS KMS signing algorithms to key types and schemes.
 
         Returns:
         Tuple[str, str]: Key type and AWS signing algorithm.
@@ -224,7 +254,7 @@ class AWSSigner(Signer):
             payload: bytes to be signed.
 
         Raises:
-            Various errors from botocore.exceptions.
+            BotoCoreError, ClientError: Errors from the botocore.exceptions library.
 
         Returns:
             Signature.
