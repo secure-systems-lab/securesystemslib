@@ -56,7 +56,7 @@ class TestAWSKMSKeys(unittest.TestCase):
         securesystemslib GitHub Action environment: test cannot pass elsewhere.
         """
 
-        uri, key = AWSSigner.import_(self.aws_id)
+        uri, key = AWSSigner.import_(self.aws_id, self.pubkey.scheme)
         print(key.__dict__)
         print("")
         print(self.pubkey.__dict__)
