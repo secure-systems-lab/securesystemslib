@@ -4,7 +4,6 @@ import logging
 from typing import Optional, Tuple
 from urllib import parse
 
-from cryptography.hazmat.primitives import serialization
 import securesystemslib.hash as sslib_hash
 from securesystemslib.exceptions import UnsupportedLibraryError
 from securesystemslib import exceptions
@@ -21,6 +20,7 @@ logger = logging.getLogger(__name__)
 AWS_IMPORT_ERROR = None
 try:
     import boto3
+    from cryptography.hazmat.primitives import serialization
     from botocore.exceptions import BotoCoreError, ClientError
 except ImportError:
     AWS_IMPORT_ERROR = ("Signing with AWS KMS requires aws-kms and cryptography.")
