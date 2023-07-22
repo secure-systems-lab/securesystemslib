@@ -47,9 +47,16 @@ class AWSSigner(Signer):
         key_id (str): AWS KMS key ID.
         public_key (Key): Related public key instance.
 
+    Returns:
+        AWSSigner: An instance of the AWSSigner class.
+
     Raises:
         UnsupportedAlgorithmError: If the payload hash algorithm is unsupported.
-        BotoCoreError, ClientError: Errors from the botocore.exceptions library.
+        BotoCoreError: Errors from the botocore.exceptions library.
+        ClientError: Errors related to AWS KMS client.
+
+    Note:
+        If necessary libraries for AWS KMS are not available, the UnsupportedLibraryError will be raised.
     """
 
     SCHEME = "awskms"
@@ -108,7 +115,12 @@ class AWSSigner(Signer):
             local_scheme (str): Local scheme to use.
 
         Returns:
-        Tuple[str, Key]: A tuple where the first element is a string representing the private key URI and the second element is an instance of the public key.
+            Tuple[str, Key]: A tuple where the first element is a string representing the private key URI, and the second element is an instance of the public key.
+
+        Raises:
+            UnsupportedAlgorithmError: If the AWS KMS signing algorithm is unsupported.
+            BotoCoreError: Errors from the botocore.exceptions library.
+            ClientError: Errors related to AWS KMS client.
         """
         if AWS_IMPORT_ERROR:
             raise UnsupportedLibraryError(AWS_IMPORT_ERROR)
@@ -117,7 +129,7 @@ class AWSSigner(Signer):
         request = client.get_public_key(KeyId=aws_key_id)
         kms_pubkey = serialization.load_der_public_key(request["PublicKey"])
 
-        aws_algorithms_list = list(request["SigningAlgorithms"])
+        aws_algorithms_list = request["SigningAlgorithms"]
         public_key_pem = kms_pubkey.public_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo,
@@ -273,7 +285,8 @@ class AWSSigner(Signer):
             payload: bytes to be signed.
 
         Raises:
-            BotoCoreError, ClientError: Errors from the botocore.exceptions library.
+            BotoCoreError: Errors from the botocore.exceptions library.
+            ClientError: Errors related to AWS KMS client.
 
         Returns:
             Signature.
