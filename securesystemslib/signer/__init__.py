@@ -4,8 +4,8 @@ The Signer API
 This module provides extensible interfaces for public keys and signers:
 Some implementations are provided by default but more can be added by users.
 """
-from securesystemslib.signer._azure_signer import AzureSigner
 from securesystemslib.signer._aws_signer import AWSSigner
+from securesystemslib.signer._azure_signer import AzureSigner
 from securesystemslib.signer._gcp_signer import GCPSigner
 from securesystemslib.signer._gpg_signer import GPGKey, GPGSigner
 from securesystemslib.signer._hsm_signer import HSMSigner

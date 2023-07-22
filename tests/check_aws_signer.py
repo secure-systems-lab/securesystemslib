@@ -18,6 +18,7 @@ import unittest
 from securesystemslib.exceptions import UnverifiedSignatureError
 from securesystemslib.signer import AWSSigner, Key, Signer
 
+
 class TestAWSKMSKeys(unittest.TestCase):
     """Test that AWS KMS keys can be used to sign."""
 
@@ -26,9 +27,7 @@ class TestAWSKMSKeys(unittest.TestCase):
         {
             "keytype": "rsa",
             "scheme": "rsassa-pss-sha256",
-            "keyval": {
-                "public": "REDACTED"
-            },
+            "keyval": {"public": "REDACTED"},
         },
     )
     aws_id = "REDACTED"
@@ -41,7 +40,7 @@ class TestAWSKMSKeys(unittest.TestCase):
         """
 
         data = "data".encode("utf-8")
-        
+
         signer = Signer.from_priv_key_uri(f"awskms:{self.aws_id}", self.pubkey)
         sig = signer.sign(data)
 
