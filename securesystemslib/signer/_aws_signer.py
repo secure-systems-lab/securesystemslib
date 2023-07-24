@@ -234,7 +234,7 @@ class AWSSigner(Signer):
                 ):
                     return "rsa", sslib_pss_algo
                 if sslib_pss_algo == local_scheme and get_aws_signing_scheme:
-                    return algo
+                    return (algo, "")
             elif algo_parts[1] == "PKCS1":
                 padding = f"{algo_parts[1].lower()}{algo_parts[2].lower()}{algo_parts[3].lower()}"
                 sha = algo_parts[5].lower()
@@ -245,7 +245,7 @@ class AWSSigner(Signer):
                 ):
                     return "rsa", sslib_pkcs_algo
                 if sslib_pkcs_algo == local_scheme and get_aws_signing_scheme:
-                    return algo
+                    return (algo, "")
         # If no matching signing algorithm is found, raise an exception
         raise exceptions.UnsupportedAlgorithmError(
             f"Unsupported signing algorithm: {local_scheme[1]}"
@@ -293,13 +293,12 @@ class AWSSigner(Signer):
             Signature.
         """
         try:
+            signing_algorithm = self.get_aws_algo[0]
             request = self.client.sign(
                 KeyId=self.key_id,
                 Message=payload,
                 MessageType="RAW",
-                SigningAlgorithm=self.get_aws_algo[0]
-                if self.public_key.keytype == "ecdsa"
-                else self.get_aws_algo,
+                SigningAlgorithm=signing_algorithm,
             )
 
             hasher = sslib_hash.digest(self.hash_algorithm)
