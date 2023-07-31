@@ -155,7 +155,7 @@ class AWSSigner(Signer):
         get_aws_signing_scheme=False,
     ) -> Tuple[str, str]:
         """
-        Returns key type and scheme for the AWS KMS key type and signing algorithm
+        Returns the Secure Systems Library key type and scheme for the AWS KMS key type and signing algorithm
 
         Arguments:
             aws_algorithms_list (list): AWS KMS signing algorithms
