@@ -155,16 +155,16 @@ class AWSSigner(Signer):
         get_aws_signing_scheme=False,
     ) -> Tuple[str, str]:
         """
-        Return keytype and scheme for the AWS KMS key type and signing algorithm
+        Returns key type and scheme for the AWS KMS key type and signing algorithm
 
         Arguments:
-        aws_algorithms_list (list): AWS KMS signing algorithms
-        local_scheme (str): The Secure Systems Library scheme
-        get_aws_signing_scheme (bool, optional): Enables the return of an AWS signing algorithm for signing. Defaults to False.
+            aws_algorithms_list (list): AWS KMS signing algorithms
+            local_scheme (str): The Secure Systems Library scheme
+            get_aws_signing_scheme (bool, optional): Enables the return of an AWS signing algorithm for signing. Defaults to False.
 
         Returns:
-        Tuple[str, str]: Tuple containing key type and signing scheme if get_aws_signing_scheme is False.
-        str: AWS signing algorithm if get_aws_signing_scheme is True.
+            Tuple[str, str]: Tuple containing key type and signing scheme if get_aws_signing_scheme is False.
+            Tuple[str, str]: AWS signing scheme in the first value and an empty string in the last to keep returns consistent if get_aws_signing_scheme is True.
         """
         keytypes_and_schemes = {
             "ECDSA_SHA_256": ("ecdsa", "ecdsa-sha2-nistp256"),
@@ -181,24 +181,9 @@ class AWSSigner(Signer):
         keytype = keytype_and_scheme[0]
 
         if get_aws_signing_scheme:
-            if keytype == "ecdsa":
-                aws_ecdsa_signing_algo = next(
-                    (
-                        aws_ecdsa_signing_algo
-                        for aws_ecdsa_signing_algo, local_scheme in keytypes_and_schemes.items()
-                        if local_scheme == keytype_and_scheme
-                    ),
-                    None,
-                )
-                if aws_ecdsa_signing_algo is not None:
-                    return (aws_ecdsa_signing_algo, "")
-            else:
-                aws_rsa_signing_algo = AWSSigner._parse_rsa(
-                    keytypes_and_schemes,
-                    local_scheme,
-                    get_aws_signing_scheme=True,
-                )
-                return aws_rsa_signing_algo
+            AWSSigner._get_aws_signing_algo(
+                keytype, local_scheme, keytypes_and_schemes, keytype_and_scheme
+            )
         if keytype == "ecdsa":
             return keytype_and_scheme
         sslib_rsa_and_scheme = AWSSigner._parse_rsa(
@@ -207,19 +192,59 @@ class AWSSigner(Signer):
         return sslib_rsa_and_scheme
 
     @staticmethod
+    def _get_aws_signing_algo(
+        keytype: str,
+        local_scheme: str,
+        keytypes_and_schemes: dict,
+        keytype_and_scheme: tuple,
+    ) -> Tuple[str, str]:
+        """
+        Returns AWS signing algorithm
+
+        Arguments:
+            keytype (str): The Secure Systems Library key type.
+            local_scheme (str): The Secure Systems Library signing scheme.
+            keytypes_and_schemes (dict): The Secure Systems Library key types and signing schemes with the appropriate AWS signing algorithm as the dictionary key.
+            keytype_and_scheme (tuple): The Secure Systems Library key type and signing scheme.
+
+        Returns:
+            Tuple[str, str]: AWS signing scheme in the first value and an empty string in the last to keep returns consistent.
+        """
+        if keytype == "ecdsa":
+            aws_ecdsa_signing_algo = next(
+                (
+                    aws_ecdsa_signing_algo
+                    for aws_ecdsa_signing_algo, local_scheme in keytypes_and_schemes.items()
+                    if local_scheme == keytype_and_scheme
+                ),
+                None,
+            )
+            if aws_ecdsa_signing_algo is not None:
+                return (aws_ecdsa_signing_algo, "")
+        aws_rsa_signing_algo = AWSSigner._parse_rsa(
+            keytypes_and_schemes,
+            local_scheme,
+            get_aws_signing_scheme=True,
+        )
+        return aws_rsa_signing_algo
+
+    @staticmethod
     def _parse_rsa(
         keytypes_and_schemes: dict,
         local_scheme: str,
         get_aws_signing_scheme: bool = False,
     ) -> Tuple[str, str]:
         """
-        Returns the correct AWS signing algorithm for RSA keys.
+        Returns the correct key type and scheme or AWS signing algorithm for RSA keys.
 
         Arguments:
             keytypes_and_schemes (dict): A mapping of AWS KMS signing algorithms to key types and schemes.
+            local_scheme (str): The Secure Systems Library signing scheme.
+            get_aws_signing_scheme (bool, optional): Enables the return of an AWS signing algorithm for signing. Defaults to False.
 
         Returns:
-            str: AWS signing algorithm.
+            Tuple[str, str]: Tuple containing key type and signing scheme if get_aws_signing_scheme is False.
+            Tuple[str, str]: Tuple containing the AWS signing scheme for the first value and an empty string in the last to keep returns consistent if get_aws_signing_scheme is True.
         """
         for algo in keytypes_and_schemes:
             algo_parts = algo.split("_")
@@ -257,10 +282,10 @@ class AWSSigner(Signer):
         Helper function to return payload hash algorithm used for this key
 
         Arguments:
-        public_key (Key): Public key object
+            public_key (Key): Public key object
 
         Returns:
-        str: Hash algorithm
+            str: Hash algorithm
         """
         if public_key.keytype == "rsa":
             # hash algorithm is encoded as last scheme portion
