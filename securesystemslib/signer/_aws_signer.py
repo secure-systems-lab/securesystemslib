@@ -179,11 +179,12 @@ class AWSSigner(Signer):
         }
         keytype_and_scheme = keytypes_and_schemes[aws_algorithms_list[0]]
         keytype = keytype_and_scheme[0]
+        aws_signing_scheme = AWSSigner._get_aws_signing_algo(
+            keytype, local_scheme, keytypes_and_schemes, keytype_and_scheme
+        )
 
         if get_aws_signing_scheme:
-            AWSSigner._get_aws_signing_algo(
-                keytype, local_scheme, keytypes_and_schemes, keytype_and_scheme
-            )
+            return aws_signing_scheme
         if keytype == "ecdsa":
             return keytype_and_scheme
         sslib_rsa_and_scheme = AWSSigner._parse_rsa(
