@@ -28,8 +28,10 @@ class TestAWSKMSKeys(unittest.TestCase):
         "REDACTED",
         {
             "keytype": "rsa",
-            "scheme": "rsassa-pss-sha256",
-            "keyval": {"public": "REDACTED"},
+            "scheme": "rsassa-pss-sha512",
+            "keyval": {
+                "public": "-----BEGIN PUBLIC KEY-----\nREDACTED\n-----END PUBLIC KEY-----\n"
+            },
         },
     )
     aws_key_id = "REDACTED"

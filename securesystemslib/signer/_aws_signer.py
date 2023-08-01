@@ -118,7 +118,6 @@ class AWSSigner(Signer):
         request = client.get_public_key(KeyId=aws_key_id)
         kms_pubkey = serialization.load_der_public_key(request["PublicKey"])
 
-        aws_algorithms_list = request["SigningAlgorithms"]
         public_key_pem = kms_pubkey.public_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo,
@@ -127,7 +126,7 @@ class AWSSigner(Signer):
             keytype, scheme = cls._get_keytype_and_scheme(local_scheme)
         except KeyError as e:
             raise exceptions.UnsupportedAlgorithmError(
-                f"{aws_algorithms_list} is not a supported signing algorithm"
+                f"{local_scheme} is not a supported signing algorithm"
             ) from e
 
         keyval = {"public": public_key_pem}
@@ -160,9 +159,12 @@ class AWSSigner(Signer):
             "RSASSA_PKCS1_V1_5_SHA_384": ("rsa", "rsa-pkcs1v15-sha384"),
             "RSASSA_PKCS1_V1_5_SHA_512": ("rsa", "rsa-pkcs1v15-sha512"),
         }
-        for aws_algo, keytype_and_scheme in keytypes_and_schemes.items():
+        for _, keytype_and_scheme in keytypes_and_schemes.items():
             if keytype_and_scheme[1] == scheme:
-                return keytypes_and_schemes[aws_algo]
+                return keytype_and_scheme
+        raise exceptions.UnsupportedAlgorithmError(
+            f"Unknown signing scheme: {scheme}"
+        )
 
     @staticmethod
     def _get_aws_signing_algo(
