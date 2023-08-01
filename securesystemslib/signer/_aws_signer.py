@@ -149,17 +149,17 @@ class AWSSigner(Signer):
             scheme
         """
         keytypes_and_schemes = {
-            "ECDSA_SHA_256": ("ecdsa", "ecdsa-sha2-nistp256"),
-            "ECDSA_SHA_384": ("ecdsa", "ecdsa-sha2-nistp384"),
-            "ECDSA_SHA_512": ("ecdsa", "ecdsa-sha2-nistp512"),
-            "RSASSA_PSS_SHA_256": ("rsa", "rsassa-pss-sha256"),
-            "RSASSA_PSS_SHA_384": ("rsa", "rsassa-pss-sha384"),
-            "RSASSA_PSS_SHA_512": ("rsa", "rsassa-pss-sha512"),
-            "RSASSA_PKCS1_V1_5_SHA_256": ("rsa", "rsa-pkcs1v15-sha256"),
-            "RSASSA_PKCS1_V1_5_SHA_384": ("rsa", "rsa-pkcs1v15-sha384"),
-            "RSASSA_PKCS1_V1_5_SHA_512": ("rsa", "rsa-pkcs1v15-sha512"),
+            ("ecdsa", "ecdsa-sha2-nistp256"),
+            ("ecdsa", "ecdsa-sha2-nistp384"),
+            ("ecdsa", "ecdsa-sha2-nistp512"),
+            ("rsa", "rsassa-pss-sha256"),
+            ("rsa", "rsassa-pss-sha384"),
+            ("rsa", "rsassa-pss-sha512"),
+            ("rsa", "rsa-pkcs1v15-sha256"),
+            ("rsa", "rsa-pkcs1v15-sha384"),
+            ("rsa", "rsa-pkcs1v15-sha512"),
         }
-        for _, keytype_and_scheme in keytypes_and_schemes.items():
+        for keytype_and_scheme in keytypes_and_schemes:
             if keytype_and_scheme[1] == scheme:
                 return keytype_and_scheme
         raise exceptions.UnsupportedAlgorithmError(

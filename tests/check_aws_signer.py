@@ -28,7 +28,7 @@ class TestAWSKMSKeys(unittest.TestCase):
         "REDACTED",
         {
             "keytype": "rsa",
-            "scheme": "rsassa-pss-sha512",
+            "scheme": "rsassa-pss-sha256",
             "keyval": {
                 "public": "-----BEGIN PUBLIC KEY-----\nREDACTED\n-----END PUBLIC KEY-----\n"
             },
