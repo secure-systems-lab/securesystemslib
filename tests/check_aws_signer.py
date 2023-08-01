@@ -1,16 +1,18 @@
-"""
-This module confirms that signing using AWS KMS keys works.
+"""This module confirms that signing using AWS KMS keys works.
 
-The purpose is to do a smoke test, not to exhaustively test every possible
-key and environment combination.
+The purpose is to do a smoke test, not to exhaustively test every possible key
+and environment combination.
 
 For AWS, the requirements to successfully test are:
-* AWS authentication details have to be available in the environment
-* The key defined in the test has to be available to the authenticated user
+* AWS authentication details
+have to be available in the environment
+* The key defined in the test has to be
+available to the authenticated user
 
-NOTE: the filename is purposefully check_ rather than test_ so that tests are
-only run when explicitly invoked: The tests can only pass on the securesystemslib
-GitHub Action environment because of the above requirements.
+Remember to replace the REDACTED fields to include the necessary values:
+* keyid: Hash of the public key
+* public: The public key, refer to other KMS tests to see the format
+* aws_id: AWS KMS ID or alias
 """
 
 import unittest
@@ -30,18 +32,16 @@ class TestAWSKMSKeys(unittest.TestCase):
             "keyval": {"public": "REDACTED"},
         },
     )
-    aws_id = "REDACTED"
+    aws_key_id = "REDACTED"
 
     def test_aws_sign(self):
-        """Test that AWS KMS key works for signing
-
-        NOTE: The KMS account is setup to only accept requests from the
-        securesystemslib GitHub Action environment: test cannot pass elsewhere.
-        """
+        """Test that AWS KMS key works for signing"""
 
         data = "data".encode("utf-8")
 
-        signer = Signer.from_priv_key_uri(f"awskms:{self.aws_id}", self.pubkey)
+        signer = Signer.from_priv_key_uri(
+            f"awskms:{self.aws_key_id}", self.pubkey
+        )
         sig = signer.sign(data)
 
         self.pubkey.verify_signature(sig, data)
@@ -49,18 +49,11 @@ class TestAWSKMSKeys(unittest.TestCase):
             self.pubkey.verify_signature(sig, b"NOT DATA")
 
     def test_aws_import(self):
-        """Test that AWS KMS key can be imported
+        """Test that AWS KMS key can be imported"""
 
-        NOTE: The KMS account is setup to only accept requests from the
-        securesystemslib GitHub Action environment: test cannot pass elsewhere.
-        """
-
-        uri, key = AWSSigner.import_(self.aws_id, self.pubkey.scheme)
-        print(key.__dict__)
-        print("")
-        print(self.pubkey.__dict__)
+        uri, key = AWSSigner.import_(self.aws_key_id, self.pubkey.scheme)
         self.assertEqual(key.keytype, self.pubkey.keytype)
-        self.assertEqual(uri, f"awskms:{self.aws_id}")
+        self.assertEqual(uri, f"awskms:{self.aws_key_id}")
 
 
 if __name__ == "__main__":
