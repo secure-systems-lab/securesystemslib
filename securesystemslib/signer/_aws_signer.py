@@ -73,7 +73,7 @@ class AWSSigner(Signer):
         self.aws_key_id = aws_key_id
         self.public_key = public_key
         self.client = boto3.client("kms")
-        self.get_aws_algo = self._get_aws_signing_algo(self.public_key.scheme)
+        self.aws_algo = self._get_aws_signing_algo(self.public_key.scheme)
 
     @classmethod
     def from_priv_key_uri(
@@ -123,48 +123,41 @@ class AWSSigner(Signer):
             format=serialization.PublicFormat.SubjectPublicKeyInfo,
         ).decode("utf-8")
         try:
-            keytype, scheme = cls._get_keytype_and_scheme(local_scheme)
+            keytype = cls._get_keytype_for_scheme(local_scheme)
         except KeyError as e:
             raise exceptions.UnsupportedAlgorithmError(
                 f"{local_scheme} is not a supported signing algorithm"
             ) from e
 
         keyval = {"public": public_key_pem}
-        keyid = cls._get_keyid(keytype, scheme, keyval)
-        public_key = SSlibKey(keyid, keytype, scheme, keyval)
+        keyid = cls._get_keyid(keytype, local_scheme, keyval)
+        public_key = SSlibKey(keyid, keytype, local_scheme, keyval)
         return f"{cls.SCHEME}:{aws_key_id}", public_key
 
     @staticmethod
-    def _get_keytype_and_scheme(
+    def _get_keytype_for_scheme(
         scheme: str,
-    ) -> Tuple[str, str]:
-        """Returns the Secure Systems Library key type and scheme for the AWS KMS
-        key type and signing algorithm
+    ) -> str:
+        """Returns the Secure Systems Library key type.
 
         Arguments:
-            (str): The Secure Systems Library scheme get_aws_signing_scheme
+            (str): The Secure Systems Library scheme.
 
         Returns:
-            Tuple[str, str]: The Secure Systems Library key type and signing
-            scheme
+            str: The Secure Systems Library key type.
         """
-        keytypes_and_schemes = {
-            ("ecdsa", "ecdsa-sha2-nistp256"),
-            ("ecdsa", "ecdsa-sha2-nistp384"),
-            ("ecdsa", "ecdsa-sha2-nistp512"),
-            ("rsa", "rsassa-pss-sha256"),
-            ("rsa", "rsassa-pss-sha384"),
-            ("rsa", "rsassa-pss-sha512"),
-            ("rsa", "rsa-pkcs1v15-sha256"),
-            ("rsa", "rsa-pkcs1v15-sha384"),
-            ("rsa", "rsa-pkcs1v15-sha512"),
+        keytype_for_scheme = {
+            "ecdsa-sha2-nistp256": "ecdsa",
+            "ecdsa-sha2-nistp384": "ecdsa",
+            "ecdsa-sha2-nistp512": "ecdsa",
+            "rsassa-pss-sha256": "rsa",
+            "rsassa-pss-sha384": "rsa",
+            "rsassa-pss-sha512": "rsa",
+            "rsa-pkcs1v15-sha256": "rsa",
+            "rsa-pkcs1v15-sha384": "rsa",
+            "rsa-pkcs1v15-sha512": "rsa",
         }
-        for keytype_and_scheme in keytypes_and_schemes:
-            if keytype_and_scheme[1] == scheme:
-                return keytype_and_scheme
-        raise exceptions.UnsupportedAlgorithmError(
-            f"Unknown signing scheme: {scheme}"
-        )
+        return keytype_for_scheme[scheme]
 
     @staticmethod
     def _get_aws_signing_algo(
@@ -231,12 +224,11 @@ class AWSSigner(Signer):
             Signature.
         """
         try:
-            signing_algorithm = self.get_aws_algo
             request = self.client.sign(
                 KeyId=self.aws_key_id,
                 Message=payload,
                 MessageType="RAW",
-                SigningAlgorithm=signing_algorithm,
+                SigningAlgorithm=self.aws_algo,
             )
 
             hasher = sslib_hash.digest(self.hash_algorithm)
