@@ -29,28 +29,26 @@ except ImportError:
 class AWSSigner(Signer):
     """AWS Key Management Service Signer
 
-    This Signer uses AWS KMS to sign. This signer supports signing with RSA and
-    EC keys uses "ambient" credentials: typically environment variables such as
-    AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_SESSION_TOKEN (if
-    necessary). These will be recognized by the boto3 SDK, which underlies the
-    aws_kms Python module.
+    This Signer uses AWS KMS to sign and supports signing with RSA/EC keys and
+    uses "ambient" credentials typically environment variables such as
+    AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_SESSION_TOKEN. These will
+    be recognized by the boto3 SDK, which underlies the aws_kms Python module.
 
     For more details on AWS authentication, refer to the AWS Command Line
     Interface User Guide:
-    https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html.
+        https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
 
     Some practical authentication options include:
-    AWS CLI: https://aws.amazon.com/cli/
-    AWS SDKs: https://aws.amazon.com/tools/
+        AWS CLI: https://aws.amazon.com/cli/
+        AWS SDKs: https://aws.amazon.com/tools/
 
     The specific permissions that AWS KMS signer needs are:
-    kms:Sign for the sign()
-    kms:GetPublicKey for the import()
+        kms:Sign for sign()
+        kms:GetPublicKey for import()
 
     Arguments:
         aws_key_id (str): AWS KMS key ID or alias.
-        public_key (Key): The related public key
-        instance.
+        public_key (Key): The related public key instance.
 
     Returns:
         AWSSigner: An instance of the AWSSigner class.
@@ -59,8 +57,7 @@ class AWSSigner(Signer):
         UnsupportedAlgorithmError: If the payload hash algorithm is unsupported.
         BotoCoreError: Errors from the botocore.exceptions library.
         ClientError: Errors related to AWS KMS client.
-        UnsupportedLibraryError: If necessary libraries for AWS KMS are not
-        available.
+        UnsupportedLibraryError: If necessary libraries for AWS KMS are not available.
     """
 
     SCHEME = "awskms"
