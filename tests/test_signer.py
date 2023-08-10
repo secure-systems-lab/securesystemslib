@@ -21,12 +21,9 @@ from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
     SIGNER_FOR_URI_SCHEME,
     CryptoSigner,
-    ECDSASigner,
-    Ed25519Signer,
     GPGKey,
     GPGSigner,
     Key,
-    RSASigner,
     SecretsHandler,
     Signature,
     Signer,
@@ -793,12 +790,12 @@ class TestCryptoSigner(unittest.TestCase):
     def test_generate(self):
         """Test generate and use signer (key pair) for each sslib keytype"""
         test_data = [
-            (RSASigner, "rsa", "rsassa-pss-sha256"),
-            (ECDSASigner, "ecdsa", "ecdsa-sha2-nistp256"),
-            (Ed25519Signer, "ed25519", "ed25519"),
+            (CryptoSigner.generate_rsa, "rsa", "rsassa-pss-sha256"),
+            (CryptoSigner.generate_ecdsa, "ecdsa", "ecdsa-sha2-nistp256"),
+            (CryptoSigner.generate_ed25519, "ed25519", "ed25519"),
         ]
-        for signer_class, keytype, default_scheme in test_data:
-            signer = signer_class.generate()
+        for generate, keytype, default_scheme in test_data:
+            signer = generate()
             self.assertEqual(signer.public_key.keytype, keytype)
             self.assertEqual(signer.public_key.scheme, default_scheme)
 
