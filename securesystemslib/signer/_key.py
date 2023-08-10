@@ -192,7 +192,11 @@ class SSlibKey(Key):
     """Key implementation for RSA, Ed25519, ECDSA keys"""
 
     def to_securesystemslib_key(self) -> Dict[str, Any]:
-        """Internal helper, returns a classic securesystemslib keydict"""
+        """Internal helper, returns a classic securesystemslib keydict.
+
+        .. deprecated:: 0.28.0
+            Please use ``CryptoSigner`` instead of securesystemslib keydicts.
+        """
         return {
             "keyid": self.keyid,
             "keytype": self.keytype,
@@ -202,7 +206,11 @@ class SSlibKey(Key):
 
     @classmethod
     def from_securesystemslib_key(cls, key_dict: Dict[str, Any]) -> "SSlibKey":
-        """Constructor from classic securesystemslib keydict"""
+        """Constructor from classic securesystemslib keydict
+
+        .. deprecated:: 0.28.0
+            Please use ``CryptoSigner`` instead of securesystemslib keydicts.
+        """
         # ensure possible private keys are not included in keyval
         return SSlibKey(
             key_dict["keyid"],

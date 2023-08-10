@@ -37,6 +37,9 @@ class SSlibSigner(Signer):
         key_dict:
             A securesystemslib-style key dictionary. This is an implementation
             detail, not part of public API
+
+    .. deprecated:: 0.28.0
+        Please use ``CryptoSigner`` instead.
     """
 
     ENVVAR_URI_SCHEME = "envvar"
