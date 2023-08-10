@@ -78,20 +78,20 @@ class CryptoSigner(Signer, metaclass=ABCMeta):
                 RSAPrivateKey,
                 load_pem_private_key(private.encode(), password=None),
             )
-            return RSASigner(public_key, private_key)
+            return _RSASigner(public_key, private_key)
 
         if public_key.keytype == "ecdsa":
             private_key = cast(
                 EllipticCurvePrivateKey,
                 load_pem_private_key(private.encode(), password=None),
             )
-            return ECDSASigner(public_key, private_key)
+            return _ECDSASigner(public_key, private_key)
 
         if public_key.keytype == "ed25519":
             private_key = Ed25519PrivateKey.from_private_bytes(
                 bytes.fromhex(private)
             )
-            return Ed25519Signer(public_key, private_key)
+            return _Ed25519Signer(public_key, private_key)
 
         raise ValueError(f"unsupported keytype: {public_key.keytype}")
 
@@ -103,15 +103,15 @@ class CryptoSigner(Signer, metaclass=ABCMeta):
         private_key = load_pem_private_key(private_pem, secret)
 
         if public_key.keytype == "rsa":
-            return RSASigner(public_key, cast(RSAPrivateKey, private_key))
+            return _RSASigner(public_key, cast(RSAPrivateKey, private_key))
 
         if public_key.keytype == "ecdsa":
-            return ECDSASigner(
+            return _ECDSASigner(
                 public_key, cast(EllipticCurvePrivateKey, private_key)
             )
 
         if public_key.keytype == "ed25519":
-            return Ed25519Signer(
+            return _Ed25519Signer(
                 public_key, cast(Ed25519PrivateKey, private_key)
             )
 
@@ -191,7 +191,7 @@ class CryptoSigner(Signer, metaclass=ABCMeta):
         public_key = SSlibKey._from_crypto_public_key(  # pylint: disable=protected-access
             private_key.public_key(), keyid, "ed25519"
         )
-        return Ed25519Signer(public_key, private_key)
+        return _Ed25519Signer(public_key, private_key)
 
     @staticmethod
     def generate_rsa(
@@ -222,7 +222,7 @@ class CryptoSigner(Signer, metaclass=ABCMeta):
         public_key = SSlibKey._from_crypto_public_key(  # pylint: disable=protected-access
             private_key.public_key(), keyid, scheme
         )
-        return RSASigner(public_key, private_key)
+        return _RSASigner(public_key, private_key)
 
     @staticmethod
     def generate_ecdsa(
@@ -246,11 +246,11 @@ class CryptoSigner(Signer, metaclass=ABCMeta):
         public_key = SSlibKey._from_crypto_public_key(  # pylint: disable=protected-access
             private_key.public_key(), keyid, "ecdsa-sha2-nistp256"
         )
-        return ECDSASigner(public_key, private_key)
+        return _ECDSASigner(public_key, private_key)
 
 
-class RSASigner(CryptoSigner):
-    """pyca/cryptography rsa signer implementation"""
+class _RSASigner(CryptoSigner):
+    """Internal pyca/cryptography rsa signer implementation"""
 
     def __init__(self, public_key: SSlibKey, private_key: "RSAPrivateKey"):
         if public_key.scheme not in [
@@ -307,8 +307,8 @@ class RSASigner(CryptoSigner):
         return Signature(self.public_key.keyid, sig.hex())
 
 
-class ECDSASigner(CryptoSigner):
-    """pyca/cryptography ecdsa signer implementation"""
+class _ECDSASigner(CryptoSigner):
+    """Internal pyca/cryptography ecdsa signer implementation"""
 
     def __init__(
         self, public_key: SSlibKey, private_key: "EllipticCurvePrivateKey"
@@ -325,8 +325,8 @@ class ECDSASigner(CryptoSigner):
         return Signature(self.public_key.keyid, sig.hex())
 
 
-class Ed25519Signer(CryptoSigner):
-    """pyca/cryptography ecdsa signer implementation"""
+class _Ed25519Signer(CryptoSigner):
+    """Internal pyca/cryptography ecdsa signer implementation"""
 
     def __init__(self, public_key: SSlibKey, private_key: "Ed25519PrivateKey"):
         if public_key.scheme != "ed25519":
