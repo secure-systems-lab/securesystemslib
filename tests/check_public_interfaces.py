@@ -308,13 +308,13 @@ class TestPublicInterfaces(
             securesystemslib.gpg.functions.export_pubkey("f00")
         self.assertEqual(expected_error_msg, str(ctx.exception))
 
-    def test_sslib_key_from_file(self):
-        """Assert raise UnsupportedLibraryError on SSlibKey.from_file()."""
+    def test_sslib_key_from_pem(self):
+        """Assert raise UnsupportedLibraryError on SSlibKey.from_pem()."""
         with self.assertRaises(UnsupportedLibraryError):
-            SSlibKey.from_file("should/fail/before/file/open")
+            SSlibKey.from_pem(b"fail")
 
     def test_crypto_signer_from_priv_key_uri(self):
-        """Assert raise UnsupportedLibraryError on SSlibKey.from_file()."""
+        """Assert raise UnsupportedLibraryError on 'from_priv_key_uri'."""
 
         public_key = SSlibKey(
             "aa", "rsa", "rsa-pkcs1v15-sha512", {"public": "val"}

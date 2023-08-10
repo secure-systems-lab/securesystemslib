@@ -301,9 +301,9 @@ class SSlibKey(Key):
         return SSlibKey(keyid, keytype, scheme, keyval)
 
     @classmethod
-    def from_file(
+    def from_pem(
         cls,
-        path: str,
+        pem: bytes,
         scheme: Optional[str] = None,
         keyid: Optional[str] = None,
     ) -> "SSlibKey":
@@ -314,7 +314,7 @@ class SSlibKey(Key):
         may but are not guaranteed to work.
 
         Args:
-            path: Path to public key file.
+            pem: Public key PEM data.
             scheme: SSlibKey signing scheme. Defaults are "rsassa-pss-sha256",
                 "ecdsa-sha2-nistp256", and "ed25519" according to the keytype
             keyid: Key identifier. If not passed, a default keyid is computed.
@@ -333,8 +333,6 @@ class SSlibKey(Key):
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
 
-        with open(path, "rb") as f:
-            pem = f.read()
         public_key = load_pem_public_key(pem)
         return cls._from_crypto_public_key(public_key, keyid, scheme)
 

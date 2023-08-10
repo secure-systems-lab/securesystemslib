@@ -287,8 +287,8 @@ class TestKey(unittest.TestCase):
 class TestSSlibKey(unittest.TestCase):
     """SSlibKey tests."""
 
-    def test_from_file(self):
-        """Test load PEM/subjectPublicKeyInfo files for each SSlibKey keytype"""
+    def test_from_pem(self):
+        """Test load PEM/subjectPublicKeyInfo for each SSlibKey keytype"""
         test_data = [
             (
                 "rsa",
@@ -307,14 +307,22 @@ class TestSSlibKey(unittest.TestCase):
             ),
         ]
 
+        def _from_file(path):
+            with open(path, "rb") as f:
+                pem = f.read()
+            return pem
+
         for keytype, default_scheme, default_keyid in test_data:
-            key = SSlibKey.from_file(PEMS_DIR / f"{keytype}_public.pem")
+            pem = _from_file(PEMS_DIR / f"{keytype}_public.pem")
+            key = SSlibKey.from_pem(pem)
             self.assertEqual(key.keytype, keytype)
             self.assertEqual(key.scheme, default_scheme)
             self.assertEqual(key.keyid, default_keyid)
 
-        key = SSlibKey.from_file(
-            PEMS_DIR / "rsa_public.pem",
+        # Test with non-default scheme/keyid
+        pem = _from_file(PEMS_DIR / "rsa_public.pem")
+        key = SSlibKey.from_pem(
+            pem,
             scheme="rsa-pkcs1v15-sha224",
             keyid="abcdef",
         )
