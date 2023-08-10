@@ -44,6 +44,7 @@ from securesystemslib.exceptions import (
     VerificationError,
 )
 from securesystemslib.signer import (
+    CryptoSigner,
     ECDSASigner,
     Ed25519Signer,
     GPGKey,
@@ -54,7 +55,6 @@ from securesystemslib.signer import (
     SpxSigner,
     SSlibKey,
 )
-from securesystemslib.signer._signer import CryptoSigner
 from securesystemslib.signer._sigstore_signer import SigstoreKey
 
 

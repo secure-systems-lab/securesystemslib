@@ -6,13 +6,8 @@ from urllib import parse
 
 import securesystemslib.hash as sslib_hash
 from securesystemslib.exceptions import UnsupportedLibraryError
-from securesystemslib.signer._key import Key
-from securesystemslib.signer._signer import (
-    SecretsHandler,
-    Signature,
-    Signer,
-    SSlibKey,
-)
+from securesystemslib.signer._key import Key, SSlibKey
+from securesystemslib.signer._signer import SecretsHandler, Signature, Signer
 from securesystemslib.signer._utils import compute_default_keyid
 
 AZURE_IMPORT_ERROR = None

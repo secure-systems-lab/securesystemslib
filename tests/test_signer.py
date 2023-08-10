@@ -20,6 +20,7 @@ from securesystemslib.gpg.exceptions import CommandError, KeyNotFoundError
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
     SIGNER_FOR_URI_SCHEME,
+    CryptoSigner,
     ECDSASigner,
     Ed25519Signer,
     GPGKey,
@@ -35,7 +36,6 @@ from securesystemslib.signer import (
     SSlibSigner,
     generate_spx_key_pair,
 )
-from securesystemslib.signer._signer import CryptoSigner
 from securesystemslib.signer._utils import compute_default_keyid
 
 PEMS_DIR = Path(__file__).parent / "data" / "pems"
