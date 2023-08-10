@@ -325,7 +325,7 @@ class CryptoSigner(Signer, metaclass=ABCMeta):
         priv_key_uri: str,
         public_key: Key,
         secrets_handler: Optional[SecretsHandler] = None,
-    ) -> "SSlibSigner":
+    ) -> "CryptoSigner":
         """Constructor for Signer to call
 
         Please refer to Signer.from_priv_key_uri() documentation.
@@ -352,7 +352,7 @@ class CryptoSigner(Signer, metaclass=ABCMeta):
         uri = parse.urlparse(priv_key_uri)
 
         if uri.scheme != cls.FILE_URI_SCHEME:
-            raise ValueError(f"SSlibSigner does not support {priv_key_uri}")
+            raise ValueError(f"CryptoSigner does not support {priv_key_uri}")
 
         params = dict(parse.parse_qsl(uri.query))
 
