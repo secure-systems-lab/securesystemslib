@@ -6,13 +6,9 @@ from urllib import parse
 
 import securesystemslib.hash as sslib_hash
 from securesystemslib import exceptions
-from securesystemslib.signer._key import Key
-from securesystemslib.signer._signer import (
-    SecretsHandler,
-    Signature,
-    Signer,
-    SSlibKey,
-)
+from securesystemslib.signer._key import Key, SSlibKey
+from securesystemslib.signer._signer import SecretsHandler, Signature, Signer
+from securesystemslib.signer._utils import compute_default_keyid
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +99,7 @@ class GCPSigner(Signer):
             ) from e
 
         keyval = {"public": kms_pubkey.pem}
-        keyid = cls._get_keyid(keytype, scheme, keyval)
+        keyid = compute_default_keyid(keytype, scheme, keyval)
         public_key = SSlibKey(keyid, keytype, scheme, keyval)
 
         return f"{cls.SCHEME}:{gcp_keyid}", public_key

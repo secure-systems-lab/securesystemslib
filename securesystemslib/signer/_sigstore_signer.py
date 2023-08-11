@@ -18,6 +18,7 @@ from securesystemslib.signer._signer import (
     Signature,
     Signer,
 )
+from securesystemslib.signer._utils import compute_default_keyid
 
 IMPORT_ERROR = "sigstore library required to use 'sigstore-oidc' keys"
 
@@ -189,7 +190,7 @@ class SigstoreSigner(Signer):
         keytype = SigstoreKey.DEFAULT_KEY_TYPE
         scheme = SigstoreKey.DEFAULT_SCHEME
         keyval = {"identity": identity, "issuer": issuer}
-        keyid = cls._get_keyid(keytype, scheme, keyval)
+        keyid = compute_default_keyid(keytype, scheme, keyval)
         key = SigstoreKey(keyid, keytype, scheme, keyval)
         uri = cls._get_uri(ambient)
 

@@ -5,13 +5,13 @@ import os
 import shutil
 import tempfile
 import unittest
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 import securesystemslib.keys as KEYS
 from securesystemslib.exceptions import (
     CryptoError,
     FormatError,
-    UnsupportedAlgorithmError,
     UnverifiedSignatureError,
     VerificationError,
 )
@@ -20,6 +20,7 @@ from securesystemslib.gpg.exceptions import CommandError, KeyNotFoundError
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
     SIGNER_FOR_URI_SCHEME,
+    CryptoSigner,
     GPGKey,
     GPGSigner,
     Key,
@@ -32,6 +33,9 @@ from securesystemslib.signer import (
     SSlibSigner,
     generate_spx_key_pair,
 )
+from securesystemslib.signer._utils import compute_default_keyid
+
+PEMS_DIR = Path(__file__).parent / "data" / "pems"
 
 
 class TestKey(unittest.TestCase):
@@ -280,6 +284,52 @@ class TestKey(unittest.TestCase):
         del KEY_FOR_TYPE_AND_SCHEME[("custom", "ed25519")]
 
 
+class TestSSlibKey(unittest.TestCase):
+    """SSlibKey tests."""
+
+    def test_from_pem(self):
+        """Test load PEM/subjectPublicKeyInfo for each SSlibKey keytype"""
+        test_data = [
+            (
+                "rsa",
+                "rsassa-pss-sha256",
+                "2f685fa7546f1856b123223ab086b3def14c89d24eef18f49c32508c2f60e241",
+            ),
+            (
+                "ecdsa",
+                "ecdsa-sha2-nistp256",
+                "50d7e110ad65f3b2dba5c3cfc8c5ca259be9774cc26be3410044ffd4be3aa5f3",
+            ),
+            (
+                "ed25519",
+                "ed25519",
+                "c6d8bf2e4f48b41ac2ce8eca21415ca8ef68c133b47fc33df03d4070a7e1e9cc",
+            ),
+        ]
+
+        def _from_file(path):
+            with open(path, "rb") as f:
+                pem = f.read()
+            return pem
+
+        for keytype, default_scheme, default_keyid in test_data:
+            pem = _from_file(PEMS_DIR / f"{keytype}_public.pem")
+            key = SSlibKey.from_pem(pem)
+            self.assertEqual(key.keytype, keytype)
+            self.assertEqual(key.scheme, default_scheme)
+            self.assertEqual(key.keyid, default_keyid)
+
+        # Test with non-default scheme/keyid
+        pem = _from_file(PEMS_DIR / "rsa_public.pem")
+        key = SSlibKey.from_pem(
+            pem,
+            scheme="rsa-pkcs1v15-sha224",
+            keyid="abcdef",
+        )
+        self.assertEqual(key.scheme, "rsa-pkcs1v15-sha224")
+        self.assertEqual(key.keyid, "abcdef")
+
+
 class TestSigner(unittest.TestCase):
     """Test Signer and SSlibSigner functionality"""
 
@@ -385,8 +435,29 @@ class TestSigner(unittest.TestCase):
             with self.assertRaises(CryptoError):
                 signer = Signer.from_priv_key_uri(uri, pubkey, fake_handler)
 
-    def test_sslib_signer_sign(self):
-        for scheme_dict in self.keys:
+    def test_sslib_signer_sign_all_schemes(self):
+        rsa_key, ed25519_key, ecdsa_key = self.keys
+        keys = []
+        for scheme in [
+            "rsassa-pss-sha224",
+            "rsassa-pss-sha256",
+            "rsassa-pss-sha384",
+            "rsassa-pss-sha512",
+            "rsa-pkcs1v15-sha224",
+            "rsa-pkcs1v15-sha256",
+            "rsa-pkcs1v15-sha384",
+            "rsa-pkcs1v15-sha512",
+        ]:
+            key = copy.deepcopy(rsa_key)
+            key["scheme"] = scheme
+            keys.append(key)
+
+        self.assertEqual(ecdsa_key["scheme"], "ecdsa-sha2-nistp256")
+        self.assertEqual(ed25519_key["scheme"], "ed25519")
+        keys += [ecdsa_key, ed25519_key]
+
+        # Test sign/verify for each supported scheme
+        for scheme_dict in keys:
             # Test generation of signatures.
             sslib_signer = SSlibSigner(scheme_dict)
             sig_obj = sslib_signer.sign(self.DATA)
@@ -397,25 +468,20 @@ class TestSigner(unittest.TestCase):
             )
             self.assertTrue(verified, "Incorrect signature.")
 
-            # Removing private key from "scheme_dict".
-            private = scheme_dict["keyval"]["private"]
-            scheme_dict["keyval"]["private"] = ""
-            sslib_signer.key_dict = scheme_dict
+    def test_sslib_signer_errors(self):
+        # Test basic initialization errors for each keytype
+        for scheme_dict in self.keys:
+            # Assert error for invalid private key data
+            bad_private = copy.deepcopy(scheme_dict)
+            bad_private["keyval"]["private"] = ""
+            with self.assertRaises(ValueError):
+                SSlibSigner(bad_private)
 
-            with self.assertRaises((ValueError, FormatError)):
-                sslib_signer.sign(self.DATA)
-
-            scheme_dict["keyval"]["private"] = private
-
-            # Test for invalid signature scheme.
-            valid_scheme = scheme_dict["scheme"]
-            scheme_dict["scheme"] = "invalid_scheme"
-            sslib_signer = SSlibSigner(scheme_dict)
-
-            with self.assertRaises((UnsupportedAlgorithmError, FormatError)):
-                sslib_signer.sign(self.DATA)
-
-            scheme_dict["scheme"] = valid_scheme
+            # Assert error for invalid scheme
+            invalid_scheme = copy.deepcopy(scheme_dict)
+            invalid_scheme["scheme"] = "invalid_scheme"
+            with self.assertRaises(ValueError):
+                SSlibSigner(invalid_scheme)
 
     def test_custom_signer(self):
         # setup
@@ -627,24 +693,25 @@ class TestGPGRSA(unittest.TestCase):
 
 
 class TestUtils(unittest.TestCase):
-    """Test Signer utility methods."""
+    """Test utility methods."""
 
-    def test_get_keyid(self):
-        # pylint: disable=protected-access
+    def test_compute_default_keyid(self):
         self.assertEqual(
-            Signer._get_keyid("rsa", "rsassa-pss-sha256", {"public": "abcd"}),
+            compute_default_keyid(
+                "rsa", "rsassa-pss-sha256", {"public": "abcd"}
+            ),
             "7b56b88ae790729d4e359d3fc5e889f1e0669a2e71a12d00e87473870c73fbcf",
         )
 
         # Unsupported keys can have default keyids too
         self.assertEqual(
-            Signer._get_keyid("foo", "bar", {"baz": "qux"}),
+            compute_default_keyid("foo", "bar", {"baz": "qux"}),
             "e3471be0598305190ba82f6f8043f4df52f3fbe471fdc187223bd9ade92abebb",
         )
 
         # Invalid keys cannot
         with self.assertRaises(FormatError):
-            Signer._get_keyid("foo", "bar", {"baz": 1.1})
+            compute_default_keyid("foo", "bar", {"baz": 1.1})
 
 
 @unittest.skipIf(os.name == "nt", "PySPX n/a on Windows")
@@ -670,6 +737,80 @@ class TestSphincs(unittest.TestCase):
                 signer.public_key.keyid, signer.public_key.to_dict()
             ),
         )
+
+
+class TestCryptoSigner(unittest.TestCase):
+    """CryptoSigner tests"""
+
+    def test_from_priv_key_uri(self):
+        """Test load and use PEM/PKCS#8 files for each sslib keytype"""
+        test_data = [
+            (
+                "rsa",
+                "rsassa-pss-sha256",
+                "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwhX6rioiL/cX5Ys32InF\nU52H8tL14QeX0tacZdb+AwcH6nIh97h3RSHvGD7Xy6uaMRmGldAnSVYwJHqoJ5j2\nynVzU/RFpr+6n8Ps0QFg5GmlEqZboFjLbS0bsRQcXXnqJNsVLEPT3ULvu1rFRbWz\nAMFjNtNNk5W/u0GEzXn3D03jIdhD8IKAdrTRf0VMD9TRCXLdMmEU2vkf1NVUnOTb\n/dRX5QA8TtBylVnouZknbavQ0J/pPlHLfxUgsKzodwDlJmbPG9BWwXqQCmP0DgOG\nNIZ1X281MOBaGbkNVEuntNjCSaQxQjfALVVU5NAfal2cwMINtqaoc7Wa+TWvpFEI\nWwIDAQAB\n-----END PUBLIC KEY-----\n",
+            ),
+            (
+                "ecdsa",
+                "ecdsa-sha2-nistp256",
+                "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcLYSZyFGeKdWNt5dWFbnv6N9NyHC\noUNLcG6GZIxLwN8Q8MUdHdOOxGkDnyBRSJpIZ/r/oDECSTwfCYhdogweLA==\n-----END PUBLIC KEY-----\n",
+            ),
+            (
+                "ed25519",
+                "ed25519",
+                "4f66dabebcf30628963786001984c0b75c175cdcf3bc4855933a2628f0cd0a0f",
+            ),
+        ]
+
+        signer_backup = SIGNER_FOR_URI_SCHEME[CryptoSigner.FILE_URI_SCHEME]
+        SIGNER_FOR_URI_SCHEME[CryptoSigner.FILE_URI_SCHEME] = CryptoSigner
+
+        for keytype, scheme, public_key_value in test_data:
+            for encrypted in [True, False]:
+                if encrypted:
+                    file_name = f"{keytype}_private_encrypted.pem"
+                    parameter = "true"
+
+                    def handler(_):
+                        return "hunter2"
+
+                else:
+                    file_name = f"{keytype}_private.pem"
+                    parameter = "false"
+                    handler = None
+
+                uri = f"file:{PEMS_DIR / file_name}?encrypted={parameter}"
+                public_key = SSlibKey(
+                    "abcdefg", keytype, scheme, {"public": public_key_value}
+                )
+                signer = Signer.from_priv_key_uri(uri, public_key, handler)
+                self.assertIsInstance(signer, CryptoSigner)
+
+                sig = signer.sign(b"DATA")
+                self.assertIsNone(
+                    signer.public_key.verify_signature(sig, b"DATA")
+                )
+                with self.assertRaises(UnverifiedSignatureError):
+                    signer.public_key.verify_signature(sig, b"NOT DATA")
+
+        SIGNER_FOR_URI_SCHEME[CryptoSigner.FILE_URI_SCHEME] = signer_backup
+
+    def test_generate(self):
+        """Test generate and use signer (key pair) for each sslib keytype"""
+        test_data = [
+            (CryptoSigner.generate_rsa, "rsa", "rsassa-pss-sha256"),
+            (CryptoSigner.generate_ecdsa, "ecdsa", "ecdsa-sha2-nistp256"),
+            (CryptoSigner.generate_ed25519, "ed25519", "ed25519"),
+        ]
+        for generate, keytype, default_scheme in test_data:
+            signer = generate()
+            self.assertEqual(signer.public_key.keytype, keytype)
+            self.assertEqual(signer.public_key.scheme, default_scheme)
+
+            sig = signer.sign(b"DATA")
+            self.assertIsNone(signer.public_key.verify_signature(sig, b"DATA"))
+            with self.assertRaises(UnverifiedSignatureError):
+                signer.public_key.verify_signature(sig, b"NOT DATA")
 
 
 # Run the unit tests.

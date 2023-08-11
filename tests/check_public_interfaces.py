@@ -44,6 +44,7 @@ from securesystemslib.exceptions import (
     VerificationError,
 )
 from securesystemslib.signer import (
+    CryptoSigner,
     GPGKey,
     Key,
     Signature,
@@ -306,6 +307,32 @@ class TestPublicInterfaces(
         with self.assertRaises(expected_error) as ctx:
             securesystemslib.gpg.functions.export_pubkey("f00")
         self.assertEqual(expected_error_msg, str(ctx.exception))
+
+    def test_sslib_key_from_pem(self):
+        """Assert raise UnsupportedLibraryError on SSlibKey.from_pem()."""
+        with self.assertRaises(UnsupportedLibraryError):
+            SSlibKey.from_pem(b"fail")
+
+    def test_crypto_signer_from_priv_key_uri(self):
+        """Assert raise UnsupportedLibraryError on 'from_priv_key_uri'."""
+
+        public_key = SSlibKey(
+            "aa", "rsa", "rsa-pkcs1v15-sha512", {"public": "val"}
+        )
+        with self.assertRaises(UnsupportedLibraryError):
+            CryptoSigner.from_priv_key_uri(
+                "file:should/fail/before/urlparse", public_key, None
+            )
+
+    def test_signer_generate(self):
+        """Assert raise UnsupportedLibraryError on CryptoSigner.generate()."""
+        for generate in [
+            CryptoSigner.generate_rsa,
+            CryptoSigner.generate_ecdsa,
+            CryptoSigner.generate_ed25519,
+        ]:
+            with self.assertRaises(UnsupportedLibraryError):
+                generate()
 
     def test_signer_verify(self):
         """Assert generic VerificationError from UnsupportedLibraryError."""

@@ -6,13 +6,9 @@ from urllib import parse
 
 import securesystemslib.hash as sslib_hash
 from securesystemslib.exceptions import UnsupportedLibraryError
-from securesystemslib.signer._key import Key
-from securesystemslib.signer._signer import (
-    SecretsHandler,
-    Signature,
-    Signer,
-    SSlibKey,
-)
+from securesystemslib.signer._key import Key, SSlibKey
+from securesystemslib.signer._signer import SecretsHandler, Signature, Signer
+from securesystemslib.signer._utils import compute_default_keyid
 
 AZURE_IMPORT_ERROR = None
 try:
@@ -231,7 +227,7 @@ class AzureSigner(Signer):
 
         keytype, scheme = cls._get_keytype_and_scheme(key_vault_key.key.crv)
         keyval = {"public": pem.decode("utf-8")}
-        keyid = cls._get_keyid(keytype, scheme, keyval)
+        keyid = compute_default_keyid(keytype, scheme, keyval)
         public_key = SSlibKey(keyid, keytype, scheme, keyval)
         priv_key_uri = key_vault_key.key.kid.replace("https:", "azurekms:")
 
