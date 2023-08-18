@@ -15,6 +15,12 @@ class Signature:
     Provides utility methods to easily create an object from a dictionary
     and return the dictionary representation of the object.
 
+    Args:
+        keyid: HEX string used as a unique identifier of the key.
+        sig: HEX string representing the signature.
+        unrecognized_fields: Dictionary of all attributes that are not managed
+            by securesystemslib.
+
     Attributes:
         keyid: HEX string used as a unique identifier of the key.
         signature: HEX string representing the signature.
