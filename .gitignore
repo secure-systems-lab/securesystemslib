@@ -15,3 +15,6 @@ env/*
 tests/htmlcov/*
 .DS_Store
 .python-version
+
+# Sphinx documentation
+docs/_build/
