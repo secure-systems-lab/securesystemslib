@@ -45,6 +45,8 @@ class AWSSigner(Signer):
     Arguments:
         aws_key_id (str): AWS KMS key ID or alias.
         public_key (Key): The related public key instance.
+        endpoint_url: (str): AWS endpoint URL.
+        region_name: (str): AWS region to use. Example: us-east-1.
 
     Returns:
         AWSSigner: An instance of the AWSSigner class.
@@ -58,14 +60,22 @@ class AWSSigner(Signer):
 
     SCHEME = "awskms"
 
-    def __init__(self, aws_key_id: str, public_key: Key):
+    def __init__(
+        self,
+        aws_key_id: str,
+        public_key: Key,
+        endpoint_url: Optional[str] = None,
+        region_name: Optional[str] = None
+    ):
         if AWS_IMPORT_ERROR:
             raise UnsupportedLibraryError(AWS_IMPORT_ERROR)
 
         self.hash_algorithm = self._get_hash_algorithm(public_key)
         self.aws_key_id = aws_key_id
         self.public_key = public_key
-        self.client = boto3.client("kms")
+        self.client = boto3.client(
+            "kms", endpoint_url=endpoint_url, region_name=region_name
+        )
         self.aws_algo = self._get_aws_signing_algo(self.public_key.scheme)
 
     @classmethod
@@ -83,7 +93,13 @@ class AWSSigner(Signer):
         return cls(uri.path, public_key)
 
     @classmethod
-    def import_(cls, aws_key_id: str, local_scheme: str) -> Tuple[str, Key]:
+    def import_(
+        cls,
+        aws_key_id: str,
+        local_scheme: str,
+        endpoint_url: Optional[str] = None,
+        region_name: Optional[str] = None
+    ) -> Tuple[str, Key]:
         """Loads a key and signer details from AWS KMS.
 
         Returns the private key uri and the public key. This method should only
@@ -92,6 +108,8 @@ class AWSSigner(Signer):
         Arguments:
             aws_key_id (str): AWS KMS key ID.
             local_scheme (str): Local scheme to use.
+            endpoint_url: (str): AWS endpoint URL.
+            region_name: (str): AWS region to use. Example: us-east-1.
 
         Returns:
             Tuple[str, Key]: A tuple where the first element is a string
@@ -107,7 +125,9 @@ class AWSSigner(Signer):
         if AWS_IMPORT_ERROR:
             raise UnsupportedLibraryError(AWS_IMPORT_ERROR)
 
-        client = boto3.client("kms")
+        client = boto3.client(
+            "kms", endpoint_url=endpoint_url, region_name=region_name
+        )
         request = client.get_public_key(KeyId=aws_key_id)
         kms_pubkey = serialization.load_der_public_key(request["PublicKey"])
 
