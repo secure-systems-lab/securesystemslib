@@ -131,9 +131,6 @@ class SigstoreSigner(Signer):
     SCHEME = "sigstore"
 
     def __init__(self, token: Any, public_key: Key):
-        # TODO: Vet public key
-        # - signer eligible for keytype/scheme?
-        # - token matches identity/issuer?
         self.public_key = public_key
         # token is of type sigstore.oidc.IdentityToken but the module should be usable
         # without sigstore so it's not annotated
@@ -148,7 +145,7 @@ class SigstoreSigner(Signer):
     ) -> "SigstoreSigner":
         # pylint: disable=import-outside-toplevel
         try:
-            from sigstore.oidc import Issuer, detect_credential, IdentityToken
+            from sigstore.oidc import IdentityToken, Issuer, detect_credential
         except ImportError as e:
             raise UnsupportedLibraryError(IMPORT_ERROR) from e
 
@@ -161,8 +158,9 @@ class SigstoreSigner(Signer):
             raise ValueError(f"SigstoreSigner does not support {priv_key_uri}")
 
         params = dict(parse.parse_qsl(uri.query))
+        ambient = params.get("ambient", "true") == "true"
 
-        if params.get("ambient") == "false":
+        if not ambient:
             # TODO: Restrict oauth flow to use identity/issuer from public_key
             # TODO: Use secrets_handler for identity_token() secret arg
             issuer = Issuer.production()
@@ -172,6 +170,20 @@ class SigstoreSigner(Signer):
             if not credential:
                 raise RuntimeError("Failed to detect Sigstore credentials")
             token = IdentityToken(credential)
+
+        key_identity = public_key.keyval["identity"]
+        key_issuer = public_key.keyval["issuer"]
+        if key_issuer != token.expected_certificate_subject:
+            raise ValueError(
+                f"Signer identity issuer {token.expected_certificate_subject} "
+                f"did not match key: {key_issuer}"
+            )
+        # TODO: should check ambient identity too: unfortunately IdentityToken does
+        # not provide access to the expected identity value (cert SAN) in ambient case
+        if not ambient and key_identity != token.identity:
+            raise ValueError(
+                f"Signer identity {token.identity} did not match key: {key_identity}"
+            )
 
         return cls(token, public_key)
 
