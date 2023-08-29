@@ -130,11 +130,13 @@ class SigstoreSigner(Signer):
 
     SCHEME = "sigstore"
 
-    def __init__(self, token: str, public_key: Key):
+    def __init__(self, token: Any, public_key: Key):
         # TODO: Vet public key
         # - signer eligible for keytype/scheme?
         # - token matches identity/issuer?
         self.public_key = public_key
+        # token is of type sigstore.oidc.IdentityToken but the module should be usable
+        # without sigstore so it's not annotated
         self._token = token
 
     @classmethod
@@ -146,7 +148,7 @@ class SigstoreSigner(Signer):
     ) -> "SigstoreSigner":
         # pylint: disable=import-outside-toplevel
         try:
-            from sigstore.oidc import Issuer, detect_credential
+            from sigstore.oidc import Issuer, detect_credential, IdentityToken
         except ImportError as e:
             raise UnsupportedLibraryError(IMPORT_ERROR) from e
 
@@ -166,9 +168,10 @@ class SigstoreSigner(Signer):
             issuer = Issuer.production()
             token = issuer.identity_token()
         else:
-            # Note: this method signature only works with sigstore-python 1.1.2:
-            # dependencies must be updated when changing this
-            token = detect_credential("sigstore")
+            credential = detect_credential()
+            if not credential:
+                raise RuntimeError("Failed to detect Sigstore credentials")
+            token = IdentityToken(credential)
 
         return cls(token, public_key)
 
@@ -217,12 +220,14 @@ class SigstoreSigner(Signer):
         """
         # pylint: disable=import-outside-toplevel
         try:
-            from sigstore.sign import Signer as _Signer
+            from sigstore.sign import SigningContext
         except ImportError as e:
             raise UnsupportedLibraryError(IMPORT_ERROR) from e
 
-        signer = _Signer.production()
-        result = signer.sign(io.BytesIO(payload), self._token)
+        context = SigningContext.production()
+        with context.signer(self._token) as sigstore_signer:
+            result = sigstore_signer.sign(io.BytesIO(payload))
+
         # TODO: Ask upstream if they can make this public
         bundle = result._to_bundle()  # pylint: disable=protected-access
 
