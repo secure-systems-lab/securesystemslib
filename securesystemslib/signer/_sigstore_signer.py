@@ -141,7 +141,7 @@ class SigstoreSigner(Signer):
         cls,
         priv_key_uri: str,
         public_key: Key,
-        secrets_handler: Optional[SecretsHandler] = None,
+        _secrets_handler: Optional[SecretsHandler] = None,
     ) -> "SigstoreSigner":
         # pylint: disable=import-outside-toplevel
         try:
