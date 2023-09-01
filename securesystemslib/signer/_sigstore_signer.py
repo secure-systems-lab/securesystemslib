@@ -189,8 +189,8 @@ class SigstoreSigner(Signer):
         key should be stored for later use.
 
         Arguments:
-            identity: The OIDC identity used to create a signing token.
-            issuer: The OIDC issuer URL used to create a signing token.
+            identity: The OIDC identity to use when verifying a signature.
+            issuer: The OIDC issuer to use when verifying a signature.
             ambient: Toggle usage of ambient credentials in returned URI.
         """
         keytype = SigstoreKey.DEFAULT_KEY_TYPE
