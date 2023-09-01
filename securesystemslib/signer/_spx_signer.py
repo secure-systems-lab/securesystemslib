@@ -38,7 +38,13 @@ def generate_spx_key_pair() -> Tuple[bytes, bytes]:
 
 
 class SpxKey(Key):
-    """SPHINCS+ verifier."""
+    """SPHINCS+ verifier.
+
+    NOTE: The SPHINCS+ key and signature metadata formats are not part of the
+    TUF specification and are not considered stable in securesystemslib. They
+    may change in future releases and may not be supported by other
+    implementations.
+    """
 
     DEFAULT_KEY_TYPE = "sphincs"
     DEFAULT_SCHEME = "sphincs-shake-128s"
@@ -88,6 +94,11 @@ class SpxKey(Key):
 
 class SpxSigner(Signer):
     """SPHINCS+ signer.
+
+    NOTE: The SPHINCS+ key and signature metadata formats are not part of the
+    TUF specification and are not considered stable in securesystemslib. They
+    may change in future releases and may not be supported by other
+    implementations.
 
     Usage::
 
