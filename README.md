@@ -2,9 +2,14 @@
 
 [![CI](https://github.com/secure-systems-lab/securesystemslib/workflows/Run%20Securesystemslib%20tests/badge.svg)](https://github.com/secure-systems-lab/securesystemslib/actions?query=workflow%3A%22Run+Securesystemslib+tests%22+branch%3Amain)
 
-A cryptography interface to sign and verify
-[TUF](https://theupdateframework.io) and [in-toto](https://in-toto.io)
-metadata.
+Securesystemslib is a cryptography interface for signing and verifying digital
+signatures. It is developed for the [TUF](https://theupdateframework.io) and
+[in-toto](https://in-toto.io) projects: the key and signature containers are
+compatible with metadata formats from those projects.
+
+Under the hood, Securesystemslib can use various digital signing systems
+(e.g. [cryptography](https://pypi.org/project/cryptography/), PIV hardware keys
+and multiple cloud-based key management systems).
 
 ## Installation
 
@@ -18,6 +23,11 @@ signature creation, `securesystemslib` can be installed with *extras*. See
 pip install securesystemslib[crypto]
 ```
 
+```bash
+# ...or with HSM (e.g. Yubikey) support
+pip install securesystemslib[hsm]
+```
+
 ## Usage
 [python-securesystemslib.readthedocs.io](https://python-securesystemslib.readthedocs.io)
 
@@ -25,8 +35,7 @@ pip install securesystemslib[crypto]
 - Questions and discussions:
   [`#securesystemslib-python`](https://cloud-native.slack.com/archives/C05PF3GA7AL)
   on [CNCF Slack](https://communityinviter.com/apps/cloud-native/cncf)
-- Security issues: [*Draft a new security
-  advisory*](https://github.com/secure-systems-lab/securesystemslib/security/advisories/new)
+- Security issues: [*Report a vulnerability*](https://github.com/secure-systems-lab/securesystemslib/security/advisories/new)
 - Other issues and requests: [*Open a new
   issue*](https://github.com/secure-systems-lab/securesystemslib/issues/new)
 
