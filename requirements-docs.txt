@@ -1,0 +1,5 @@
+-r requirements-pinned.txt
+
+# install sphinx and its extensions
+sphinx
+sphinx-rtd-theme

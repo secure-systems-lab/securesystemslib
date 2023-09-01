@@ -56,6 +56,11 @@ logger = logging.getLogger(__name__)
 # NOTE Key dispatch table is defined here so it's usable by Key,
 # but is populated in __init__.py (and can be appended by users).
 KEY_FOR_TYPE_AND_SCHEME: Dict[Tuple[str, str], Type] = {}
+"""Key dispatch table for ``Key.from_dict()``
+
+See ``securesystemslib.signer.KEY_FOR_TYPE_AND_SCHEME`` for default key types
+and schemes, and how to register custom implementations.
+"""
 
 
 class Key(metaclass=ABCMeta):
@@ -121,8 +126,9 @@ class Key(metaclass=ABCMeta):
         Key implementations must override this factory constructor that is used
         as a deserialization helper.
 
-        Users should call Key.from_dict(): it dispatches to the actual subclass
-        implementation based on supported keys in KEY_FOR_TYPE_AND_SCHEME.
+        Users should call ``Key.from_dict()``: it dispatches to the actual
+        subclass implementation based on supported keys in
+        ``KEY_FOR_TYPE_AND_SCHEME``.
 
         Raises:
             KeyError, TypeError: Invalid arguments.

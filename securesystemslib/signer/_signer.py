@@ -12,7 +12,11 @@ logger = logging.getLogger(__name__)
 # NOTE Signer dispatch table is defined here so it's usable by Signer,
 # but is populated in __init__.py (and can be appended by users).
 SIGNER_FOR_URI_SCHEME: Dict[str, Type] = {}
+"""Signer dispatch table for ``Signer.from_priv_key()``
 
+See ``securesystemslib.signer.SIGNER_FOR_URI_SCHEME`` for default URI schemes,
+and how to register custom implementations.
+"""
 
 # SecretsHandler is a function the calling code can provide to Signer:
 # SecretsHandler will be called if Signer needs additional secrets.
@@ -24,23 +28,25 @@ SecretsHandler = Callable[[str], str]
 class Signer(metaclass=ABCMeta):
     """Signer interface that supports multiple signing implementations.
 
-    Usage example:
+    Usage example::
 
         signer = Signer.from_priv_key_uri("envvar:MYPRIVKEY", pub_key)
         sig = signer.sign(b"data")
 
     Note that signer implementations may raise errors (during both
-    Signer.from_priv_key_uri() and Signer.sign()) that are not documented here:
-    examples could include network errors or file read errors. Applications
-    should use generic try-except here if unexpected raises are not an option.
+    ``Signer.from_priv_key_uri()`` and ``Signer.sign()``) that are not
+    documented here: examples could include network errors or file read errors.
+    Applications should use generic try-except here if unexpected raises are
+    not an option.
 
-    See SIGNER_FOR_URI_SCHEME for supported private key URI schemes. The
+    See ``SIGNER_FOR_URI_SCHEME`` for supported private key URI schemes. The
     currently supported default schemes are:
-    * envvar: see SSlibSigner for details
-    * file: see SSlibSigner for details
+
+    * envvar: see ``SSlibSigner`` for details
+    * file: see ``SSlibSigner`` for details
 
     Interactive applications may also define a secrets handler that allows
-    asking for user secrets if they are needed:
+    asking for user secrets if they are needed::
 
         from getpass import getpass
 
@@ -55,7 +61,7 @@ class Signer(metaclass=ABCMeta):
         uri2 = "file:keys/myenckey?encrypted=true"
         signer2 = Signer.from_priv_key_uri(uri2, pub_key2, sec_handler)
 
-    Applications can provide their own Signer and Key implementations:
+    Applications can provide their own Signer and Key implementations::
 
         from securesystemslib.signer import Signer, SIGNER_FOR_URI_SCHEME
         from mylib import MySigner
@@ -90,7 +96,7 @@ class Signer(metaclass=ABCMeta):
         """Factory constructor for a given private key URI
 
         Returns a specific Signer instance based on the private key URI and the
-        supported uri schemes listed in SIGNER_FOR_URI_SCHEME.
+        supported uri schemes listed in ``SIGNER_FOR_URI_SCHEME``.
 
         Args:
             priv_key_uri: URI that identifies the private key
