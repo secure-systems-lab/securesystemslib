@@ -28,10 +28,9 @@ logger = logging.getLogger(__name__)
 class SigstoreKey(Key):
     """Sigstore verifier.
 
-    NOTE: The Sigstore key and signature metadata formats are not part of the
-    TUF specification and are not considered stable in securesystemslib. They
-    may change in future releases and may not be supported by other
-    implementations.
+    NOTE: The Sigstore key and signature serialization formats are not yet
+    considered stable in securesystemslib. They may change in future releases
+    and may not be supported by other implementations.
     """
 
     DEFAULT_KEY_TYPE = "sigstore-oidc"
@@ -90,10 +89,9 @@ class SigstoreKey(Key):
 class SigstoreSigner(Signer):
     """Sigstore signer.
 
-    NOTE: The Sigstore key and signature metadata formats are not part of the
-    TUF specification and are not considered stable in securesystemslib. They
-    may change in future releases and may not be supported by other
-    implementations.
+    NOTE: The Sigstore key and signature serialization formats are not yet
+    considered stable in securesystemslib. They may change in future releases
+    and may not be supported by other implementations.
 
     All signers should be instantiated with ``Signer.from_priv_key_uri()``.
     Unstable ``SigstoreSigner`` currently requires opt-in via
