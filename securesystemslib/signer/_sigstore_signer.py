@@ -28,7 +28,9 @@ logger = logging.getLogger(__name__)
 class SigstoreKey(Key):
     """Sigstore verifier.
 
-    NOTE: unstable API - routines and metadata formats may change!
+    NOTE: The Sigstore key and signature serialization formats are not yet
+    considered stable in securesystemslib. They may change in future releases
+    and may not be supported by other implementations.
     """
 
     DEFAULT_KEY_TYPE = "sigstore-oidc"
@@ -87,7 +89,9 @@ class SigstoreKey(Key):
 class SigstoreSigner(Signer):
     """Sigstore signer.
 
-    NOTE: unstable API - routines and metadata formats may change!
+    NOTE: The Sigstore key and signature serialization formats are not yet
+    considered stable in securesystemslib. They may change in future releases
+    and may not be supported by other implementations.
 
     All signers should be instantiated with ``Signer.from_priv_key_uri()``.
     Unstable ``SigstoreSigner`` currently requires opt-in via
@@ -183,8 +187,8 @@ class SigstoreSigner(Signer):
         key should be stored for later use.
 
         Arguments:
-            identity: The OIDC identity used to create a signing token.
-            issuer: The OIDC issuer URL used to create a signing token.
+            identity: The OIDC identity to use when verifying a signature.
+            issuer: The OIDC issuer to use when verifying a signature.
             ambient: Toggle usage of ambient credentials in returned URI.
         """
         keytype = SigstoreKey.DEFAULT_KEY_TYPE

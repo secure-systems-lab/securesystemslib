@@ -38,6 +38,10 @@ SIGNER_FOR_URI_SCHEME.update(
     }
 )
 
+# Signers with currently unstable metadata formats, not supported by default:
+#   SigstoreSigner,
+#   SpxSigner (also does not yet support private key uri scheme)
+
 # Register supported key types and schemes, and the Keys implementing them
 KEY_FOR_TYPE_AND_SCHEME.update(
     {
@@ -54,9 +58,12 @@ KEY_FOR_TYPE_AND_SCHEME.update(
         ("rsa", "rsa-pkcs1v15-sha256"): SSlibKey,
         ("rsa", "rsa-pkcs1v15-sha384"): SSlibKey,
         ("rsa", "rsa-pkcs1v15-sha512"): SSlibKey,
-        ("sphincs", "sphincs-shake-128s"): SpxKey,
         ("rsa", "pgp+rsa-pkcsv1.5"): GPGKey,
         ("dsa", "pgp+dsa-fips-180-2"): GPGKey,
         ("eddsa", "pgp+eddsa-ed25519"): GPGKey,
     }
 )
+
+# Keys with currently unstable metadata formats, not supported by default:
+#       ("sphincs", "sphincs-shake-128s"): SpxKey,
+#       ("sigstore-oidc", "Fulcio"): SigstoreKey,
