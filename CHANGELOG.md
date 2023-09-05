@@ -1,5 +1,29 @@
 # Changelog
 
+## securesystemslib v0.29.0
+
+This release is reaping the rewards of the new signer API with four(!) new
+signing methods: Two cloud based KMSs, post-quantum crypto support and a
+"keyless" signing system.
+
+Advance notice to folks using the `keys`, `ecdsa_keys`, `rsa_keys` and
+`ed25519_keys` modules: these modules are headed for deprecation. Please have
+a look at the `signer` API and get in touch if the functionality you need
+isn't there (or if more documentation is needed).
+
+### Added
+* Sigstore as a new experimental signing method (#552)
+* SPHINCS+ as a new experimental signing method (#568)
+* Azure Key Vault as a new signing method (#588)
+* AWS KMS  as a new signing method (#609)
+* `CryptoSigner` as a more featureful replacement for `SSLibSigner` (#604)
+* Documentation that focuses on the signer API (#634, #622)
+
+### Changed
+* `SSLibSigner` has been deprecated: Please use `CryptoSigner` instead (#604)
+* `keys` module is not used for signature verification in `signer` API (#585)
+* Various minor fixes, please see git log for details
+
 ## securesystemslib v0.28.0
 
 ### Added
