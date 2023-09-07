@@ -215,6 +215,25 @@ class SigstoreSigner(Signer):
 
         return uri, key
 
+    @classmethod
+    def import_via_auth(cls) -> Tuple[str, SigstoreKey]:
+        """Create public key and signer URI by interactive authentication
+
+        Returns a private key URI (for Signer.from_priv_key_uri()) and a public
+        key. This method always uses the interactive authentication.
+        """
+        # pylint: disable=import-outside-toplevel
+        try:
+            from sigstore.oidc import Issuer
+        except ImportError as e:
+            raise UnsupportedLibraryError(IMPORT_ERROR) from e
+
+        # authenticate to get the identity and issuer
+        token = Issuer.production().identity_token()
+        return cls.import_(
+            token.identity, token.expected_certificate_subject, False
+        )
+
     def sign(self, payload: bytes) -> Signature:
         """Signs payload using the OIDC token on the signer instance.
 
