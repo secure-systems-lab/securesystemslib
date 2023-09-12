@@ -259,8 +259,7 @@ class SigstoreSigner(Signer):
         with context.signer(self._token) as sigstore_signer:
             result = sigstore_signer.sign(io.BytesIO(payload))
 
-        # TODO: Ask upstream if they can make this public
-        bundle = result._to_bundle()  # pylint: disable=protected-access
+        bundle = result.to_bundle()
 
         return Signature(
             self.public_key.keyid,
