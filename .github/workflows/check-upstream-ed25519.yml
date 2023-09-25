@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check out repository
-      uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac
+      uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
     - name: Test if ed25519 upstream main HEAD is what we expect
       id: test_ed25519
       run: |
