@@ -1,8 +1,7 @@
 Welcome to ``securesystemslib``
 ===============================
 
-A cryptography interface to sign and verify `TUF
-<https://theupdateframework.io>`_ and `in-toto <https://in-toto.io>`_ metadata.
+A cryptography interface for signing and verifying digital signatures.
 
 .. note::
    This documentation is built for
