@@ -1,7 +1,7 @@
 Welcome to ``securesystemslib``
 ===============================
 
-A cryptography interface for signing and verifying digital signatures. -
+A cryptography interface for signing and verifying digital signatures.
 
 .. note::
    This documentation is built for
