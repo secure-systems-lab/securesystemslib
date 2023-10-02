@@ -1,6 +1,7 @@
 # securesystemslib
 
 [![CI](https://github.com/secure-systems-lab/securesystemslib/workflows/Run%20Securesystemslib%20tests/badge.svg)](https://github.com/secure-systems-lab/securesystemslib/actions?query=workflow%3A%22Run+Securesystemslib+tests%22+branch%3Amain)
+[![Documentation Status](https://readthedocs.org/projects/python-securesystemslib/badge/?version=latest)](https://python-securesystemslib.readthedocs.io/en/latest/?badge=latest)
 
 Securesystemslib is a cryptography interface for signing and verifying digital
 signatures. It is developed for the [TUF](https://theupdateframework.io) and
