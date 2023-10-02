@@ -141,7 +141,7 @@ class SigstoreSigner(Signer):
         cls,
         priv_key_uri: str,
         public_key: Key,
-        _secrets_handler: Optional[SecretsHandler] = None,
+        secrets_handler: Optional[SecretsHandler] = None,
     ) -> "SigstoreSigner":
         # pylint: disable=import-outside-toplevel
         try:
@@ -163,8 +163,7 @@ class SigstoreSigner(Signer):
         if not ambient:
             # TODO: Restrict oauth flow to use identity/issuer from public_key
             # TODO: Use secrets_handler for identity_token() secret arg
-            issuer = Issuer.production()
-            token = issuer.identity_token()
+            token = Issuer.production().identity_token()
         else:
             credential = detect_credential()
             if not credential:
