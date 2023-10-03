@@ -1,5 +1,21 @@
 # Changelog
 
+## securesystemslib v0.30.0
+
+This release contains improved Sigstore support.
+
+### Changed
+
+* SigstoreSigner adapted to sigstore-python 2.0 API: This allows
+  improved UX where a new signing identity can be defined using
+  interactive credentials (browser login):
+  `SigstoreSigner.import_via_auth()`
+* Documentation improvements
+
+### Removed
+
+* Python 3.7 is no longer supported
+
 ## securesystemslib v0.29.0
 
 This release is reaping the rewards of the new signer API with four(!) new
