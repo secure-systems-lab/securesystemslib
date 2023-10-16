@@ -1,0 +1,1 @@
+{"keytype": "ecdsa", "scheme": "ecdsa-sha2-nistp256", "keyid_hash_algorithms": ["sha256", "sha512"], "keyval": {"public": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEx+6/aDen+X60RXLETPYz/H4U4qAY\neD/faCdpHBBmyip7xRiyWIrWljDmqcwLfv5wswrqdLF8M6hAdgYjIQZU/A==\n-----END PUBLIC KEY-----"}}
