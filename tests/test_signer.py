@@ -8,6 +8,8 @@ import unittest
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
+
 import securesystemslib.keys as KEYS
 from securesystemslib.exceptions import (
     CryptoError,
@@ -741,6 +743,24 @@ class TestSphincs(unittest.TestCase):
 
 class TestCryptoSigner(unittest.TestCase):
     """CryptoSigner tests"""
+
+    def test_init(self):
+        """Test CryptoSigner constructor."""
+        for keytype in ["rsa", "ecdsa", "ed25519"]:
+            path = PEMS_DIR / f"{keytype}_private.pem"
+
+            with open(path, "rb") as f:
+                data = f.read()
+
+            private_key = load_pem_private_key(data, None)
+
+            # Init w/o public key (public key is created from private key)
+            signer = CryptoSigner(private_key)
+            self.assertEqual(keytype, signer.public_key.keytype)
+
+            # Re-init with passed public key
+            signer2 = CryptoSigner(private_key, signer.public_key)
+            self.assertEqual(keytype, signer2.public_key.keytype)
 
     def test_from_priv_key_uri(self):
         """Test load and use PEM/PKCS#8 files for each sslib keytype"""
