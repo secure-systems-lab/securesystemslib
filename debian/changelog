@@ -1,3 +1,20 @@
+python-securesystemslib (0.28.0-1) unstable; urgency=medium
+
+  * New upstream release includes among other things:
+    - Signer API improvements
+    - Experimental DSSE implementation
+    - And much more (see upstream CHANGELOG.md)
+
+  * d/control
+    - Change gnupg2 to gnupg (Closes: #1055407)
+  * d/patches
+    - 1 changed
+    - 1 removed
+  * d/Dockerfile
+    - Added Dockerfile used to build this release on macOS
+
+ -- Lukas Puehringer <lukas.puehringer@nyu.edu>  Tue, 07 Nov 2023 12:12:00 +0100
+
 python-securesystemslib (0.26.0-1) unstable; urgency=medium
 
   * New upstream release includes among other things:
