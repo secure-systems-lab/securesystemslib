@@ -7,12 +7,12 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from docs.migrate_key import main as migrate_key_cli
 from securesystemslib.exceptions import UnverifiedSignatureError
 from securesystemslib.interface import (
     import_privatekey_from_file,
     import_publickeys_from_file,
 )
-from securesystemslib.migrate_key import main as migrate_key_cli
 from securesystemslib.signer import CryptoSigner, SSlibKey, SSlibSigner
 
 
