@@ -48,3 +48,9 @@ command line in the root of the repository.
 ```bash
 tox
 ```
+
+## Legacy key migration
+
+Use [`migrate_keys`](docs/migrate_key.py) script to convert key pairs generated
+with legacy `keys` or `interface` modules to a consistent standard format, which
+is compatible with [`CryptoSigner`](docs/CRYPTO_SIGNER.md).
