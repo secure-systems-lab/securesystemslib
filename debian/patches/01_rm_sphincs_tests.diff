@@ -9,109 +9,44 @@ Author: Lukas Puehringer <lukas.puehringer@nyu.edu>
 Forwarded: not-needed
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
-Index: securesystemslib-0.26.0/tests/test_keys.py
-===================================================================
---- securesystemslib-0.26.0.orig/tests/test_keys.py
-+++ securesystemslib-0.26.0/tests/test_keys.py
-@@ -40,7 +40,6 @@ class TestKeys(unittest.TestCase):  # py
-         cls.rsakey_dict = KEYS.generate_rsa_key()
-         cls.ed25519key_dict = KEYS.generate_ed25519_key()
-         cls.ecdsakey_dict = KEYS.generate_ecdsa_key()
--        cls.sphincskey_dict = KEYS.generate_sphincs_key()
+--- a/tests/test_keys.py
++++ b/tests/test_keys.py
+@@ -33,27 +33,6 @@
+ DATA = securesystemslib.formats.encode_canonical(DATA_STR).encode("utf-8")
  
-     def test_generate_rsa_key(self):
-         _rsakey_dict = KEYS.generate_rsa_key()  # pylint: disable=invalid-name
-@@ -267,7 +266,6 @@ class TestKeys(unittest.TestCase):  # py
-         # Creating a signature for 'DATA'.
-         rsa_signature = KEYS.create_signature(self.rsakey_dict, DATA)
-         ed25519_signature = KEYS.create_signature(self.ed25519key_dict, DATA)
--        sphincs_signature = KEYS.create_signature(self.sphincskey_dict, DATA)
  
-         # Check format of output.
-         self.assertEqual(
-@@ -284,13 +282,6 @@ class TestKeys(unittest.TestCase):  # py
-             ),
-             FORMAT_ERROR_MSG,
-         )
--        self.assertEqual(
--            None,
--            securesystemslib.formats.SIGNATURE_SCHEMA.check_match(
--                sphincs_signature
--            ),
--            FORMAT_ERROR_MSG,
--        )
- 
-         # Test for invalid signature scheme.
-         args = (self.rsakey_dict, DATA)
-@@ -344,7 +335,6 @@ class TestKeys(unittest.TestCase):  # py
-         rsa_signature = KEYS.create_signature(self.rsakey_dict, DATA)
-         ed25519_signature = KEYS.create_signature(self.ed25519key_dict, DATA)
-         ecdsa_signature = KEYS.create_signature(self.ecdsakey_dict, DATA)
--        sphincs_signature = KEYS.create_signature(self.sphincskey_dict, DATA)
- 
-         # Verifying the 'signature' of 'DATA'.
-         verified = KEYS.verify_signature(self.rsakey_dict, rsa_signature, DATA)
-@@ -368,24 +358,6 @@ class TestKeys(unittest.TestCase):  # py
-         )
-         self.ed25519key_dict["scheme"] = valid_scheme
- 
--        # Verifying the 'sphincs_signature' of 'DATA'.
--        verified = KEYS.verify_signature(
--            self.sphincskey_dict, sphincs_signature, DATA
--        )
--        self.assertTrue(verified, "Incorrect signature.")
+-@unittest.skipIf(os.name == "nt", "PySPX n/a on Windows")
+-class TestSphincsKeys(unittest.TestCase):
+-    """Test create keys, sign and verify for sphincs keys."""
 -
--        # Verify that an invalid sphincs signature scheme is rejected.
--        valid_scheme = self.sphincskey_dict["scheme"]
--        self.sphincskey_dict["scheme"] = "invalid_scheme"
--        self.assertRaises(
--            securesystemslib.exceptions.UnsupportedAlgorithmError,
--            KEYS.verify_signature,
--            self.sphincskey_dict,
--            sphincs_signature,
--            DATA,
--        )
--        self.sphincskey_dict["scheme"] = valid_scheme
+-    def test_sphincs_keys(self):
+-        key = KEYS.generate_sphincs_key()
+-        sig = KEYS.create_signature(key, b"data")
+-        self.assertTrue(securesystemslib.formats.SIGNATURE_SCHEMA.matches(sig))
 -
-         # Verifying the 'ecdsa_signature' of 'DATA'.
-         verified = KEYS.verify_signature(
-             self.ecdsakey_dict, ecdsa_signature, DATA
-@@ -432,11 +404,6 @@ class TestKeys(unittest.TestCase):  # py
-         self.assertFalse(verified, "Returned 'True' on an incorrect signature.")
- 
-         verified = KEYS.verify_signature(
--            self.sphincskey_dict, sphincs_signature, _DATA
--        )
--        self.assertFalse(verified, "Returned 'True' on an incorrect signature.")
+-        # Assert valid/invalid signature
+-        self.assertTrue(KEYS.verify_signature(key, sig, b"data"))
+-        self.assertFalse(KEYS.verify_signature(key, sig, b"not data"))
 -
--        verified = KEYS.verify_signature(
-             self.ecdsakey_dict, ecdsa_signature, _DATA
-         )
-         self.assertFalse(verified, "Returned 'True' on an incorrect signature.")
-@@ -484,14 +451,6 @@ class TestKeys(unittest.TestCase):  # py
-         )
-         self.assertTrue(verified, "Incorrect signature.")
- 
--        # Verify that sphincs fails if PySPX is not installed
--        KEYS.sphincs_keys.SPX_AVAIL = False  # Monkey patch availability
+-        # Assert verificaiton failure for unsupported signing scheme
+-        key["scheme"] = "invalid_scheme"
 -        with self.assertRaises(
--            securesystemslib.exceptions.UnsupportedLibraryError
+-            securesystemslib.exceptions.UnsupportedAlgorithmError
 -        ):
--            KEYS.verify_signature(self.sphincskey_dict, sphincs_signature, DATA)
--        KEYS.sphincs_keys.SPX_AVAIL = True
+-            KEYS.verify_signature(key, sig, b"data")
 -
-         # Verify ecdsa key with HEX encoded keyval instead of PEM encoded keyval
-         ecdsa_key = KEYS.generate_ecdsa_key()
-         ecdsa_key["keyval"]["public"] = "abcd"
-Index: securesystemslib-0.26.0/tests/test_signer.py
-===================================================================
---- securesystemslib-0.26.0.orig/tests/test_signer.py
-+++ securesystemslib-0.26.0/tests/test_signer.py
-@@ -168,7 +168,6 @@ class TestSigner(unittest.TestCase):
-             KEYS.generate_rsa_key(),
+-
+ class TestKeys(unittest.TestCase):  # pylint: disable=missing-class-docstring
+     @classmethod
+     def setUpClass(cls):
+--- a/tests/test_signer.py
++++ b/tests/test_signer.py
+@@ -280,8 +280,6 @@
              KEYS.generate_ed25519_key(),
              KEYS.generate_ecdsa_key(),
--            KEYS.generate_sphincs_key(),
          ]
+-        if os.name != "nt":
+-            cls.keys.append(KEYS.generate_sphincs_key())
+ 
          cls.DATA = b"DATA"
  

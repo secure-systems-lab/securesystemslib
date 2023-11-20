@@ -18,7 +18,7 @@ Build-Depends:
  python3-pykcs11,
  python3-asn1crypto,
  softhsm2,
- gnupg2,
+ gnupg,
 Standards-Version: 4.6.2
 Rules-Requires-Root: no
 Homepage: https://ssl.engineering.nyu.edu
@@ -31,7 +31,7 @@ Depends:
   ${python3:Depends},
   ${misc:Depends},
 Recommends:
- gnupg2,
+ gnupg,
  python3-cryptography,
  python3-nacl,
  python3-pykcs11,
