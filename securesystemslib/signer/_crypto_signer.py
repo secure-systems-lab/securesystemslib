@@ -99,7 +99,26 @@ def _get_rsa_padding(
 
 
 class CryptoSigner(Signer):
-    """PYCA/cryptography Signer implementations."""
+    """PYCA/cryptography Signer implementations.
+
+    A CryptoSigner can be created from:
+
+        a. private key file -- ``Signer.from_priv_key_uri()``
+
+          URI has the format "file:<PATH>?encrypted=[true|false]", where
+          PATH is the path to a file with private key data in a standard
+          PEM/PKCS8 format.
+
+          A related public key must be passed.
+
+          If  ``encrypted=true``, the optional secrets handler is expected to
+          return a decryption password.
+
+        b. newly generated key pair -- ``CryptoSigner.generate_*()``
+
+        c. existing pyca/cryptography private key object -- ``CryptoSigner()``
+
+    """
 
     FILE_URI_SCHEME = "file"
 
