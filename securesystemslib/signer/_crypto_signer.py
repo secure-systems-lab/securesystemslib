@@ -1,8 +1,8 @@
 """Signer implementation for pyca/cryptography signing. """
 
 import logging
-from abc import ABCMeta
-from typing import Any, Dict, Optional, cast
+from dataclasses import astuple, dataclass
+from typing import Any, Dict, Optional, Union
 from urllib import parse
 
 from securesystemslib.exceptions import UnsupportedLibraryError
@@ -53,14 +53,132 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-class CryptoSigner(Signer, metaclass=ABCMeta):
-    """Base class for PYCA/cryptography Signer implementations."""
+@dataclass
+class _RSASignArgs:
+    padding: "AsymmetricPadding"
+    hash_algo: "HashAlgorithm"
+
+
+@dataclass
+class _ECDSASignArgs:
+    sig_algo: "ECDSA"
+
+
+@dataclass
+class _NoSignArgs:
+    pass
+
+
+def _get_hash_algorithm(name: str) -> "HashAlgorithm":
+    """Helper to return hash algorithm for name."""
+    algorithm: HashAlgorithm
+    if name == "sha224":
+        algorithm = SHA224()
+    if name == "sha256":
+        algorithm = SHA256()
+    if name == "sha384":
+        algorithm = SHA384()
+    if name == "sha512":
+        algorithm = SHA512()
+
+    return algorithm
+
+
+def _get_rsa_padding(
+    name: str, hash_algorithm: "HashAlgorithm"
+) -> "AsymmetricPadding":
+    """Helper to return rsa signature padding for name."""
+    padding: AsymmetricPadding
+    if name == "pss":
+        padding = PSS(mgf=MGF1(hash_algorithm), salt_length=PSS.DIGEST_LENGTH)
+
+    if name == "pkcs1v15":
+        padding = PKCS1v15()
+
+    return padding
+
+
+class CryptoSigner(Signer):
+    """PYCA/cryptography Signer implementations.
+
+    A CryptoSigner can be created from:
+
+        a. private key file -- ``Signer.from_priv_key_uri()``
+
+          URI has the format "file:<PATH>?encrypted=[true|false]", where
+          PATH is the path to a file with private key data in a standard
+          PEM/PKCS8 format.
+
+          A related public key must be passed.
+
+          If  ``encrypted=true``, the optional secrets handler is expected to
+          return a decryption password.
+
+        b. newly generated key pair -- ``CryptoSigner.generate_*()``
+
+        c. existing pyca/cryptography private key object -- ``CryptoSigner()``
+
+    """
 
     FILE_URI_SCHEME = "file"
 
-    def __init__(self, public_key: SSlibKey):
+    def __init__(
+        self,
+        private_key: "PrivateKeyTypes",
+        public_key: Optional[SSlibKey] = None,
+    ):
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
+
+        if public_key is None:
+            public_key = SSlibKey._from_crypto_public_key(
+                private_key.public_key(), None, None
+            )
+
+        self._private_key: PrivateKeyTypes
+        self._sign_args: Union[_RSASignArgs, _ECDSASignArgs, _NoSignArgs]
+
+        if public_key.keytype == "rsa" and public_key.scheme in [
+            "rsassa-pss-sha224",
+            "rsassa-pss-sha256",
+            "rsassa-pss-sha384",
+            "rsassa-pss-sha512",
+            "rsa-pkcs1v15-sha224",
+            "rsa-pkcs1v15-sha256",
+            "rsa-pkcs1v15-sha384",
+            "rsa-pkcs1v15-sha512",
+        ]:
+            if not isinstance(private_key, RSAPrivateKey):
+                raise ValueError(f"invalid rsa key: {type(private_key)}")
+
+            padding_name, hash_name = public_key.scheme.split("-")[1:]
+            hash_algo = _get_hash_algorithm(hash_name)
+            padding = _get_rsa_padding(padding_name, hash_algo)
+            self._sign_args = _RSASignArgs(padding, hash_algo)
+            self._private_key = private_key
+
+        elif (
+            public_key.keytype == "ecdsa"
+            and public_key.scheme == "ecdsa-sha2-nistp256"
+        ):
+            if not isinstance(private_key, EllipticCurvePrivateKey):
+                raise ValueError(f"invalid ecdsa key: {type(private_key)}")
+
+            signature_algorithm = ECDSA(SHA256())
+            self._sign_args = _ECDSASignArgs(signature_algorithm)
+            self._private_key = private_key
+
+        elif public_key.keytype == "ed25519" and public_key.scheme == "ed25519":
+            if not isinstance(private_key, Ed25519PrivateKey):
+                raise ValueError(f"invalid ed25519 key: {type(private_key)}")
+
+            self._sign_args = _NoSignArgs()
+            self._private_key = private_key
+
+        else:
+            raise ValueError(
+                f"unsupported public key {public_key.keytype}/{public_key.scheme}"
+            )
 
         self.public_key = public_key
 
@@ -73,49 +191,18 @@ class CryptoSigner(Signer, metaclass=ABCMeta):
         public_key = SSlibKey.from_securesystemslib_key(key_dict)
 
         private_key: PrivateKeyTypes
-        if public_key.keytype == "rsa":
-            private_key = cast(
-                RSAPrivateKey,
-                load_pem_private_key(private.encode(), password=None),
-            )
-            return _RSASigner(public_key, private_key)
+        if public_key.keytype in ["rsa", "ecdsa"]:
+            private_key = load_pem_private_key(private.encode(), password=None)
 
-        if public_key.keytype == "ecdsa":
-            private_key = cast(
-                EllipticCurvePrivateKey,
-                load_pem_private_key(private.encode(), password=None),
-            )
-            return _ECDSASigner(public_key, private_key)
-
-        if public_key.keytype == "ed25519":
+        elif public_key.keytype == "ed25519":
             private_key = Ed25519PrivateKey.from_private_bytes(
                 bytes.fromhex(private)
             )
-            return _Ed25519Signer(public_key, private_key)
 
-        raise ValueError(f"unsupported keytype: {public_key.keytype}")
+        else:
+            raise ValueError(f"unsupported keytype: {public_key.keytype}")
 
-    @classmethod
-    def _from_pem(
-        cls, private_pem: bytes, secret: Optional[bytes], public_key: SSlibKey
-    ):
-        """Helper factory to create CryptoSigner from private PEM."""
-        private_key = load_pem_private_key(private_pem, secret)
-
-        if public_key.keytype == "rsa":
-            return _RSASigner(public_key, cast(RSAPrivateKey, private_key))
-
-        if public_key.keytype == "ecdsa":
-            return _ECDSASigner(
-                public_key, cast(EllipticCurvePrivateKey, private_key)
-            )
-
-        if public_key.keytype == "ed25519":
-            return _Ed25519Signer(
-                public_key, cast(Ed25519PrivateKey, private_key)
-            )
-
-        raise ValueError(f"unsupported keytype: {public_key.keytype}")
+        return CryptoSigner(private_key, public_key)
 
     @classmethod
     def from_priv_key_uri(
@@ -167,7 +254,8 @@ class CryptoSigner(Signer, metaclass=ABCMeta):
         with open(uri.path, "rb") as f:
             private_pem = f.read()
 
-        return cls._from_pem(private_pem, secret, public_key)
+        private_key = load_pem_private_key(private_pem, secret)
+        return CryptoSigner(private_key, public_key)
 
     @staticmethod
     def generate_ed25519(
@@ -191,7 +279,7 @@ class CryptoSigner(Signer, metaclass=ABCMeta):
         public_key = SSlibKey._from_crypto_public_key(  # pylint: disable=protected-access
             private_key.public_key(), keyid, "ed25519"
         )
-        return _Ed25519Signer(public_key, private_key)
+        return CryptoSigner(private_key, public_key)
 
     @staticmethod
     def generate_rsa(
@@ -222,7 +310,7 @@ class CryptoSigner(Signer, metaclass=ABCMeta):
         public_key = SSlibKey._from_crypto_public_key(  # pylint: disable=protected-access
             private_key.public_key(), keyid, scheme
         )
-        return _RSASigner(public_key, private_key)
+        return CryptoSigner(private_key, public_key)
 
     @staticmethod
     def generate_ecdsa(
@@ -246,95 +334,8 @@ class CryptoSigner(Signer, metaclass=ABCMeta):
         public_key = SSlibKey._from_crypto_public_key(  # pylint: disable=protected-access
             private_key.public_key(), keyid, "ecdsa-sha2-nistp256"
         )
-        return _ECDSASigner(public_key, private_key)
-
-
-class _RSASigner(CryptoSigner):
-    """Internal pyca/cryptography rsa signer implementation"""
-
-    def __init__(self, public_key: SSlibKey, private_key: "RSAPrivateKey"):
-        if public_key.scheme not in [
-            "rsassa-pss-sha224",
-            "rsassa-pss-sha256",
-            "rsassa-pss-sha384",
-            "rsassa-pss-sha512",
-            "rsa-pkcs1v15-sha224",
-            "rsa-pkcs1v15-sha256",
-            "rsa-pkcs1v15-sha384",
-            "rsa-pkcs1v15-sha512",
-        ]:
-            raise ValueError(f"unsupported scheme {public_key.scheme}")
-
-        super().__init__(public_key)
-        self._private_key = private_key
-        padding_name, hash_name = public_key.scheme.split("-")[1:]
-        self._algorithm = self._get_hash_algorithm(hash_name)
-        self._padding = self._get_rsa_padding(padding_name, self._algorithm)
-
-    @staticmethod
-    def _get_hash_algorithm(name: str) -> "HashAlgorithm":
-        """Helper to return hash algorithm for name."""
-        algorithm: HashAlgorithm
-        if name == "sha224":
-            algorithm = SHA224()
-        if name == "sha256":
-            algorithm = SHA256()
-        if name == "sha384":
-            algorithm = SHA384()
-        if name == "sha512":
-            algorithm = SHA512()
-
-        return algorithm
-
-    @staticmethod
-    def _get_rsa_padding(
-        name: str, hash_algorithm: "HashAlgorithm"
-    ) -> "AsymmetricPadding":
-        """Helper to return rsa signature padding for name."""
-        padding: AsymmetricPadding
-        if name == "pss":
-            padding = PSS(
-                mgf=MGF1(hash_algorithm), salt_length=PSS.DIGEST_LENGTH
-            )
-
-        if name == "pkcs1v15":
-            padding = PKCS1v15()
-
-        return padding
+        return CryptoSigner(private_key, public_key)
 
     def sign(self, payload: bytes) -> Signature:
-        sig = self._private_key.sign(payload, self._padding, self._algorithm)
-        return Signature(self.public_key.keyid, sig.hex())
-
-
-class _ECDSASigner(CryptoSigner):
-    """Internal pyca/cryptography ecdsa signer implementation"""
-
-    def __init__(
-        self, public_key: SSlibKey, private_key: "EllipticCurvePrivateKey"
-    ):
-        if public_key.scheme != "ecdsa-sha2-nistp256":
-            raise ValueError(f"unsupported scheme {public_key.scheme}")
-
-        super().__init__(public_key)
-        self._private_key = private_key
-        self._signature_algorithm = ECDSA(SHA256())
-
-    def sign(self, payload: bytes) -> Signature:
-        sig = self._private_key.sign(payload, self._signature_algorithm)
-        return Signature(self.public_key.keyid, sig.hex())
-
-
-class _Ed25519Signer(CryptoSigner):
-    """Internal pyca/cryptography ecdsa signer implementation"""
-
-    def __init__(self, public_key: SSlibKey, private_key: "Ed25519PrivateKey"):
-        if public_key.scheme != "ed25519":
-            raise ValueError(f"unsupported scheme {public_key.scheme}")
-
-        super().__init__(public_key)
-        self._private_key = private_key
-
-    def sign(self, payload: bytes) -> Signature:
-        sig = self._private_key.sign(payload)
+        sig = self._private_key.sign(payload, *astuple(self._sign_args))  # type: ignore
         return Signature(self.public_key.keyid, sig.hex())
