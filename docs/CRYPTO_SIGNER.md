@@ -82,13 +82,17 @@ os.environ.update({
 ```python
 import os
 from securesystemslib.signer import SSlibKey, Signer, CryptoSigner, SIGNER_FOR_URI_SCHEME
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
+
 
 # NOTE: Registration becomes obsolete once CryptoSigner is the default file signer
 SIGNER_FOR_URI_SCHEME.update({CryptoSigner.FILE_URI_SCHEME: CryptoSigner})
 
 # Read signer details
 uri = os.environ["SIGNER_URI"]
-public_key = SSlibKey.from_pem(os.environ["SIGNER_PUBLIC"].encode())
+public_key = SSlibKey.from_crypto(
+    load_pem_public_key(os.environ["SIGNER_PUBLIC"].encode())
+)
 secrets_handler = lambda sec: os.environ["SIGNER_SECRET"]
 
 # Load and sign

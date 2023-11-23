@@ -7,6 +7,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
+
 from docs.migrate_key import main as migrate_key_cli
 from securesystemslib.exceptions import UnverifiedSignatureError
 from securesystemslib.interface import (
@@ -53,11 +55,16 @@ class TestMigrateKey(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.new_keys)
 
+    def _from_file(self, algo):
+        with open(self.new_keys / f"{algo}_public", "rb") as f:
+            pem = f.read()
+        return load_pem_public_key(pem)
+
     def test_migrated_keys(self):
         for algo in ["rsa", "ecdsa", "ed25519"]:
             # Load public key
-            with open(self.new_keys / f"{algo}_public", "rb") as f:
-                public_key = SSlibKey.from_pem(f.read())
+            crypto_key = self._from_file(algo)
+            public_key = SSlibKey.from_crypto(crypto_key)
 
             # Load unencrypted private key
             path = self.new_keys / f"{algo}_private_unencrypted"
@@ -109,12 +116,12 @@ class TestMigrateKey(unittest.TestCase):
             signer = SSlibSigner(private_key)
 
             # Load new public key
-            with open(self.new_keys / f"{algo}_public", "rb") as f:
-                # NOTE: The new auto-keyid would differ from the old keyid.
-                # Set it explicitly, to verify signatures with old keyid below
-                public_key = SSlibKey.from_pem(
-                    f.read(), keyid=private_key["keyid"]
-                )
+            crypto_key = self._from_file(algo)
+            # NOTE: The new auto-keyid would differ from the old keyid.
+            # Set it explicitly, to verify signatures with old keyid below
+            public_key = SSlibKey.from_crypto(
+                crypto_key, keyid=private_key["keyid"]
+            )
 
             # Sign and test signature
             sig = signer.sign(b"data")

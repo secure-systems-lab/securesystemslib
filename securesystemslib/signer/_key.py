@@ -324,42 +324,6 @@ class SSlibKey(Key):
 
         return SSlibKey(keyid, keytype, scheme, keyval)
 
-    @classmethod
-    def from_pem(
-        cls,
-        pem: bytes,
-        scheme: Optional[str] = None,
-        keyid: Optional[str] = None,
-    ) -> "SSlibKey":
-        """Load SSlibKey from PEM.
-
-        NOTE: pyca/cryptography is used to decode the PEM payload. The expected
-        (and tested) format is subjectPublicKeyInfo (RFC 5280). Other formats
-        may but are not guaranteed to work.
-
-        Args:
-            pem: Public key PEM data.
-            scheme: SSlibKey signing scheme. Defaults are "rsassa-pss-sha256",
-                "ecdsa-sha2-nistp256", and "ed25519" according to the keytype
-            keyid: Key identifier. If not passed, a default keyid is computed.
-
-        Raises:
-            UnsupportedLibraryError: pyca/cryptography not installed
-            ValueError: Key type not supported
-            ValueError, \
-                    cryptography.exceptions.UnsupportedAlgorithm:
-                pyca/cryptography deserialization failed
-
-        Returns:
-            SSlibKey
-
-        """
-        if CRYPTO_IMPORT_ERROR:
-            raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
-
-        public_key = load_pem_public_key(pem)
-        return cls.from_crypto(public_key, keyid, scheme)
-
     @staticmethod
     def _get_hash_algorithm(name: str) -> "HashAlgorithm":
         """Helper to return hash algorithm for name."""
