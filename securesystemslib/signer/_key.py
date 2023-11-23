@@ -276,21 +276,31 @@ class SSlibKey(Key):
         raise ValueError(f"unsupported 'keytype' {keytype}")
 
     @classmethod
-    def _from_crypto_public_key(
+    def from_crypto(
         cls,
         public_key: "PublicKeyTypes",
-        keyid: Optional[str],
-        scheme: Optional[str],
+        keyid: Optional[str] = None,
+        scheme: Optional[str] = None,
     ) -> "SSlibKey":
-        """Helper to create SSlibKey from pyca/cryptography public key.
+        """Create SSlibKey from pyca/cryptography public key.
 
-        NOTE: keytype (rsa, ecdsa, ed25519) assessed automatically. Defaults
-        exist for keyid and scheme, if not passed.
+        Args:
+            public_key: pyca/cryptography public key object.
+            keyid: Key identifier. If not passed, a default keyid is computed.
+            scheme: SSlibKey signing scheme. Defaults are "rsassa-pss-sha256",
+                "ecdsa-sha2-nistp256", and "ed25519" according to the keytype
 
-        FIXME: also used in CryptoSigner keygen implementations, which requires
-        protected access. Should we make it public, or refactor and move to
-        an internal utils method?
+        Raises:
+            UnsupportedLibraryError: pyca/cryptography not installed
+            ValueError: Key type not supported
+
+        Returns:
+            SSlibKey
+
         """
+        if CRYPTO_IMPORT_ERROR:
+            raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
+
         keytype = cls._get_keytype_for_crypto_key(public_key)
         if not scheme:
             scheme = cls._get_default_scheme(keytype)
@@ -348,7 +358,7 @@ class SSlibKey(Key):
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
 
         public_key = load_pem_public_key(pem)
-        return cls._from_crypto_public_key(public_key, keyid, scheme)
+        return cls.from_crypto(public_key, keyid, scheme)
 
     @staticmethod
     def _get_hash_algorithm(name: str) -> "HashAlgorithm":

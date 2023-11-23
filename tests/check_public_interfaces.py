@@ -308,6 +308,11 @@ class TestPublicInterfaces(
             securesystemslib.gpg.functions.export_pubkey("f00")
         self.assertEqual(expected_error_msg, str(ctx.exception))
 
+    def test_sslib_key_from_crypto(self):
+        """Assert raise UnsupportedLibraryError on SSlibKey.from_crypto()."""
+        with self.assertRaises(UnsupportedLibraryError):
+            SSlibKey.from_crypto("mock pyca/crypto pubkey")  # type: ignore
+
     def test_sslib_key_from_pem(self):
         """Assert raise UnsupportedLibraryError on SSlibKey.from_pem()."""
         with self.assertRaises(UnsupportedLibraryError):
