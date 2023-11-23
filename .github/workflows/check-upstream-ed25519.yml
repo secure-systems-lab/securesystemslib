@@ -31,7 +31,7 @@ jobs:
           console.log("ed25519 upstream main has changed!")
           console.log("${{ steps.test_ed25519.outputs.output }}")
           const repo = context.repo.owner + "/" + context.repo.repo
-          const issues = await github.search.issuesAndPullRequests({
+          const issues = await github.rest.search.issuesAndPullRequests({
             q: "ed25519+upstream+has+new+commits+in:title+state:open+type:issue+repo:" + repo,
           })
 
@@ -39,7 +39,7 @@ jobs:
             console.log("Issue is already open, not creating.")
           } else {
             console.log("Creating a new issue...")
-            await github.issues.create({
+            await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: "ed25519 upstream has new commits",
