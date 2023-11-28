@@ -131,9 +131,7 @@ class CryptoSigner(Signer):
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
 
         if public_key is None:
-            public_key = SSlibKey._from_crypto_public_key(
-                private_key.public_key(), None, None
-            )
+            public_key = SSlibKey.from_crypto(private_key.public_key())
 
         self._private_key: PrivateKeyTypes
         self._sign_args: Union[_RSASignArgs, _ECDSASignArgs, _NoSignArgs]
@@ -276,7 +274,7 @@ class CryptoSigner(Signer):
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
 
         private_key = Ed25519PrivateKey.generate()
-        public_key = SSlibKey._from_crypto_public_key(  # pylint: disable=protected-access
+        public_key = SSlibKey.from_crypto(
             private_key.public_key(), keyid, "ed25519"
         )
         return CryptoSigner(private_key, public_key)
@@ -307,7 +305,7 @@ class CryptoSigner(Signer):
             public_exponent=65537,
             key_size=size,
         )
-        public_key = SSlibKey._from_crypto_public_key(  # pylint: disable=protected-access
+        public_key = SSlibKey.from_crypto(
             private_key.public_key(), keyid, scheme
         )
         return CryptoSigner(private_key, public_key)
@@ -331,7 +329,7 @@ class CryptoSigner(Signer):
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
 
         private_key = generate_ec_private_key(SECP256R1())
-        public_key = SSlibKey._from_crypto_public_key(  # pylint: disable=protected-access
+        public_key = SSlibKey.from_crypto(
             private_key.public_key(), keyid, "ecdsa-sha2-nistp256"
         )
         return CryptoSigner(private_key, public_key)

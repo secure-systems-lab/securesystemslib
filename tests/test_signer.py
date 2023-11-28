@@ -8,7 +8,10 @@ import unittest
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.hazmat.primitives.serialization import (
+    load_pem_private_key,
+    load_pem_public_key,
+)
 
 import securesystemslib.keys as KEYS
 from securesystemslib.exceptions import (
@@ -289,8 +292,8 @@ class TestKey(unittest.TestCase):
 class TestSSlibKey(unittest.TestCase):
     """SSlibKey tests."""
 
-    def test_from_pem(self):
-        """Test load PEM/subjectPublicKeyInfo for each SSlibKey keytype"""
+    def test_from_crypto(self):
+        """Test load pyca/cryptography public key for each SSlibKey keytype"""
         test_data = [
             (
                 "rsa",
@@ -312,19 +315,21 @@ class TestSSlibKey(unittest.TestCase):
         def _from_file(path):
             with open(path, "rb") as f:
                 pem = f.read()
-            return pem
+
+            crypto_key = load_pem_public_key(pem)
+            return crypto_key
 
         for keytype, default_scheme, default_keyid in test_data:
-            pem = _from_file(PEMS_DIR / f"{keytype}_public.pem")
-            key = SSlibKey.from_pem(pem)
+            crypto_key = _from_file(PEMS_DIR / f"{keytype}_public.pem")
+            key = SSlibKey.from_crypto(crypto_key)
             self.assertEqual(key.keytype, keytype)
             self.assertEqual(key.scheme, default_scheme)
             self.assertEqual(key.keyid, default_keyid)
 
         # Test with non-default scheme/keyid
-        pem = _from_file(PEMS_DIR / "rsa_public.pem")
-        key = SSlibKey.from_pem(
-            pem,
+        crypto_key = _from_file(PEMS_DIR / "rsa_public.pem")
+        key = SSlibKey.from_crypto(
+            crypto_key,
             scheme="rsa-pkcs1v15-sha224",
             keyid="abcdef",
         )

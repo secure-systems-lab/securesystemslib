@@ -276,21 +276,31 @@ class SSlibKey(Key):
         raise ValueError(f"unsupported 'keytype' {keytype}")
 
     @classmethod
-    def _from_crypto_public_key(
+    def from_crypto(
         cls,
         public_key: "PublicKeyTypes",
-        keyid: Optional[str],
-        scheme: Optional[str],
+        keyid: Optional[str] = None,
+        scheme: Optional[str] = None,
     ) -> "SSlibKey":
-        """Helper to create SSlibKey from pyca/cryptography public key.
+        """Create SSlibKey from pyca/cryptography public key.
 
-        NOTE: keytype (rsa, ecdsa, ed25519) assessed automatically. Defaults
-        exist for keyid and scheme, if not passed.
+        Args:
+            public_key: pyca/cryptography public key object.
+            keyid: Key identifier. If not passed, a default keyid is computed.
+            scheme: SSlibKey signing scheme. Defaults are "rsassa-pss-sha256",
+                "ecdsa-sha2-nistp256", and "ed25519" according to the keytype
 
-        FIXME: also used in CryptoSigner keygen implementations, which requires
-        protected access. Should we make it public, or refactor and move to
-        an internal utils method?
+        Raises:
+            UnsupportedLibraryError: pyca/cryptography not installed
+            ValueError: Key type not supported
+
+        Returns:
+            SSlibKey
+
         """
+        if CRYPTO_IMPORT_ERROR:
+            raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
+
         keytype = cls._get_keytype_for_crypto_key(public_key)
         if not scheme:
             scheme = cls._get_default_scheme(keytype)
@@ -313,42 +323,6 @@ class SSlibKey(Key):
             keyid = compute_default_keyid(keytype, scheme, keyval)
 
         return SSlibKey(keyid, keytype, scheme, keyval)
-
-    @classmethod
-    def from_pem(
-        cls,
-        pem: bytes,
-        scheme: Optional[str] = None,
-        keyid: Optional[str] = None,
-    ) -> "SSlibKey":
-        """Load SSlibKey from PEM.
-
-        NOTE: pyca/cryptography is used to decode the PEM payload. The expected
-        (and tested) format is subjectPublicKeyInfo (RFC 5280). Other formats
-        may but are not guaranteed to work.
-
-        Args:
-            pem: Public key PEM data.
-            scheme: SSlibKey signing scheme. Defaults are "rsassa-pss-sha256",
-                "ecdsa-sha2-nistp256", and "ed25519" according to the keytype
-            keyid: Key identifier. If not passed, a default keyid is computed.
-
-        Raises:
-            UnsupportedLibraryError: pyca/cryptography not installed
-            ValueError: Key type not supported
-            ValueError, \
-                    cryptography.exceptions.UnsupportedAlgorithm:
-                pyca/cryptography deserialization failed
-
-        Returns:
-            SSlibKey
-
-        """
-        if CRYPTO_IMPORT_ERROR:
-            raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
-
-        public_key = load_pem_public_key(pem)
-        return cls._from_crypto_public_key(public_key, keyid, scheme)
 
     @staticmethod
     def _get_hash_algorithm(name: str) -> "HashAlgorithm":
