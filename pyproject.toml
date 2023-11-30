@@ -1,5 +1,6 @@
 [build-system]
-requires = ["hatchling"]
+# Version needs manual updates (dependabot/dependabot-core#8465)
+requires = ["hatchling==1.18.0"]
 build-backend = "hatchling.build"
 
 [project]
