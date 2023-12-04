@@ -1,5 +1,16 @@
 # Changelog
 
+## securesystemslib v0.31.0
+
+### Added
+* CryptoSigner: create from `cryptography` private key with new constructor (#675)
+* SSlibKey: create from `cryptography` public key with new `from_crypto` method (#678)
+* Release: auto-release with PyPI Trusted Publishing (#683)
+* Docs to migrate legacy key files (#658)
+
+### Removed
+* Removed `SSlibKey.from_pem` factory method in favor of `from_crypto` (#678)
+
 ## securesystemslib v0.30.0
 
 This release contains improved Sigstore support.
