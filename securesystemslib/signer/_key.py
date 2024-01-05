@@ -238,11 +238,9 @@ class SSlibKey(Key):
     def to_dict(self) -> Dict[str, Any]:
         return self._to_dict()
 
-    def _from_pem(self) -> "PublicKeyTypes":
+    def _crypto_key(self) -> "PublicKeyTypes":
         """Helper to load public key instance from PEM-formatted keyval.
 
-        # FIXME: Sounds like it's an SSlibKey factory, but isn't. Should think
-        of a better name or refactor _verify!
         """
         public_bytes = self.keyval["public"].encode("utf-8")
         return load_pem_public_key(public_bytes)
@@ -376,7 +374,7 @@ class SSlibKey(Key):
                 "rsa-pkcs1v15-sha384",
                 "rsa-pkcs1v15-sha512",
             ]:
-                key = cast(RSAPublicKey, self._from_pem())
+                key = cast(RSAPublicKey, self._crypto_key())
                 padding_name, hash_name = self.scheme.split("-")[1:]
                 hash_algorithm = self._get_hash_algorithm(hash_name)
                 padding = self._get_rsa_padding(padding_name, hash_algorithm)
@@ -386,7 +384,7 @@ class SSlibKey(Key):
                 "ecdsa-sha2-nistp256",
                 "ecdsa-sha2-nistp384",
             ]:
-                key = cast(EllipticCurvePublicKey, self._from_pem())
+                key = cast(EllipticCurvePublicKey, self._crypto_key())
                 hash_name = f"sha{self.scheme[-3:]}"
                 hash_algorithm = self._get_hash_algorithm(hash_name)
                 signature_algorithm = ECDSA(hash_algorithm)
