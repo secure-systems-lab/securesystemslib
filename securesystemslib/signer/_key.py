@@ -239,9 +239,7 @@ class SSlibKey(Key):
         return self._to_dict()
 
     def _crypto_key(self) -> "PublicKeyTypes":
-        """Helper to get a `cryptography` public key for this SSlibKey.
-
-        """
+        """Helper to get a `cryptography` public key for this SSlibKey."""
         public_bytes = self.keyval["public"].encode("utf-8")
         return load_pem_public_key(public_bytes)
 
