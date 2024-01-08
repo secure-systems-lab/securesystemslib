@@ -11,6 +11,9 @@ jobs:
   check-ed25519-upstream:
     name: Open an issue if upstream ed25519 has new commits
     runs-on: ubuntu-latest
+    permissions:
+      issues: 'write' # for filing an issue on failure
+
     steps:
     - name: Check out repository
       uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
