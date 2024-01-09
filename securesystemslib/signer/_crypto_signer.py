@@ -68,6 +68,9 @@ class _ECDSASignArgs:
 class _NoSignArgs:
     pass
 
+# for backwards compat: use when spec-deprecated keytype ecdsa-sha2-nistp256
+# should be accepted in addition to "ecdsa"
+_ECDSA_KEYTYPES = ["ecdsa", "ecdsa-sha2-nistp256"]
 
 def _get_hash_algorithm(name: str) -> "HashAlgorithm":
     """Helper to return hash algorithm for name."""
@@ -156,7 +159,7 @@ class CryptoSigner(Signer):
             self._private_key = private_key
 
         elif (
-            public_key.keytype == "ecdsa"
+            public_key.keytype in _ECDSA_KEYTYPES
             and public_key.scheme == "ecdsa-sha2-nistp256"
         ):
             if not isinstance(private_key, EllipticCurvePrivateKey):
@@ -189,7 +192,7 @@ class CryptoSigner(Signer):
         public_key = SSlibKey.from_securesystemslib_key(key_dict)
 
         private_key: PrivateKeyTypes
-        if public_key.keytype in ["rsa", "ecdsa"]:
+        if public_key.keytype in ["rsa"] + _ECDSA_KEYTYPES:
             private_key = load_pem_private_key(private.encode(), password=None)
 
         elif public_key.keytype == "ed25519":

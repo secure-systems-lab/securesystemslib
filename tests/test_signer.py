@@ -781,6 +781,11 @@ class TestCryptoSigner(unittest.TestCase):
                 "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcLYSZyFGeKdWNt5dWFbnv6N9NyHC\noUNLcG6GZIxLwN8Q8MUdHdOOxGkDnyBRSJpIZ/r/oDECSTwfCYhdogweLA==\n-----END PUBLIC KEY-----\n",
             ),
             (
+                "ecdsa-sha2-nistp256", # keytype deprecated in TUF spec, tested for backwards compat with older metadata
+                "ecdsa-sha2-nistp256",
+                "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcLYSZyFGeKdWNt5dWFbnv6N9NyHC\noUNLcG6GZIxLwN8Q8MUdHdOOxGkDnyBRSJpIZ/r/oDECSTwfCYhdogweLA==\n-----END PUBLIC KEY-----\n",
+            ),
+            (
                 "ed25519",
                 "ed25519",
                 "4f66dabebcf30628963786001984c0b75c175cdcf3bc4855933a2628f0cd0a0f",
@@ -791,16 +796,22 @@ class TestCryptoSigner(unittest.TestCase):
         SIGNER_FOR_URI_SCHEME[CryptoSigner.FILE_URI_SCHEME] = CryptoSigner
 
         for keytype, scheme, public_key_value in test_data:
+            if keytype == "ecdsa-sha2-nistp256":
+                # special case for keytype that is deprecated in spec
+                keytype_for_filename = "ecdsa"
+            else:
+                keytype_for_filename = keytype
             for encrypted in [True, False]:
+
                 if encrypted:
-                    file_name = f"{keytype}_private_encrypted.pem"
+                    file_name = f"{keytype_for_filename}_private_encrypted.pem"
                     parameter = "true"
 
                     def handler(_):
                         return "hunter2"
 
                 else:
-                    file_name = f"{keytype}_private.pem"
+                    file_name = f"{keytype_for_filename}_private.pem"
                     parameter = "false"
                     handler = None
 
