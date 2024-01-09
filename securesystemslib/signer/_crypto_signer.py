@@ -68,9 +68,11 @@ class _ECDSASignArgs:
 class _NoSignArgs:
     pass
 
+
 # for backwards compat: use when spec-deprecated keytype ecdsa-sha2-nistp256
 # should be accepted in addition to "ecdsa"
 _ECDSA_KEYTYPES = ["ecdsa", "ecdsa-sha2-nistp256"]
+
 
 def _get_hash_algorithm(name: str) -> "HashAlgorithm":
     """Helper to return hash algorithm for name."""

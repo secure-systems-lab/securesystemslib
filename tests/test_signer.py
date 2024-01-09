@@ -774,48 +774,44 @@ class TestCryptoSigner(unittest.TestCase):
                 "rsa",
                 "rsassa-pss-sha256",
                 "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwhX6rioiL/cX5Ys32InF\nU52H8tL14QeX0tacZdb+AwcH6nIh97h3RSHvGD7Xy6uaMRmGldAnSVYwJHqoJ5j2\nynVzU/RFpr+6n8Ps0QFg5GmlEqZboFjLbS0bsRQcXXnqJNsVLEPT3ULvu1rFRbWz\nAMFjNtNNk5W/u0GEzXn3D03jIdhD8IKAdrTRf0VMD9TRCXLdMmEU2vkf1NVUnOTb\n/dRX5QA8TtBylVnouZknbavQ0J/pPlHLfxUgsKzodwDlJmbPG9BWwXqQCmP0DgOG\nNIZ1X281MOBaGbkNVEuntNjCSaQxQjfALVVU5NAfal2cwMINtqaoc7Wa+TWvpFEI\nWwIDAQAB\n-----END PUBLIC KEY-----\n",
+                "rsa_private.pem",
             ),
             (
                 "ecdsa",
                 "ecdsa-sha2-nistp256",
                 "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcLYSZyFGeKdWNt5dWFbnv6N9NyHC\noUNLcG6GZIxLwN8Q8MUdHdOOxGkDnyBRSJpIZ/r/oDECSTwfCYhdogweLA==\n-----END PUBLIC KEY-----\n",
+                "ecdsa_private.pem",
             ),
             (
-                "ecdsa-sha2-nistp256", # keytype deprecated in TUF spec, tested for backwards compat with older metadata
+                "ecdsa-sha2-nistp256",  # keytype deprecated in TUF spec, tested for backwards compat with older metadata
                 "ecdsa-sha2-nistp256",
                 "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcLYSZyFGeKdWNt5dWFbnv6N9NyHC\noUNLcG6GZIxLwN8Q8MUdHdOOxGkDnyBRSJpIZ/r/oDECSTwfCYhdogweLA==\n-----END PUBLIC KEY-----\n",
+                "ecdsa_private.pem",
             ),
             (
                 "ed25519",
                 "ed25519",
                 "4f66dabebcf30628963786001984c0b75c175cdcf3bc4855933a2628f0cd0a0f",
+                "ed25519_private.pem",
             ),
         ]
 
         signer_backup = SIGNER_FOR_URI_SCHEME[CryptoSigner.FILE_URI_SCHEME]
         SIGNER_FOR_URI_SCHEME[CryptoSigner.FILE_URI_SCHEME] = CryptoSigner
 
-        for keytype, scheme, public_key_value in test_data:
-            if keytype == "ecdsa-sha2-nistp256":
-                # special case for keytype that is deprecated in spec
-                keytype_for_filename = "ecdsa"
-            else:
-                keytype_for_filename = keytype
+        for keytype, scheme, public_key_value, fname in test_data:
             for encrypted in [True, False]:
-
                 if encrypted:
-                    file_name = f"{keytype_for_filename}_private_encrypted.pem"
-                    parameter = "true"
+                    priv_fname = fname.replace(".pem", "_encrypted.pem")
+                    uri = f"file:{PEMS_DIR / priv_fname}?encrypted=true"
 
                     def handler(_):
                         return "hunter2"
 
                 else:
-                    file_name = f"{keytype_for_filename}_private.pem"
-                    parameter = "false"
+                    uri = f"file:{PEMS_DIR / fname}?encrypted=false"
                     handler = None
 
-                uri = f"file:{PEMS_DIR / file_name}?encrypted={parameter}"
                 public_key = SSlibKey(
                     "abcdefg", keytype, scheme, {"public": public_key_value}
                 )
