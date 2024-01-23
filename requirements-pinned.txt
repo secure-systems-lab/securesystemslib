@@ -11,7 +11,7 @@ cffi==1.16.0
     #   cryptography
     #   pynacl
     #   pyspx
-cryptography==41.0.7
+cryptography==42.0.0
     # via -r requirements.txt
 pycparser==2.21
     # via cffi
