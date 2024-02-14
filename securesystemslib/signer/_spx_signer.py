@@ -1,6 +1,7 @@
 """Signer implementation for project SPHINCS+ post-quantum signature support.
 
 """
+
 import logging
 import os
 from typing import Any, Dict, Optional, Tuple

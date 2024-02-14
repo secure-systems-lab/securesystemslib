@@ -14,6 +14,7 @@
 <Purpose>
   RSA-specific handling routines for signature verification and key parsing
 """
+
 import binascii
 
 CRYPTO = True
@@ -202,10 +203,10 @@ def verify_signature(signature_object, pubkey_info, content, hash_algorithm_id):
     signature_length = len(signature_object["signature"])
     if pubkey_length != signature_length:  # pragma: no cover
         zero_pad = "0" * (pubkey_length - signature_length)
-        signature_object[
-            "signature"
-        ] = "{}{}".format(  # pylint: disable=consider-using-f-string
-            zero_pad, signature_object["signature"]
+        signature_object["signature"] = (
+            "{}{}".format(  # pylint: disable=consider-using-f-string
+                zero_pad, signature_object["signature"]
+            )
         )
 
     digest = gpg_util.hash_object(

@@ -15,6 +15,7 @@
   publicly-usable functions for exporting public-keys, signing data and
   verifying signatures.
 """
+
 import logging
 import subprocess  # nosec
 import time
