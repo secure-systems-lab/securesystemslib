@@ -1,4 +1,5 @@
 """Key interface and the default implementations"""
+
 import logging
 from abc import ABCMeta, abstractmethod
 from typing import Any, Dict, Optional, Tuple, Type, cast

@@ -466,9 +466,9 @@ class TestCommon(unittest.TestCase):
 
         # Tamper with primary key to trigger signature verification error
         invalid_sig_bundle = deepcopy(self.raw_key_bundle)
-        invalid_sig_bundle[PACKET_TYPE_PRIMARY_KEY][
-            "packet"
-        ] = invalid_sig_bundle[PACKET_TYPE_PRIMARY_KEY]["packet"][:-1]
+        invalid_sig_bundle[PACKET_TYPE_PRIMARY_KEY]["packet"] = (
+            invalid_sig_bundle[PACKET_TYPE_PRIMARY_KEY]["packet"][:-1]
+        )
 
         test_data = [
             (bad_subkey_bundle, "Pubkey packet version '3' not supported"),

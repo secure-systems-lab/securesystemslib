@@ -1,5 +1,6 @@
 """Test HSMSigner
 """
+
 import os
 import shutil
 import tempfile

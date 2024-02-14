@@ -4,6 +4,7 @@ Uses PKCS#11/Cryptoki API to create signatures with HSMs (e.g. YubiKey) and to e
 the related public keys.
 
 """
+
 import binascii
 from contextlib import contextmanager
 from typing import Dict, Iterator, List, Optional, Tuple

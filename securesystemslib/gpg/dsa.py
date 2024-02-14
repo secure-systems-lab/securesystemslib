@@ -14,6 +14,7 @@
 <Purpose>
   DSA-specific handling routines for signature verification and key parsing
 """
+
 import binascii
 
 CRYPTO = True

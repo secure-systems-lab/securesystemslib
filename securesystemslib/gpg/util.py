@@ -14,6 +14,7 @@
 <Purpose>
   general-purpose utilities for binary data handling and pgp data parsing
 """
+
 import binascii
 import logging
 import struct

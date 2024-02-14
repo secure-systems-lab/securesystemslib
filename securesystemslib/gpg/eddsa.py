@@ -16,6 +16,7 @@
   parsing and verification.
 
 """
+
 import binascii
 
 from securesystemslib import exceptions, formats

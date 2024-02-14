@@ -15,6 +15,7 @@
   aggregates all the constant definitions and lookup structures for signature
   handling
 """
+
 import functools
 import logging
 import os

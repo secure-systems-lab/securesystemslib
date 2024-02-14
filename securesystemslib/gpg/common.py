@@ -17,6 +17,7 @@
   call them.
 
 """
+
 import binascii
 import collections
 import logging
