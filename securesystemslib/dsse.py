@@ -17,7 +17,7 @@ class Envelope:
     Attributes:
         payload: Arbitrary byte sequence of serialized body.
         payload_type: string that identifies how to interpret payload.
-        signatures: list of Signature.
+        signatures: dict of Signature key id and Signatures.
 
     """
 
@@ -26,7 +26,7 @@ class Envelope:
     ):
         self.payload = payload
         self.payload_type = payload_type
-        self.signatures = signatures
+        self.signatures = {sig.keyid: sig for sig in signatures}
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Envelope):
@@ -69,7 +69,7 @@ class Envelope:
         """Returns the JSON-serializable dictionary representation of self."""
 
         signatures = []
-        for signature in self.signatures:
+        for signature in list(self.signatures.values()):
             sig_dict = signature.to_dict()
             sig_dict["sig"] = b64enc(bytes.fromhex(sig_dict["sig"]))
             signatures.append(sig_dict)
@@ -101,7 +101,7 @@ class Envelope:
         """
 
         signature = signer.sign(self.pae())
-        self.signatures.append(signature)
+        self.signatures[signature.keyid] = signature
 
         return signature
 
@@ -140,7 +140,7 @@ class Envelope:
         if len(keys) < threshold:
             raise ValueError("Number of keys can't be less than threshold")
 
-        for signature in self.signatures:
+        for signature in list(self.signatures.values()):
             for key in keys:
                 # If Signature keyid doesn't match with Key, skip.
                 if not key.keyid == signature.keyid:

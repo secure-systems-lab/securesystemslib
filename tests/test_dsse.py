@@ -38,7 +38,7 @@ class TestEnvelope(unittest.TestCase):
 
         # create envelope object from its dict.
         envelope_obj = Envelope.from_dict(envelope_dict)
-        for signature in envelope_obj.signatures:
+        for signature in list(envelope_obj.signatures.values()):
             self.assertIsInstance(signature, Signature)
 
         # Assert envelope dict created by to_dict will be equal.
@@ -105,7 +105,7 @@ class TestEnvelope(unittest.TestCase):
 
         # Check for signatures of Envelope.
         self.assertEqual(len(self.key_dicts), len(envelope_obj.signatures))
-        for signature in envelope_obj.signatures:
+        for signature in list(envelope_obj.signatures.values()):
             self.assertIsInstance(signature, Signature)
 
         # Test for invalid threshold value for keys_list.
