@@ -40,14 +40,8 @@ pip install securesystemslib[hsm]
 - Other issues and requests: [*Open a new
   issue*](https://github.com/secure-systems-lab/securesystemslib/issues/new)
 
-## Testing
-`tox` is used for testing. It can be installed via
-[pip](https://tox.wiki/en/4.9.0/installation.html#via-pip) and executed from the
-command line in the root of the repository.
-
-```bash
-tox
-```
+## Contribute
+See [Instructions for contributors](docs/CONTRIBUTE.md).
 
 ## Legacy key migration
 
