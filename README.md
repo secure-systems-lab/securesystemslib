@@ -36,7 +36,7 @@ pip install securesystemslib[hsm]
 - Questions and discussions:
   [`#securesystemslib-python`](https://cloud-native.slack.com/archives/C05PF3GA7AL)
   on [CNCF Slack](https://communityinviter.com/apps/cloud-native/cncf)
-- Security issues: [*Report a vulnerability*](https://github.com/secure-systems-lab/securesystemslib/security/advisories/new)
+- Security issues: see [Security policy](docs/SECURITY.md)
 - Other issues and requests: [*Open a new
   issue*](https://github.com/secure-systems-lab/securesystemslib/issues/new)
 
