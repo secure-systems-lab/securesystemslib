@@ -41,7 +41,7 @@ pip install securesystemslib[hsm]
   issue*](https://github.com/secure-systems-lab/securesystemslib/issues/new)
 
 ## Contribute
-See [Instructions for contributors](docs/CONTRIBUTE.md).
+See [Instructions for contributors](docs/CONTRIBUTING.md).
 
 ## Legacy key migration
 
