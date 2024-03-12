@@ -22,11 +22,14 @@ class Envelope:
     """
 
     def __init__(
-        self, payload: bytes, payload_type: str, signatures: List[Signature]
+        self, 
+        payload: bytes, 
+        payload_type: str, 
+        signatures: Dict[str, Signature]
     ):
         self.payload = payload
         self.payload_type = payload_type
-        self.signatures = {sig.keyid: sig for sig in signatures}
+        self.signatures = signatures
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Envelope):
@@ -58,10 +61,15 @@ class Envelope:
         payload = b64dec(data["payload"])
         payload_type = data["payloadType"]
 
-        signatures = []
+        signatures = {}
         for signature in data["signatures"]:
             signature["sig"] = b64dec(signature["sig"]).hex()
-            signatures.append(Signature.from_dict(signature))
+            signature = Signature.from_dict(signature)
+            if signature.keyid in signatures:
+                raise ValueError(
+                    f"Multiple signatures found for keyid {signature.keyid}"
+                )
+            signatures[signature.keyid] = signature
 
         return cls(payload, payload_type, signatures)
 
