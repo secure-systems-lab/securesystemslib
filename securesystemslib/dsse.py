@@ -22,10 +22,10 @@ class Envelope:
     """
 
     def __init__(
-        self, 
-        payload: bytes, 
-        payload_type: str, 
-        signatures: Dict[str, Signature]
+        self,
+        payload: bytes,
+        payload_type: str,
+        signatures: Dict[str, Signature],
     ):
         self.payload = payload
         self.payload_type = payload_type
