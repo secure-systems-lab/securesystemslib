@@ -31,6 +31,20 @@ class TestEnvelope(unittest.TestCase):
         }
         cls.pae = b"DSSEv1 29 http://example.com/HelloWorld 11 hello world"
 
+    def test_envelope_from_dict_with_duplicate_signatures(self):
+        """Test envelope from_dict generates error with duplicate signature keyids"""
+        envelope_dict = copy.deepcopy(self.envelope_dict)
+
+        # add duplicate keyid.
+        envelope_dict["signatures"].append(copy.deepcopy(self.signature_dict))
+
+        # assert that calling from_dict will raise an error.
+        expected_error_message = f"Multiple signatures found for keyid {self.signature_dict['keyid']}"
+        with self.assertRaises(ValueError) as context:
+            Envelope.from_dict(envelope_dict)
+
+        self.assertEqual(str(context.exception), expected_error_message)
+
     def test_envelope_from_to_dict(self):
         """Test envelope to_dict and from_dict methods."""
 
@@ -38,7 +52,7 @@ class TestEnvelope(unittest.TestCase):
 
         # create envelope object from its dict.
         envelope_obj = Envelope.from_dict(envelope_dict)
-        for signature in list(envelope_obj.signatures.values()):
+        for signature in envelope_obj.signatures.values():
             self.assertIsInstance(signature, Signature)
 
         # Assert envelope dict created by to_dict will be equal.
@@ -105,7 +119,7 @@ class TestEnvelope(unittest.TestCase):
 
         # Check for signatures of Envelope.
         self.assertEqual(len(self.key_dicts), len(envelope_obj.signatures))
-        for signature in list(envelope_obj.signatures.values()):
+        for signature in envelope_obj.signatures.values():
             self.assertIsInstance(signature, Signature)
 
         # Test for invalid threshold value for keys_list.

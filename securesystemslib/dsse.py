@@ -77,7 +77,7 @@ class Envelope:
         """Returns the JSON-serializable dictionary representation of self."""
 
         signatures = []
-        for signature in list(self.signatures.values()):
+        for signature in self.signatures.values():
             sig_dict = signature.to_dict()
             sig_dict["sig"] = b64enc(bytes.fromhex(sig_dict["sig"]))
             signatures.append(sig_dict)
@@ -148,7 +148,7 @@ class Envelope:
         if len(keys) < threshold:
             raise ValueError("Number of keys can't be less than threshold")
 
-        for signature in list(self.signatures.values()):
+        for signature in self.signatures.values():
             for key in keys:
                 # If Signature keyid doesn't match with Key, skip.
                 if not key.keyid == signature.keyid:
