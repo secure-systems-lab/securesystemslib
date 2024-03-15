@@ -9,24 +9,31 @@ cryptographic signatures:
 * ``Signer.sign``
 * ``Key.verify_signature``
 
-These interfaces can be implemented using arbitrary PKI technology. Many
-default implementations are included.
+The interfaces can be implemented using arbitrary asymmetric signing technology.
+The ``Key`` class is also a container class for public key data. The ``Signer``
+class, on the other hand, treats the private key as implementation detail. This
+means that one specific signer may indeed contain the private key, but another
+calls a remote cloud KMS, or a local hardware token for signing.
 
-In addition, the API provides generic *load* methods for signers and public
-keys:
+In addition to sign and verify interface methods, the signer API provides
+generic *load* methods:
 
-* ``Signer.from_priv_key_uri`` - to load a signer from a URI
-* ``Key.from_dict`` - to load a public key from a serialized format
+* ``Signer.from_priv_key_uri`` -  Loads any specific signer from a URI. The
+  specific signer implementation itself is responsible for the URI format and
+  resolution. To become discoverable, signers and their URI schemes are
+  registered in the ``SIGNER_FOR_URI_SCHEME`` lookup table.
 
-These methods allow an application to use the exact same code, in order to load
-any signer or public key, which implements above interface, independently of
-the specific implementation.
+* ``Key.from_dict`` - Loads any specific key from a serialized format. The
+  specific key implementation is responsible public key format and
+  deserialization. To become discoverable, key type and signing scheme --
+  required fields in any public key -- are registered in the
+  ``KEY_FOR_TYPE_AND_SCHEME`` lookup table.
 
-For a signer or public key implementation to become discoverable, it needs
-to be *registered* in the corresponding lookup table:
+An application can use these same methods to uniformly load any signer or public
+key, regardless of the specific implementation. Many signers and keys are
+already included in the signer API. And an application can also create and
+register its own.
 
-* ``SIGNER_FOR_URI_SCHEME``
-* ``KEY_FOR_TYPE_AND_SCHEME``
 
 Usage
 -----
