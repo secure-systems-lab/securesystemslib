@@ -123,8 +123,9 @@ class AWSSigner(Signer):
             raise UnsupportedLibraryError(AWS_IMPORT_ERROR)
 
         try:
-            if local_scheme and local_scheme in cls.aws_signing_algorithms:
-                scheme = local_scheme
+            if local_scheme:
+                if local_scheme not in cls.aws_signing_algorithms:
+                    raise ValueError(f"Unsupported scheme: {local_scheme}")
         except KeyError as e:
             raise ValueError(f"Unsupported scheme: {local_scheme}") from e
 
