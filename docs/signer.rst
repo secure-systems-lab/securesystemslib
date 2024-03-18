@@ -24,7 +24,7 @@ generic *load* methods:
   registered in the ``SIGNER_FOR_URI_SCHEME`` lookup table.
 
 * ``Key.from_dict`` - Loads any specific key from a serialized format. The
-  specific key implementation is responsible public key format and
+  specific key implementation is responsible for the public key format and
   deserialization. To become discoverable, key type and signing scheme --
   required fields in any public key -- are registered in the
   ``KEY_FOR_TYPE_AND_SCHEME`` lookup table.
