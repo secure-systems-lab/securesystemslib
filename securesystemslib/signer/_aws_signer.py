@@ -122,10 +122,6 @@ class AWSSigner(Signer):
         if AWS_IMPORT_ERROR:
             raise UnsupportedLibraryError(AWS_IMPORT_ERROR)
 
-        if local_scheme:
-            if local_scheme not in cls.aws_signing_algorithms:
-                raise ValueError(f"Unsupported scheme: {local_scheme}")
-
         try:
             client = boto3.client("kms")
             request = client.get_public_key(KeyId=aws_key_id)
@@ -139,16 +135,18 @@ class AWSSigner(Signer):
 
         kms_pubkey = serialization.load_der_public_key(request["PublicKey"])
         keytype = cls._get_keytype_from_aws_response(request)
+        aws_scheme = request["SigningAlgorithms"][0]
 
         if not local_scheme:
             if keytype == "ecdsa":
-                aws_scheme = request["SigningAlgorithms"][0]
                 local_scheme = cls._get_ecdsa_scheme(aws_scheme)
             elif keytype == "rsa":
                 local_scheme = "rsassa-pss-sha256"
             else:
                 raise ValueError(f"Unsupported key type: {keytype}")
         else:
+            if local_scheme not in cls.aws_signing_algorithms:
+                raise ValueError(f"Unsupported scheme: {local_scheme}")
             aws_scheme = request["SigningAlgorithms"][0]
             if (
                 keytype == "ecdsa"
