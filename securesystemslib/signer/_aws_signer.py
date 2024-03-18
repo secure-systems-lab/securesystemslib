@@ -143,9 +143,9 @@ class AWSSigner(Signer):
         if not local_scheme:
             if keytype == "ecdsa":
                 aws_scheme = request["SigningAlgorithms"][0]
-                scheme = cls._get_ecdsa_scheme(aws_scheme)
+                local_scheme = cls._get_ecdsa_scheme(aws_scheme)
             elif keytype == "rsa":
-                scheme = "rsassa-pss-sha256"
+                local_scheme = "rsassa-pss-sha256"
             else:
                 raise ValueError(f"Unsupported key type: {keytype}")
 
@@ -155,8 +155,8 @@ class AWSSigner(Signer):
         ).decode("utf-8")
 
         keyval = {"public": public_key_pem}
-        keyid = compute_default_keyid(keytype, scheme, keyval)
-        public_key = SSlibKey(keyid, keytype, scheme, keyval)
+        keyid = compute_default_keyid(keytype, local_scheme, keyval)
+        public_key = SSlibKey(keyid, keytype, local_scheme, keyval)
         return f"{cls.SCHEME}:{aws_key_id}", public_key
 
     @staticmethod
