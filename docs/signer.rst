@@ -3,8 +3,7 @@ Signer API
 
 .. currentmodule:: securesystemslib.signer
 
-At its core the signer API defines abstract interfaces to create and verify
-cryptographic signatures:
+The signer module provides a simple and unified cryptographic signing and signature verification API designed to work consistently regardless of the underlying signing technology. This is achieved with abstract interfaces backed by multiple implementations:  
 
 * ``Signer.sign``
 * ``Key.verify_signature``
