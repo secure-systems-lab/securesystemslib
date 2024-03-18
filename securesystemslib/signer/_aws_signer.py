@@ -122,12 +122,9 @@ class AWSSigner(Signer):
         if AWS_IMPORT_ERROR:
             raise UnsupportedLibraryError(AWS_IMPORT_ERROR)
 
-        try:
-            if local_scheme:
-                if local_scheme not in cls.aws_signing_algorithms:
-                    raise ValueError(f"Unsupported scheme: {local_scheme}")
-        except KeyError as e:
-            raise ValueError(f"Unsupported scheme: {local_scheme}") from e
+        if local_scheme:
+            if local_scheme not in cls.aws_signing_algorithms:
+                raise ValueError(f"Unsupported scheme: {local_scheme}")
 
         try:
             client = boto3.client("kms")
