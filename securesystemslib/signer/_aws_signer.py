@@ -122,9 +122,8 @@ class AWSSigner(Signer):
         if AWS_IMPORT_ERROR:
             raise UnsupportedLibraryError(AWS_IMPORT_ERROR)
 
-        if local_scheme:
-            if local_scheme not in cls.aws_signing_algorithms:
-                raise ValueError(f"Unsupported scheme: {local_scheme}")
+        if local_scheme and local_scheme not in cls.aws_signing_algorithms:
+            raise ValueError(f"Unsupported scheme: {local_scheme}")
 
         try:
             client = boto3.client("kms")
@@ -140,21 +139,6 @@ class AWSSigner(Signer):
         keytype = cls._get_keytype_from_aws_response(request)
         aws_scheme = request["SigningAlgorithms"][0]
 
-        if (
-            keytype == "ecdsa"
-            and cls._get_ecdsa_scheme(aws_scheme) != local_scheme
-        ):
-            raise ValueError(
-                f"The AWS KMS key does not support the scheme: {local_scheme}"
-            )
-        if (
-            keytype == "rsa"
-            and local_scheme not in cls.aws_signing_algorithms.values()
-        ):
-            raise ValueError(
-                f"The AWS KMS key does not support the scheme: {local_scheme}"
-            )
-
         if not local_scheme:
             if keytype == "ecdsa":
                 local_scheme = cls._get_ecdsa_scheme(aws_scheme)
@@ -162,6 +146,21 @@ class AWSSigner(Signer):
                 local_scheme = "rsassa-pss-sha256"
             else:
                 raise ValueError(f"Unsupported key type: {keytype}")
+
+        if keytype == "ecdsa" and local_scheme != cls._get_ecdsa_scheme(
+            aws_scheme
+        ):
+            raise ValueError(
+                f"The AWS KMS key does not support the scheme: {local_scheme}"
+            )
+
+        if (
+            keytype == "rsa"
+            and local_scheme not in cls.aws_signing_algorithms.values()
+        ):
+            raise ValueError(
+                f"The AWS KMS key does not support the scheme: {local_scheme}"
+            )
 
         kms_pubkey = serialization.load_der_public_key(request["PublicKey"])
 
