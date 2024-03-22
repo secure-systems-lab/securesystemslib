@@ -147,21 +147,6 @@ class AWSSigner(Signer):
             else:
                 raise ValueError(f"Unsupported key type: {keytype}")
 
-        if keytype == "ecdsa" and local_scheme != cls._get_ecdsa_scheme(
-            aws_scheme
-        ):
-            raise ValueError(
-                f"The AWS KMS key does not support the scheme: {local_scheme}"
-            )
-
-        if (
-            keytype == "rsa"
-            and local_scheme not in cls.aws_signing_algorithms.values()
-        ):
-            raise ValueError(
-                f"The AWS KMS key does not support the scheme: {local_scheme}"
-            )
-
         kms_pubkey = serialization.load_der_public_key(request["PublicKey"])
 
         public_key_pem = kms_pubkey.public_bytes(
