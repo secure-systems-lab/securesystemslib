@@ -114,7 +114,11 @@ class SpxSigner(Signer):
 
     def __init__(self, private: bytes, public: SpxKey):
         self.private_key = private
-        self.public_key = public
+        self._public_key = public
+
+    @property
+    def public_key(self) -> Key:
+        return self._public_key
 
     @classmethod
     def from_priv_key_uri(

@@ -64,9 +64,13 @@ class AWSSigner(Signer):
 
         self.hash_algorithm = self._get_hash_algorithm(public_key)
         self.aws_key_id = aws_key_id
-        self.public_key = public_key
+        self._public_key = public_key
         self.client = boto3.client("kms")
         self.aws_algo = self._get_aws_signing_algo(self.public_key.scheme)
+
+    @property
+    def public_key(self) -> Key:
+        return self._public_key
 
     @classmethod
     def from_priv_key_uri(

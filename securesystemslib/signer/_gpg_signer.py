@@ -93,7 +93,11 @@ class GPGSigner(Signer):
         homedir: Optional[str] = None,
     ):
         self.homedir = homedir
-        self.public_key = public_key
+        self._public_key = public_key
+
+    @property
+    def public_key(self) -> Key:
+        return self._public_key
 
     @classmethod
     def from_priv_key_uri(

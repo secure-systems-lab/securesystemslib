@@ -131,10 +131,14 @@ class SigstoreSigner(Signer):
     SCHEME = "sigstore"
 
     def __init__(self, token: Any, public_key: Key):
-        self.public_key = public_key
+        self._public_key = public_key
         # token is of type sigstore.oidc.IdentityToken but the module should be usable
         # without sigstore so it's not annotated
         self._token = token
+
+    @property
+    def public_key(self) -> Key:
+        return self._public_key
 
     @classmethod
     def from_priv_key_uri(

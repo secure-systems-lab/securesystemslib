@@ -81,7 +81,11 @@ class AzureSigner(Signer):
                 "Key %s has unsupported key type or unsupported elliptic curve"
             )
             raise e
-        self.public_key = public_key
+        self._public_key = public_key
+
+    @property
+    def public_key(self) -> Key:
+        return self._public_key
 
     @staticmethod
     def _get_key_vault_key(

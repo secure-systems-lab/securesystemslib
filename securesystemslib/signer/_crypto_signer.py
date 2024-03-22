@@ -183,7 +183,11 @@ class CryptoSigner(Signer):
                 f"unsupported public key {public_key.keytype}/{public_key.scheme}"
             )
 
-        self.public_key = public_key
+        self._public_key = public_key
+
+    @property
+    def public_key(self) -> Key:
+        return self._public_key
 
     @classmethod
     def from_securesystemslib_key(

@@ -144,8 +144,12 @@ class HSMSigner(Signer):
 
         self.hsm_keyid = hsm_keyid
         self.token_filter = token_filter
-        self.public_key = public_key
+        self._public_key = public_key
         self.pin_handler = pin_handler
+
+    @property
+    def public_key(self) -> Key:
+        return self._public_key
 
     @staticmethod
     def _find_pkcs_slot(filters: Dict[str, str]) -> int:
