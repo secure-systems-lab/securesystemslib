@@ -61,8 +61,12 @@ class GCPSigner(Signer):
 
         self.hash_algorithm = self._get_hash_algorithm(public_key)
         self.gcp_keyid = gcp_keyid
-        self.public_key = public_key
+        self._public_key = public_key
         self.client = kms.KeyManagementServiceClient()
+
+    @property
+    def public_key(self) -> Key:
+        return self._public_key
 
     @classmethod
     def from_priv_key_uri(

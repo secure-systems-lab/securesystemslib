@@ -119,3 +119,12 @@ class Signer(metaclass=ABCMeta):
         return signer.from_priv_key_uri(
             priv_key_uri, public_key, secrets_handler
         )
+
+    @property
+    @abstractmethod
+    def public_key(self) -> Key:
+        """
+        Returns:
+            Public key the signer is based off.
+        """
+        raise NotImplementedError

@@ -48,6 +48,7 @@ class SSlibSigner(Signer):
     def __init__(self, key_dict: Dict):
         self.key_dict = key_dict
         self._crypto_signer = CryptoSigner.from_securesystemslib_key(key_dict)
+        self._public_key = SSlibKey.from_securesystemslib_key(key_dict)
 
     @classmethod
     def from_priv_key_uri(
@@ -98,6 +99,10 @@ class SSlibSigner(Signer):
         keydict["keyval"]["private"] = private
 
         return cls(keydict)
+
+    @property
+    def public_key(self) -> Key:
+        return self._public_key
 
     def sign(self, payload: bytes) -> Signature:
         """Signs a given payload by the key assigned to the SSlibSigner instance.
