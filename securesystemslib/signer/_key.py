@@ -21,6 +21,8 @@ try:
     from cryptography.exceptions import InvalidSignature
     from cryptography.hazmat.primitives.asymmetric.ec import (
         ECDSA,
+        SECP256R1,
+        SECP384R1,
         EllipticCurvePublicKey,
     )
     from cryptography.hazmat.primitives.asymmetric.ed25519 import (
@@ -245,32 +247,39 @@ class SSlibKey(Key):
         return load_pem_public_key(public_bytes)
 
     @staticmethod
-    def _get_keytype_for_crypto_key(public_key: "PublicKeyTypes") -> str:
-        """Helper to return keytype for pyca/cryptography public key."""
+    def _from_crypto(public_key: "PublicKeyTypes") -> Tuple[str, str, str]:
+        """Return tuple of keytype, default scheme and serialized public key
+        value for the passed public key.
+
+        Raise ValueError if public key is not supported.
+        """
+
+        def _raw() -> str:
+            return public_key.public_bytes(
+                encoding=Encoding.Raw, format=PublicFormat.Raw
+            ).hex()
+
+        def _pem() -> str:
+            return public_key.public_bytes(
+                encoding=Encoding.PEM, format=PublicFormat.SubjectPublicKeyInfo
+            ).decode()
+
         if isinstance(public_key, RSAPublicKey):
-            return "rsa"
+            return "rsa", "rsassa-pss-sha256", _pem()
 
         if isinstance(public_key, EllipticCurvePublicKey):
-            return "ecdsa"
+            if isinstance(public_key.curve, SECP256R1):
+                return "ecdsa", "ecdsa-sha2-nistp256", _pem()
+
+            if isinstance(public_key.curve, SECP384R1):
+                return "ecdsa", "ecdsa-sha2-nistp384", _pem()
+
+            raise ValueError(f"unsupported curve '{public_key.curve.name}'")
 
         if isinstance(public_key, Ed25519PublicKey):
-            return "ed25519"
+            return "ed25519", "ed25519", _raw()
 
-        raise ValueError(f"unsupported 'public_key' type {type(public_key)}")
-
-    @staticmethod
-    def _get_default_scheme(keytype: str) -> str:
-        """Helper to return default scheme for keytype."""
-        if keytype == "rsa":
-            return "rsassa-pss-sha256"
-
-        if keytype == "ecdsa":
-            return "ecdsa-sha2-nistp256"
-
-        if keytype == "ed25519":
-            return "ed25519"
-
-        raise ValueError(f"unsupported 'keytype' {keytype}")
+        raise ValueError(f"unsupported key '{type(public_key)}'")
 
     @classmethod
     def from_crypto(
@@ -285,7 +294,8 @@ class SSlibKey(Key):
             public_key: pyca/cryptography public key object.
             keyid: Key identifier. If not passed, a default keyid is computed.
             scheme: SSlibKey signing scheme. Defaults are "rsassa-pss-sha256",
-                "ecdsa-sha2-nistp256", and "ed25519" according to the keytype
+                "ecdsa-sha2-nistp256", "ecdsa-sha2-nistp384" and "ed25519"
+                according to the keytype.
 
         Raises:
             UnsupportedLibraryError: pyca/cryptography not installed
@@ -298,21 +308,10 @@ class SSlibKey(Key):
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
 
-        keytype = cls._get_keytype_for_crypto_key(public_key)
+        keytype, default_scheme, public_key_value = cls._from_crypto(public_key)
+
         if not scheme:
-            scheme = cls._get_default_scheme(keytype)
-
-        if keytype in ["rsa", "ecdsa"]:
-            pem: bytes = public_key.public_bytes(
-                encoding=Encoding.PEM, format=PublicFormat.SubjectPublicKeyInfo
-            )
-            public_key_value = pem.decode()
-
-        else:  # ed25519
-            raw: bytes = public_key.public_bytes(
-                encoding=Encoding.Raw, format=PublicFormat.Raw
-            )
-            public_key_value = raw.hex()
+            scheme = default_scheme
 
         keyval = {"public": public_key_value}
 
