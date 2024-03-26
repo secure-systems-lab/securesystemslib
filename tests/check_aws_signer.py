@@ -50,10 +50,15 @@ class TestAWSKMSKeys(unittest.TestCase):
         with self.assertRaises(UnverifiedSignatureError):
             self.pubkey.verify_signature(sig, b"NOT DATA")
 
-    def test_aws_import(self):
-        """Test that AWS KMS key can be imported"""
-
+    def test_aws_import_with_scheme(self):
+        """Test that AWS KMS key can be imported with a specified scheme."""
         uri, key = AWSSigner.import_(self.aws_key_id, self.pubkey.scheme)
+        self.assertEqual(key.keytype, self.pubkey.keytype)
+        self.assertEqual(uri, f"awskms:{self.aws_key_id}")
+
+    def test_aws_import_without_scheme(self):
+        """Test that AWS KMS key can be imported without specifying a scheme."""
+        uri, key = AWSSigner.import_(self.aws_key_id)
         self.assertEqual(key.keytype, self.pubkey.keytype)
         self.assertEqual(uri, f"awskms:{self.aws_key_id}")
 
