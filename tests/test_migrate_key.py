@@ -68,22 +68,13 @@ class TestMigrateKey(unittest.TestCase):
 
             # Load unencrypted private key
             path = self.new_keys / f"{algo}_private_unencrypted"
-            uri = f"file:{path}?encrypted=false"
-            signer_unenc = CryptoSigner.from_priv_key_uri(uri, public_key)
+            uri = f"file2:{path}"
+            signer = CryptoSigner.from_priv_key_uri(uri, public_key)
 
-            # Load encrypted private key
-            path = self.new_keys / f"{algo}_private_encrypted"
-            uri = f"file:{path}?encrypted=true"
-            signer_enc = CryptoSigner.from_priv_key_uri(
-                uri, public_key, lambda sec: "password"
-            )
-
-            # Sign and test signatures
-            for signer in [signer_unenc, signer_enc]:
-                sig = signer.sign(b"data")
-                self.assertIsNone(public_key.verify_signature(sig, b"data"))
-                with self.assertRaises(UnverifiedSignatureError):
-                    public_key.verify_signature(sig, b"not data")
+            sig = signer.sign(b"data")
+            self.assertIsNone(public_key.verify_signature(sig, b"data"))
+            with self.assertRaises(UnverifiedSignatureError):
+                public_key.verify_signature(sig, b"not data")
 
     def test_new_signature_verifies_with_old_key(self):
         for algo in ["rsa", "ecdsa", "ed25519"]:
@@ -98,7 +89,7 @@ class TestMigrateKey(unittest.TestCase):
             # NOTE: The signer is loaded with the old public key, thus the old
             # keyid will be assigned to any new signatures.
             path = self.new_keys / f"{algo}_private_unencrypted"
-            uri = f"file:{path}?encrypted=false"
+            uri = f"file2:{path}"
             signer = CryptoSigner.from_priv_key_uri(uri, public_key)
 
             # Sign and test signatures

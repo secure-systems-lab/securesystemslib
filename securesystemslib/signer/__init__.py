@@ -31,6 +31,7 @@ SIGNER_FOR_URI_SCHEME.update(
     {
         SSlibSigner.ENVVAR_URI_SCHEME: SSlibSigner,
         SSlibSigner.FILE_URI_SCHEME: SSlibSigner,
+        CryptoSigner.SCHEME: CryptoSigner,
         GCPSigner.SCHEME: GCPSigner,
         HSMSigner.SCHEME: HSMSigner,
         GPGSigner.SCHEME: GPGSigner,
