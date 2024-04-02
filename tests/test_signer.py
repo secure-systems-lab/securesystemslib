@@ -299,16 +299,25 @@ class TestSSlibKey(unittest.TestCase):
                 "rsa",
                 "rsassa-pss-sha256",
                 "2f685fa7546f1856b123223ab086b3def14c89d24eef18f49c32508c2f60e241",
+                "rsa_public.pem",
             ),
             (
                 "ecdsa",
                 "ecdsa-sha2-nistp256",
                 "50d7e110ad65f3b2dba5c3cfc8c5ca259be9774cc26be3410044ffd4be3aa5f3",
+                "ecdsa_public.pem",
+            ),
+            (
+                "ecdsa",
+                "ecdsa-sha2-nistp384",
+                "0155661bdf705f621a74f55eef36c9ae041e456141eced7a45d4a1f75ded9ac0",
+                "ecdsa_secp384r1_public.pem",
             ),
             (
                 "ed25519",
                 "ed25519",
                 "c6d8bf2e4f48b41ac2ce8eca21415ca8ef68c133b47fc33df03d4070a7e1e9cc",
+                "ed25519_public.pem",
             ),
         ]
 
@@ -319,8 +328,8 @@ class TestSSlibKey(unittest.TestCase):
             crypto_key = load_pem_public_key(pem)
             return crypto_key
 
-        for keytype, default_scheme, default_keyid in test_data:
-            crypto_key = _from_file(PEMS_DIR / f"{keytype}_public.pem")
+        for keytype, default_scheme, default_keyid, fname in test_data:
+            crypto_key = _from_file(PEMS_DIR / fname)
             key = SSlibKey.from_crypto(crypto_key)
             self.assertEqual(key.keytype, keytype)
             self.assertEqual(key.scheme, default_scheme)
