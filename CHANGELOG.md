@@ -1,5 +1,19 @@
 # Changelog
 
+## securesystemslib v0.32.0
+
+### Added
+Signer: Add public key attribute to interface (#756)
+CryptoSigner: Support ecdsa keytype that is no longer in spec (#711)
+
+### Changed
+* dependabot: Use groups, update weekly #735
+* dsse: Change Envelope.signatures type to dict (#743)
+* docs: Improve user and contributor docs (#744, #745, #746, #749)
+
+### Fixed
+* Fix check-upstream-ed25519 workflow permission #706
+
 ## securesystemslib v0.31.0
 
 ### Added
