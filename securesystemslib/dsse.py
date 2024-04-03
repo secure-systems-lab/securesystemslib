@@ -17,12 +17,15 @@ class Envelope:
     Attributes:
         payload: Arbitrary byte sequence of serialized body.
         payload_type: string that identifies how to interpret payload.
-        signatures: list of Signature.
+        signatures: dict of Signature key id and Signatures.
 
     """
 
     def __init__(
-        self, payload: bytes, payload_type: str, signatures: List[Signature]
+        self,
+        payload: bytes,
+        payload_type: str,
+        signatures: Dict[str, Signature],
     ):
         self.payload = payload
         self.payload_type = payload_type
@@ -58,10 +61,15 @@ class Envelope:
         payload = b64dec(data["payload"])
         payload_type = data["payloadType"]
 
-        signatures = []
+        signatures = {}
         for signature in data["signatures"]:
             signature["sig"] = b64dec(signature["sig"]).hex()
-            signatures.append(Signature.from_dict(signature))
+            signature = Signature.from_dict(signature)
+            if signature.keyid in signatures:
+                raise ValueError(
+                    f"Multiple signatures found for keyid {signature.keyid}"
+                )
+            signatures[signature.keyid] = signature
 
         return cls(payload, payload_type, signatures)
 
@@ -69,7 +77,7 @@ class Envelope:
         """Returns the JSON-serializable dictionary representation of self."""
 
         signatures = []
-        for signature in self.signatures:
+        for signature in self.signatures.values():
             sig_dict = signature.to_dict()
             sig_dict["sig"] = b64enc(bytes.fromhex(sig_dict["sig"]))
             signatures.append(sig_dict)
@@ -101,7 +109,7 @@ class Envelope:
         """
 
         signature = signer.sign(self.pae())
-        self.signatures.append(signature)
+        self.signatures[signature.keyid] = signature
 
         return signature
 
@@ -140,7 +148,7 @@ class Envelope:
         if len(keys) < threshold:
             raise ValueError("Number of keys can't be less than threshold")
 
-        for signature in self.signatures:
+        for signature in self.signatures.values():
             for key in keys:
                 # If Signature keyid doesn't match with Key, skip.
                 if not key.keyid == signature.keyid:
