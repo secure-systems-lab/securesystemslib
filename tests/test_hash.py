@@ -256,35 +256,6 @@ class TestHash(unittest.TestCase):  # pylint: disable=missing-class-docstring
         # to always seek to the beginning.
         self.assertEqual(digest_object_truth.digest(), digest_object.digest())
 
-    def test_digest_from_rsa_scheme(self):
-        self._run_with_all_hash_libraries(
-            self._do_get_digest_from_rsa_valid_schemes, "sha256"
-        )
-        self._run_with_all_hash_libraries(
-            self._do_get_digest_from_rsa_non_valid_schemes, "sha256"
-        )
-
-    def _do_get_digest_from_rsa_valid_schemes(self, library, algorithm):
-        scheme = "rsassa-pss-sha256"
-        expected_digest_cls = type(
-            securesystemslib.hash.digest(algorithm, library)
-        )
-
-        self.assertIsInstance(
-            securesystemslib.hash.digest_from_rsa_scheme(scheme, library),
-            expected_digest_cls,
-        )
-
-    def _do_get_digest_from_rsa_non_valid_schemes(
-        self, library, algorithm
-    ):  # pylint: disable=unused-argument
-        self.assertRaises(
-            securesystemslib.exceptions.FormatError,
-            securesystemslib.hash.digest_from_rsa_scheme,
-            "rsassa-pss-sha123",
-            library,
-        )
-
     def test_unsupported_digest_algorithm_and_library(self):
         self.assertRaises(
             securesystemslib.exceptions.UnsupportedAlgorithmError,

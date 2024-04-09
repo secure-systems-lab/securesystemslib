@@ -23,7 +23,7 @@
 
 import hashlib
 
-from securesystemslib import exceptions, formats
+from securesystemslib import exceptions
 from securesystemslib.storage import FilesystemBackend
 
 DEFAULT_CHUNK_SIZE = 4096
@@ -145,9 +145,6 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
         The crypto library to use for the given hash algorithm (e.g., 'hashlib').
 
     <Exceptions>
-      securesystemslib.exceptions.FormatError, if the arguments are
-      improperly formatted.
-
       securesystemslib.exceptions.UnsupportedAlgorithmError, if an unsupported
       hashing algorithm is specified, or digest could not be generated with given
       the algorithm.
@@ -165,11 +162,6 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
         hashlib.new(algorithm) or
         PycaDiggestWrapper object
     """
-
-    # Are the arguments properly formatted?  If not, raise
-    # 'securesystemslib.exceptions.FormatError'.
-    formats.NAME_SCHEMA.check_match(algorithm)
-    formats.NAME_SCHEMA.check_match(hash_library)
 
     # Was a hashlib digest object requested and is it supported?
     # If so, return the digest object.
@@ -260,12 +252,6 @@ def digest_fileobject(
         hashlib.new(algorithm) or
         PycaDiggestWrapper object
     """
-
-    # Are the arguments properly formatted?  If not, raise
-    # 'securesystemslib.exceptions.FormatError'.
-    formats.NAME_SCHEMA.check_match(algorithm)
-    formats.NAME_SCHEMA.check_match(hash_library)
-
     # Digest object returned whose hash will be updated using 'file_object'.
     # digest() raises:
     # securesystemslib.exceptions.UnsupportedAlgorithmError
@@ -340,9 +326,6 @@ def digest_filename(
         passed a FilesystemBackend will be instantiated and used.
 
     <Exceptions>
-      securesystemslib.exceptions.FormatError, if the arguments are
-      improperly formatted.
-
       securesystemslib.exceptions.UnsupportedAlgorithmError, if the given
       'algorithm' is unsupported.
 
@@ -361,12 +344,6 @@ def digest_filename(
         hashlib.new(algorithm) or
         PycaDiggestWrapper object
     """
-    # Are the arguments properly formatted?  If not, raise
-    # 'securesystemslib.exceptions.FormatError'.
-    formats.PATH_SCHEMA.check_match(filename)
-    formats.NAME_SCHEMA.check_match(algorithm)
-    formats.NAME_SCHEMA.check_match(hash_library)
-
     digest_object = None
 
     if storage_backend is None:
@@ -383,47 +360,3 @@ def digest_filename(
         )
 
     return digest_object
-
-
-def digest_from_rsa_scheme(scheme, hash_library=DEFAULT_HASH_LIBRARY):
-    """
-    <Purpose>
-      Get digest object from RSA scheme.
-
-    <Arguments>
-      scheme:
-        A string that indicates the signature scheme used to generate
-        'signature'.
-
-      hash_library:
-        The crypto library to use for the given hash algorithm (e.g., 'hashlib').
-
-    <Exceptions>
-      securesystemslib.exceptions.FormatError, if the arguments are
-      improperly formatted.
-
-      securesystemslib.exceptions.UnsupportedAlgorithmError, if an unsupported
-      hashing algorithm is specified, or digest could not be generated with given
-      the algorithm.
-
-      securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported
-      library was requested via 'hash_library'.
-
-    <Side Effects>
-      None.
-
-    <Returns>
-      Digest object
-
-      e.g.
-        hashlib.new(algorithm) or
-        PycaDiggestWrapper object
-    """
-    # Are the arguments properly formatted?  If not, raise
-    # 'securesystemslib.exceptions.FormatError'.
-    formats.RSA_SCHEME_SCHEMA.check_match(scheme)
-
-    # Get hash algorithm from rsa scheme (hash algorithm id is specified after
-    # the last dash; e.g. rsassa-pss-sha256 -> sha256)
-    hash_algorithm = scheme.split("-")[-1]
-    return digest(hash_algorithm, hash_library)
