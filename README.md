@@ -45,6 +45,9 @@ See [Instructions for contributors](docs/CONTRIBUTING.md).
 
 ## Legacy key migration
 
-Use [`migrate_keys`](docs/migrate_key.py) script to convert key pairs generated
-with legacy `keys` or `interface` modules to a consistent standard format, which
-is compatible with [`CryptoSigner`](docs/CRYPTO_SIGNER.md).
+Use
+[`migrate_keys`](https://github.com/secure-systems-lab/securesystemslib/blob/v0.31.0/docs/migrate_key.py)
+script to convert key pairs generated with legacy `keys` or `interface` modules
+to a consistent standard format, which is compatible with
+[`CryptoSigner`](docs/CRYPTO_SIGNER.md). The script requires
+`securesystemslib~=0.31.0`.
