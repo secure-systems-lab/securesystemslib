@@ -27,7 +27,7 @@ except ImportError:
     CRYPTO = False
 
 # pylint: disable=wrong-import-position
-from securesystemslib import exceptions, formats
+from securesystemslib import exceptions
 from securesystemslib.gpg import util as gpg_util
 from securesystemslib.gpg.exceptions import PacketParsingError
 
@@ -42,13 +42,9 @@ def create_pubkey(pubkey_info):
 
     <Arguments>
       pubkey_info:
-              The RSA pubkey info dictionary as specified by
-              securesystemslib.formats.GPG_RSA_PUBKEY_SCHEMA
+              An RSA pubkey dict.
 
     <Exceptions>
-      securesystemslib.exceptions.FormatError if
-        pubkey_info does not match securesystemslib.formats.GPG_RSA_PUBKEY_SCHEMA
-
       securesystemslib.exceptions.UnsupportedLibraryError if
         the cryptography module is unavailable
 
@@ -59,8 +55,6 @@ def create_pubkey(pubkey_info):
     """
     if not CRYPTO:  # pragma: no cover
         raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
-
-    formats.GPG_RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
     e = int(pubkey_info["keyval"]["public"]["e"], 16)
     n = int(pubkey_info["keyval"]["public"]["n"], 16)
@@ -87,9 +81,7 @@ def get_pubkey_params(data):
       None.
 
     <Returns>
-      The parsed RSA public key in the format
-      securesystemslib.formats.GPG_RSA_PUBKEY_SCHEMA.
-
+      An RSA public key dict.
     """
     ptr = 0
 
@@ -151,12 +143,10 @@ def verify_signature(signature_object, pubkey_info, content, hash_algorithm_id):
 
     <Arguments>
       signature_object:
-              A signature dictionary as specified by
-              securesystemslib.formats.GPG_SIGNATURE_SCHEMA
+              A signature dict.
 
       pubkey_info:
-              The RSA public key info dictionary as specified by
-              securesystemslib.formats.GPG_RSA_PUBKEY_SCHEMA
+              The RSA public key dict.
 
       content:
               The signed bytes against which the signature is verified
@@ -168,11 +158,6 @@ def verify_signature(signature_object, pubkey_info, content, hash_algorithm_id):
               "hashes" or "method" fields.
 
     <Exceptions>
-      securesystemslib.exceptions.FormatError if:
-        signature_object does not match
-        securesystemslib.formats.GPG_SIGNATURE_SCHEMA,
-        pubkey_info does not match securesystemslib.formats.GPG_RSA_PUBKEY_SCHEMA
-
       securesystemslib.exceptions.UnsupportedLibraryError if:
         the cryptography module is unavailable
 
@@ -186,9 +171,6 @@ def verify_signature(signature_object, pubkey_info, content, hash_algorithm_id):
     """
     if not CRYPTO:  # pragma: no cover
         raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
-
-    formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
-    formats.GPG_RSA_PUBKEY_SCHEMA.check_match(pubkey_info)
 
     hasher = gpg_util.get_hashing_class(hash_algorithm_id)
 
