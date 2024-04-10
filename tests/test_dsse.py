@@ -2,11 +2,15 @@
 
 import copy
 import unittest
+from pathlib import Path
 
-import securesystemslib.keys as KEYS
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
+
 from securesystemslib.dsse import Envelope
 from securesystemslib.exceptions import VerificationError
-from securesystemslib.signer import Signature, SSlibKey, SSlibSigner
+from securesystemslib.signer import CryptoSigner, Signature
+
+PEMS_DIR = Path(__file__).parent / "data" / "pems"
 
 
 class TestEnvelope(unittest.TestCase):
@@ -14,11 +18,17 @@ class TestEnvelope(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.key_dicts = [
-            KEYS.generate_rsa_key(),
-            KEYS.generate_ed25519_key(),
-            KEYS.generate_ecdsa_key(),
-        ]
+        cls.signers: list[CryptoSigner] = []
+        for keytype in ["rsa", "ecdsa", "ed25519"]:
+            path = PEMS_DIR / f"{keytype}_private.pem"
+
+            with open(path, "rb") as f:
+                data = f.read()
+
+            private_key = load_pem_private_key(data, None)
+            signer = CryptoSigner(private_key)
+
+            cls.signers.append(signer)
 
         cls.signature_dict = {
             "keyid": "11fa391a0ed7a447",
@@ -102,23 +112,14 @@ class TestEnvelope(unittest.TestCase):
         envelope_obj = Envelope.from_dict(envelope_dict)
 
         key_list = []
-        for key_dict in self.key_dicts:
-            # Test for invalid scheme.
-            valid_scheme = key_dict["scheme"]
-            key_dict["scheme"] = "invalid_scheme"
-            with self.assertRaises(ValueError):
-                signer = SSlibSigner(key_dict)
-
-            # Sign the payload.
-            key_dict["scheme"] = valid_scheme
-            signer = SSlibSigner(key_dict)
+        for signer in self.signers:
             envelope_obj.sign(signer)
 
             # Create a List of "Key" from key_dict.
-            key_list.append(SSlibKey.from_securesystemslib_key(key_dict))
+            key_list.append(signer.public_key)
 
         # Check for signatures of Envelope.
-        self.assertEqual(len(self.key_dicts), len(envelope_obj.signatures))
+        self.assertEqual(len(self.signers), len(envelope_obj.signatures))
         for signature in envelope_obj.signatures.values():
             self.assertIsInstance(signature, Signature)
 
@@ -136,14 +137,12 @@ class TestEnvelope(unittest.TestCase):
         self.assertEqual(len(verified_keys), len(key_list))
 
         # Test for unknown keys and threshold of 1.
-        new_key_dicts = [
-            KEYS.generate_rsa_key(),
-            KEYS.generate_ed25519_key(),
-            KEYS.generate_ecdsa_key(),
-        ]
         new_key_list = []
-        for key_dict in new_key_dicts:
-            new_key_list.append(SSlibKey.from_securesystemslib_key(key_dict))
+        for key in key_list:
+            new_key = copy.deepcopy(key)
+            # if it has a different keyid, it is a different key in sslib
+            new_key.keyid = reversed(key.keyid)
+            new_key_list.append(new_key)
 
         with self.assertRaises(VerificationError):
             envelope_obj.verify(new_key_list, 1)
