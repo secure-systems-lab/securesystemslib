@@ -29,8 +29,6 @@ from securesystemslib.signer._sslib_signer import SSlibSigner
 # Register supported private key uri schemes and the Signers implementing them
 SIGNER_FOR_URI_SCHEME.update(
     {
-        SSlibSigner.ENVVAR_URI_SCHEME: SSlibSigner,
-        SSlibSigner.FILE_URI_SCHEME: SSlibSigner,
         GCPSigner.SCHEME: GCPSigner,
         HSMSigner.SCHEME: HSMSigner,
         GPGSigner.SCHEME: GPGSigner,
