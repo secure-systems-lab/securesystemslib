@@ -30,7 +30,7 @@ class Signer(metaclass=ABCMeta):
 
     Usage example::
 
-        signer = Signer.from_priv_key_uri("envvar:MYPRIVKEY", pub_key)
+        signer = Signer.from_priv_key_uri(uri, pub_key)
         sig = signer.sign(b"data")
 
     Note that signer implementations may raise errors (during both
@@ -39,11 +39,7 @@ class Signer(metaclass=ABCMeta):
     Applications should use generic try-except here if unexpected raises are
     not an option.
 
-    See ``SIGNER_FOR_URI_SCHEME`` for supported private key URI schemes. The
-    currently supported default schemes are:
-
-    * envvar: see ``SSlibSigner`` for details
-    * file: see ``SSlibSigner`` for details
+    See ``SIGNER_FOR_URI_SCHEME`` for supported private key URI schemes.
 
     Interactive applications may also define a secrets handler that allows
     asking for user secrets if they are needed::
@@ -53,13 +49,7 @@ class Signer(metaclass=ABCMeta):
         def sec_handler(secret_name:str) -> str:
             return getpass(f"Enter {secret_name}: ")
 
-        # user will not be asked for a passphrase for unencrypted key
-        uri = "file:keys/mykey?encrypted=false"
         signer = Signer.from_priv_key_uri(uri, pub_key, sec_handler)
-
-        # user will be asked for a passphrase for encrypted key
-        uri2 = "file:keys/myenckey?encrypted=true"
-        signer2 = Signer.from_priv_key_uri(uri2, pub_key2, sec_handler)
 
     Applications can provide their own Signer and Key implementations::
 

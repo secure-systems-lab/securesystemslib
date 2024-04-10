@@ -24,7 +24,6 @@ from securesystemslib.signer._spx_signer import (
     SpxSigner,
     generate_spx_key_pair,
 )
-from securesystemslib.signer._sslib_signer import SSlibSigner
 
 # Register supported private key uri schemes and the Signers implementing them
 SIGNER_FOR_URI_SCHEME.update(
