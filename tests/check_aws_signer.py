@@ -1,66 +1,68 @@
-"""This module confirms that signing using AWS KMS keys works.
+"""Test AWSSigner
 
-The purpose is to do a smoke test, not to exhaustively test every possible key
-and environment combination.
-
-For AWS, the requirements to successfully test are:
-* AWS authentication details
-have to be available in the environment
-* The key defined in the test has to be
-available to the authenticated user
-
-Remember to replace the REDACTED fields to include the necessary values:
-* keyid: Hash of the public key
-* public: The public key, refer to other KMS tests to see the format
-* aws_id: AWS KMS ID or alias
 """
 
 import unittest
 
 from securesystemslib.exceptions import UnverifiedSignatureError
-from securesystemslib.signer import AWSSigner, Key, Signer
+from securesystemslib.signer import AWSSigner, Signer
 
 
-class TestAWSKMSKeys(unittest.TestCase):
-    """Test that AWS KMS keys can be used to sign."""
+class TestAWSSigner(unittest.TestCase):
+    """Test AWSSigner"""
 
-    pubkey = Key.from_dict(
-        "REDACTED",
-        {
-            "keytype": "rsa",
-            "scheme": "rsassa-pss-sha256",
-            "keyval": {
-                "public": "-----BEGIN PUBLIC KEY-----\nREDACTED\n-----END PUBLIC KEY-----\n"
-            },
-        },
-    )
-    aws_key_id = "REDACTED"
+    def test_aws_import_sign_verify(self):
+        # Test full signer flow with localstack
+        # - see tests/scripts/init-aws-kms.sh for how keys are created
+        # - see tox.ini for how credentials etc. are passed via env vars
+        keys_and_schemes = [
+            (
+                "alias/rsa",
+                "rsassa-pss-sha256",
+                [
+                    "rsassa-pss-sha256",
+                    "rsassa-pss-sha384",
+                    "rsassa-pss-sha512",
+                    "rsa-pkcs1v15-sha256",
+                    "rsa-pkcs1v15-sha384",
+                    "rsa-pkcs1v15-sha512",
+                ],
+            ),
+            (
+                "alias/ecdsa_nistp256",
+                "ecdsa-sha2-nistp256",
+                ["ecdsa-sha2-nistp256"],
+            ),
+            (
+                "alias/ecdsa_nistp384",
+                "ecdsa-sha2-nistp384",
+                ["ecdsa-sha2-nistp384"],
+            ),
+        ]
+        for aws_keyid, default_scheme, schemes in keys_and_schemes:
+            for scheme in schemes:
+                # Test import
+                uri, public_key = AWSSigner.import_(aws_keyid, scheme)
+                self.assertEqual(uri, f"{AWSSigner.SCHEME}:{aws_keyid}")
+                self.assertEqual(scheme, public_key.scheme)
 
-    def test_aws_sign(self):
-        """Test that AWS KMS key works for signing"""
+                # Test import with default_scheme
+                if scheme == default_scheme:
+                    uri2, public_key2 = AWSSigner.import_(aws_keyid)
+                    self.assertEqual(uri, uri2)
+                    self.assertEqual(public_key, public_key2)
 
-        data = "data".encode("utf-8")
+                # Test load
+                signer = Signer.from_priv_key_uri(uri, public_key)
+                self.assertIsInstance(signer, AWSSigner)
 
-        signer = Signer.from_priv_key_uri(
-            f"awskms:{self.aws_key_id}", self.pubkey
-        )
-        sig = signer.sign(data)
-
-        self.pubkey.verify_signature(sig, data)
-        with self.assertRaises(UnverifiedSignatureError):
-            self.pubkey.verify_signature(sig, b"NOT DATA")
-
-    def test_aws_import_with_scheme(self):
-        """Test that AWS KMS key can be imported with a specified scheme."""
-        uri, key = AWSSigner.import_(self.aws_key_id, self.pubkey.scheme)
-        self.assertEqual(key.keytype, self.pubkey.keytype)
-        self.assertEqual(uri, f"awskms:{self.aws_key_id}")
-
-    def test_aws_import_without_scheme(self):
-        """Test that AWS KMS key can be imported without specifying a scheme."""
-        uri, key = AWSSigner.import_(self.aws_key_id)
-        self.assertEqual(key.keytype, self.pubkey.keytype)
-        self.assertEqual(uri, f"awskms:{self.aws_key_id}")
+                # Test sign and verify
+                signature = signer.sign(b"DATA")
+                self.assertIsNone(
+                    public_key.verify_signature(signature, b"DATA")
+                )
+                with self.assertRaises(UnverifiedSignatureError):
+                    public_key.verify_signature(signature, b"NOT DATA")
 
 
 if __name__ == "__main__":
