@@ -2,7 +2,7 @@
 
 import logging
 from dataclasses import astuple, dataclass
-from typing import Any, Dict, Optional, Union
+from typing import Optional, Union
 from urllib import parse
 
 from securesystemslib.exceptions import UnsupportedLibraryError
@@ -188,28 +188,6 @@ class CryptoSigner(Signer):
     @property
     def public_key(self) -> Key:
         return self._public_key
-
-    @classmethod
-    def from_securesystemslib_key(
-        cls, key_dict: Dict[str, Any]
-    ) -> "CryptoSigner":
-        """Factory to create CryptoSigner from securesystemslib private key dict."""
-        private = key_dict["keyval"]["private"]
-        public_key = SSlibKey.from_securesystemslib_key(key_dict)
-
-        private_key: PrivateKeyTypes
-        if public_key.keytype in ["rsa"] + _ECDSA_KEYTYPES:
-            private_key = load_pem_private_key(private.encode(), password=None)
-
-        elif public_key.keytype == "ed25519":
-            private_key = Ed25519PrivateKey.from_private_bytes(
-                bytes.fromhex(private)
-            )
-
-        else:
-            raise ValueError(f"unsupported keytype: {public_key.keytype}")
-
-        return CryptoSigner(private_key, public_key)
 
     @classmethod
     def from_priv_key_uri(

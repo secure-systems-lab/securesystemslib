@@ -8,14 +8,13 @@ import unittest
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
     load_pem_public_key,
 )
 
-import securesystemslib.keys as KEYS
 from securesystemslib.exceptions import (
-    CryptoError,
     FormatError,
     UnverifiedSignatureError,
     VerificationError,
@@ -35,7 +34,6 @@ from securesystemslib.signer import (
     SpxKey,
     SpxSigner,
     SSlibKey,
-    SSlibSigner,
     generate_spx_key_pair,
 )
 from securesystemslib.signer._utils import compute_default_keyid
@@ -349,186 +347,14 @@ class TestSSlibKey(unittest.TestCase):
 class TestSigner(unittest.TestCase):
     """Test Signer and SSlibSigner functionality"""
 
-    @classmethod
-    def setUpClass(cls):
-        cls.keys = [
-            KEYS.generate_rsa_key(),
-            KEYS.generate_ed25519_key(),
-            KEYS.generate_ecdsa_key(),
-        ]
-
-        cls.DATA = b"DATA"
-
-        # pylint: disable=consider-using-with
-        cls.testdir = tempfile.TemporaryDirectory()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.testdir.cleanup()
-
     def test_signer_sign_with_incorrect_uri(self):
-        pubkey = SSlibKey.from_securesystemslib_key(self.keys[0])
-        with self.assertRaises(ValueError):
-            # unknown uri
+        pubkey = "fake key"
+        with self.assertRaises(ValueError) as ctx:
             Signer.from_priv_key_uri("unknownscheme:x", pubkey)
 
-        with self.assertRaises(ValueError):
-            # env variable not defined
-            Signer.from_priv_key_uri("envvar:NONEXISTENTVAR", pubkey)
-
-        with self.assertRaises(ValueError):
-            # no "encrypted" param
-            Signer.from_priv_key_uri("file:path/to/privkey", pubkey)
-
-        with self.assertRaises(OSError):
-            # file not found
-            uri = "file:nonexistentfile?encrypted=false"
-            Signer.from_priv_key_uri(uri, pubkey)
-
-    def test_signer_sign_with_envvar_uri(self):
-        for key in self.keys:
-            # setup
-            pubkey = SSlibKey.from_securesystemslib_key(key)
-            os.environ["PRIVKEY"] = key["keyval"]["private"]
-
-            # test signing
-            signer = Signer.from_priv_key_uri("envvar:PRIVKEY", pubkey)
-            sig = signer.sign(self.DATA)
-
-            pubkey.verify_signature(sig, self.DATA)
-            with self.assertRaises(UnverifiedSignatureError):
-                pubkey.verify_signature(sig, b"NOT DATA")
-
-    def test_signer_sign_with_file_uri(self):
-        for key in self.keys:
-            # setup
-            pubkey = SSlibKey.from_securesystemslib_key(key)
-            # let teardownclass handle the file removal
-            with tempfile.NamedTemporaryFile(
-                dir=self.testdir.name, delete=False
-            ) as f:
-                f.write(key["keyval"]["private"].encode())
-
-            # test signing with unencrypted key
-            uri = f"file:{f.name}?encrypted=false"
-            signer = Signer.from_priv_key_uri(uri, pubkey)
-            sig = signer.sign(self.DATA)
-
-            pubkey.verify_signature(sig, self.DATA)
-            with self.assertRaises(UnverifiedSignatureError):
-                pubkey.verify_signature(sig, b"NOT DATA")
-
-    def test_signer_sign_with_enc_file_uri(self):
-        for key in self.keys:
-            # setup
-            pubkey = SSlibKey.from_securesystemslib_key(key)
-            privkey = KEYS.encrypt_key(key, "hunter2")
-            # let teardownclass handle the file removal
-            with tempfile.NamedTemporaryFile(
-                dir=self.testdir.name, delete=False
-            ) as f:
-                f.write(privkey.encode())
-
-            # test signing with encrypted key
-            def secrets_handler(secret: str) -> str:
-                if secret != "passphrase":
-                    raise ValueError("Only prepared to return a passphrase")
-                return "hunter2"
-
-            uri = f"file:{f.name}?encrypted=true"
-
-            signer = Signer.from_priv_key_uri(uri, pubkey, secrets_handler)
-            sig = signer.sign(self.DATA)
-
-            pubkey.verify_signature(sig, self.DATA)
-            with self.assertRaises(UnverifiedSignatureError):
-                pubkey.verify_signature(sig, b"NOT DATA")
-
-            # test wrong passphrase
-            def fake_handler(_) -> str:
-                return "12345"
-
-            with self.assertRaises(CryptoError):
-                signer = Signer.from_priv_key_uri(uri, pubkey, fake_handler)
-
-    def test_sslib_signer_sign_all_schemes(self):
-        rsa_key, ed25519_key, ecdsa_key = self.keys
-        keys = []
-        for scheme in [
-            "rsassa-pss-sha224",
-            "rsassa-pss-sha256",
-            "rsassa-pss-sha384",
-            "rsassa-pss-sha512",
-            "rsa-pkcs1v15-sha224",
-            "rsa-pkcs1v15-sha256",
-            "rsa-pkcs1v15-sha384",
-            "rsa-pkcs1v15-sha512",
-        ]:
-            key = copy.deepcopy(rsa_key)
-            key["scheme"] = scheme
-            keys.append(key)
-
-        self.assertEqual(ecdsa_key["scheme"], "ecdsa-sha2-nistp256")
-        self.assertEqual(ed25519_key["scheme"], "ed25519")
-        keys += [ecdsa_key, ed25519_key]
-
-        # Test sign/verify for each supported scheme
-        for scheme_dict in keys:
-            # Test generation of signatures.
-            sslib_signer = SSlibSigner(scheme_dict)
-            sig_obj = sslib_signer.sign(self.DATA)
-
-            # Verify signature
-            verified = KEYS.verify_signature(
-                scheme_dict, sig_obj.to_dict(), self.DATA
-            )
-            self.assertTrue(verified, "Incorrect signature.")
-
-    def test_sslib_signer_errors(self):
-        # Test basic initialization errors for each keytype
-        for scheme_dict in self.keys:
-            # Assert error for invalid private key data
-            bad_private = copy.deepcopy(scheme_dict)
-            bad_private["keyval"]["private"] = ""
-            with self.assertRaises(ValueError):
-                SSlibSigner(bad_private)
-
-            # Assert error for invalid scheme
-            invalid_scheme = copy.deepcopy(scheme_dict)
-            invalid_scheme["scheme"] = "invalid_scheme"
-            with self.assertRaises(ValueError):
-                SSlibSigner(invalid_scheme)
-
-    def test_custom_signer(self):
-        # setup
-        key = self.keys[0]
-        pubkey = SSlibKey.from_securesystemslib_key(key)
-
-        class CustomSigner(SSlibSigner):
-            """Custom signer with a hard coded key"""
-
-            CUSTOM_SCHEME = "custom"
-
-            @classmethod
-            def from_priv_key_uri(
-                cls,
-                priv_key_uri: str,
-                public_key: Key,
-                secrets_handler: Optional[SecretsHandler] = None,
-            ) -> "CustomSigner":
-                return cls(key)
-
-        # register custom signer
-        SIGNER_FOR_URI_SCHEME[CustomSigner.CUSTOM_SCHEME] = CustomSigner
-
-        # test signing
-        signer = Signer.from_priv_key_uri("custom:foo", pubkey)
-        self.assertIsInstance(signer, CustomSigner)
-        sig = signer.sign(self.DATA)
-
-        pubkey.verify_signature(sig, self.DATA)
-        with self.assertRaises(UnverifiedSignatureError):
-            pubkey.verify_signature(sig, b"NOT DATA")
+        self.assertEqual(
+            "Unsupported private key scheme unknownscheme", str(ctx.exception)
+        )
 
     def test_signature_from_to_dict(self):
         signature_dict = {
@@ -758,8 +584,9 @@ class TestSphincs(unittest.TestCase):
 class TestCryptoSigner(unittest.TestCase):
     """CryptoSigner tests"""
 
-    def test_init(self):
-        """Test CryptoSigner constructor."""
+    @classmethod
+    def setUpClass(cls):
+        cls.keys: list[PrivateKeyTypes] = []
         for keytype in ["rsa", "ecdsa", "ed25519"]:
             path = PEMS_DIR / f"{keytype}_private.pem"
 
@@ -768,6 +595,12 @@ class TestCryptoSigner(unittest.TestCase):
 
             private_key = load_pem_private_key(data, None)
 
+            cls.keys.append(private_key)
+
+    def test_init(self):
+        """Test CryptoSigner constructor."""
+        for keytype, private_key in zip(["rsa", "ecdsa", "ed25519"], self.keys):
+
             # Init w/o public key (public key is created from private key)
             signer = CryptoSigner(private_key)
             self.assertEqual(keytype, signer.public_key.keytype)
@@ -775,6 +608,33 @@ class TestCryptoSigner(unittest.TestCase):
             # Re-init with passed public key
             signer2 = CryptoSigner(private_key, signer.public_key)
             self.assertEqual(keytype, signer2.public_key.keytype)
+
+    def test_sign(self):
+        rsa_schemes = [
+            "rsassa-pss-sha224",
+            "rsassa-pss-sha256",
+            "rsassa-pss-sha384",
+            "rsassa-pss-sha512",
+            "rsa-pkcs1v15-sha224",
+            "rsa-pkcs1v15-sha256",
+            "rsa-pkcs1v15-sha384",
+            "rsa-pkcs1v15-sha512",
+        ]
+        ecdsa_schemes = ["ecdsa-sha2-nistp256"]
+        ed25519_schemes = ["ed25519"]
+        schemes = [rsa_schemes, ecdsa_schemes, ed25519_schemes]
+
+        for private_key, key_schemes in zip(self.keys, schemes):
+            public_key = SSlibKey.from_crypto(private_key.public_key())
+            for scheme in key_schemes:
+                public_key.scheme = scheme
+                signer = CryptoSigner(private_key, public_key)
+                sig = signer.sign(b"DATA")
+                self.assertIsNone(
+                    signer.public_key.verify_signature(sig, b"DATA")
+                )
+                with self.assertRaises(UnverifiedSignatureError):
+                    signer.public_key.verify_signature(sig, b"NOT DATA")
 
     def test_from_priv_key_uri(self):
         """Test load and use PEM/PKCS#8 files for each sslib keytype"""
@@ -805,7 +665,8 @@ class TestCryptoSigner(unittest.TestCase):
             ),
         ]
 
-        signer_backup = SIGNER_FOR_URI_SCHEME[CryptoSigner.FILE_URI_SCHEME]
+        # FIXME: remove, if CryptoSigner.FILE_URI_SCHEME becomes default (#617)
+        signer_backup = SIGNER_FOR_URI_SCHEME.get(CryptoSigner.FILE_URI_SCHEME)
         SIGNER_FOR_URI_SCHEME[CryptoSigner.FILE_URI_SCHEME] = CryptoSigner
 
         for keytype, scheme, public_key_value, fname in test_data:
@@ -834,7 +695,17 @@ class TestCryptoSigner(unittest.TestCase):
                 with self.assertRaises(UnverifiedSignatureError):
                     signer.public_key.verify_signature(sig, b"NOT DATA")
 
-        SIGNER_FOR_URI_SCHEME[CryptoSigner.FILE_URI_SCHEME] = signer_backup
+        if signer_backup:
+            SIGNER_FOR_URI_SCHEME[CryptoSigner.FILE_URI_SCHEME] = signer_backup
+
+        with self.assertRaises(ValueError):
+            # no "encrypted" param
+            Signer.from_priv_key_uri("file:path/to/privkey", signer.public_key)
+
+        with self.assertRaises(OSError):
+            # file not found
+            uri = "file:nonexistentfile?encrypted=false"
+            Signer.from_priv_key_uri(uri, signer.public_key)
 
     def test_generate(self):
         """Test generate and use signer (key pair) for each sslib keytype"""
@@ -852,6 +723,37 @@ class TestCryptoSigner(unittest.TestCase):
             self.assertIsNone(signer.public_key.verify_signature(sig, b"DATA"))
             with self.assertRaises(UnverifiedSignatureError):
                 signer.public_key.verify_signature(sig, b"NOT DATA")
+
+    def test_custom_crypto_signer(self):
+        # setup
+        key = self.keys[0]
+        pubkey = SSlibKey.from_crypto(key.public_key())
+
+        class CustomSigner(CryptoSigner):
+            """Custom signer with a hard coded key"""
+
+            CUSTOM_SCHEME = "custom"
+
+            @classmethod
+            def from_priv_key_uri(
+                cls,
+                priv_key_uri: str,
+                public_key: Key,
+                secrets_handler: Optional[SecretsHandler] = None,
+            ) -> "CustomSigner":
+                return cls(key)
+
+        # register custom signer
+        SIGNER_FOR_URI_SCHEME[CustomSigner.CUSTOM_SCHEME] = CustomSigner
+
+        # test signing
+        signer = Signer.from_priv_key_uri("custom:foo", pubkey)
+        self.assertIsInstance(signer, CustomSigner)
+        sig = signer.sign(b"DATA")
+
+        pubkey.verify_signature(sig, b"DATA")
+        with self.assertRaises(UnverifiedSignatureError):
+            pubkey.verify_signature(sig, b"NOT DATA")
 
 
 # Run the unit tests.
