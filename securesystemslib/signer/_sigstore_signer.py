@@ -39,13 +39,6 @@ class SigstoreKey(Key):
     @classmethod
     def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "SigstoreKey":
         keytype, scheme, keyval = cls._from_dict(key_dict)
-
-        for content in ["identity", "issuer"]:
-            if content not in keyval or not isinstance(keyval[content], str):
-                raise ValueError(
-                    f"{content} string required for scheme {scheme}"
-                )
-
         return cls(keyid, keytype, scheme, keyval, key_dict)
 
     def to_dict(self) -> Dict:

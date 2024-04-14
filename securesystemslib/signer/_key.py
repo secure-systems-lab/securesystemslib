@@ -95,6 +95,8 @@ class Key(metaclass=ABCMeta):
         keyval: Dict[str, Any],
         unrecognized_fields: Optional[Dict[str, Any]] = None,
     ):
+        from securesystemslib.signer._sigstore_signer import SigstoreKey
+
         if not all(
             isinstance(at, str) for at in [keyid, keytype, scheme]
         ) or not isinstance(keyval, dict):
@@ -108,6 +110,20 @@ class Key(metaclass=ABCMeta):
             unrecognized_fields = {}
 
         self.unrecognized_fields = unrecognized_fields
+
+        if isinstance(self, SSlibKey):
+            if "public" not in keyval or not isinstance(keyval["public"], str):
+                raise ValueError(
+                    f"public key string required for scheme {scheme}"
+                )
+        elif isinstance(self, SigstoreKey):
+            for content in ["identity", "issuer"]:
+                if content not in keyval or not isinstance(
+                    keyval[content], str
+                ):
+                    raise ValueError(
+                        f"{content} string required for scheme {scheme}"
+                    )
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Key):
@@ -203,9 +219,6 @@ class SSlibKey(Key):
     @classmethod
     def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "SSlibKey":
         keytype, scheme, keyval = cls._from_dict(key_dict)
-
-        if "public" not in keyval or not isinstance(keyval["public"], str):
-            raise ValueError(f"public key string required for scheme {scheme}")
 
         # All fields left in the key_dict are unrecognized.
         return cls(keyid, keytype, scheme, keyval, key_dict)
