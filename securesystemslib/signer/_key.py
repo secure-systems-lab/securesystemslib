@@ -95,7 +95,6 @@ class Key(metaclass=ABCMeta):
         keyval: Dict[str, Any],
         unrecognized_fields: Optional[Dict[str, Any]] = None,
     ):
-
         if not all(
             isinstance(at, str) for at in [keyid, keytype, scheme]
         ) or not isinstance(keyval, dict):
@@ -211,7 +210,6 @@ class SSlibKey(Key):
     ):
         if "public" not in keyval or not isinstance(keyval["public"], str):
             raise ValueError(f"public key string required for scheme {scheme}")
-
         super().__init__(keyid, keytype, scheme, keyval, unrecognized_fields)
 
     @classmethod

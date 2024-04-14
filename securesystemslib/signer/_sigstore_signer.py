@@ -49,7 +49,6 @@ class SigstoreKey(Key):
                 raise ValueError(
                     f"{content} string required for scheme {scheme}"
                 )
-
         super().__init__(keyid, keytype, scheme, keyval, unrecognized_fields)
 
     @classmethod
