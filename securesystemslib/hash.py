@@ -64,8 +64,7 @@ try:
 
         <Properties>
           algorithm:
-            Specific for `cryptography.hazmat.primitives.hashes.Hash` object, but
-            needed for `rsa_keys.py`
+            Specific for `cryptography.hazmat.primitives.hashes.Hash` object.
 
           digest_size:
             Returns original's object digest size.
@@ -394,8 +393,7 @@ def digest_from_rsa_scheme(scheme, hash_library=DEFAULT_HASH_LIBRARY):
     <Arguments>
       scheme:
         A string that indicates the signature scheme used to generate
-        'signature'. Currently supported RSA schemes are defined in
-        `securesystemslib.keys.RSA_SIGNATURE_SCHEMES`
+        'signature'.
 
       hash_library:
         The crypto library to use for the given hash algorithm (e.g., 'hashlib').

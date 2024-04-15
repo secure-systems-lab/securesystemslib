@@ -23,7 +23,6 @@ import timeit
 import unittest
 
 import securesystemslib.hash
-import securesystemslib.settings
 import securesystemslib.util
 from securesystemslib import exceptions, unittest_toolbox
 

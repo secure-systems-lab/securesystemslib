@@ -51,7 +51,6 @@ gcpkms = ["google-cloud-kms", "cryptography>=40.0.0"]
 azurekms = ["azure-identity", "azure-keyvault-keys", "cryptography>=40.0.0"]
 awskms = ["boto3", "botocore", "cryptography>=40.0.0"]
 hsm = ["asn1crypto", "cryptography>=40.0.0", "PyKCS11"]
-pynacl = ["pynacl>1.2.0"]
 PySPX = ["PySPX>=0.5.0"]
 sigstore = ["sigstore~=2.0"]
 
