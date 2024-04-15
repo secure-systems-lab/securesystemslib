@@ -36,16 +36,24 @@ class SigstoreKey(Key):
     DEFAULT_KEY_TYPE = "sigstore-oidc"
     DEFAULT_SCHEME = "Fulcio"
 
-    @classmethod
-    def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "SigstoreKey":
-        keytype, scheme, keyval = cls._from_dict(key_dict)
-
+    def __init__(
+        self,
+        keyid: str,
+        keytype: str,
+        scheme: str,
+        keyval: Dict[str, Any],
+        unrecognized_fields: Optional[Dict[str, Any]] = None,
+    ):
         for content in ["identity", "issuer"]:
             if content not in keyval or not isinstance(keyval[content], str):
                 raise ValueError(
                     f"{content} string required for scheme {scheme}"
                 )
+        super().__init__(keyid, keytype, scheme, keyval, unrecognized_fields)
 
+    @classmethod
+    def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "SigstoreKey":
+        keytype, scheme, keyval = cls._from_dict(key_dict)
         return cls(keyid, keytype, scheme, keyval, key_dict)
 
     def to_dict(self) -> Dict:

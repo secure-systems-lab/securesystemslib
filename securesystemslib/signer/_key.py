@@ -200,12 +200,21 @@ class Key(metaclass=ABCMeta):
 class SSlibKey(Key):
     """Key implementation for RSA, Ed25519, ECDSA keys"""
 
+    def __init__(
+        self,
+        keyid: str,
+        keytype: str,
+        scheme: str,
+        keyval: Dict[str, Any],
+        unrecognized_fields: Optional[Dict[str, Any]] = None,
+    ):
+        if "public" not in keyval or not isinstance(keyval["public"], str):
+            raise ValueError(f"public key string required for scheme {scheme}")
+        super().__init__(keyid, keytype, scheme, keyval, unrecognized_fields)
+
     @classmethod
     def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "SSlibKey":
         keytype, scheme, keyval = cls._from_dict(key_dict)
-
-        if "public" not in keyval or not isinstance(keyval["public"], str):
-            raise ValueError(f"public key string required for scheme {scheme}")
 
         # All fields left in the key_dict are unrecognized.
         return cls(keyid, keytype, scheme, keyval, key_dict)
