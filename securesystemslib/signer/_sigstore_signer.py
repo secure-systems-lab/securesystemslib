@@ -1,5 +1,10 @@
 """Signer implementation for project sigstore.
 
+NOTE: SigstoreSigner and -Key are disabled temporarily around
+the Securesystemslib 1.0 release as the cyclic dependency
+(securesystemslib -> sigstore-python -> tuf -> securesystemslib)
+is problematic during API deprecations.
+See issue #781.
 """
 
 import io
