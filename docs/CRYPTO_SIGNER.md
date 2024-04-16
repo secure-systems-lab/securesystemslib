@@ -27,9 +27,9 @@ The typical Signer API usage is described in
 [this blog post](https://theupdateframework.github.io/python-tuf/2023/01/24/securesystemslib-signer-api.html)
 and outlined below for a file-based signer.
 
-#### 1. Generate key files
-*`CryptoSigner` does not provide API to generate key files. Compatible
-keys can be generated with standard tools like `openssl genpkey` (CLI) or
+#### 1. Generate key content
+*`CryptoSigner` does not provide a comprehensive API for key content generation.
+Compatible keys can be generated with standard tools like `openssl genpkey` (CLI) or
 `pyca/cryptography` (Python).*
 
 ```python
@@ -38,64 +38,30 @@ from cryptography.hazmat.primitives import asymmetric, serialization
 # Generate key pair
 private_key = asymmetric.ed25519.Ed25519PrivateKey.generate()
 
-# Serialize private key as encrypted PEM/PKCS8
+# Deploy private key
 private_pem = private_key.private_bytes(
     encoding=serialization.Encoding.PEM,
     format=serialization.PrivateFormat.PKCS8,
-    encryption_algorithm=serialization.BestAvailableEncryption(b"hunter2"),
 )
-
-# Serialize public key as encrypted PEM/subjectPublicKeyInfo
-public_pem = private_key.public_key().public_bytes(
-    encoding=serialization.Encoding.PEM,
-    format=serialization.PublicFormat.SubjectPublicKeyInfo,
-)
-
-# Write key files
 with open("private.pem", "wb") as f:
     f.write(private_pem)
-with open("public.pem", "wb") as f:
-    f.write(public_pem)
+
+# TODO: The public details (public key and the private key URI) must be stored
+# somewhere. In a TUF system the public key goes into TUF metadata, and the
+# URI can can be stored either in the metadata as well (as a custom field) or in
+# signing application configuration
+public_key = SSlibKey.from_crypto(private_key.public_key())
+uri = "file2:private.pem"
 ```
 
-#### 2. Prepare signing environment
+#### 2. Load and use signer
+
+Signer usage is not specific to CryptoSigner:
 
 ```python
-import os
-from securesystemslib.signer import SSlibKey
+from securesystemslib.signer import Signer
 
-with open("public.pem", "rb") as f:
-    public_bytes = f.read()
-
-# Make public key, signer URI, and key decryption password available to the
-# signer, e.g. via environment variables. The private key file must also be
-# available to the signer at the specified path.
-os.environ.update({
-    "SIGNER_URI":  "file:private.pem?encrypted=true",
-    "SIGNER_PUBLIC": public_bytes.decode(),
-    "SIGNER_SECRET": "hunter2"
-})
-```
-
-#### 3. Load and use signer
-
-```python
-import os
-from securesystemslib.signer import SSlibKey, Signer, CryptoSigner, SIGNER_FOR_URI_SCHEME
-from cryptography.hazmat.primitives.serialization import load_pem_public_key
-
-
-# NOTE: Registration becomes obsolete once CryptoSigner is the default file signer
-SIGNER_FOR_URI_SCHEME.update({CryptoSigner.FILE_URI_SCHEME: CryptoSigner})
-
-# Read signer details
-uri = os.environ["SIGNER_URI"]
-public_key = SSlibKey.from_crypto(
-    load_pem_public_key(os.environ["SIGNER_PUBLIC"].encode())
-)
-secrets_handler = lambda sec: os.environ["SIGNER_SECRET"]
-
-# Load and sign
-signer = Signer.from_priv_key_uri(uri, public_key, secrets_handler)
+# TODO: load the URI and public key (see earlier comment)
+signer = Signer.from_priv_key_uri(uri, public_key)
 signer.sign(b"data")
 ```

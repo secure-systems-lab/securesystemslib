@@ -5,6 +5,7 @@ import os
 import shutil
 import tempfile
 import unittest
+from contextlib import suppress
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -657,27 +658,21 @@ class TestCryptoSigner(unittest.TestCase):
             ),
         ]
 
-        # FIXME: remove, if CryptoSigner.FILE_URI_SCHEME becomes default (#617)
-        signer_backup = SIGNER_FOR_URI_SCHEME.get(CryptoSigner.FILE_URI_SCHEME)
-        SIGNER_FOR_URI_SCHEME[CryptoSigner.FILE_URI_SCHEME] = CryptoSigner
-
         for keytype, scheme, public_key_value, fname in test_data:
-            for encrypted in [True, False]:
-                if encrypted:
-                    priv_fname = fname.replace(".pem", "_encrypted.pem")
-                    uri = f"file:{PEMS_DIR / priv_fname}?encrypted=true"
-
-                    def handler(_):
-                        return "hunter2"
-
+            for use_prefix in [True, False]:
+                if use_prefix:
+                    # uri path is relative from CRYPTO_SIGNER_PATH_PREFIX
+                    os.environ["CRYPTO_SIGNER_PATH_PREFIX"] = str(PEMS_DIR)
+                    uri = f"file2:{fname}"
                 else:
-                    uri = f"file:{PEMS_DIR / fname}?encrypted=false"
-                    handler = None
+                    with suppress(KeyError):
+                        del os.environ["CRYPTO_SIGNER_PATH_PREFIX"]
+                    uri = f"file2:{PEMS_DIR / fname}"
 
                 public_key = SSlibKey(
                     "abcdefg", keytype, scheme, {"public": public_key_value}
                 )
-                signer = Signer.from_priv_key_uri(uri, public_key, handler)
+                signer = Signer.from_priv_key_uri(uri, public_key)
                 self.assertIsInstance(signer, CryptoSigner)
 
                 sig = signer.sign(b"DATA")
@@ -687,17 +682,10 @@ class TestCryptoSigner(unittest.TestCase):
                 with self.assertRaises(UnverifiedSignatureError):
                     signer.public_key.verify_signature(sig, b"NOT DATA")
 
-        if signer_backup:
-            SIGNER_FOR_URI_SCHEME[CryptoSigner.FILE_URI_SCHEME] = signer_backup
-
-        with self.assertRaises(ValueError):
-            # no "encrypted" param
-            Signer.from_priv_key_uri("file:path/to/privkey", signer.public_key)
-
         with self.assertRaises(OSError):
             # file not found
-            uri = "file:nonexistentfile?encrypted=false"
-            Signer.from_priv_key_uri(uri, signer.public_key)
+            uri = "file2:nonexistentfile"
+            Signer.from_priv_key_uri(uri, public_key)
 
     def test_generate(self):
         """Test generate and use signer (key pair) for each sslib keytype"""

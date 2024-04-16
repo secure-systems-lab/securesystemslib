@@ -1,6 +1,7 @@
 """Signer implementation for pyca/cryptography signing. """
 
 import logging
+import os
 from dataclasses import astuple, dataclass
 from typing import Optional, Union
 from urllib import parse
@@ -26,7 +27,6 @@ try:
     from cryptography.hazmat.primitives.asymmetric.padding import (
         MGF1,
         PSS,
-        AsymmetricPadding,
         PKCS1v15,
     )
     from cryptography.hazmat.primitives.asymmetric.rsa import (
@@ -108,24 +108,24 @@ class CryptoSigner(Signer):
 
     A CryptoSigner can be created from:
 
-        a. private key file -- ``Signer.from_priv_key_uri()``
+        a. private key file -- see ``Signer.from_priv_key_uri()``
 
-          URI has the format "file:<PATH>?encrypted=[true|false]", where
-          PATH is the path to a file with private key data in a standard
-          PEM/PKCS8 format.
+          This is the generic (not CryptoSigner specific) way to
+          create a signer: use this when you already have a private
+          key  (and a private key URI) you can use.
 
-          A related public key must be passed.
+        b. newly generated key pair -- see ``CryptoSigner.generate_*()``
 
-          If  ``encrypted=true``, the optional secrets handler is expected to
-          return a decryption password.
-
-        b. newly generated key pair -- ``CryptoSigner.generate_*()``
+          Use this when you need a brand new private key pair.
 
         c. existing pyca/cryptography private key object -- ``CryptoSigner()``
 
+          Use this if you need a brand new private key pair and option
+          b is not flexible enough for your case.
     """
 
-    FILE_URI_SCHEME = "file"
+    SCHEME = "file2"
+    PREFIX_ENV_VAR = "CRYPTO_SIGNER_PATH_PREFIX"
 
     def __init__(
         self,
@@ -204,6 +204,13 @@ class CryptoSigner(Signer):
         expected (and tested) encoding/format is PEM/PKCS8. Other formats may
         but are not guaranteed to work.
 
+        URI has the format "file2:<PATH>", where PATH is a filesystem path to the
+        private key file. If CRYPTO_SIGNER_PATH_PREFIX environment variable
+        is set, the private key will be read from
+        ``CRYPTO_SIGNER_PATH_PREFIX + <SEPARATOR> + PATH``. The purpose of this
+        is to allow PATH to only encode an identifier (e.g. filename) while allowing
+        the signing system to store the private keys whereever it wants at runtime.
+
         Additionally raises:
             UnsupportedLibraryError: pyca/cryptography not installed
             OSError: file cannot be read
@@ -221,25 +228,21 @@ class CryptoSigner(Signer):
 
         uri = parse.urlparse(priv_key_uri)
 
-        if uri.scheme != cls.FILE_URI_SCHEME:
+        if uri.scheme != cls.SCHEME:
             raise ValueError(f"CryptoSigner does not support {priv_key_uri}")
 
-        params = dict(parse.parse_qsl(uri.query))
+        prefix = os.environ.get(cls.PREFIX_ENV_VAR)
+        path = os.path.join(prefix, uri.path) if prefix else uri.path
+        try:
+            with open(path, "rb") as f:
+                private_pem = f.read()
+        except FileNotFoundError as e:
+            raise FileNotFoundError(
+                f"Private key not found in '{path}' (with ",
+                f"{cls.PREFIX_ENV_VAR}: {prefix}, path: {uri.path})",
+            ) from e
 
-        if "encrypted" not in params:
-            raise ValueError(f"{uri.scheme} requires 'encrypted' parameter")
-
-        secret = None
-        if params["encrypted"] != "false":
-            if not secrets_handler:
-                raise ValueError("encrypted key requires a secrets handler")
-
-            secret = secrets_handler("passphrase").encode()
-
-        with open(uri.path, "rb") as f:
-            private_pem = f.read()
-
-        private_key = load_pem_private_key(private_pem, secret)
+        private_key = load_pem_private_key(private_pem, None)
         return CryptoSigner(private_key, public_key)
 
     @staticmethod

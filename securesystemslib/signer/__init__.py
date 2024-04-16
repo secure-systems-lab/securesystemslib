@@ -28,6 +28,7 @@ from securesystemslib.signer._spx_signer import (
 # Register supported private key uri schemes and the Signers implementing them
 SIGNER_FOR_URI_SCHEME.update(
     {
+        CryptoSigner.SCHEME: CryptoSigner,
         GCPSigner.SCHEME: GCPSigner,
         HSMSigner.SCHEME: HSMSigner,
         GPGSigner.SCHEME: GPGSigner,
