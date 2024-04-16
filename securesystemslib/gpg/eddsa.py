@@ -19,7 +19,7 @@
 
 import binascii
 
-from securesystemslib import exceptions, formats
+from securesystemslib import exceptions
 from securesystemslib.gpg import util as gpg_util
 from securesystemslib.gpg.exceptions import PacketParsingError
 
@@ -65,8 +65,7 @@ def get_pubkey_params(data):
 
     <Returns>
       A dictionary with an element "q" that holds the ascii hex representation
-      of the MPI of an EC point representing an EdDSA public key that conforms
-      with securesystemslib.formats.GPG_ED25519_PUBKEY_SCHEMA.
+      of the MPI of an EC point representing an EdDSA public key.
 
     """
     ptr = 0
@@ -163,12 +162,9 @@ def create_pubkey(pubkey_info):
 
     <Arguments>
       pubkey_info:
-            The ED25519 public key dictionary as specified by
-            securesystemslib.formats.GPG_ED25519_PUBKEY_SCHEMA
+            The ED25519 public key dict.
 
     <Exceptions>
-      securesystemslib.exceptions.FormatError if
-        pubkey_info does not match securesystemslib.formats.GPG_DSA_PUBKEY_SCHEMA
 
       securesystemslib.exceptions.UnsupportedLibraryError if
         the cryptography module is unavailable
@@ -180,8 +176,6 @@ def create_pubkey(pubkey_info):
     """
     if not CRYPTO:  # pragma: no cover
         raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
-
-    formats.GPG_ED25519_PUBKEY_SCHEMA.check_match(pubkey_info)
 
     public_bytes = binascii.unhexlify(pubkey_info["keyval"]["public"]["q"])
     public_key = pyca_ed25519.Ed25519PublicKey.from_public_bytes(public_bytes)
@@ -197,12 +191,10 @@ def verify_signature(signature_object, pubkey_info, content, hash_algorithm_id):
 
     <Arguments>
       signature_object:
-              A signature dictionary as specified by
-              securesystemslib.formats.GPG_SIGNATURE_SCHEMA
+              A signature dict.
 
       pubkey_info:
-              The DSA public key info dictionary as specified by
-              securesystemslib.formats.GPG_ED25519_PUBKEY_SCHEMA
+              A DSA public key dict.
 
       hash_algorithm_id:
               one of SHA1, SHA256, SHA512 (see securesystemslib.gpg.constants)
@@ -214,10 +206,6 @@ def verify_signature(signature_object, pubkey_info, content, hash_algorithm_id):
               The signed bytes against which the signature is verified
 
     <Exceptions>
-      securesystemslib.exceptions.FormatError if:
-        signature_object does not match securesystemslib.formats.GPG_SIGNATURE_SCHEMA
-        pubkey_info does not match securesystemslib.formats.GPG_ED25519_PUBKEY_SCHEMA
-
       securesystemslib.exceptions.UnsupportedLibraryError if:
         the cryptography module is unavailable
 
@@ -231,9 +219,6 @@ def verify_signature(signature_object, pubkey_info, content, hash_algorithm_id):
     """
     if not CRYPTO:  # pragma: no cover
         raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
-
-    formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
-    formats.GPG_ED25519_PUBKEY_SCHEMA.check_match(pubkey_info)
 
     hasher = gpg_util.get_hashing_class(hash_algorithm_id)
 

@@ -14,11 +14,7 @@ from cryptography.hazmat.primitives.serialization import (
     load_pem_public_key,
 )
 
-from securesystemslib.exceptions import (
-    FormatError,
-    UnverifiedSignatureError,
-    VerificationError,
-)
+from securesystemslib.exceptions import FormatError, UnverifiedSignatureError
 from securesystemslib.gpg.constants import have_gpg
 from securesystemslib.gpg.exceptions import CommandError, KeyNotFoundError
 from securesystemslib.signer import (
@@ -440,10 +436,6 @@ class TestGPGRSA(unittest.TestCase):
 
         with self.assertRaises(UnverifiedSignatureError):
             public_key.verify_signature(sig, self.wrong_data)
-
-        sig.keyid = 123456
-        with self.assertRaises(VerificationError):
-            public_key.verify_signature(sig, self.test_data)
 
     def test_gpg_fail_sign_keyid_match(self):
         """Fail signing because signature keyid does not match public key."""

@@ -4,7 +4,8 @@ import logging
 from typing import Any, Dict, Optional, Tuple
 from urllib import parse
 
-from securesystemslib import exceptions, formats
+from securesystemslib import exceptions
+from securesystemslib.gpg import constants as gpg_constants
 from securesystemslib.gpg import exceptions as gpg_exceptions
 from securesystemslib.gpg import functions as gpg
 from securesystemslib.signer._key import Key
@@ -52,10 +53,7 @@ class GPGKey(Key):
                 raise exceptions.UnverifiedSignatureError(
                     f"Failed to verify signature by {self.keyid}"
                 )
-        except (
-            exceptions.FormatError,
-            exceptions.UnsupportedLibraryError,
-        ) as e:
+        except (exceptions.UnsupportedLibraryError,) as e:
             logger.info("Key %s failed to verify sig: %s", self.keyid, str(e))
             raise exceptions.VerificationError(
                 f"Unknown failure to verify signature by {self.keyid}"
@@ -138,7 +136,7 @@ class GPGSigner(Signer):
             "keyid": key.keyid,
             "type": key.keytype,
             "method": key.scheme,
-            "hashes": [formats.GPG_HASH_ALGORITHM_STRING],
+            "hashes": [gpg_constants.GPG_HASH_ALGORITHM_STRING],
             "keyval": key.keyval,
         }
 

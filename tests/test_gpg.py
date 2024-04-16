@@ -31,7 +31,6 @@ import cryptography.hazmat.primitives.hashes as hashing
 from cryptography.hazmat import backends
 from cryptography.hazmat.primitives import serialization
 
-from securesystemslib.formats import ANY_PUBKEY_DICT_SCHEMA, GPG_PUBKEY_SCHEMA
 from securesystemslib.gpg.common import (
     _assign_certified_key_info,
     _get_verified_subkeys,
@@ -286,11 +285,10 @@ class TestCommon(unittest.TestCase):
         gpg --list-packets
     ```
     """
-        # Expect parsed primary key matching GPG_PUBKEY_SCHEMA
-        self.assertTrue(
-            GPG_PUBKEY_SCHEMA.matches(
-                self.raw_key_bundle[PACKET_TYPE_PRIMARY_KEY]["key"]
-            )
+        # Expect parsed primary key
+        self.assertEqual(
+            self.raw_key_bundle[PACKET_TYPE_PRIMARY_KEY]["key"]["method"],
+            "pgp+rsa-pkcsv1.5",
         )
 
         # Parse corresponding raw packet for comparison
@@ -599,7 +597,7 @@ class TestGPGRSA(unittest.TestCase):
 
     def test_export_pubkey_error(self):
         """Test correct error is raised if function called incorrectly."""
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyNotFoundError):
             export_pubkey("not-a-key-id")
 
     def test_export_pubkey(self):
@@ -655,7 +653,6 @@ class TestGPGRSA(unittest.TestCase):
             [self.default_keyid, self.keyid_768C43], homedir=self.gnupg_home
         )
 
-        ANY_PUBKEY_DICT_SCHEMA.check_match(key_dict)
         self.assertListEqual(
             sorted([self.default_keyid.lower(), self.keyid_768C43.lower()]),
             sorted(key_dict.keys()),

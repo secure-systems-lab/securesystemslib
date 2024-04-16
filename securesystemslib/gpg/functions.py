@@ -20,7 +20,7 @@ import logging
 import subprocess  # nosec
 import time
 
-from securesystemslib import exceptions, formats
+from securesystemslib import exceptions
 from securesystemslib.gpg.common import (
     get_pubkey_bundle,
     parse_signature_packet,
@@ -73,9 +73,6 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
               gpg command timeout in seconds. Default is 10.
 
     <Exceptions>
-      securesystemslib.exceptions.FormatError:
-              If the keyid was passed and does not match
-              securesystemslib.formats.KEYID_SCHEMA
 
       ValueError:
               If the gpg command failed to create a valid signature.
@@ -98,8 +95,7 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
       None.
 
     <Returns>
-      The created signature in the format:
-      securesystemslib.formats.GPG_SIGNATURE_SCHEMA.
+      A signature dict.
 
     """
     if not have_gpg():  # pragma: no cover
@@ -110,7 +106,6 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
 
     keyarg = ""
     if keyid:
-        formats.KEYID_SCHEMA.check_match(keyid)
         keyarg = (
             "--local-user {}".format(  # pylint: disable=consider-using-f-string
                 keyid
@@ -211,12 +206,10 @@ def verify_signature(signature_object, pubkey_info, content):
 
     <Arguments>
       signature_object:
-              A signature object in the format:
-              securesystemslib.formats.GPG_SIGNATURE_SCHEMA
+              A signature dict.
 
       pubkey_info:
-              A public key object in the format:
-              securesystemslib.formats.GPG_PUBKEY_SCHEMA
+              A public key dict.
 
       content:
               The content to be verified. (bytes)
@@ -237,9 +230,6 @@ def verify_signature(signature_object, pubkey_info, content):
     """
     if not CRYPTO:  # pragma: no cover
         raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
-
-    formats.GPG_PUBKEY_SCHEMA.check_match(pubkey_info)
-    formats.GPG_SIGNATURE_SCHEMA.check_match(signature_object)
 
     handler = SIGNATURE_HANDLERS[pubkey_info["type"]]
     sig_keyid = signature_object["keyid"]
@@ -270,13 +260,12 @@ def export_pubkey(keyid, homedir=None, timeout=GPG_TIMEOUT):
     """Exports a public key from a GnuPG keyring.
 
     Arguments:
-      keyid: An OpenPGP keyid in KEYID_SCHEMA format.
+      keyid: An OpenPGP keyid..
       homedir (optional): A path to the GnuPG home directory. If not set the
           default GnuPG home directory is used.
       timeout (optional): gpg command timeout in seconds. Default is 10.
 
     Raises:
-      ValueError: Keyid is not a string.
       UnsupportedLibraryError: The gpg command or pyca/cryptography are not
           available.
       KeyNotFoundError: No key or subkey was found for that keyid.
@@ -285,7 +274,7 @@ def export_pubkey(keyid, homedir=None, timeout=GPG_TIMEOUT):
       Calls system gpg command in a subprocess.
 
     Returns:
-      An OpenPGP public key object in GPG_PUBKEY_SCHEMA format.
+      An OpenPGP public key dict.
 
     """
     if not have_gpg():  # pragma: no cover
@@ -293,14 +282,6 @@ def export_pubkey(keyid, homedir=None, timeout=GPG_TIMEOUT):
 
     if not CRYPTO:  # pragma: no cover
         raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
-
-    if not formats.KEYID_SCHEMA.matches(keyid):
-        # FIXME: probably needs smarter parsing of what a valid keyid is so as to
-        # not export more than one pubkey packet.
-        raise ValueError(
-            "we need to export an individual key. Please provide a "  # pylint: disable=consider-using-f-string
-            " valid keyid! Keyid was '{}'.".format(keyid)
-        )
 
     homearg = ""
     if homedir:
@@ -330,7 +311,7 @@ def export_pubkeys(keyids, homedir=None, timeout=GPG_TIMEOUT):
     """Exports multiple public keys from a GnuPG keyring.
 
     Arguments:
-      keyids: A list of OpenPGP keyids in KEYID_SCHEMA format.
+      keyids: A list of OpenPGP keyids.
       homedir (optional): A path to the GnuPG home directory. If not set the
           default GnuPG home directory is used.
       timeout (optional): gpg command timeout in seconds. Default is 10.
@@ -346,7 +327,7 @@ def export_pubkeys(keyids, homedir=None, timeout=GPG_TIMEOUT):
       Calls system gpg command in a subprocess.
 
     Returns:
-      A dict of OpenPGP public key objects in GPG_PUBKEY_SCHEMA format as values,
+      A dict of OpenPGP public key dicts as values,
       and their keyids as dict keys.
 
 

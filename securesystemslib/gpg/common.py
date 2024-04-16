@@ -23,10 +23,10 @@ import collections
 import logging
 import struct
 
-from securesystemslib import formats
 from securesystemslib.gpg import util as gpg_util
 from securesystemslib.gpg.constants import (
     FULL_KEYID_SUBPACKET,
+    GPG_HASH_ALGORITHM_STRING,
     KEY_EXPIRATION_SUBPACKET,
     PACKET_TYPE_PRIMARY_KEY,
     PACKET_TYPE_SIGNATURE,
@@ -93,7 +93,7 @@ def parse_pubkey_payload(data):
       None.
 
     <Returns>
-      A public key in the format securesystemslib.formats.GPG_PUBKEY_SCHEMA
+      A public key dict.
 
     """
     if not data:
@@ -145,7 +145,7 @@ def parse_pubkey_payload(data):
     return {
         "method": keyinfo["method"],
         "type": keyinfo["type"],
-        "hashes": [formats.GPG_HASH_ALGORITHM_STRING],
+        "hashes": [GPG_HASH_ALGORITHM_STRING],
         "creation_time": time_of_creation[0],
         "keyid": keyinfo["keyid"],
         "keyval": {"private": "", "public": key_params},
@@ -333,7 +333,7 @@ def _assign_certified_key_info(bundle):
       None.
 
     <Returns>
-      A public key in the format securesystemslib.formats.GPG_PUBKEY_SCHEMA.
+      A public key dict.
 
     """
     # Create handler shortcut
@@ -476,8 +476,7 @@ def _get_verified_subkeys(bundle):
       None.
 
     <Returns>
-      A dictionary of public keys in the format
-      securesystemslib.formats.GPG_PUBKEY_SCHEMA, with keyids as dict keys.
+      A dict of public keys dicts with keyids as dict keys.
 
     """
     # Create handler shortcut
@@ -601,19 +600,14 @@ def get_pubkey_bundle(data, keyid):
             If no master key or subkeys could be found that matches the passed
             keyid.
 
-      securesystemslib.exceptions.FormatError
-            If the passed keyid does not match
-            securesystemslib.formats.KEYID_SCHEMA
 
     <Side Effects>
       None.
 
     <Returns>
-      A public key in the format securesystemslib.formats.GPG_PUBKEY_SCHEMA with
-      optional subkeys.
+      A public key dict with optional subkeys.
 
     """
-    formats.KEYID_SCHEMA.check_match(keyid)
     if not data:
         raise KeyNotFoundError(
             "Could not find gpg key '{}' in empty exported key "  # pylint: disable=consider-using-f-string
@@ -703,9 +697,7 @@ def parse_signature_packet(  # pylint: disable=too-many-locals,too-many-branches
       None.
 
     <Returns>
-      A signature dictionary matching
-      securesystemslib.formats.GPG_SIGNATURE_SCHEMA with the following special
-      characteristics:
+      A signature dict with the following special characteristics:
        - The "keyid" field is an empty string if it cannot be determined
        - The "short_keyid" is not added if it cannot be determined
        - At least one of non-empty "keyid" or "short_keyid" are part of the
