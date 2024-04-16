@@ -114,14 +114,6 @@ class CryptoSigner(Signer):
           create a signer: use this when you already have a private
           key  (and a private key URI) you can use.
 
-          URI has the format "file2:<PATH>", where PATH is a filesystem
-          path to the private key file. If CRYPTO_SIGNER_PATH_PREFIX
-          environment variable set, the private key will be read from
-          ``CRYPTO_SIGNER_PATH_PREFIX + <SEPARATOR> + PATH``. The
-          purpose of this is to allow PATH to only encode an identifier
-          (e.g. filename) while allowing the signing system to store
-          the private keys where ever it wants at runtime.
-
         b. newly generated key pair -- see ``CryptoSigner.generate_*()``
 
           Use this when you need a brand new private key pair.
@@ -217,7 +209,7 @@ class CryptoSigner(Signer):
         is set, the private key will be read from
         ``CRYPTO_SIGNER_PATH_PREFIX + <SEPARATOR> + PATH``. The purpose of this
         is to allow PATH to only encode an identifier (e.g. filename) while allowing
-        the signing system to store the private keys where ever it wants at runtime.
+        the signing system to store the private keys whereever it wants at runtime.
 
         Additionally raises:
             UnsupportedLibraryError: pyca/cryptography not installed
