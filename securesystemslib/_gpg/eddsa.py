@@ -20,8 +20,8 @@
 import binascii
 
 from securesystemslib import exceptions
-from securesystemslib.gpg import util as gpg_util
-from securesystemslib.gpg.exceptions import PacketParsingError
+from securesystemslib._gpg import util as gpg_util
+from securesystemslib._gpg.exceptions import PacketParsingError
 
 CRYPTO = True
 NO_CRYPTO_MSG = "EdDSA key support for GPG requires the cryptography library"
@@ -57,7 +57,7 @@ def get_pubkey_params(data):
             public-key algorithm of this key.
 
     <Exceptions>
-      securesystemslib.gpg.exceptions.PacketParsingError or IndexError:
+      securesystemslib._gpg.exceptions.PacketParsingError or IndexError:
             if the public key data is malformed.
 
     <Side Effects>
@@ -197,7 +197,7 @@ def verify_signature(signature_object, pubkey_info, content, hash_algorithm_id):
               A DSA public key dict.
 
       hash_algorithm_id:
-              one of SHA1, SHA256, SHA512 (see securesystemslib.gpg.constants)
+              one of SHA1, SHA256, SHA512 (see securesystemslib._gpg.constants)
               used to verify the signature
               NOTE: Overrides any hash algorithm specification in "pubkey_info"'s
               "hashes" or "method" fields.
@@ -211,7 +211,7 @@ def verify_signature(signature_object, pubkey_info, content, hash_algorithm_id):
 
       ValueError:
         if the passed hash_algorithm_id is not supported (see
-        securesystemslib.gpg.util.get_hashing_class)
+        securesystemslib._gpg.util.get_hashing_class)
 
     <Returns>
       True if signature verification passes and False otherwise.

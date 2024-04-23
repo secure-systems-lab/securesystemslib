@@ -29,8 +29,8 @@ except ImportError:
 
 # pylint: disable=wrong-import-position
 from securesystemslib import exceptions
-from securesystemslib.gpg import constants
-from securesystemslib.gpg.exceptions import PacketParsingError
+from securesystemslib._gpg import constants
+from securesystemslib._gpg.exceptions import PacketParsingError
 
 log = logging.getLogger(__name__)
 
@@ -113,11 +113,11 @@ def parse_packet_header(
 
       expected_type: (optional)
               Used to error out if the packet does not have the expected
-              type. See securesystemslib.gpg.constants.PACKET_TYPE_* for
+              type. See securesystemslib._gpg.constants.PACKET_TYPE_* for
               available types.
 
     <Exceptions>
-      securesystemslib.gpg.exceptions.PacketParsingError
+      securesystemslib._gpg.exceptions.PacketParsingError
               If the new format packet length encodes a partial body length
               If the old format packet length encodes an indeterminate length
               If header or body length could not be determined
@@ -315,7 +315,7 @@ def get_hashing_class(hash_algorithm_id):
 
     <Arguments>
       hash_algorithm_id:
-              one of SHA1, SHA256, SHA512 (see securesystemslib.gpg.constants)
+              one of SHA1, SHA256, SHA512 (see securesystemslib._gpg.constants)
 
     <Exceptions>
       ValueError

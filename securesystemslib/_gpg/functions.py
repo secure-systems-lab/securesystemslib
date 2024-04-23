@@ -21,11 +21,11 @@ import subprocess  # nosec
 import time
 
 from securesystemslib import exceptions
-from securesystemslib.gpg.common import (
+from securesystemslib._gpg.common import (
     get_pubkey_bundle,
     parse_signature_packet,
 )
-from securesystemslib.gpg.constants import (
+from securesystemslib._gpg.constants import (
     FULLY_SUPPORTED_MIN_VERSION,
     GPG_TIMEOUT,
     NO_GPG_MSG,
@@ -34,9 +34,9 @@ from securesystemslib.gpg.constants import (
     gpg_sign_command,
     have_gpg,
 )
-from securesystemslib.gpg.exceptions import CommandError, KeyExpirationError
-from securesystemslib.gpg.handlers import SIGNATURE_HANDLERS
-from securesystemslib.gpg.rsa import CRYPTO
+from securesystemslib._gpg.exceptions import CommandError, KeyExpirationError
+from securesystemslib._gpg.handlers import SIGNATURE_HANDLERS
+from securesystemslib._gpg.rsa import CRYPTO
 
 log = logging.getLogger(__name__)
 
@@ -50,10 +50,10 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
       identified by the passed keyid from the gpg keyring at the passed homedir.
 
       The executed base command is defined in
-      securesystemslib.gpg.constants.gpg_sign_command.
+      securesystemslib._gpg.constants.gpg_sign_command.
 
       NOTE: On not fully supported versions of GPG, i.e. versions below
-      securesystemslib.gpg.constants.FULLY_SUPPORTED_MIN_VERSION the returned
+      securesystemslib._gpg.constants.FULLY_SUPPORTED_MIN_VERSION the returned
       signature does not contain the full keyid. As a work around, we export the
       public key bundle identified by the short keyid to compute the full keyid
       and add it to the returned signature.
@@ -84,10 +84,10 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
               If the gpg command is not available, or
               the cryptography library is not installed.
 
-      securesystemslib.gpg.exceptions.CommandError:
+      securesystemslib._gpg.exceptions.CommandError:
               If the gpg command returned a non-zero exit code
 
-      securesystemslib.gpg.exceptions.KeyNotFoundError:
+      securesystemslib._gpg.exceptions.KeyNotFoundError:
               If the used gpg version is not fully supported
               and no public key can be found for short keyid.
 
@@ -215,7 +215,7 @@ def verify_signature(signature_object, pubkey_info, content):
               The content to be verified. (bytes)
 
     <Exceptions>
-      securesystemslib.gpg.exceptions.KeyExpirationError:
+      securesystemslib._gpg.exceptions.KeyExpirationError:
               if the passed public key has expired
 
       securesystemslib.exceptions.UnsupportedLibraryError:

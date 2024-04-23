@@ -28,8 +28,8 @@ except ImportError:
 
 # pylint: disable=wrong-import-position
 from securesystemslib import exceptions
-from securesystemslib.gpg import util as gpg_util
-from securesystemslib.gpg.exceptions import PacketParsingError
+from securesystemslib._gpg import util as gpg_util
+from securesystemslib._gpg.exceptions import PacketParsingError
 
 # pylint: enable=wrong-import-position
 
@@ -74,7 +74,7 @@ def get_pubkey_params(data):
              in the fifth paragraph of section 5.5.2.
 
     <Exceptions>
-      securesystemslib.gpg.exceptions.PacketParsingError:
+      securesystemslib._gpg.exceptions.PacketParsingError:
              if the public key parameters are malformed
 
     <Side Effects>
@@ -115,7 +115,7 @@ def get_signature_params(data):
              in the third paragraph of section 5.2.2.
 
     <Exceptions>
-      securesystemslib.gpg.exceptions.PacketParsingError:
+      securesystemslib._gpg.exceptions.PacketParsingError:
              if the public key parameters are malformed
 
     <Side Effects>
@@ -152,7 +152,7 @@ def verify_signature(signature_object, pubkey_info, content, hash_algorithm_id):
               The signed bytes against which the signature is verified
 
       hash_algorithm_id:
-              one of SHA1, SHA256, SHA512 (see securesystemslib.gpg.constants)
+              one of SHA1, SHA256, SHA512 (see securesystemslib._gpg.constants)
               used to verify the signature
               NOTE: Overrides any hash algorithm specification in "pubkey_info"'s
               "hashes" or "method" fields.
@@ -163,7 +163,7 @@ def verify_signature(signature_object, pubkey_info, content, hash_algorithm_id):
 
       ValueError:
         if the passed hash_algorithm_id is not supported (see
-        securesystemslib.gpg.util.get_hashing_class)
+        securesystemslib._gpg.util.get_hashing_class)
 
     <Returns>
       True if signature verification passes and False otherwise

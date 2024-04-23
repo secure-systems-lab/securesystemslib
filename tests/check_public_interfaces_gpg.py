@@ -12,7 +12,7 @@
   See LICENSE for licensing information.
 
 <Purpose>
-  Check that the public facing 'gpg.functions' module remains importable if
+  Check that the public facing '_gpg.functions' module remains importable if
   gnupg is not installed, and that each function presents meaningful
   user-feedback.
   Further check that gpg signature verification works even without gpg.
@@ -25,14 +25,14 @@
 
 import unittest
 
-from securesystemslib.exceptions import UnsupportedLibraryError
-from securesystemslib.gpg.constants import NO_GPG_MSG, have_gpg
-from securesystemslib.gpg.functions import (
+from securesystemslib._gpg.constants import NO_GPG_MSG, have_gpg
+from securesystemslib._gpg.functions import (
     create_signature,
     export_pubkey,
     export_pubkeys,
     verify_signature,
 )
+from securesystemslib.exceptions import UnsupportedLibraryError
 from securesystemslib.signer import GPGKey, GPGSigner, Signer
 
 

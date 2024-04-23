@@ -5,9 +5,9 @@ from typing import Any, Dict, Optional, Tuple
 from urllib import parse
 
 from securesystemslib import exceptions
-from securesystemslib.gpg import constants as gpg_constants
-from securesystemslib.gpg import exceptions as gpg_exceptions
-from securesystemslib.gpg import functions as gpg
+from securesystemslib._gpg import constants as gpg_constants
+from securesystemslib._gpg import exceptions as gpg_exceptions
+from securesystemslib._gpg import functions as gpg
 from securesystemslib.signer._key import Key
 from securesystemslib.signer._signer import SecretsHandler, Signature, Signer
 
@@ -205,9 +205,9 @@ class GPGSigner(Signer):
             OSError: gpg command is not present or non-executable.
             securesystemslib.exceptions.UnsupportedLibraryError: gpg command is not
                 available, or the cryptography library is not installed.
-            securesystemslib.gpg.exceptions.CommandError: gpg command returned a
+            securesystemslib._gpg.exceptions.CommandError: gpg command returned a
                 non-zero exit code.
-            securesystemslib.gpg.exceptions.KeyNotFoundError: gpg version is not fully
+            securesystemslib._gpg.exceptions.KeyNotFoundError: gpg version is not fully
                 supported.
 
         Returns:

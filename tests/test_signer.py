@@ -15,9 +15,9 @@ from cryptography.hazmat.primitives.serialization import (
     load_pem_public_key,
 )
 
+from securesystemslib._gpg.constants import have_gpg
+from securesystemslib._gpg.exceptions import CommandError, KeyNotFoundError
 from securesystemslib.exceptions import FormatError, UnverifiedSignatureError
-from securesystemslib.gpg.constants import have_gpg
-from securesystemslib.gpg.exceptions import CommandError, KeyNotFoundError
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
     SIGNER_FOR_URI_SCHEME,
