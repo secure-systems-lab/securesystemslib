@@ -5,9 +5,9 @@ from typing import Any, Dict, Optional, Tuple
 from urllib import parse
 
 from securesystemslib import exceptions
-from securesystemslib.gpg import constants as gpg_constants
-from securesystemslib.gpg import exceptions as gpg_exceptions
-from securesystemslib.gpg import functions as gpg
+from securesystemslib._gpg import constants as gpg_constants
+from securesystemslib._gpg import exceptions as gpg_exceptions
+from securesystemslib._gpg import functions as gpg
 from securesystemslib.signer._key import Key
 from securesystemslib.signer._signer import SecretsHandler, Signature, Signer
 
@@ -167,7 +167,7 @@ class GPGSigner(Signer):
         Raises:
             UnsupportedLibraryError: The gpg command or pyca/cryptography are
                 not available.
-            KeyNotFoundError: No key was found for the passed keyid.
+            ValueError: No key was found for the passed keyid.
 
         Returns:
             Tuple of private key uri and the public key.
@@ -175,7 +175,12 @@ class GPGSigner(Signer):
         """
         uri = f"{cls.SCHEME}:{homedir or ''}"
 
-        raw_key = gpg.export_pubkey(keyid, homedir)
+        try:
+            raw_key = gpg.export_pubkey(keyid, homedir)
+
+        except gpg_exceptions.KeyNotFoundError as e:
+            raise ValueError(e) from e
+
         raw_keys = [raw_key] + list(raw_key.pop("subkeys", {}).values())
         keyids = []
 
@@ -187,7 +192,7 @@ class GPGSigner(Signer):
             keyids.append(key["keyid"])
 
         else:
-            raise gpg_exceptions.KeyNotFoundError(
+            raise ValueError(
                 f"No exact match found for passed keyid"
                 f" {keyid}, found: {keyids}."
             )
@@ -201,22 +206,24 @@ class GPGSigner(Signer):
             payload: bytes to be signed.
 
         Raises:
-            ValueError: gpg command failed to create a valid signature.
-            OSError: gpg command is not present or non-executable.
+            ValueError: gpg command failed to create a valid signature, e.g.
+                because its keyid does not match the public key keyid.
+            OSError: gpg command is not present, or non-executable, or returned
+                a non-zero exit code.
             securesystemslib.exceptions.UnsupportedLibraryError: gpg command is not
                 available, or the cryptography library is not installed.
-            securesystemslib.gpg.exceptions.CommandError: gpg command returned a
-                non-zero exit code.
-            securesystemslib.gpg.exceptions.KeyNotFoundError: gpg version is not fully
-                supported.
 
         Returns:
             Signature.
 
         """
-        raw_sig = gpg.create_signature(
-            payload, self.public_key.keyid, self.homedir
-        )
+        try:
+            raw_sig = gpg.create_signature(
+                payload, self.public_key.keyid, self.homedir
+            )
+        except gpg_exceptions.KeyNotFoundError as e:
+            raise ValueError(e) from e
+
         if raw_sig["keyid"] != self.public_key.keyid:
             raise ValueError(
                 f"The signing key {raw_sig['keyid']} does not"

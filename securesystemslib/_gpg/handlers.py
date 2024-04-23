@@ -16,7 +16,7 @@
   the signature verification and key parsing.
 """
 
-from securesystemslib.gpg import dsa, eddsa, rsa
+from securesystemslib._gpg import dsa, eddsa, rsa
 
 # See section 9.1. (public-key algorithms) of RFC4880 (-bis8)
 SUPPORTED_SIGNATURE_ALGORITHMS = {

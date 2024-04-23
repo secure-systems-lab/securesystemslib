@@ -32,10 +32,10 @@ import shutil
 import tempfile
 import unittest
 
-import securesystemslib.exceptions  # pylint: disable=wrong-import-position
-import securesystemslib.gpg.constants  # pylint: disable=wrong-import-position
-import securesystemslib.gpg.functions  # pylint: disable=wrong-import-position
-import securesystemslib.gpg.util  # pylint: disable=wrong-import-position
+# pylint: disable=protected-access
+import securesystemslib._gpg.constants
+import securesystemslib._gpg.util
+import securesystemslib.exceptions
 from securesystemslib.exceptions import (
     UnsupportedLibraryError,
     VerificationError,
@@ -66,18 +66,18 @@ class TestPublicInterfaces(
     def test_gpg_functions(self):
         """Public GPG functions must raise error on missing cryptography lib."""
         expected_error = securesystemslib.exceptions.UnsupportedLibraryError
-        expected_error_msg = securesystemslib.gpg.functions.NO_CRYPTO_MSG
+        expected_error_msg = securesystemslib._gpg.functions.NO_CRYPTO_MSG
 
         with self.assertRaises(expected_error) as ctx:
-            securesystemslib.gpg.functions.create_signature("bar")
+            securesystemslib._gpg.functions.create_signature("bar")
         self.assertEqual(expected_error_msg, str(ctx.exception))
 
         with self.assertRaises(expected_error) as ctx:
-            securesystemslib.gpg.functions.verify_signature(None, "f00", "bar")
+            securesystemslib._gpg.functions.verify_signature(None, "f00", "bar")
         self.assertEqual(expected_error_msg, str(ctx.exception))
 
         with self.assertRaises(expected_error) as ctx:
-            securesystemslib.gpg.functions.export_pubkey("f00")
+            securesystemslib._gpg.functions.export_pubkey("f00")
         self.assertEqual(expected_error_msg, str(ctx.exception))
 
     def test_sslib_key_from_crypto(self):

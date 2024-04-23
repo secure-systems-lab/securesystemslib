@@ -6,6 +6,7 @@ with the '-m' flag, when invoked individually.
 """
 
 # Increase gpg subprocess timeout -- Windows CI fails frequently with default 10s.
-import securesystemslib.gpg.constants
+# pylint: disable=protected-access
+import securesystemslib._gpg.constants
 
-securesystemslib.gpg.constants.GPG_TIMEOUT = 120
+securesystemslib._gpg.constants.GPG_TIMEOUT = 120

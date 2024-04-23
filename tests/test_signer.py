@@ -15,9 +15,8 @@ from cryptography.hazmat.primitives.serialization import (
     load_pem_public_key,
 )
 
+from securesystemslib._gpg.constants import have_gpg
 from securesystemslib.exceptions import FormatError, UnverifiedSignatureError
-from securesystemslib.gpg.constants import have_gpg
-from securesystemslib.gpg.exceptions import CommandError, KeyNotFoundError
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
     SIGNER_FOR_URI_SCHEME,
@@ -452,7 +451,7 @@ class TestGPGRSA(unittest.TestCase):
 
         # gpg exports the right key, but we require an exact keyid match
         non_matching_keyid = self.default_keyid.upper()
-        with self.assertRaises(KeyNotFoundError):
+        with self.assertRaises(ValueError):
             GPGSigner.import_(non_matching_keyid, self.gnupg_home)
 
     def test_gpg_fail_sign_expired_key(self):
@@ -461,7 +460,7 @@ class TestGPGRSA(unittest.TestCase):
 
         uri, public_key = GPGSigner.import_(expired_key, self.gnupg_home)
         signer = Signer.from_priv_key_uri(uri, public_key)
-        with self.assertRaises(CommandError):
+        with self.assertRaises(OSError):
             signer.sign(self.test_data)
 
     def test_gpg_signer_load_with_bad_scheme(self):

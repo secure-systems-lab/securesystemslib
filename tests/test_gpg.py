@@ -31,7 +31,7 @@ import cryptography.hazmat.primitives.hashes as hashing
 from cryptography.hazmat import backends
 from cryptography.hazmat.primitives import serialization
 
-from securesystemslib.gpg.common import (
+from securesystemslib._gpg.common import (
     _assign_certified_key_info,
     _get_verified_subkeys,
     get_pubkey_bundle,
@@ -39,7 +39,7 @@ from securesystemslib.gpg.common import (
     parse_pubkey_payload,
     parse_signature_packet,
 )
-from securesystemslib.gpg.constants import (
+from securesystemslib._gpg.constants import (
     PACKET_TYPE_PRIMARY_KEY,
     PACKET_TYPE_SUB_KEY,
     PACKET_TYPE_USER_ATTR,
@@ -49,24 +49,23 @@ from securesystemslib.gpg.constants import (
     SHA512,
     have_gpg,
 )
-from securesystemslib.gpg.dsa import create_pubkey as dsa_create_pubkey
-from securesystemslib.gpg.eddsa import ED25519_SIG_LENGTH
-from securesystemslib.gpg.exceptions import (
-    CommandError,
+from securesystemslib._gpg.dsa import create_pubkey as dsa_create_pubkey
+from securesystemslib._gpg.eddsa import ED25519_SIG_LENGTH
+from securesystemslib._gpg.exceptions import (
     KeyExpirationError,
     KeyNotFoundError,
     PacketParsingError,
     PacketVersionNotSupportedError,
     SignatureAlgorithmNotSupportedError,
 )
-from securesystemslib.gpg.functions import (
+from securesystemslib._gpg.functions import (
     create_signature,
     export_pubkey,
     export_pubkeys,
     verify_signature,
 )
-from securesystemslib.gpg.rsa import create_pubkey as rsa_create_pubkey
-from securesystemslib.gpg.util import (
+from securesystemslib._gpg.rsa import create_pubkey as rsa_create_pubkey
+from securesystemslib._gpg.util import (
     get_hashing_class,
     parse_packet_header,
     parse_subpacket_header,
@@ -196,7 +195,7 @@ class TestUtil(unittest.TestCase):
 
 @unittest.skipIf(not have_gpg(), "gpg not found")
 class TestCommon(unittest.TestCase):
-    """Test common functions of the securesystemslib.gpg module."""
+    """Test common functions of the securesystemslib._gpg module."""
 
     @classmethod
     def setUpClass(self):  # pylint: disable=bad-classmethod-argument
@@ -271,7 +270,7 @@ class TestCommon(unittest.TestCase):
         # Create empty packet of unsupported type 66 (bit 0-5) and length 0 and
         # pass as second packet to provoke skipping of unsupported packet
         unsupported_packet = bytearray([0b01111111, 0])
-        with patch("securesystemslib.gpg.common.log") as mock_log:
+        with patch("securesystemslib._gpg.common.log") as mock_log:
             parse_pubkey_bundle(primary_key_packet + unsupported_packet)
             self.assertTrue(
                 "Ignoring gpg key packet '63'" in mock_log.info.call_args[0][0]
@@ -370,7 +369,7 @@ class TestCommon(unittest.TestCase):
         ]
 
         for bundle, expected_msg in test_data:
-            with patch("securesystemslib.gpg.common.log") as mock_log:
+            with patch("securesystemslib._gpg.common.log") as mock_log:
                 _assign_certified_key_info(bundle)
                 msg = str(mock_log.info.call_args[0][0])
                 self.assertTrue(
@@ -483,7 +482,7 @@ class TestCommon(unittest.TestCase):
         ]
 
         for bundle, expected_msg in test_data:
-            with patch("securesystemslib.gpg.common.log") as mock_log:
+            with patch("securesystemslib._gpg.common.log") as mock_log:
                 _get_verified_subkeys(bundle)
                 msg = str(mock_log.info.call_args[0][0])
                 self.assertTrue(
@@ -702,8 +701,8 @@ class TestGPGRSA(unittest.TestCase):
             del os.environ["GNUPGHOME"]
 
     def test_create_signature_with_expired_key(self):
-        """Test signing with expired key raises gpg CommandError."""
-        with self.assertRaises(CommandError) as ctx:
+        """Test signing with expired key raises OSError."""
+        with self.assertRaises(OSError) as ctx:
             create_signature(
                 b"livestock",
                 keyid=self.expired_key_keyid,

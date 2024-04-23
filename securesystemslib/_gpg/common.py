@@ -23,8 +23,8 @@ import collections
 import logging
 import struct
 
-from securesystemslib.gpg import util as gpg_util
-from securesystemslib.gpg.constants import (
+from securesystemslib._gpg import util as gpg_util
+from securesystemslib._gpg.constants import (
     FULL_KEYID_SUBPACKET,
     GPG_HASH_ALGORITHM_STRING,
     KEY_EXPIRATION_SUBPACKET,
@@ -45,13 +45,13 @@ from securesystemslib.gpg.constants import (
     SUPPORTED_PUBKEY_PACKET_VERSIONS,
     SUPPORTED_SIGNATURE_PACKET_VERSIONS,
 )
-from securesystemslib.gpg.exceptions import (
+from securesystemslib._gpg.exceptions import (
     KeyNotFoundError,
     PacketParsingError,
     PacketVersionNotSupportedError,
     SignatureAlgorithmNotSupportedError,
 )
-from securesystemslib.gpg.handlers import (
+from securesystemslib._gpg.handlers import (
     SIGNATURE_HANDLERS,
     SUPPORTED_SIGNATURE_ALGORITHMS,
 )
@@ -71,7 +71,7 @@ def parse_pubkey_payload(data):
             (version 4) of the RFC.
 
             NOTE: The payload can be parsed from a full key packet (header +
-            payload) by using securesystemslib.gpg.util.parse_packet_header.
+            payload) by using securesystemslib._gpg.util.parse_packet_header.
 
             WARNING: this doesn't support armored pubkey packets, so use with
             care. pubkey packets are a little bit more complicated than the
@@ -81,13 +81,13 @@ def parse_pubkey_payload(data):
       ValueError
             If the passed public key data is empty.
 
-      securesystemslib.gpg.exceptions.PacketVersionNotSupportedError
+      securesystemslib._gpg.exceptions.PacketVersionNotSupportedError
             If the packet version does not match
-            securesystemslib.gpg.constants.SUPPORTED_PUBKEY_PACKET_VERSIONS
+            securesystemslib._gpg.constants.SUPPORTED_PUBKEY_PACKET_VERSIONS
 
-      securesystemslib.gpg.exceptions.SignatureAlgorithmNotSupportedError
+      securesystemslib._gpg.exceptions.SignatureAlgorithmNotSupportedError
             If the signature algorithm does not match one of
-            securesystemslib.gpg.constants.SUPPORTED_SIGNATURE_ALGORITHMS
+            securesystemslib._gpg.constants.SUPPORTED_SIGNATURE_ALGORITHMS
 
     <Side Effects>
       None.
@@ -169,7 +169,7 @@ def parse_pubkey_bundle(data):
             Public key data as written to stdout by gpg_export_pubkey_command.
 
     <Exceptions>
-      securesystemslib.gpg.exceptions.PacketParsingError
+      securesystemslib._gpg.exceptions.PacketParsingError
             If data is empty.
             If data cannot be parsed.
 
@@ -585,17 +585,17 @@ def get_pubkey_bundle(data, keyid):
     <Arguments>
       data:
             Public key data as written to stdout by
-            securesystemslib.gpg.constants.gpg_export_pubkey_command.
+            securesystemslib._gpg.constants.gpg_export_pubkey_command.
 
       keyid:
             The keyid of the master key or one of its subkeys expected to be
             contained in the passed gpg data.
 
     <Exceptions>
-      securesystemslib.gpg.exceptions.PacketParsingError
+      securesystemslib._gpg.exceptions.PacketParsingError
             If the key data could not be parsed
 
-      securesystemslib.gpg.exceptions.KeyNotFoundError
+      securesystemslib._gpg.exceptions.KeyNotFoundError
             If the passed data is empty.
             If no master key or subkeys could be found that matches the passed
             keyid.
@@ -676,12 +676,12 @@ def parse_signature_packet(  # pylint: disable=too-many-locals,too-many-branches
              section 5.2 (and 5.2.3.1).
       supported_signature_types: (optional)
             a set of supported signature_types, the signature packet may be
-            (see securesystemslib.gpg.constants for available types). If None is
+            (see securesystemslib._gpg.constants for available types). If None is
             specified the signature packet must be of type SIGNATURE_TYPE_BINARY.
       supported_hash_algorithms: (optional)
             a set of supported hash algorithm ids, the signature packet
             may use. Available ids are SHA1, SHA256, SHA512 (see
-            securesystemslib.gpg.constants). If None is specified, the signature
+            securesystemslib._gpg.constants). If None is specified, the signature
             packet must use SHA256.
       include_info: (optional)
             a boolean that indicates whether an opaque dictionary should be
