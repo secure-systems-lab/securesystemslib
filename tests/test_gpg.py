@@ -52,7 +52,6 @@ from securesystemslib._gpg.constants import (
 from securesystemslib._gpg.dsa import create_pubkey as dsa_create_pubkey
 from securesystemslib._gpg.eddsa import ED25519_SIG_LENGTH
 from securesystemslib._gpg.exceptions import (
-    CommandError,
     KeyExpirationError,
     KeyNotFoundError,
     PacketParsingError,
@@ -702,8 +701,8 @@ class TestGPGRSA(unittest.TestCase):
             del os.environ["GNUPGHOME"]
 
     def test_create_signature_with_expired_key(self):
-        """Test signing with expired key raises gpg CommandError."""
-        with self.assertRaises(CommandError) as ctx:
+        """Test signing with expired key raises OSError."""
+        with self.assertRaises(OSError) as ctx:
             create_signature(
                 b"livestock",
                 keyid=self.expired_key_keyid,

@@ -34,7 +34,7 @@ from securesystemslib._gpg.constants import (
     gpg_sign_command,
     have_gpg,
 )
-from securesystemslib._gpg.exceptions import CommandError, KeyExpirationError
+from securesystemslib._gpg.exceptions import KeyExpirationError
 from securesystemslib._gpg.handlers import SIGNATURE_HANDLERS
 from securesystemslib._gpg.rsa import CRYPTO
 
@@ -78,14 +78,12 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
               If the gpg command failed to create a valid signature.
 
       OSError:
-              If the gpg command is not present or non-executable.
+              If the gpg command is not present, or non-executable,
+              or returned a non-zero exit code
 
       securesystemslib.exceptions.UnsupportedLibraryError:
               If the gpg command is not available, or
               the cryptography library is not installed.
-
-      securesystemslib._gpg.exceptions.CommandError:
-              If the gpg command returned a non-zero exit code
 
       securesystemslib._gpg.exceptions.KeyNotFoundError:
               If the used gpg version is not fully supported
@@ -134,7 +132,7 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
     # reporting, as there is no clear distinction between the return codes
     # https://lists.gnupg.org/pipermail/gnupg-devel/2005-December/022559.html
     if gpg_process.returncode != 0:
-        raise CommandError(
+        raise OSError(
             "Command '{}' returned "  # pylint: disable=consider-using-f-string
             "non-zero exit status '{}', stderr was:\n{}.".format(
                 gpg_process.args,

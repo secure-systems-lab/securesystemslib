@@ -38,10 +38,6 @@ class SignatureAlgorithmNotSupportedError(Exception):
     pass
 
 
-class CommandError(Exception):
-    pass
-
-
 class KeyExpirationError(Exception):  # pylint: disable=missing-class-docstring
     def __init__(self, key):
         super(  # pylint: disable=super-with-arguments
