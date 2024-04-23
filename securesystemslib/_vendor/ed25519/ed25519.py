@@ -31,29 +31,9 @@ arithmetic, so we cannot handle secrets without risking their disclosure.
 """
 
 import hashlib
-import operator
-import sys
 
 
 __version__ = "1.0.dev0"
-
-
-# Useful for very coarse version differentiation.
-PY3 = sys.version_info[0] == 3
-
-if PY3:
-    indexbytes = operator.getitem
-    intlist2bytes = bytes
-    int2byte = operator.methodcaller("to_bytes", 1, "big")
-else:
-    int2byte = chr
-    range = xrange  # noqa: F821
-
-    def indexbytes(buf, i):
-        return ord(buf[i])
-
-    def intlist2bytes(l):
-        return b"".join(chr(c) for c in l)
 
 
 b = 256
@@ -197,11 +177,8 @@ def scalarmult_B(e):
 
 def encodeint(y):
     bits = [(y >> i) & 1 for i in range(b)]
-    return b"".join(
-        [
-            int2byte(sum([bits[i * 8 + j] << j for j in range(8)]))
-            for i in range(b // 8)
-        ]
+    return bytes(
+        [sum([bits[i * 8 + j] << j for j in range(8)]) for i in range(b // 8)]
     )
 
 
@@ -211,16 +188,13 @@ def encodepoint(P):
     x = (x * zi) % q
     y = (y * zi) % q
     bits = [(y >> i) & 1 for i in range(b - 1)] + [x & 1]
-    return b"".join(
-        [
-            int2byte(sum([bits[i * 8 + j] << j for j in range(8)]))
-            for i in range(b // 8)
-        ]
+    return bytes(
+        [sum([bits[i * 8 + j] << j for j in range(8)]) for i in range(b // 8)]
     )
 
 
 def bit(h, i):
-    return (indexbytes(h, i // 8) >> (i % 8)) & 1
+    return (h[i // 8] >> (i % 8)) & 1
 
 
 def publickey_unsafe(sk):
@@ -248,9 +222,7 @@ def signature_unsafe(m, sk, pk):
     """
     h = H(sk)
     a = 2 ** (b - 2) + sum(2**i * bit(h, i) for i in range(3, b - 2))
-    r = Hint(
-        intlist2bytes([indexbytes(h, j) for j in range(b // 8, b // 4)]) + m
-    )
+    r = Hint(bytes([h[j] for j in range(b // 8, b // 4)]) + m)
     R = scalarmult_B(r)
     S = (r + Hint(encodepoint(R) + pk + m) * a) % l
     return encodepoint(R) + encodeint(S)
