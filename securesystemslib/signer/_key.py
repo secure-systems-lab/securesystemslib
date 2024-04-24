@@ -341,9 +341,18 @@ class SSlibKey(Key):
 
     def _verify(self, signature: bytes, data: bytes) -> None:
         """Helper to verify signature using pyca/cryptography (default)."""
+
+        def _validate_type(key, type_):
+            if not isinstance(key, type_):
+                raise ValueError(f"bad key {key} for {self.scheme}")
+
+        def _validate_curve(key, curve):
+            if not isinstance(key.curve, curve):
+                raise ValueError(f"bad curve {key.curve} for {self.scheme}")
+
         try:
             key: PublicKeyTypes
-            if self.scheme in [
+            if self.keytype == "rsa" and self.scheme in [
                 "rsassa-pss-sha224",
                 "rsassa-pss-sha256",
                 "rsassa-pss-sha384",
@@ -354,28 +363,39 @@ class SSlibKey(Key):
                 "rsa-pkcs1v15-sha512",
             ]:
                 key = cast(RSAPublicKey, self._crypto_key())
+                _validate_type(key, RSAPublicKey)
                 padding_name, hash_name = self.scheme.split("-")[1:]
                 hash_algorithm = self._get_hash_algorithm(hash_name)
                 padding = self._get_rsa_padding(padding_name, hash_algorithm)
                 key.verify(signature, data, padding, hash_algorithm)
 
-            elif self.scheme in [
-                "ecdsa-sha2-nistp256",
-                "ecdsa-sha2-nistp384",
-            ]:
+            elif (
+                self.keytype in ["ecdsa", "ecdsa-sha2-nistp256"]
+                and self.scheme == "ecdsa-sha2-nistp256"
+            ):
                 key = cast(EllipticCurvePublicKey, self._crypto_key())
-                hash_name = f"sha{self.scheme[-3:]}"
-                hash_algorithm = self._get_hash_algorithm(hash_name)
-                signature_algorithm = ECDSA(hash_algorithm)
-                key.verify(signature, data, signature_algorithm)
+                _validate_type(key, EllipticCurvePublicKey)
+                _validate_curve(key, SECP256R1)
+                key.verify(signature, data, ECDSA(SHA256()))
 
-            elif self.scheme in ["ed25519"]:
+            elif (
+                self.keytype in ["ecdsa", "ecdsa-sha2-nistp384"]
+                and self.scheme == "ecdsa-sha2-nistp384"
+            ):
+                key = cast(EllipticCurvePublicKey, self._crypto_key())
+                _validate_type(key, EllipticCurvePublicKey)
+                _validate_curve(key, SECP384R1)
+                key.verify(signature, data, ECDSA(SHA384()))
+
+            elif self.keytype == "ed25519" and self.scheme == "ed25519":
                 public_bytes = bytes.fromhex(self.keyval["public"])
                 key = Ed25519PublicKey.from_public_bytes(public_bytes)
                 key.verify(signature, data)
 
             else:
-                raise ValueError(f"unknown scheme '{self.scheme}'")
+                raise ValueError(
+                    f"Unsupported public key {self.keytype}/{self.scheme}"
+                )
 
         except InvalidSignature as e:
             raise UnverifiedSignatureError from e
