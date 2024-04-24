@@ -35,6 +35,8 @@ Compatible keys can be generated with standard tools like `openssl genpkey` (CLI
 ```python
 from cryptography.hazmat.primitives import asymmetric, serialization
 
+from securesystemslib.signer import SSlibKey
+
 # Generate key pair
 private_key = asymmetric.ed25519.Ed25519PrivateKey.generate()
 
@@ -42,6 +44,7 @@ private_key = asymmetric.ed25519.Ed25519PrivateKey.generate()
 private_pem = private_key.private_bytes(
     encoding=serialization.Encoding.PEM,
     format=serialization.PrivateFormat.PKCS8,
+    encryption_algorithm=serialization.NoEncryption()
 )
 with open("private.pem", "wb") as f:
     f.write(private_pem)
