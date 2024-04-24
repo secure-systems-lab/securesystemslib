@@ -8,13 +8,19 @@ jobs:
   test:
     strategy:
       fail-fast: false
-      # Run tests on each OS/Python combination
       matrix:
+        # Run tests once on each supported Python
         python-version: ["3.8", "3.9", "3.10", "3.11"]
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest]
         toxenv: [py]
-
         include:
+          # Run macOS, Windows and "special" tests on latest Python version only
+          - python-version: "3.11"
+            os: macos-latest
+            toxenv: py
+          - python-version: "3.11"
+            os: windows-latest
+            toxenv: py
           - python-version: "3.11"
             os: ubuntu-latest
             toxenv: purepy311
