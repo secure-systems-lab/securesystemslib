@@ -1,70 +1,87 @@
 
 # CryptoSigner
 
-`CryptoSigner` is a modern replacement for the legacy `securesystemslib.keys`
-module. It can be used via the `Signer.from_priv_key_uri` API to load private
-*rsa*, *ecdsa* and *ed25519* keys from file. It also provides API to generate
-in-memory signers for ad-hoc signing.
+`CryptoSigner` implements signing with file-based *rsa*, *ecdsa* and *ed25519*
+keys. New private key material can be created with the provided simple API
+or with [cryptography](https://cryptography.io/).
+
+Loading the signer at signing time works through the generic
+`Signer.from_priv_key_uri()` method using the "file2:" URI.
 
 ## Code examples
 
-### Example 1: Ad-hoc signing
+### 1. Generate key content
 
-`CryptoSigner` provides `generate_{rsa, ed25519, ecdsa}` methods for ad-hoc
-signing and signature verification, e.g. in tests or demos.
+`CryptoSigner` provides `generate_{rsa, ed25519, ecdsa}` methods to create new
+private key material.
 
 ```python
 from securesystemslib.signer import CryptoSigner
 
 signer = CryptoSigner.generate_ed25519()
-signature = signer.sign(b"data")
-signer.public_key.verify_signature(signature, b"data")
+
+# store private key securely
+with open ("privkey.pem", "wb") as f:
+    f.write(signer.private_bytes)
+
+# Publish the public key
+pubkey = signer.public_key
+print(pubkey.to_dict())
 ```
 
-### Example 2: Asynchronous key management and signing
+For more control over the key material, the cryptography API can be used
 
-The typical Signer API usage is described in
-[this blog post](https://theupdateframework.github.io/python-tuf/2023/01/24/securesystemslib-signer-api.html)
-and outlined below for a file-based signer.
-
-#### 1. Generate key content
-*`CryptoSigner` does not provide a comprehensive API for key content generation.
-Compatible keys can be generated with standard tools like `openssl genpkey` (CLI) or
-`pyca/cryptography` (Python).*
+<details><summary>Generating a new private key with cryptography</summary>
 
 ```python
-from cryptography.hazmat.primitives import asymmetric, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from securesystemslib.signer import CryptoSigner
 
-from securesystemslib.signer import SSlibKey
-
-# Generate key pair
-private_key = asymmetric.ed25519.Ed25519PrivateKey.generate()
-
-# Deploy private key
-private_pem = private_key.private_bytes(
-    encoding=serialization.Encoding.PEM,
-    format=serialization.PrivateFormat.PKCS8,
-    encryption_algorithm=serialization.NoEncryption()
+# Generate key pair with non-default arguments
+private_key = rsa.generate_private_key(
+    public_exponent=65537,
+    key_size=4096,
 )
-with open("private.pem", "wb") as f:
-    f.write(private_pem)
 
-# TODO: The public details (public key and the private key URI) must be stored
-# somewhere. In a TUF system the public key goes into TUF metadata, and the
-# URI can can be stored either in the metadata as well (as a custom field) or in
-# signing application configuration
-public_key = SSlibKey.from_crypto(private_key.public_key())
-uri = "file2:private.pem"
+signer = CryptoSigner(private_key)
+
+# store private key securely
+with open ("privkey.pem", "wb") as f:
+    f.write(signer.private_bytes)
+
+# Publish the public key
+pubkey = signer.public_key
+print(pubkey.to_dict())
 ```
+</details>
 
-#### 2. Load and use signer
+<details><summary>Using an existing private key</summary>
+
+```python
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from securesystemslib.signer import CryptoSigner
+
+# Load a PEM encoded key from disk
+with open("privkey.pem", "rb") as f:
+    private_key = load_pem_private_key(f.read(), None)
+
+signer = CryptoSigner(private_key)
+
+# Publish the public key
+pubkey = signer.public_key
+print(pubkey.to_dict())
+```
+</details>
+
+### 2. Load and use signer
 
 Signer usage is not specific to CryptoSigner:
 
 ```python
 from securesystemslib.signer import Signer
 
-# TODO: load the URI and public key (see earlier comment)
-signer = Signer.from_priv_key_uri(uri, public_key)
-signer.sign(b"data")
+# Load signer using URI that points to private key bytes
+signer = Signer.from_priv_key_uri("file2:privkey.pem", pubkey)
+signature = signer.sign(b"data")
+print(signature.to_dict())
 ```

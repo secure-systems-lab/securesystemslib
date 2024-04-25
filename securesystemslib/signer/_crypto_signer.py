@@ -45,6 +45,9 @@ try:
         HashAlgorithm,
     )
     from cryptography.hazmat.primitives.serialization import (
+        Encoding,
+        NoEncryption,
+        PrivateFormat,
         load_pem_private_key,
     )
 except ImportError:
@@ -188,6 +191,18 @@ class CryptoSigner(Signer):
     @property
     def public_key(self) -> Key:
         return self._public_key
+
+    @property
+    def private_bytes(self) -> bytes:
+        """Return the PEM encoded PKCS8 format private key as bytes
+
+        The return value can be used as file content when a Signer is loaded with
+        `Signer.from_priv_key_uri('file2:<FILEPATH>')`."""
+        return self._private_key.private_bytes(
+            encoding=Encoding.PEM,
+            format=PrivateFormat.PKCS8,
+            encryption_algorithm=NoEncryption(),
+        )
 
     @classmethod
     def from_priv_key_uri(

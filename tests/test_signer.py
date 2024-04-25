@@ -703,6 +703,23 @@ class TestCryptoSigner(unittest.TestCase):
             with self.assertRaises(UnverifiedSignatureError):
                 signer.public_key.verify_signature(sig, b"NOT DATA")
 
+    def test_private_bytes(self):
+        """Test private_bytes -> from_priv_key_uri"""
+        with tempfile.TemporaryDirectory() as tempdir:
+            priv_key_path = os.path.join(tempdir, "privkey.pem")
+            for pem in ["rsa", "ecdsa", "ed25519"]:
+                with open(PEMS_DIR / f"{pem}_private.pem", "rb") as f:
+                    privkey = load_pem_private_key(f.read(), None)
+                    signer = CryptoSigner(privkey)
+
+                with open(priv_key_path, "wb") as f:
+                    f.write(signer.private_bytes)
+
+                signer2 = Signer.from_priv_key_uri(
+                    f"file2:{priv_key_path}", signer.public_key
+                )
+                self.assertEqual(signer.private_bytes, signer2.private_bytes)
+
     def test_custom_crypto_signer(self):
         # setup
         key = self.keys[0]
