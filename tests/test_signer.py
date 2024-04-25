@@ -703,6 +703,23 @@ class TestCryptoSigner(unittest.TestCase):
             with self.assertRaises(UnverifiedSignatureError):
                 signer.public_key.verify_signature(sig, b"NOT DATA")
 
+    def test_private_bytes(self):
+        """Test full cycle of generate -> private_bytes -> from_priv_key_uri"""
+        generate_funcs = [
+            CryptoSigner.generate_rsa,
+            CryptoSigner.generate_ecdsa,
+            CryptoSigner.generate_ed25519,
+        ]
+        for generate in generate_funcs:
+            signer = generate()
+            with open("privkey.pem", "wb") as f:
+                f.write(signer.private_bytes)
+
+            signer2 = Signer.from_priv_key_uri(
+                "file2:privkey.pem", signer.public_key
+            )
+            self.assertEqual(signer.private_bytes, signer2.private_bytes)
+
     def test_custom_crypto_signer(self):
         # setup
         key = self.keys[0]
