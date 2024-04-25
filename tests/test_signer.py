@@ -704,14 +704,12 @@ class TestCryptoSigner(unittest.TestCase):
                 signer.public_key.verify_signature(sig, b"NOT DATA")
 
     def test_private_bytes(self):
-        """Test full cycle of generate -> private_bytes -> from_priv_key_uri"""
-        generate_funcs = [
-            CryptoSigner.generate_rsa,
-            CryptoSigner.generate_ecdsa,
-            CryptoSigner.generate_ed25519,
-        ]
-        for generate in generate_funcs:
-            signer = generate()
+        """Test private_bytes -> from_priv_key_uri"""
+        for pem in ["rsa", "ecdsa", "ed25519"]:
+            with open(PEMS_DIR / f"{pem}_private.pem", "rb") as f:
+                privkey = load_pem_private_key(f.read(), None)
+                signer = CryptoSigner(privkey)
+
             with open("privkey.pem", "wb") as f:
                 f.write(signer.private_bytes)
 
