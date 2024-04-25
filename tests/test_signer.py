@@ -705,18 +705,20 @@ class TestCryptoSigner(unittest.TestCase):
 
     def test_private_bytes(self):
         """Test private_bytes -> from_priv_key_uri"""
-        for pem in ["rsa", "ecdsa", "ed25519"]:
-            with open(PEMS_DIR / f"{pem}_private.pem", "rb") as f:
-                privkey = load_pem_private_key(f.read(), None)
-                signer = CryptoSigner(privkey)
+        with tempfile.TemporaryDirectory() as tempdir:
+            priv_key_path = os.path.join(tempdir, "privkey.pem")
+            for pem in ["rsa", "ecdsa", "ed25519"]:
+                with open(PEMS_DIR / f"{pem}_private.pem", "rb") as f:
+                    privkey = load_pem_private_key(f.read(), None)
+                    signer = CryptoSigner(privkey)
 
-            with open("privkey.pem", "wb") as f:
-                f.write(signer.private_bytes)
+                with open(priv_key_path, "wb") as f:
+                    f.write(signer.private_bytes)
 
-            signer2 = Signer.from_priv_key_uri(
-                "file2:privkey.pem", signer.public_key
-            )
-            self.assertEqual(signer.private_bytes, signer2.private_bytes)
+                signer2 = Signer.from_priv_key_uri(
+                    f"file2:{priv_key_path}", signer.public_key
+                )
+                self.assertEqual(signer.private_bytes, signer2.private_bytes)
 
     def test_custom_crypto_signer(self):
         # setup
