@@ -76,6 +76,7 @@ class TestKey(unittest.TestCase):
                 Key.from_dict("aa", keydict)
 
     def test_key_verify_signature(self):
+        # pylint: disable=too-many-locals
         ed25519_keyid = (
             "fc3920f44a1deec695ed9327f70513909a36f51ad19774167ddf28a12f8bbbed"
         )
@@ -90,6 +91,10 @@ class TestKey(unittest.TestCase):
             "985171ff9ee901fbab17aa6f57347933aeae9d194f0f93e83e5c3dbc1755e754"
         )
         ecdsa_pub = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEsYJfSlYU3UlYbGOZfE/yOHkayWWq\nLPR/NeCa83szZmnJGc9wwCRPvJS87K+eDGIhhhKueTyrLqXQqmyHioQbOQ==\n-----END PUBLIC KEY-----\n"
+        ecdsa_nistp384_keyid = (
+            "0155661bdf705f621a74f55eef36c9ae041e456141eced7a45d4a1f75ded9ac0"
+        )
+        ecdsa_nistp384_pub = "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEksAG80nLUksODTEUBTPJJPYN0bfxhkrr\n2hlyokfRG4kDYsRRN86vWwxDTW7qhWNZPFhJMJxHmvHsCbLz/IF7hdo8Xv/vRO4M\nVHbwq0fiWznUvkZowHC5fH2EEvNF1R5t\n-----END PUBLIC KEY-----\n"
 
         key_sig_data = [
             (
@@ -171,11 +176,11 @@ class TestKey(unittest.TestCase):
                 "3045022100b3db1e5ca53226ee27f93a3b2f5e1534f4a4c51f872aa1b6efd0b37be27f483602204f793f7ad7c25188ad55eb6a8a8d142f89b0b0090815de47d9a24389872b02e3",
             ),
             (
-                ecdsa_keyid,
+                ecdsa_nistp384_keyid,
                 "ecdsa",
                 "ecdsa-sha2-nistp384",
-                ecdsa_pub,
-                "3045022100fc41dad2236dc479454cfeab69a8d77b67e38ef3290ddef3f240406db63c407c0220402ef9c132ec6682f70143079c6e0c11ce4904be03354bd1b0bc7553125e013e",
+                ecdsa_nistp384_pub,
+                "30650230747ffab40d894dcacfa2da613a312b2423aa744c7b2365345467819c2af210983c5a7ce6810db995f2e6c90f90f9ad1c023100fdde5013796916af1989b757b64f2fad8496fa7b2b19e9568260868d4a670e6feb123b3337179a4d06b5fbe42b6937fb",
             ),
             (
                 ecdsa_keyid,
@@ -185,11 +190,11 @@ class TestKey(unittest.TestCase):
                 "304502207d0058b745b2259501204c2ba287ba3769ec2420e12463a325c59670c24df9b6022100836ca63a1b870f755c1596711a003a505e72e25cb0970e823a331e044adc63ec",
             ),
             (
-                ecdsa_keyid,
+                ecdsa_nistp384_keyid,
                 "ecdsa-sha2-nistp384",
                 "ecdsa-sha2-nistp384",
-                ecdsa_pub,
-                "304502200cf6f9794205d4694438cc4f394fe385c85d2ee6938f079c7e1bd896dcd8c635022100a2ba46172be199955be7317c9335ae7f073328d26a5f561968024ff46e430c21",
+                ecdsa_nistp384_pub,
+                "30650230747ffab40d894dcacfa2da613a312b2423aa744c7b2365345467819c2af210983c5a7ce6810db995f2e6c90f90f9ad1c023100fdde5013796916af1989b757b64f2fad8496fa7b2b19e9568260868d4a670e6feb123b3337179a4d06b5fbe42b6937fb",
             ),
         ]
         for keyid, keytype, scheme, pub, sig in key_sig_data:
