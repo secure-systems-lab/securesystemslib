@@ -344,6 +344,36 @@ class TestSSlibKey(unittest.TestCase):
         self.assertEqual(key.scheme, "rsa-pkcs1v15-sha224")
         self.assertEqual(key.keyid, "abcdef")
 
+    def test_verify_invalid_keytype_scheme(self):
+
+        rsa = "-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAsDqUoiFJZX+5gm5pyI1l\nVc/N3yjJVOIl9GyiK0mRyzV3IzUQzhjq8nhk0eLfzXw2XwIAYOJC6dR/tGRG4JDx\nJkez5FFH4zLosr/XzT7CG5zxJ3kKICLD1v9rZQr5ZgARQDOpkxzPz46rGnE0sHd7\nMpnpPMScA1pMIzwM1RoPS4ntZipI1cl9M7HMQ6mkBp8/DNKCqaDWixJqaGgWrhhK\nhI/1mzBliMKriNxPKSCGVlOk/QpZft+y1fs42s0DMd5BOFBo+ZcoXLYRncg9S3A2\nxx/jT69Bt3ceiAZqnp7f6M+ZzoUifSelaoL7QIYg/GkEl+0oxTD0yRphGiCKwn9c\npSbn7NgnbjqSgIMeEtlf/5Coyrs26pyFf/9GbusddPSxxxwIJ/7IJuF7P1Yy0WpZ\nkMeY83h9n2IdnEYi+rpdbLJPQd7Fpu2xrdA3Fokj8AvCpcmxn8NIXZuK++r8/xsE\nAUL30HH7dgVn50AvdPaJnqAORT3OlabW0DK9prcwKnyzAgMBAAE=\n-----END PUBLIC KEY-----"
+        ed25519 = (
+            "50a5768a7a577483c28e57a6742b4d2170b9be628a961355ef127c45f2aefdc5"
+        )
+        ecdsa_nistp256 = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEsYJfSlYU3UlYbGOZfE/yOHkayWWq\nLPR/NeCa83szZmnJGc9wwCRPvJS87K+eDGIhhhKueTyrLqXQqmyHioQbOQ==\n-----END PUBLIC KEY-----\n"
+        ecdsa_nistp384 = "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEksAG80nLUksODTEUBTPJJPYN0bfxhkrr\n2hlyokfRG4kDYsRRN86vWwxDTW7qhWNZPFhJMJxHmvHsCbLz/IF7hdo8Xv/vRO4M\nVHbwq0fiWznUvkZowHC5fH2EEvNF1R5t\n-----END PUBLIC KEY-----\n"
+
+        test_data = [
+            # bad keytype / scheme
+            ("ed25519", "rsassa-pss-sha256", rsa),
+            ("ecdsa-sha2-nistp384", "ecdsa-sha2-nistp256", ecdsa_nistp256),
+            ("ecdsa-sha2-nistp256", "ecdsa-sha2-nistp384", ecdsa_nistp384),
+            ("rsa", "ed25519", ed25519),
+            # bad key type (pem formatted keys only)
+            ("rsa", "rsassa-pss-sha256", ecdsa_nistp256),
+            ("ecdsa", "ecdsa-sha2-nistp256", rsa),
+            # bad curve (ecdsa keys only)
+            ("ecdsa", "ecdsa-sha2-nistp256", ecdsa_nistp384),
+            ("ecdsa", "ecdsa-sha2-nistp384", ecdsa_nistp256),
+        ]
+
+        for keytype, scheme, val in test_data:
+            key = SSlibKey("fake", keytype, scheme, {"public": val})
+            with self.assertRaises(ValueError):
+                key._verify(  # pylint: disable=protected-access
+                    b"fakesig", b"fakedata"
+                )
+
 
 class TestSigner(unittest.TestCase):
     """Test Signer and SSlibSigner functionality"""
