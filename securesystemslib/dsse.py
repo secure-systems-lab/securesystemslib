@@ -116,9 +116,6 @@ class Envelope:
     def verify(self, keys: List[Key], threshold: int) -> Dict[str, Key]:
         """Verify the payload with the provided Keys.
 
-        NOTE: This API is experimental and might change (see
-        secure-systems-lab/dsse#55)
-
         Arguments:
             keys: A list of public keys to verify the signatures.
             threshold: Number of signatures needed to pass the verification.
