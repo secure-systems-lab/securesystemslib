@@ -3,7 +3,7 @@ Signer API
 
 .. currentmodule:: securesystemslib.signer
 
-The signer module provides a simple and unified cryptographic signing and signature verification API designed to work consistently regardless of the underlying signing technology. This is achieved with abstract interfaces backed by multiple implementations:  
+The signer module provides a simple and unified cryptographic signing and signature verification API designed to work consistently regardless of the underlying signing technology. This is achieved with abstract interfaces backed by multiple implementations:
 
 * ``Signer.sign``
 * ``Key.verify_signature``
@@ -59,8 +59,7 @@ which may happen on different systems and at different points in time:
 
 4. **Verify**, given a configured public key
 
-.. warning::
-   The API is experimental and may change without warning in versions ``<1.0.0``.
+.. note::
 
    See `'New Signer API' <https://theupdateframework.github.io/python-tuf/2023/01/24/securesystemslib-signer-api.html>`_ blog post
    for background infos.
