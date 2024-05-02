@@ -10,13 +10,14 @@ from contextlib import contextmanager
 from typing import Dict, Iterator, List, Optional, Tuple
 from urllib import parse
 
-from securesystemslib import KEY_TYPE_ECDSA
 from securesystemslib.exceptions import UnsupportedLibraryError
 from securesystemslib.hash import digest
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import SecretsHandler, Signer
 from securesystemslib.signer._utils import compute_default_keyid
+
+_KEY_TYPE_ECDSA = "ecdsa"
 
 # pylint: disable=wrong-import-position
 CRYPTO_IMPORT_ERROR = None
@@ -217,11 +218,13 @@ class HSMSigner(Signer):
             ]
         )
         if not keys:
-            raise ValueError(f"could not find {KEY_TYPE_ECDSA} key for {keyid}")
+            raise ValueError(
+                f"could not find {_KEY_TYPE_ECDSA} key for {keyid}"
+            )
 
         if len(keys) > 1:
             raise ValueError(
-                f"found more than one {KEY_TYPE_ECDSA} key for {keyid}"
+                f"found more than one {_KEY_TYPE_ECDSA} key for {keyid}"
             )
 
         return keys[0]
@@ -327,8 +330,8 @@ class HSMSigner(Signer):
 
         keyval = {"public": public_pem}
         scheme = _SCHEME_FOR_CURVE[curve]
-        keyid = compute_default_keyid(KEY_TYPE_ECDSA, scheme, keyval)
-        key = SSlibKey(keyid, KEY_TYPE_ECDSA, scheme, keyval)
+        keyid = compute_default_keyid(_KEY_TYPE_ECDSA, scheme, keyval)
+        key = SSlibKey(keyid, _KEY_TYPE_ECDSA, scheme, keyval)
 
         return uri, key
 

@@ -12,10 +12,3 @@ __version__ = "0.31.0"
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 logger.addHandler(logging.StreamHandler())
-
-
-# Global constants
-# TODO: Replace hard-coded key types with these constants (and add more)
-KEY_TYPE_RSA = "rsa"
-KEY_TYPE_ED25519 = "ed25519"
-KEY_TYPE_ECDSA = "ecdsa"
