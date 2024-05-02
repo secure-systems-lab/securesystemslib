@@ -2,8 +2,15 @@
 
 ## securesystemslib v1.0.0
 
+Securesystemslib API is now considered stable. The core functionality is
+provided in the _Signer_ interface and the half a dozen integrated _Signer_
+implementations that can be found in the `signer` module. Smaller helper
+modules `dsse`, `formats`, `hash` and `storage` are also part of the API.
+Several legacy modules have been removed.
+
 ### Added
 * Signer: add public_key attribute to interface (#756)
+* VaultSigner: Signer implementation for HashiCorp Vault (#800)
 * CryptoSigner: support ecdsa keytype that is no longer in spec (#711)
 * CryptoSigner: add private_bytes property (#799)
 * CryptoSigner: add `"file2"` signer uri (#759)
