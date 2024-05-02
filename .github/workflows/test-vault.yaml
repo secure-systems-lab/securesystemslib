@@ -1,0 +1,44 @@
+name: Run HashiCorp Vault tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  local-vault:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout securesystemslib
+        uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f
+
+      - name: Set up Python
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
+        with:
+          python-version: '3.x'
+          cache: 'pip'
+          cache-dependency-path: 'requirements*.txt'
+
+      - name:  Install system dependencies
+        shell: bash
+        run: |
+          sudo apt update && sudo apt install -y gpg wget
+          wget -O- https://apt.releases.hashicorp.com/gpg | \
+            sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+
+          gpg --no-default-keyring --fingerprint \
+            --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg
+
+          echo "deb [arch=$(dpkg --print-architecture) \
+            signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
+            https://apt.releases.hashicorp.com $(lsb_release -cs) main" | \
+            sudo tee /etc/apt/sources.list.d/hashicorp.list
+
+          sudo apt update && sudo apt install -y vault
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade tox
+
+      - name: Run tests
+        run: tox -e local-vault

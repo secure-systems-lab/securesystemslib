@@ -24,6 +24,7 @@ from securesystemslib.signer._spx_signer import (
     SpxSigner,
     generate_spx_key_pair,
 )
+from securesystemslib.signer._vault_signer import VaultSigner
 
 # Register supported private key uri schemes and the Signers implementing them
 SIGNER_FOR_URI_SCHEME.update(
@@ -34,6 +35,7 @@ SIGNER_FOR_URI_SCHEME.update(
         GPGSigner.SCHEME: GPGSigner,
         AzureSigner.SCHEME: AzureSigner,
         AWSSigner.SCHEME: AWSSigner,
+        VaultSigner.SCHEME: VaultSigner,
     }
 )
 
