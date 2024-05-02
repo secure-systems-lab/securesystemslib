@@ -1,5 +1,38 @@
 # Changelog
 
+## securesystemslib v1.0.0
+
+### Added
+* Signer: add public_key attribute to interface (#756)
+* CryptoSigner: support ecdsa keytype that is no longer in spec (#711)
+* CryptoSigner: add private_bytes property (#799)
+* CryptoSigner: add `"file2"` signer uri (#759)
+* test: use localstack to test AWSSigner (#777)
+
+### Removed
+* CryptoSigner: remove `"file"` signer uri (#759)
+* migration script for legacy keys  (#770)
+* `SSlibSigner` class and `*_securesystemslib_key` methods (#771)
+* legacy key `key*`, `interface`, `util` and `schema` modules (#772, #773, #776)
+* unused functions in `hash`, and `formats` module (#774, #776)
+* unused global key constants (#806)
+
+### Changed
+* SSlibKey: strengthen input validation (#780, #795)
+* AWSSigner: support default scheme and add stronger input validation (#724, #778)
+* dsse: change Envelope.signatures type to dict (#743)
+* vendor: update ed25519 copy (#793)
+* docs: improve user and contributor docs (#744, #745, #746, #749, #759, #796)
+* test: improve and temporarily disable SigstoreSigner test (#779, #785)
+* ci: use dependabot groups, update weekly (#735)
+* ci: test macOS and Windows on latest Python only (#797)
+* Make securessystemslib.gpg internal (#792)
+
+### Fixed
+* Fix check-upstream-ed25519 workflow permission (#706)
+* SSlibKey: fix default scheme and test for ecdsa nistp384 key (#763 #794)
+
+
 ## securesystemslib v0.31.0
 
 ### Added
