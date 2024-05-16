@@ -1,13 +1,7 @@
 """Signer implementation for project sigstore.
-
-NOTE: SigstoreSigner and -Key are disabled temporarily around
-the Securesystemslib 1.0 release as the cyclic dependency
-(securesystemslib -> sigstore-python -> tuf -> securesystemslib)
-is problematic during API deprecations.
-See issue #781.
 """
 
-import io
+import json
 import logging
 from typing import Any, Dict, Optional, Tuple
 from urllib import parse
@@ -66,37 +60,35 @@ class SigstoreKey(Key):
 
     def verify_signature(self, signature: Signature, data: bytes) -> None:
         # pylint: disable=import-outside-toplevel,import-error
-        result = None
         try:
-            from sigstore.verify import VerificationMaterials, Verifier
+            from sigstore.errors import VerificationError as SigstoreVerifyError
+            from sigstore.models import Bundle
+            from sigstore.verify import Verifier
             from sigstore.verify.policy import Identity
-            from sigstore_protobuf_specs.dev.sigstore.bundle.v1 import Bundle
 
             verifier = Verifier.production()
             identity = Identity(
                 identity=self.keyval["identity"], issuer=self.keyval["issuer"]
             )
-            bundle = Bundle().from_dict(signature.unrecognized_fields["bundle"])
-            materials = VerificationMaterials.from_bundle(
-                input_=io.BytesIO(data), bundle=bundle, offline=True
-            )
-            result = verifier.verify(materials, identity)
+            bundle_data = signature.unrecognized_fields["bundle"]
+            bundle = Bundle.from_json(json.dumps(bundle_data))
 
+            verifier.verify_artifact(data, bundle, identity)
+
+        except SigstoreVerifyError as e:
+            logger.info(
+                "Key %s failed to verify sig: %s",
+                self.keyid,
+                e,
+            )
+            raise UnverifiedSignatureError(
+                f"Failed to verify signature by {self.keyid}"
+            ) from e
         except Exception as e:
             logger.info("Key %s failed to verify sig: %s", self.keyid, str(e))
             raise VerificationError(
                 f"Unknown failure to verify signature by {self.keyid}"
             ) from e
-
-        if not result:
-            logger.info(
-                "Key %s failed to verify sig: %s",
-                self.keyid,
-                getattr(result, "reason", ""),
-            )
-            raise UnverifiedSignatureError(
-                f"Failed to verify signature by {self.keyid}"
-            )
 
 
 class SigstoreSigner(Signer):
@@ -189,9 +181,9 @@ class SigstoreSigner(Signer):
 
         key_identity = public_key.keyval["identity"]
         key_issuer = public_key.keyval["issuer"]
-        if key_issuer != token.expected_certificate_subject:
+        if key_issuer != token.federated_issuer:
             raise ValueError(
-                f"Signer identity issuer {token.expected_certificate_subject} "
+                f"Signer identity issuer {token.federated_issuer} "
                 f"did not match key: {key_issuer}"
             )
         # TODO: should check ambient identity too: unfortunately IdentityToken does
@@ -246,9 +238,7 @@ class SigstoreSigner(Signer):
 
         # authenticate to get the identity and issuer
         token = Issuer.production().identity_token()
-        return cls.import_(
-            token.identity, token.expected_certificate_subject, False
-        )
+        return cls.import_(token.identity, token.federated_issuer, False)
 
     def sign(self, payload: bytes) -> Signature:
         """Signs payload using the OIDC token on the signer instance.
@@ -273,12 +263,12 @@ class SigstoreSigner(Signer):
 
         context = SigningContext.production()
         with context.signer(self._token) as sigstore_signer:
-            result = sigstore_signer.sign(io.BytesIO(payload))
-
-        bundle = result.to_bundle()
-
+            bundle = sigstore_signer.sign_artifact(payload)
+        # We want to access the actual signature, see
+        # https://github.com/sigstore/protobuf-specs/blob/main/protos/sigstore_bundle.proto
+        bundle_json = json.loads(bundle.to_json())
         return Signature(
             self.public_key.keyid,
-            bundle.message_signature.signature.hex(),
-            {"bundle": bundle.to_dict()},
+            bundle_json["messageSignature"]["signature"],
+            {"bundle": bundle_json},
         )
