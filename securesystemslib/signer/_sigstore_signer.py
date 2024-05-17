@@ -65,7 +65,10 @@ class SigstoreKey(Key):
             from sigstore.models import Bundle
             from sigstore.verify import Verifier
             from sigstore.verify.policy import Identity
+        except ImportError as e:
+            raise VerificationError(IMPORT_ERROR) from e
 
+        try:
             verifier = Verifier.production()
             identity = Identity(
                 identity=self.keyval["identity"], issuer=self.keyval["issuer"]
