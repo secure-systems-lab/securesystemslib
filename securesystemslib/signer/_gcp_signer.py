@@ -165,7 +165,7 @@ class GCPSigner(Signer):
         if public_key.keytype == "rsa":
             # hash algorithm is encoded as last scheme portion
             algo = public_key.scheme.split("-")[-1]
-        if public_key.keytype in [
+        elif public_key.keytype in [
             "ecdsa",
             "ecdsa-sha2-nistp256",
             "ecdsa-sha2-nistp384",
@@ -173,6 +173,10 @@ class GCPSigner(Signer):
             # nistp256 uses sha-256, nistp384 uses sha-384
             bits = public_key.scheme.split("-nistp")[-1]
             algo = f"sha{bits}"
+        else:
+            raise exceptions.UnsupportedAlgorithmError(
+                f"Unsupported key type {public_key.keytype} in key {public_key.keyid}"
+            )
 
         # trigger UnsupportedAlgorithm if appropriate
         _ = sslib_hash.digest(algo)
