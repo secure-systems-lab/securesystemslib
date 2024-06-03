@@ -14,7 +14,7 @@ cryptography==42.0.7
     # via -r requirements.txt
 pycparser==2.22
     # via cffi
-pykcs11==1.5.15
+pykcs11==1.5.16
     # via -r requirements.txt
 pyspx==0.5.0 ; platform_system != "Windows"
     # via -r requirements.txt
