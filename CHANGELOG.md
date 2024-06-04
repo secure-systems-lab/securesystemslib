@@ -1,5 +1,14 @@
 # Changelog
 
+## securesystemslib v1.1.0
+
+This is a small release that only re-enables the use of SigstoreSigner.
+Note that SigstoreSigner and SigstoreKey are still not part of the default
+set of supported signers & keys but now they can be enabled.
+
+### Changed
+* SigstoreSigner: Re-enable compatibility with Sigstore (#781)
+
 ## securesystemslib v1.0.0
 
 Securesystemslib API is now considered stable. The core functionality is
