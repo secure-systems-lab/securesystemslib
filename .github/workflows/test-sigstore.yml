@@ -1,11 +1,10 @@
 name: Run Sigstore Signer tests
 
 on:
-  ## Disabled temporarily: #781
-  #push:
-  #  branches:
-  #    - main
-  #pull_request:
+  push:
+    branches:
+      - main
+  pull_request:
   workflow_dispatch:
 
 permissions: {}

@@ -20,6 +20,10 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import mock
 
+from securesystemslib.exceptions import (
+    UnverifiedSignatureError,
+    VerificationError,
+)
 from securesystemslib.signer import (
     SIGNER_FOR_URI_SCHEME,
     Signer,
@@ -100,7 +104,18 @@ class TestSigstoreSigner(unittest.TestCase):
             signer = Signer.from_priv_key_uri(uri, public_key)
 
         sig = signer.sign(b"data")
+
+        # Successful verification
         public_key.verify_signature(sig, b"data")
+
+        # Signature mismatch
+        with self.assertRaises(UnverifiedSignatureError):
+            public_key.verify_signature(sig, b"incorrect data")
+
+        # Broken bundle
+        sig.unrecognized_fields["bundle"]["verificationMaterial"] = None
+        with self.assertRaises(VerificationError):
+            public_key.verify_signature(sig, b"data")
 
 
 if __name__ == "__main__":
