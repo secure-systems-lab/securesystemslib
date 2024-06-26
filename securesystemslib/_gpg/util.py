@@ -30,7 +30,6 @@ try:
 except ImportError:
     CRYPTO = False
 
-# pylint: disable=wrong-import-position
 # ruff: noqa: E402
 from securesystemslib import exceptions
 from securesystemslib._gpg import constants
@@ -104,7 +103,7 @@ def hash_object(headers, algorithm, content):
     return hasher.finalize()
 
 
-def parse_packet_header(data, expected_type=None):  # pylint: disable=too-many-branches # noqa: PLR0912
+def parse_packet_header(data, expected_type=None):  # noqa: PLR0912
     """
     <Purpose>
       Parse out packet type and header and body lengths from an RFC4880 packet.
@@ -208,8 +207,9 @@ def parse_packet_header(data, expected_type=None):  # pylint: disable=too-many-b
 
     if expected_type is not None and packet_type != expected_type:
         raise PacketParsingError(
-            "Expected packet "  # pylint: disable=consider-using-f-string
-            "{}, but got {} instead!".format(expected_type, packet_type)
+            "Expected packet " "{}, but got {} instead!".format(
+                expected_type, packet_type
+            )
         )
 
     return packet_type, header_len, body_len, header_len + body_len
@@ -238,7 +238,7 @@ def compute_keyid(pubkey_packet_data):
 
     hasher = hashing.Hash(
         hashing.SHA1(),  # noqa: S303
-        backend=backends.default_backend(),  # nosec
+        backend=backends.default_backend(),
     )
     hasher.update(b"\x99")
     hasher.update(struct.pack(">H", len(pubkey_packet_data)))
@@ -348,8 +348,8 @@ def get_hashing_class(hash_algorithm_id):
         return hashing_class[hash_algorithm_id]
 
     except KeyError:
-        raise ValueError(  # pylint: disable=raise-missing-from
-            "Hash algorithm '{}' not supported, must be one of '{}' "  # pylint: disable=consider-using-f-string
+        raise ValueError(
+            "Hash algorithm '{}' not supported, must be one of '{}' "
             "(see RFC4880 9.4. Hash Algorithms).".format(
                 hash_algorithm_id, supported_hashing_algorithms
             )

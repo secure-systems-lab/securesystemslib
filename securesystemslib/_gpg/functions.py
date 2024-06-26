@@ -17,7 +17,7 @@
 """
 
 import logging
-import subprocess  # nosec
+import subprocess
 import time
 
 from securesystemslib import exceptions
@@ -104,19 +104,15 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
 
     keyarg = ""
     if keyid:
-        keyarg = "--local-user {}".format(  # pylint: disable=consider-using-f-string
-            keyid
-        )
+        keyarg = "--local-user {}".format(keyid)
 
     homearg = ""
     if homedir:
-        homearg = "--homedir {}".format(  # pylint: disable=consider-using-f-string
-            homedir
-        ).replace("\\", "/")
+        homearg = "--homedir {}".format(homedir).replace("\\", "/")
 
     command = gpg_sign_command(keyarg=keyarg, homearg=homearg)
 
-    gpg_process = subprocess.run(  # nosec
+    gpg_process = subprocess.run(
         command,  # noqa: S603
         input=content,
         check=False,
@@ -129,7 +125,7 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
     # https://lists.gnupg.org/pipermail/gnupg-devel/2005-December/022559.html
     if gpg_process.returncode != 0:
         raise OSError(
-            "Command '{}' returned "  # pylint: disable=consider-using-f-string
+            "Command '{}' returned "
             "non-zero exit status '{}', stderr was:\n{}.".format(
                 gpg_process.args,
                 gpg_process.returncode,
@@ -149,7 +145,7 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
     # test environments.
     if not signature["keyid"]:  # pragma: no cover
         log.warning(
-            "The created signature does not include the hashed subpacket"  # pylint: disable=logging-format-interpolation,consider-using-f-string
+            "The created signature does not include the hashed subpacket"
             " '33' (full keyid). You probably have a gpg version <{}."
             " We will export the public keys associated with the short keyid to"
             " compute the full keyid.".format(FULLY_SUPPORTED_MIN_VERSION)
@@ -177,7 +173,7 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
     # If there is still no full keyid something went wrong
     if not signature["keyid"]:  # pragma: no cover
         raise ValueError(
-            "Full keyid could not be determined for signature '{}'".format(  # pylint: disable=consider-using-f-string
+            "Full keyid could not be determined for signature '{}'".format(
                 signature
             )
         )
@@ -279,14 +275,12 @@ def export_pubkey(keyid, homedir=None, timeout=GPG_TIMEOUT):
 
     homearg = ""
     if homedir:
-        homearg = "--homedir {}".format(  # pylint: disable=consider-using-f-string
-            homedir
-        ).replace("\\", "/")
+        homearg = "--homedir {}".format(homedir).replace("\\", "/")
 
     # TODO: Consider adopting command error handling from `create_signature`
     # above, e.g. in a common 'run gpg command' utility function
     command = gpg_export_pubkey_command(keyid=keyid, homearg=homearg)
-    gpg_process = subprocess.run(  # nosec
+    gpg_process = subprocess.run(
         command,  # noqa: S603
         capture_output=True,
         timeout=timeout,

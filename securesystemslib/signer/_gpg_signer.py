@@ -42,12 +42,8 @@ class GPGKey(Key):
     def verify_signature(self, signature: Signature, data: bytes) -> None:
         try:
             if not gpg.verify_signature(
-                GPGSigner._sig_to_legacy_dict(  # pylint: disable=protected-access
-                    signature
-                ),
-                GPGSigner._key_to_legacy_dict(  # pylint: disable=protected-access
-                    self
-                ),
+                GPGSigner._sig_to_legacy_dict(signature),
+                GPGSigner._key_to_legacy_dict(self),
                 data,
             ):
                 raise exceptions.UnverifiedSignatureError(
