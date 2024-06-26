@@ -104,24 +104,20 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
 
     keyarg = ""
     if keyid:
-        keyarg = (
-            "--local-user {}".format(  # pylint: disable=consider-using-f-string
-                keyid
-            )
+        keyarg = "--local-user {}".format(  # pylint: disable=consider-using-f-string
+            keyid
         )
 
     homearg = ""
     if homedir:
-        homearg = (
-            "--homedir {}".format(  # pylint: disable=consider-using-f-string
-                homedir
-            ).replace("\\", "/")
-        )
+        homearg = "--homedir {}".format(  # pylint: disable=consider-using-f-string
+            homedir
+        ).replace("\\", "/")
 
     command = gpg_sign_command(keyarg=keyarg, homearg=homearg)
 
     gpg_process = subprocess.run(  # nosec
-        command,
+        command,  # noqa: S603
         input=content,
         check=False,
         capture_output=True,
@@ -283,17 +279,15 @@ def export_pubkey(keyid, homedir=None, timeout=GPG_TIMEOUT):
 
     homearg = ""
     if homedir:
-        homearg = (
-            "--homedir {}".format(  # pylint: disable=consider-using-f-string
-                homedir
-            ).replace("\\", "/")
-        )
+        homearg = "--homedir {}".format(  # pylint: disable=consider-using-f-string
+            homedir
+        ).replace("\\", "/")
 
     # TODO: Consider adopting command error handling from `create_signature`
     # above, e.g. in a common 'run gpg command' utility function
     command = gpg_export_pubkey_command(keyid=keyid, homearg=homearg)
     gpg_process = subprocess.run(  # nosec
-        command,
+        command,  # noqa: S603
         capture_output=True,
         timeout=timeout,
         check=True,

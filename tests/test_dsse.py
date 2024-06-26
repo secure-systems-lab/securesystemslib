@@ -1,4 +1,4 @@
-"""Test cases for "metadata.py". """
+"""Test cases for "metadata.py"."""
 
 import copy
 import unittest

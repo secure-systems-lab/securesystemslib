@@ -52,9 +52,7 @@ from securesystemslib.signer import (
 from securesystemslib.signer._sigstore_signer import SigstoreKey
 
 
-class TestPublicInterfaces(
-    unittest.TestCase
-):  # pylint: disable=missing-class-docstring
+class TestPublicInterfaces(unittest.TestCase):  # pylint: disable=missing-class-docstring
     @classmethod
     def setUpClass(cls):
         cls.temp_dir = tempfile.mkdtemp(dir=os.getcwd())

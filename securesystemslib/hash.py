@@ -49,9 +49,7 @@ try:
 
     SUPPORTED_LIBRARIES.append("pyca_crypto")
 
-    class PycaDiggestWrapper(
-        object
-    ):  # pylint: disable=useless-object-inheritance
+    class PycaDiggestWrapper(object):  # pylint: disable=useless-object-inheritance
         """
         <Purpose>
           A wrapper around `cryptography.hazmat.primitives.hashes.Hash` which adds

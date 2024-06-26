@@ -449,9 +449,9 @@ def _assign_certified_key_info(bundle):
                 sig_creation_time = tmp_sig_creation_time
 
     if validity_period is not None:
-        bundle[PACKET_TYPE_PRIMARY_KEY]["key"][
-            "validity_period"
-        ] = validity_period
+        bundle[PACKET_TYPE_PRIMARY_KEY]["key"]["validity_period"] = (
+            validity_period
+        )
 
     return bundle[PACKET_TYPE_PRIMARY_KEY]["key"]
 
@@ -654,6 +654,7 @@ def get_pubkey_bundle(data, keyid):
     return master_public_key
 
 
+# ruff: noqa: PLR0912, PLR0915
 def parse_signature_packet(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     data,
     supported_signature_types=None,

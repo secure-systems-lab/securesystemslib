@@ -1,4 +1,4 @@
-"""Signer implementation for OpenPGP """
+"""Signer implementation for OpenPGP"""
 
 import logging
 from typing import Any, Dict, Optional, Tuple

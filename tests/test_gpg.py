@@ -78,9 +78,7 @@ class GPGTestUtils:
     """GPG Test utility class"""
 
     @staticmethod
-    def ignore_not_found_error(
-        function, path, exc_info
-    ):  # pylint: disable=unused-argument,unused-argument
+    def ignore_not_found_error(function, path, exc_info):  # pylint: disable=unused-argument,unused-argument
         """Callback that ignores FileNotFoundError"""
         _, error, _ = exc_info
         if not isinstance(error, FileNotFoundError):
@@ -349,9 +347,9 @@ class TestCommon(unittest.TestCase):
 
         # Replace primary key id with a non-associated keyid
         wrong_keyid_bundle = deepcopy(self.raw_key_bundle)
-        wrong_keyid_bundle[PACKET_TYPE_PRIMARY_KEY]["key"][
-            "keyid"
-        ] = "8465A1E2E0FB2B40ADB2478E18FB3F537E0C8A17"
+        wrong_keyid_bundle[PACKET_TYPE_PRIMARY_KEY]["key"]["keyid"] = (
+            "8465A1E2E0FB2B40ADB2478E18FB3F537E0C8A17"
+        )
 
         # Remove a byte in user id packet to make signature verification fail
         invalid_cert_bundle = deepcopy(self.raw_key_bundle)
@@ -405,7 +403,9 @@ class TestCommon(unittest.TestCase):
         # "Test Expiration II" has the primary user ID flag set and therefor has
         # the highest priority.
         key = _assign_certified_key_info(self.raw_expired_key_bundle)
-        self.assertTrue(key["validity_period"] == 87901)  # ~ 1 day
+        self.assertTrue(
+            key["validity_period"] == 87901  # noqa: PLR2004
+        )  # ~ 1 day
 
         # Test ambiguity resolution scheme with 2 User IDs
         #   :user ID packet: "Test Expiration III <test@expir.three>"
@@ -420,7 +420,9 @@ class TestCommon(unittest.TestCase):
         del user_id_items[1]
         raw_key_bundle[PACKET_TYPE_USER_ID] = OrderedDict(user_id_items)
         key = _assign_certified_key_info(raw_key_bundle)
-        self.assertTrue(key["validity_period"] == 87901)  # ~ 1 day
+        self.assertTrue(
+            key["validity_period"] == 87901  # noqa: PLR2004
+        )  # ~ 1 day
 
     def test_get_verified_subkeys_errors(self):
         """Test _get_verified_subkeys errors with manually crafted data based on
@@ -501,7 +503,7 @@ class TestCommon(unittest.TestCase):
             subkeys["0ce427fa3f0f50bc83a4a760ed95e1581691db4d"].get(
                 "validity_period"
             )
-            == 175451
+            == 175451  # noqa: PLR2004
         )
 
         # Test subkey  without validity period, i.e. it does not expire
@@ -509,7 +511,7 @@ class TestCommon(unittest.TestCase):
             subkeys[  # pylint: disable=singleton-comparison
                 "70cfabf1e2f1dc60ac5c7bca10cd20d3d5bcb6ef"
             ].get("validity_period")
-            == None
+            is None
         )
 
     def test_get_pubkey_bundle_errors(self):
@@ -567,7 +569,7 @@ class TestGPGRSA(unittest.TestCase):
     unsupported_subkey_keyid = "611A9B648E16F54E8A7FAD5DA51E8CDF3B06524F"
     expired_key_keyid = "E8AC80C924116DABB51D4B987CB07D6D2C199C7C"
 
-    keyid_768C43 = "7B3ABB26B97B655AB9296BD15B0BD02E1C768C43"  # pylint: disable=invalid-name
+    keyid_768C43 = "7B3ABB26B97B655AB9296BD15B0BD02E1C768C43"  # pylint: disable=invalid-name # noqa: N815
 
     @classmethod
     def setUpClass(self):  # pylint: disable=bad-classmethod-argument
@@ -612,10 +614,8 @@ class TestGPGRSA(unittest.TestCase):
 
         # load the equivalent ssh key, and make sure that we get the same RSA key
         # parameters
-        ssh_key_basename = (
-            "{}.ssh".format(  # pylint: disable=consider-using-f-string
-                self.default_keyid
-            )
+        ssh_key_basename = "{}.ssh".format(  # pylint: disable=consider-using-f-string
+            self.default_keyid
         )
         ssh_key_path = os.path.join(self.gnupg_home, ssh_key_basename)
         with open(ssh_key_path, "rb") as fp:
@@ -786,10 +786,8 @@ class TestGPGDSA(unittest.TestCase):
         our_exported_key = dsa_create_pubkey(key_data)
 
         # load same key, pre-exported with 3rd-party tooling
-        pem_key_basename = (
-            "{}.pem".format(  # pylint: disable=consider-using-f-string
-                self.default_keyid
-            )
+        pem_key_basename = "{}.pem".format(  # pylint: disable=consider-using-f-string
+            self.default_keyid
         )
         pem_key_path = os.path.join(self.gnupg_home, pem_key_basename)
         with open(pem_key_path, "rb") as fp:

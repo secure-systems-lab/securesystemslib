@@ -1,4 +1,4 @@
-"""Signer utils for internal use. """
+"""Signer utils for internal use."""
 
 from typing import Any, Dict
 

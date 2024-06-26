@@ -1,5 +1,4 @@
-"""Test HSMSigner
-"""
+"""Test HSMSigner"""
 
 import os
 import shutil

@@ -15,6 +15,9 @@
   general-purpose utilities for binary data handling and pgp data parsing
 """
 
+# ruff: noqa: PLR2004
+# (disbales "Magic value used in comparison", like on line 150)
+
 import binascii
 import logging
 import struct
@@ -28,6 +31,7 @@ except ImportError:
     CRYPTO = False
 
 # pylint: disable=wrong-import-position
+# ruff: noqa: E402
 from securesystemslib import exceptions
 from securesystemslib._gpg import constants
 from securesystemslib._gpg.exceptions import PacketParsingError
@@ -100,9 +104,7 @@ def hash_object(headers, algorithm, content):
     return hasher.finalize()
 
 
-def parse_packet_header(
-    data, expected_type=None
-):  # pylint: disable=too-many-branches
+def parse_packet_header(data, expected_type=None):  # pylint: disable=too-many-branches # noqa: PLR0912
     """
     <Purpose>
       Parse out packet type and header and body lengths from an RFC4880 packet.
@@ -235,7 +237,8 @@ def compute_keyid(pubkey_packet_data):
         raise exceptions.UnsupportedLibraryError(NO_CRYPTO_MSG)
 
     hasher = hashing.Hash(
-        hashing.SHA1(), backend=backends.default_backend()  # nosec
+        hashing.SHA1(),  # noqa: S303
+        backend=backends.default_backend(),  # nosec
     )
     hasher.update(b"\x99")
     hasher.update(struct.pack(">H", len(pubkey_packet_data)))

@@ -28,6 +28,7 @@ except ImportError:
     CRYPTO = False
 
 # pylint: disable=wrong-import-position
+# ruff: noqa: E402
 from securesystemslib import exceptions
 from securesystemslib._gpg import util as gpg_util
 from securesystemslib._gpg.exceptions import PacketParsingError

@@ -1,6 +1,4 @@
-"""Test VaultSigner
-
-"""
+"""Test VaultSigner"""
 
 import unittest
 

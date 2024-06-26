@@ -1,5 +1,4 @@
-"""Signer implementation for project sigstore.
-"""
+"""Signer implementation for project sigstore."""
 
 import json
 import logging
@@ -35,7 +34,7 @@ class SigstoreKey(Key):
     DEFAULT_KEY_TYPE = "sigstore-oidc"
     DEFAULT_SCHEME = "Fulcio"
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         keyid: str,
         keytype: str,

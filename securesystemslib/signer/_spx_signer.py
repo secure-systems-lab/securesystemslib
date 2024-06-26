@@ -1,6 +1,4 @@
-"""Signer implementation for project SPHINCS+ post-quantum signature support.
-
-"""
+"""Signer implementation for project SPHINCS+ post-quantum signature support."""
 
 import logging
 import os

@@ -1,4 +1,4 @@
-"""Test cases for "signer.py". """
+"""Test cases for "signer.py"."""
 
 import copy
 import os
@@ -209,7 +209,7 @@ class TestKey(unittest.TestCase):
                 },
             )
 
-            sig = Signature.from_dict(
+            sig = Signature.from_dict(  # noqa: PLW2901
                 {
                     "keyid": keyid,
                     "sig": sig,
@@ -345,7 +345,6 @@ class TestSSlibKey(unittest.TestCase):
         self.assertEqual(key.keyid, "abcdef")
 
     def test_verify_invalid_keytype_scheme(self):
-
         rsa = "-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAsDqUoiFJZX+5gm5pyI1l\nVc/N3yjJVOIl9GyiK0mRyzV3IzUQzhjq8nhk0eLfzXw2XwIAYOJC6dR/tGRG4JDx\nJkez5FFH4zLosr/XzT7CG5zxJ3kKICLD1v9rZQr5ZgARQDOpkxzPz46rGnE0sHd7\nMpnpPMScA1pMIzwM1RoPS4ntZipI1cl9M7HMQ6mkBp8/DNKCqaDWixJqaGgWrhhK\nhI/1mzBliMKriNxPKSCGVlOk/QpZft+y1fs42s0DMd5BOFBo+ZcoXLYRncg9S3A2\nxx/jT69Bt3ceiAZqnp7f6M+ZzoUifSelaoL7QIYg/GkEl+0oxTD0yRphGiCKwn9c\npSbn7NgnbjqSgIMeEtlf/5Coyrs26pyFf/9GbusddPSxxxwIJ/7IJuF7P1Yy0WpZ\nkMeY83h9n2IdnEYi+rpdbLJPQd7Fpu2xrdA3Fokj8AvCpcmxn8NIXZuK++r8/xsE\nAUL30HH7dgVn50AvdPaJnqAORT3OlabW0DK9prcwKnyzAgMBAAE=\n-----END PUBLIC KEY-----"
         ed25519 = (
             "50a5768a7a577483c28e57a6742b4d2170b9be628a961355ef127c45f2aefdc5"
@@ -627,7 +626,6 @@ class TestCryptoSigner(unittest.TestCase):
     def test_init(self):
         """Test CryptoSigner constructor."""
         for keytype, private_key in zip(["rsa", "ecdsa", "ed25519"], self.keys):
-
             # Init w/o public key (public key is created from private key)
             signer = CryptoSigner(private_key)
             self.assertEqual(keytype, signer.public_key.keytype)

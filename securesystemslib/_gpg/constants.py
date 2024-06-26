@@ -37,7 +37,7 @@ def is_available_gnupg(gnupg: str, timeout: Optional[int] = None) -> bool:
     gpg_version_cmd = shlex.split(f"{gnupg} --version")
     try:
         subprocess.run(  # nosec
-            gpg_version_cmd,
+            gpg_version_cmd,  # noqa: S603
             capture_output=True,
             timeout=timeout,
             check=True,

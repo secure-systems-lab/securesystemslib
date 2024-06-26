@@ -64,9 +64,9 @@ except ImportError:
 _PYKCS11LIB = None
 
 
-def PYKCS11LIB():
+def PYKCS11LIB():  # noqa: N802
     """Pseudo-singleton to load shared library using PYKCS11LIB envvar only once."""
-    global _PYKCS11LIB  # pylint: disable=global-statement
+    global _PYKCS11LIB  # pylint: disable=global-statement # noqa: PLW0603
     if _PYKCS11LIB is None:
         _PYKCS11LIB = PyKCS11.PyKCS11Lib()
         _PYKCS11LIB.load()

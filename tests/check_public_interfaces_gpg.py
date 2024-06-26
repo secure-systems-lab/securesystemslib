@@ -36,9 +36,7 @@ from securesystemslib.exceptions import UnsupportedLibraryError
 from securesystemslib.signer import GPGKey, GPGSigner, Signer
 
 
-class TestPublicInterfacesGPG(
-    unittest.TestCase
-):  # pylint: disable=missing-class-docstring
+class TestPublicInterfacesGPG(unittest.TestCase):  # pylint: disable=missing-class-docstring
     @classmethod
     def setUpClass(cls):
         assert (
