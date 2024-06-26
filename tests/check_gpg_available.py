@@ -35,7 +35,7 @@ class TestGpgAvailable(unittest.TestCase):
     def test_gpg_available(self):
         """Test that GPG is available."""
         self.assertTrue(
-            securesystemslib._gpg.constants.have_gpg()  # pylint: disable=protected-access
+            securesystemslib._gpg.constants.have_gpg()
         )
 
 

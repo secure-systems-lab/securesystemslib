@@ -20,7 +20,7 @@ import unittest
 import securesystemslib.formats
 
 
-class TestFormats(unittest.TestCase):  # pylint: disable=missing-class-docstring
+class TestFormats(unittest.TestCase):
     def test_encode_canonical(self):
         # Test conditions for valid arguments.
         encode = securesystemslib.formats.encode_canonical

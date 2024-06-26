@@ -76,7 +76,6 @@ class TestKey(unittest.TestCase):
                 Key.from_dict("aa", keydict)
 
     def test_key_verify_signature(self):
-        # pylint: disable=too-many-locals
         ed25519_keyid = (
             "fc3920f44a1deec695ed9327f70513909a36f51ad19774167ddf28a12f8bbbed"
         )
@@ -369,7 +368,7 @@ class TestSSlibKey(unittest.TestCase):
         for keytype, scheme, val in test_data:
             key = SSlibKey("fake", keytype, scheme, {"public": val})
             with self.assertRaises(ValueError):
-                key._verify(  # pylint: disable=protected-access
+                key._verify(
                     b"fakesig", b"fakedata"
                 )
 
@@ -511,7 +510,6 @@ class TestGPGRSA(unittest.TestCase):
 
     def test_gpg_signature_legacy_data_structure(self):
         """Test custom fields and legacy data structure in gpg signatures."""
-        # pylint: disable=protected-access
         _, public_key = GPGSigner.import_(
             self.signing_subkey_keyid, self.gnupg_home
         )
@@ -527,7 +525,6 @@ class TestGPGRSA(unittest.TestCase):
 
     def test_gpg_key_legacy_data_structure(self):
         """Test legacy data structure conversion in gpg keys."""
-        # pylint: disable=protected-access
         _, public_key = GPGSigner.import_(
             self.signing_subkey_keyid, self.gnupg_home
         )

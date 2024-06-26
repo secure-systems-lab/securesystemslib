@@ -26,14 +26,14 @@ import securesystemslib.storage
 from securesystemslib.exceptions import StorageError
 
 
-class TestStorage(unittest.TestCase):  # pylint: disable=missing-class-docstring
+class TestStorage(unittest.TestCase):
     def setUp(self):
         self.storage_backend = securesystemslib.storage.FilesystemBackend()
         self.temp_dir = tempfile.mkdtemp(dir=os.getcwd())
         self.filepath = os.path.join(self.temp_dir, "testfile")
         with open(self.filepath, "wb") as test:
             test.write(b"testing")
-        self.fileobj = open(  # pylint: disable=consider-using-with
+        self.fileobj = open(
             self.filepath, "rb"
         )
 

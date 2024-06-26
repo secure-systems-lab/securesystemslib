@@ -32,7 +32,6 @@ import shutil
 import tempfile
 import unittest
 
-# pylint: disable=protected-access
 import securesystemslib._gpg.constants
 import securesystemslib._gpg.util
 import securesystemslib.exceptions
@@ -52,7 +51,7 @@ from securesystemslib.signer import (
 from securesystemslib.signer._sigstore_signer import SigstoreKey
 
 
-class TestPublicInterfaces(unittest.TestCase):  # pylint: disable=missing-class-docstring
+class TestPublicInterfaces(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.temp_dir = tempfile.mkdtemp(dir=os.getcwd())
