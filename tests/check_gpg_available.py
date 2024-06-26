@@ -34,9 +34,7 @@ class TestGpgAvailable(unittest.TestCase):
 
     def test_gpg_available(self):
         """Test that GPG is available."""
-        self.assertTrue(
-            securesystemslib._gpg.constants.have_gpg()
-        )
+        self.assertTrue(securesystemslib._gpg.constants.have_gpg())
 
 
 if __name__ == "__main__":

@@ -368,9 +368,7 @@ class TestSSlibKey(unittest.TestCase):
         for keytype, scheme, val in test_data:
             key = SSlibKey("fake", keytype, scheme, {"public": val})
             with self.assertRaises(ValueError):
-                key._verify(
-                    b"fakesig", b"fakedata"
-                )
+                key._verify(b"fakesig", b"fakedata")
 
 
 class TestSigner(unittest.TestCase):

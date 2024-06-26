@@ -28,10 +28,7 @@ import securesystemslib.hash
 logger = logging.getLogger(__name__)
 
 
-if (
-    "hashlib"
-    not in securesystemslib.hash.SUPPORTED_LIBRARIES
-):
+if "hashlib" not in securesystemslib.hash.SUPPORTED_LIBRARIES:
     logger.warning("Not testing hashlib: could not be imported.")
 
 

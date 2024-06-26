@@ -33,9 +33,7 @@ class TestStorage(unittest.TestCase):
         self.filepath = os.path.join(self.temp_dir, "testfile")
         with open(self.filepath, "wb") as test:
             test.write(b"testing")
-        self.fileobj = open(
-            self.filepath, "rb"
-        )
+        self.fileobj = open(self.filepath, "rb")
 
     def tearDown(self):
         self.fileobj.close()

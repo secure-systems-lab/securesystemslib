@@ -26,6 +26,7 @@ from collections import OrderedDict
 from copy import deepcopy
 from unittest.mock import patch
 
+# ruff: noqa: I001
 import cryptography.hazmat.primitives.hashes as hashing
 from cryptography.hazmat import backends
 from cryptography.hazmat.primitives import serialization
@@ -368,9 +369,7 @@ class TestCommon(unittest.TestCase):
                 msg = str(mock_log.info.call_args[0][0])
                 self.assertTrue(
                     expected_msg in msg,
-                    "'{}' not in '{}'".format(
-                        expected_msg, msg
-                    ),
+                    "'{}' not in '{}'".format(expected_msg, msg),
                 )
 
     def test_assign_certified_key_info_expiration(self):
@@ -485,9 +484,7 @@ class TestCommon(unittest.TestCase):
                 msg = str(mock_log.info.call_args[0][0])
                 self.assertTrue(
                     expected_msg in msg,
-                    "'{}' not in '{}'".format(
-                        expected_msg, msg
-                    ),
+                    "'{}' not in '{}'".format(expected_msg, msg),
                 )
 
     def test_get_verified_subkeys(self):
@@ -504,9 +501,9 @@ class TestCommon(unittest.TestCase):
 
         # Test subkey  without validity period, i.e. it does not expire
         self.assertTrue(
-            subkeys[
-                "70cfabf1e2f1dc60ac5c7bca10cd20d3d5bcb6ef"
-            ].get("validity_period")
+            subkeys["70cfabf1e2f1dc60ac5c7bca10cd20d3d5bcb6ef"].get(
+                "validity_period"
+            )
             is None
         )
 
@@ -565,7 +562,7 @@ class TestGPGRSA(unittest.TestCase):
     unsupported_subkey_keyid = "611A9B648E16F54E8A7FAD5DA51E8CDF3B06524F"
     expired_key_keyid = "E8AC80C924116DABB51D4B987CB07D6D2C199C7C"
 
-    keyid_768C43 = "7B3ABB26B97B655AB9296BD15B0BD02E1C768C43"
+    keyid_768C43 = "7B3ABB26B97B655AB9296BD15B0BD02E1C768C43"  # noqa: N815
 
     @classmethod
     def setUpClass(self):
@@ -610,9 +607,7 @@ class TestGPGRSA(unittest.TestCase):
 
         # load the equivalent ssh key, and make sure that we get the same RSA key
         # parameters
-        ssh_key_basename = "{}.ssh".format(
-            self.default_keyid
-        )
+        ssh_key_basename = "{}.ssh".format(self.default_keyid)
         ssh_key_path = os.path.join(self.gnupg_home, ssh_key_basename)
         with open(ssh_key_path, "rb") as fp:
             keydata = fp.read()
@@ -708,9 +703,7 @@ class TestGPGRSA(unittest.TestCase):
         expected = "returned non-zero exit status '2'"
         self.assertTrue(
             expected in str(ctx.exception),
-            "{} not in {}".format(
-                expected, ctx.exception
-            ),
+            "{} not in {}".format(expected, ctx.exception),
         )
 
     def test_verify_signature_with_expired_key(self):
@@ -733,10 +726,7 @@ class TestGPGRSA(unittest.TestCase):
         )
         self.assertTrue(
             expected == str(ctx.exception),
-            "\nexpected: {}"
-            "\ngot:      {}".format(
-                expected, ctx.exception
-            ),
+            "\nexpected: {}" "\ngot:      {}".format(expected, ctx.exception),
         )
 
 
@@ -782,9 +772,7 @@ class TestGPGDSA(unittest.TestCase):
         our_exported_key = dsa_create_pubkey(key_data)
 
         # load same key, pre-exported with 3rd-party tooling
-        pem_key_basename = "{}.pem".format(
-            self.default_keyid
-        )
+        pem_key_basename = "{}.pem".format(self.default_keyid)
         pem_key_path = os.path.join(self.gnupg_home, pem_key_basename)
         with open(pem_key_path, "rb") as fp:
             keydata = fp.read()
