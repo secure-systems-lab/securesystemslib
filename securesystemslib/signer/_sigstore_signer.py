@@ -1,5 +1,4 @@
-"""Signer implementation for project sigstore.
-"""
+"""Signer implementation for project sigstore."""
 
 import json
 import logging
@@ -35,7 +34,7 @@ class SigstoreKey(Key):
     DEFAULT_KEY_TYPE = "sigstore-oidc"
     DEFAULT_SCHEME = "Fulcio"
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         keyid: str,
         keytype: str,
@@ -59,7 +58,6 @@ class SigstoreKey(Key):
         return self._to_dict()
 
     def verify_signature(self, signature: Signature, data: bytes) -> None:
-        # pylint: disable=import-outside-toplevel,import-error
         try:
             from sigstore.errors import VerificationError as SigstoreVerifyError
             from sigstore.models import Bundle
@@ -155,7 +153,6 @@ class SigstoreSigner(Signer):
         public_key: Key,
         secrets_handler: Optional[SecretsHandler] = None,
     ) -> "SigstoreSigner":
-        # pylint: disable=import-outside-toplevel
         try:
             from sigstore.oidc import IdentityToken, Issuer, detect_credential
         except ImportError as e:
@@ -233,7 +230,6 @@ class SigstoreSigner(Signer):
         Returns a private key URI (for Signer.from_priv_key_uri()) and a public
         key. This method always uses the interactive authentication.
         """
-        # pylint: disable=import-outside-toplevel
         try:
             from sigstore.oidc import Issuer
         except ImportError as e:
@@ -258,7 +254,6 @@ class SigstoreSigner(Signer):
             NOTE: The relevant data is in `unrecognized_fields["bundle"]`.
 
         """
-        # pylint: disable=import-outside-toplevel
         try:
             from sigstore.sign import SigningContext
         except ImportError as e:

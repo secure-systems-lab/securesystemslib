@@ -1,4 +1,4 @@
-"""Signer implementation for pyca/cryptography signing. """
+"""Signer implementation for pyca/cryptography signing."""
 
 import logging
 import os

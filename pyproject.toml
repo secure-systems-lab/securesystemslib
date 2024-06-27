@@ -64,18 +64,32 @@ include = [
   "/securesystemslib",
   "/requirements*.txt",
   "/tox.ini",
-  "/pylintrc",
   "/mypy.ini",
   "/CHANGELOG.md",
   "/.coveragerc",
 ]
 
-[tool.black]
-line-length=80
-extend-exclude="_vendor"
+# Ruff section
+[tool.ruff]
+lint.select = [
+  "E",      # ruff default
+  "F",      # ruff default
+  "I",      # isort: all
+  "PL",     # pylint: all
+  "S",      # flake8-bandit: all
+  "N",      # pep8-naming: all
+  "RUF100"  # ruff: find unused noqa
+]
+lint.ignore = [
+  "E501"    # ignore line-too-long
+]
+exclude = ["_vendor"]
 
-[tool.isort]
-profile="black"
-line_length=80
-known_first_party = ["securesystemslib"]
-extend_skip_glob=["*/_vendor/*"]
+# Same as Black.
+line-length = 80
+indent-width = 4
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "S",      # bandit: Not running bandit on tests
+]

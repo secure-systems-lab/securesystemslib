@@ -19,7 +19,6 @@ from securesystemslib.signer._utils import compute_default_keyid
 
 _KEY_TYPE_ECDSA = "ecdsa"
 
-# pylint: disable=wrong-import-position
 CRYPTO_IMPORT_ERROR = None
 try:
     from cryptography.hazmat.primitives import serialization
@@ -52,21 +51,20 @@ except ImportError:
 
 ASN1_IMPORT_ERROR = None
 try:
-    from asn1crypto.keys import (  # pylint: disable=import-error
+    from asn1crypto.keys import (
         ECDomainParameters,
         ECPoint,
     )
 except ImportError:
     ASN1_IMPORT_ERROR = "'asn1crypto' required"
-# pylint: enable=wrong-import-position
 
 
 _PYKCS11LIB = None
 
 
-def PYKCS11LIB():
+def PYKCS11LIB():  # noqa: N802
     """Pseudo-singleton to load shared library using PYKCS11LIB envvar only once."""
-    global _PYKCS11LIB  # pylint: disable=global-statement
+    global _PYKCS11LIB  # noqa: PLW0603
     if _PYKCS11LIB is None:
         _PYKCS11LIB = PyKCS11.PyKCS11Lib()
         _PYKCS11LIB.load()

@@ -47,9 +47,7 @@ def _canonical_string_encoder(string):
     return string
 
 
-def _encode_canonical(
-    object, output_function
-):  # pylint: disable=missing-function-docstring,redefined-builtin
+def _encode_canonical(object, output_function):
     # Helper for encode_canonical.  Older versions of json.encoder don't
     # even let us replace the separators.
 
@@ -89,8 +87,9 @@ def _encode_canonical(
         raise exceptions.FormatError("I cannot encode " + repr(object))
 
 
-def encode_canonical(  # pylint: disable=inconsistent-return-statements
-    object, output_function=None  # pylint: disable=redefined-builtin
+def encode_canonical(
+    object,
+    output_function=None,
 ):
     """
     <Purpose>

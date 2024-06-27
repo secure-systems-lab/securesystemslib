@@ -38,11 +38,9 @@ class SignatureAlgorithmNotSupportedError(Exception):
     pass
 
 
-class KeyExpirationError(Exception):  # pylint: disable=missing-class-docstring
+class KeyExpirationError(Exception):
     def __init__(self, key):
-        super(  # pylint: disable=super-with-arguments
-            KeyExpirationError, self
-        ).__init__()
+        super(KeyExpirationError, self).__init__()
         self.key = key
 
     def __str__(self):
@@ -55,7 +53,7 @@ class KeyExpirationError(Exception):  # pylint: disable=missing-class-docstring
         validity_period = expiration_time - creation_time
 
         return (
-            "GPG key '{}' created on '{:%Y-%m-%d %H:%M} UTC' with validity "  # pylint: disable=consider-using-f-string
+            "GPG key '{}' created on '{:%Y-%m-%d %H:%M} UTC' with validity "
             "period '{}' expired on '{:%Y-%m-%d %H:%M} UTC'.".format(
                 self.key["keyid"],
                 creation_time,

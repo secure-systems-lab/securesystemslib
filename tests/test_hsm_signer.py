@@ -1,12 +1,11 @@
-"""Test HSMSigner
-"""
+"""Test HSMSigner"""
 
 import os
 import shutil
 import tempfile
 import unittest
 
-from asn1crypto.keys import (  # pylint: disable=import-error
+from asn1crypto.keys import (
     ECDomainParameters,
     NamedCurve,
 )

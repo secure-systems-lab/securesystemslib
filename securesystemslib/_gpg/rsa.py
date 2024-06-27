@@ -26,12 +26,10 @@ try:
 except ImportError:
     CRYPTO = False
 
-# pylint: disable=wrong-import-position
+# ruff: noqa: E402
 from securesystemslib import exceptions
 from securesystemslib._gpg import util as gpg_util
 from securesystemslib._gpg.exceptions import PacketParsingError
-
-# pylint: enable=wrong-import-position
 
 
 def create_pubkey(pubkey_info):
@@ -185,10 +183,8 @@ def verify_signature(signature_object, pubkey_info, content, hash_algorithm_id):
     signature_length = len(signature_object["signature"])
     if pubkey_length != signature_length:  # pragma: no cover
         zero_pad = "0" * (pubkey_length - signature_length)
-        signature_object["signature"] = (
-            "{}{}".format(  # pylint: disable=consider-using-f-string
-                zero_pad, signature_object["signature"]
-            )
+        signature_object["signature"] = "{}{}".format(
+            zero_pad, signature_object["signature"]
         )
 
     digest = gpg_util.hash_object(

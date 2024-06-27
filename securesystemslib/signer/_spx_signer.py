@@ -1,6 +1,4 @@
-"""Signer implementation for project SPHINCS+ post-quantum signature support.
-
-"""
+"""Signer implementation for project SPHINCS+ post-quantum signature support."""
 
 import logging
 import os
@@ -61,9 +59,7 @@ class SpxKey(Key):
         scheme = cls.DEFAULT_SCHEME
         keyval = {"public": public.hex()}
 
-        keyid = compute_default_keyid(  # pylint: disable=protected-access
-            keytype, scheme, keyval
-        )
+        keyid = compute_default_keyid(keytype, scheme, keyval)
         return cls(keyid, keytype, scheme, keyval)
 
     def to_dict(self) -> Dict[str, Any]:

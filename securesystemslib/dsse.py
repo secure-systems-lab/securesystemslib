@@ -1,5 +1,4 @@
-"""Dead Simple Signing Envelope
-"""
+"""Dead Simple Signing Envelope"""
 
 import logging
 from typing import Any, Dict, List
@@ -64,7 +63,7 @@ class Envelope:
         signatures = {}
         for signature in data["signatures"]:
             signature["sig"] = b64dec(signature["sig"]).hex()
-            signature = Signature.from_dict(signature)
+            signature = Signature.from_dict(signature)  # noqa: PLW2901
             if signature.keyid in signatures:
                 raise ValueError(
                     f"Multiple signatures found for keyid {signature.keyid}"

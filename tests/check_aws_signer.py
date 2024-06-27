@@ -1,6 +1,4 @@
-"""Test AWSSigner
-
-"""
+"""Test AWSSigner"""
 
 import unittest
 

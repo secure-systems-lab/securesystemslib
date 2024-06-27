@@ -33,7 +33,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-class UnsupportedKeyType(Exception):
+class UnsupportedKeyType(Exception):  # noqa: N818
     pass
 
 
@@ -132,7 +132,7 @@ class AzureSigner(Signer):
             raise UnsupportedKeyType("Supplied key must be an EC key")
         # Format is "ecdsa-sha2-nistp256"
         comps = public_key.scheme.split("-")
-        if len(comps) != 3:
+        if len(comps) != 3:  # noqa: PLR2004
             raise UnsupportedKeyType("Invalid scheme found")
 
         if comps[2] == "nistp256":
@@ -149,7 +149,7 @@ class AzureSigner(Signer):
         """Return the hash algorithm used by the public key"""
         # Format is "ecdsa-sha2-nistp256"
         comps = public_key.scheme.split("-")
-        if len(comps) != 3:
+        if len(comps) != 3:  # noqa: PLR2004
             raise UnsupportedKeyType("Invalid scheme found")
 
         if comps[2] == "nistp256":
@@ -188,7 +188,6 @@ class AzureSigner(Signer):
         return cls(az_key_uri, public_key)
 
     @classmethod
-    # pylint: disable=too-many-locals
     def import_(cls, az_vault_name: str, az_key_name: str) -> Tuple[str, Key]:
         """Load key and signer details from KMS
 

@@ -1,4 +1,4 @@
-"""Signer interface """
+"""Signer interface"""
 
 import logging
 from abc import ABCMeta, abstractmethod

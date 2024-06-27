@@ -1,4 +1,4 @@
-"""Test cases for "signer.py". """
+"""Test cases for "signer.py"."""
 
 import copy
 import os
@@ -76,7 +76,6 @@ class TestKey(unittest.TestCase):
                 Key.from_dict("aa", keydict)
 
     def test_key_verify_signature(self):
-        # pylint: disable=too-many-locals
         ed25519_keyid = (
             "fc3920f44a1deec695ed9327f70513909a36f51ad19774167ddf28a12f8bbbed"
         )
@@ -209,7 +208,7 @@ class TestKey(unittest.TestCase):
                 },
             )
 
-            sig = Signature.from_dict(
+            sig = Signature.from_dict(  # noqa: PLW2901
                 {
                     "keyid": keyid,
                     "sig": sig,
@@ -345,7 +344,6 @@ class TestSSlibKey(unittest.TestCase):
         self.assertEqual(key.keyid, "abcdef")
 
     def test_verify_invalid_keytype_scheme(self):
-
         rsa = "-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAsDqUoiFJZX+5gm5pyI1l\nVc/N3yjJVOIl9GyiK0mRyzV3IzUQzhjq8nhk0eLfzXw2XwIAYOJC6dR/tGRG4JDx\nJkez5FFH4zLosr/XzT7CG5zxJ3kKICLD1v9rZQr5ZgARQDOpkxzPz46rGnE0sHd7\nMpnpPMScA1pMIzwM1RoPS4ntZipI1cl9M7HMQ6mkBp8/DNKCqaDWixJqaGgWrhhK\nhI/1mzBliMKriNxPKSCGVlOk/QpZft+y1fs42s0DMd5BOFBo+ZcoXLYRncg9S3A2\nxx/jT69Bt3ceiAZqnp7f6M+ZzoUifSelaoL7QIYg/GkEl+0oxTD0yRphGiCKwn9c\npSbn7NgnbjqSgIMeEtlf/5Coyrs26pyFf/9GbusddPSxxxwIJ/7IJuF7P1Yy0WpZ\nkMeY83h9n2IdnEYi+rpdbLJPQd7Fpu2xrdA3Fokj8AvCpcmxn8NIXZuK++r8/xsE\nAUL30HH7dgVn50AvdPaJnqAORT3OlabW0DK9prcwKnyzAgMBAAE=\n-----END PUBLIC KEY-----"
         ed25519 = (
             "50a5768a7a577483c28e57a6742b4d2170b9be628a961355ef127c45f2aefdc5"
@@ -370,9 +368,7 @@ class TestSSlibKey(unittest.TestCase):
         for keytype, scheme, val in test_data:
             key = SSlibKey("fake", keytype, scheme, {"public": val})
             with self.assertRaises(ValueError):
-                key._verify(  # pylint: disable=protected-access
-                    b"fakesig", b"fakedata"
-                )
+                key._verify(b"fakesig", b"fakedata")
 
 
 class TestSigner(unittest.TestCase):
@@ -512,7 +508,6 @@ class TestGPGRSA(unittest.TestCase):
 
     def test_gpg_signature_legacy_data_structure(self):
         """Test custom fields and legacy data structure in gpg signatures."""
-        # pylint: disable=protected-access
         _, public_key = GPGSigner.import_(
             self.signing_subkey_keyid, self.gnupg_home
         )
@@ -528,7 +523,6 @@ class TestGPGRSA(unittest.TestCase):
 
     def test_gpg_key_legacy_data_structure(self):
         """Test legacy data structure conversion in gpg keys."""
-        # pylint: disable=protected-access
         _, public_key = GPGSigner.import_(
             self.signing_subkey_keyid, self.gnupg_home
         )
@@ -627,7 +621,6 @@ class TestCryptoSigner(unittest.TestCase):
     def test_init(self):
         """Test CryptoSigner constructor."""
         for keytype, private_key in zip(["rsa", "ecdsa", "ed25519"], self.keys):
-
             # Init w/o public key (public key is created from private key)
             signer = CryptoSigner(private_key)
             self.assertEqual(keytype, signer.public_key.keytype)
