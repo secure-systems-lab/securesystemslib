@@ -280,15 +280,17 @@ def parse_pubkey_bundle(data):
                     )
 
             else:
+                packets_list = [
+                    PACKET_TYPE_PRIMARY_KEY,
+                    PACKET_TYPE_USER_ID,
+                    PACKET_TYPE_USER_ATTR,
+                    PACKET_TYPE_SUB_KEY,
+                    PACKET_TYPE_SIGNATURE,
+                ]
                 log.info(
                     f"Ignoring gpg key packet '{packet_type}', "
                     "we only handle packets of "
-                    f"types '{[PACKET_TYPE_PRIMARY_KEY,
-                               PACKET_TYPE_USER_ID,
-                               PACKET_TYPE_USER_ATTR,
-                               PACKET_TYPE_SUB_KEY,
-                               PACKET_TYPE_SIGNATURE,
-                              ]}' (see RFC4880 4.3. Packet Tags)."
+                    f"types '{packets_list}' (see RFC4880 4.3. Packet Tags)."
                 )
 
         # Both errors might be raised in parse_packet_header and in this loop
