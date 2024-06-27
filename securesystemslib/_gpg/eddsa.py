@@ -79,9 +79,8 @@ def get_pubkey_params(data):
     # See 9.2. ECC Curve OID
     if curve_oid != ED25519_PUBLIC_KEY_OID:
         raise PacketParsingError(
-            "bad ed25519 curve OID '{}', expected {}'".format(
-                curve_oid, ED25519_PUBLIC_KEY_OID
-            )
+            f"bad ed25519 curve OID '{curve_oid}', "
+            f"expected {ED25519_PUBLIC_KEY_OID}'"
         )
 
     # See 13.3. EdDSA Point Format
@@ -90,9 +89,8 @@ def get_pubkey_params(data):
 
     if public_key_len != ED25519_PUBLIC_KEY_LENGTH:
         raise PacketParsingError(
-            "bad ed25519 MPI length '{}', expected {}'".format(
-                public_key_len, ED25519_PUBLIC_KEY_LENGTH
-            )
+            f"bad ed25519 MPI length '{public_key_len}', "
+            f"expected {ED25519_PUBLIC_KEY_LENGTH}'"
         )
 
     public_key_prefix = data[ptr]
@@ -100,9 +98,8 @@ def get_pubkey_params(data):
 
     if public_key_prefix != ED25519_PUBLIC_KEY_PREFIX:
         raise PacketParsingError(
-            "bad ed25519 MPI prefix '{}', expected '{}'".format(
-                public_key_prefix, ED25519_PUBLIC_KEY_PREFIX
-            )
+            f"bad ed25519 MPI prefix '{public_key_prefix}', "
+            f"expected '{ED25519_PUBLIC_KEY_PREFIX}'"
         )
 
     public_key = data[ptr : ptr + public_key_len - 1]

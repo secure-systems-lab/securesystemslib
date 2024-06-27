@@ -105,9 +105,8 @@ def parse_pubkey_payload(data):
     ptr += 1
     if version_number not in SUPPORTED_PUBKEY_PACKET_VERSIONS:
         raise PacketVersionNotSupportedError(
-            "Pubkey packet version '{}' not supported, must be one of {}".format(
-                version_number, SUPPORTED_PUBKEY_PACKET_VERSIONS
-            )
+            f"Pubkey packet version '{version_number}' not supported, "
+            f"must be one of {SUPPORTED_PUBKEY_PACKET_VERSIONS}"
         )
 
     # NOTE: Uncomment this line to decode the time of creation
@@ -130,10 +129,10 @@ def parse_pubkey_payload(data):
     # as described in section 5.2.3.21.
     if algorithm not in SUPPORTED_SIGNATURE_ALGORITHMS:
         raise SignatureAlgorithmNotSupportedError(
-            "Signature algorithm '{}' not "
+            f"Signature algorithm '{algorithm}' not "
             "supported, please verify that your gpg configuration is creating "
             "either DSA, RSA, or EdDSA signatures (see RFC4880 9.1. Public-Key "
-            "Algorithms).".format(algorithm)
+            "Algorithms)."
         )
 
     keyinfo["type"] = SUPPORTED_SIGNATURE_ALGORITHMS[algorithm]["type"]
@@ -216,8 +215,8 @@ def parse_pubkey_bundle(data):
                 and not key_bundle[PACKET_TYPE_PRIMARY_KEY]["key"]
             ):
                 raise PacketParsingError(
-                    "First packet must be a primary key ('{}'), "
-                    "got '{}'.".format(PACKET_TYPE_PRIMARY_KEY, packet_type)
+                    "First packet must be a primary key "
+                    f"('{PACKET_TYPE_PRIMARY_KEY}'), got '{packet_type}'."
                 )
 
             if (
@@ -282,25 +281,21 @@ def parse_pubkey_bundle(data):
 
             else:
                 log.info(
-                    "Ignoring gpg key packet '{}', we only handle packets of "
-                    "types '{}' (see RFC4880 4.3. Packet Tags).".format(
-                        packet_type,
-                        [
+                    f"Ignoring gpg key packet '{packet_type}', "
+                    "we only handle packets of "
+                    f"types '{[
                             PACKET_TYPE_PRIMARY_KEY,
                             PACKET_TYPE_USER_ID,
                             PACKET_TYPE_USER_ATTR,
                             PACKET_TYPE_SUB_KEY,
                             PACKET_TYPE_SIGNATURE,
-                        ],
-                    )
+                        ]}' (see RFC4880 4.3. Packet Tags)."
                 )
 
         # Both errors might be raised in parse_packet_header and in this loop
         except (PacketParsingError, IndexError) as e:
             raise PacketParsingError(
-                "Invalid public key data at position {}: {}.".format(
-                    position, e
-                )
+                f"Invalid public key data at position {position}: {e}."
             )
 
         # Go to next packet
@@ -610,9 +605,7 @@ def get_pubkey_bundle(data, keyid):
     """
     if not data:
         raise KeyNotFoundError(
-            "Could not find gpg key '{}' in empty exported key " "data.".format(
-                keyid
-            )
+            f"Could not find gpg key '{keyid}' in empty exported key data."
         )
 
     # Parse out master key and subkeys (enriched and verified via certificates
@@ -643,7 +636,7 @@ def get_pubkey_bundle(data, keyid):
 
     else:
         raise KeyNotFoundError(
-            "Could not find gpg key '{}' in exported key data.".format(keyid)
+            f"Could not find gpg key '{keyid}' in exported key data."
         )
 
     # Add subkeys dictionary to master pubkey "subkeys" field if subkeys exist
@@ -724,8 +717,8 @@ def parse_signature_packet(
     ptr += 1
     if version_number not in SUPPORTED_SIGNATURE_PACKET_VERSIONS:
         raise ValueError(
-            "Signature version '{}' not supported, must be one of "
-            "{}.".format(version_number, SUPPORTED_SIGNATURE_PACKET_VERSIONS)
+            f"Signature version '{version_number}' not supported, "
+            f"must be one of {SUPPORTED_SIGNATURE_PACKET_VERSIONS}."
         )
 
     # Per default we only parse "signatures of a binary document". Other types
@@ -737,10 +730,9 @@ def parse_signature_packet(
 
     if signature_type not in supported_signature_types:
         raise ValueError(
-            "Signature type '{}' not supported, must be one of {} "
-            "(see RFC4880 5.2.1. Signature Types).".format(
-                signature_type, supported_signature_types
-            )
+            f"Signature type '{signature_type}' not supported, "
+            f"must be one of {supported_signature_types} "
+            "(see RFC4880 5.2.1. Signature Types)."
         )
 
     signature_algorithm = data[ptr]
@@ -748,10 +740,10 @@ def parse_signature_packet(
 
     if signature_algorithm not in SUPPORTED_SIGNATURE_ALGORITHMS:
         raise ValueError(
-            "Signature algorithm '{}' not "
+            f"Signature algorithm '{signature_algorithm}' not "
             "supported, please verify that your gpg configuration is creating "
             "either DSA, RSA, or EdDSA signatures (see RFC4880 9.1. Public-Key "
-            "Algorithms).".format(signature_algorithm)
+            "Algorithms)."
         )
 
     key_type = SUPPORTED_SIGNATURE_ALGORITHMS[signature_algorithm]["type"]
@@ -762,10 +754,9 @@ def parse_signature_packet(
 
     if hash_algorithm not in supported_hash_algorithms:
         raise ValueError(
-            "Hash algorithm '{}' not supported, must be one of {}"
-            " (see RFC4880 9.4. Hash Algorithms).".format(
-                hash_algorithm, supported_hash_algorithms
-            )
+            f"Hash algorithm '{hash_algorithm}' not supported, "
+            f"must be one of {supported_hash_algorithms} "
+            "(see RFC4880 9.4. Hash Algorithms)."
         )
 
     # Obtain the hashed octets
@@ -863,11 +854,10 @@ def parse_signature_packet(
     if keyid and not keyid.endswith(short_keyid):  # pragma: no cover
         raise ValueError(
             "This signature packet seems to be corrupted. The key ID "
-            "'{}' of the 'Issuer' subpacket must match the lower 64 bits of the "
-            "fingerprint '{}' of the 'Issuer Fingerprint' subpacket (see RFC4880 "
-            "and rfc4880bis-06 5.2.3.28. Issuer Fingerprint).".format(
-                short_keyid, keyid
-            )
+            f"'{short_keyid}' of the 'Issuer' subpacket must match the "
+            f"lower 64 bits of the fingerprint '{keyid}' of the 'Issuer "
+            "Fingerprint' subpacket (see RFC4880 and rfc4880bis-06 5.2.3.28. "
+            "Issuer Fingerprint)."
         )
 
     if not info["creation_time"]:  # pragma: no cover
@@ -886,7 +876,7 @@ def parse_signature_packet(
     signature = handler.get_signature_params(data[ptr:])
 
     signature_data = {
-        "keyid": "{}".format(keyid),
+        "keyid": f"{keyid}",
         "other_headers": binascii.hexlify(data[:other_headers_ptr]).decode(
             "ascii"
         ),

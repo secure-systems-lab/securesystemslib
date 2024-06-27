@@ -104,11 +104,11 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
 
     keyarg = ""
     if keyid:
-        keyarg = "--local-user {}".format(keyid)
+        keyarg = f"--local-user {keyid}"
 
     homearg = ""
     if homedir:
-        homearg = "--homedir {}".format(homedir).replace("\\", "/")
+        homearg = f"--homedir {homedir}".replace("\\", "/")
 
     command = gpg_sign_command(keyarg=keyarg, homearg=homearg)
 
@@ -125,12 +125,9 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
     # https://lists.gnupg.org/pipermail/gnupg-devel/2005-December/022559.html
     if gpg_process.returncode != 0:
         raise OSError(
-            "Command '{}' returned "
-            "non-zero exit status '{}', stderr was:\n{}.".format(
-                gpg_process.args,
-                gpg_process.returncode,
-                gpg_process.stderr.decode(),
-            )
+            f"Command '{gpg_process.args}' returned "
+            f"non-zero exit status '{gpg_process.returncode}', "
+            f"stderr was:\n{gpg_process.stderr.decode()}."
         )
 
     signature_data = gpg_process.stdout
@@ -146,9 +143,10 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
     if not signature["keyid"]:  # pragma: no cover
         log.warning(
             "The created signature does not include the hashed subpacket"
-            " '33' (full keyid). You probably have a gpg version <{}."
+            " '33' (full keyid). You probably have a gpg version"
+            f" <{FULLY_SUPPORTED_MIN_VERSION}."
             " We will export the public keys associated with the short keyid to"
-            " compute the full keyid.".format(FULLY_SUPPORTED_MIN_VERSION)
+            " compute the full keyid."
         )
 
         short_keyid = signature["short_keyid"]
@@ -173,9 +171,7 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
     # If there is still no full keyid something went wrong
     if not signature["keyid"]:  # pragma: no cover
         raise ValueError(
-            "Full keyid could not be determined for signature '{}'".format(
-                signature
-            )
+            f"Full keyid could not be determined for signature '{signature}'"
         )
 
     # It is okay now to remove the optional short keyid to save space
@@ -275,7 +271,7 @@ def export_pubkey(keyid, homedir=None, timeout=GPG_TIMEOUT):
 
     homearg = ""
     if homedir:
-        homearg = "--homedir {}".format(homedir).replace("\\", "/")
+        homearg = f"--homedir {homedir}".replace("\\", "/")
 
     # TODO: Consider adopting command error handling from `create_signature`
     # above, e.g. in a common 'run gpg command' utility function
