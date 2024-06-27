@@ -64,7 +64,6 @@ include = [
   "/securesystemslib",
   "/requirements*.txt",
   "/tox.ini",
-  "/pylintrc",
   "/mypy.ini",
   "/CHANGELOG.md",
   "/.coveragerc",
