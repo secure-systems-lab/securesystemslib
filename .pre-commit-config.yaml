@@ -12,14 +12,8 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
 
-  - repo: https://github.com/psf/black
-    rev: 24.2.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.10
     hooks:
-      - id: black
-        args: ["."]
-
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-        args: ["."]
+      - id: ruff
+      - id: ruff-format
