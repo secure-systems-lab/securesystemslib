@@ -75,7 +75,7 @@ class AzureSigner(Signer):
             self.signature_algorithm = self._get_signature_algorithm(
                 public_key,
             )
-            self.hash_algorithm = self._get_hash_algorithm(public_key)
+            self.hash_algorithm = public_key.get_hash_algorithm_str()
         except UnsupportedKeyType as e:
             logger.info(
                 "Key %s has unsupported key type or unsupported elliptic curve"
@@ -141,23 +141,6 @@ class AzureSigner(Signer):
             return SignatureAlgorithm.es384
         if comps[2] == "nistp521":
             return SignatureAlgorithm.es512
-
-        raise UnsupportedKeyType("Unsupported curve supplied by key")
-
-    @staticmethod
-    def _get_hash_algorithm(public_key: "Key") -> str:
-        """Return the hash algorithm used by the public key"""
-        # Format is "ecdsa-sha2-nistp256"
-        comps = public_key.scheme.split("-")
-        if len(comps) != 3:  # noqa: PLR2004
-            raise UnsupportedKeyType("Invalid scheme found")
-
-        if comps[2] == "nistp256":
-            return "sha256"
-        if comps[2] == "nistp384":
-            return "sha384"
-        if comps[2] == "nistp521":
-            return "sha512"
 
         raise UnsupportedKeyType("Unsupported curve supplied by key")
 

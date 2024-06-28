@@ -4,11 +4,13 @@ import logging
 from abc import ABCMeta, abstractmethod
 from typing import Any, Dict, Optional, Tuple, Type, cast
 
+import securesystemslib.hash as sslib_hash
 from securesystemslib._vendor.ed25519.ed25519 import (
     SignatureMismatch,
     checkvalid,
 )
 from securesystemslib.exceptions import (
+    UnsupportedAlgorithmError,
     UnsupportedLibraryError,
     UnverifiedSignatureError,
     VerificationError,
@@ -55,6 +57,11 @@ except ImportError:
 
 
 logger = logging.getLogger(__name__)
+
+
+class UnsupportedKeyType(Exception):  # noqa: N818
+    pass
+
 
 # NOTE Key dispatch table is defined here so it's usable by Key,
 # but is populated in __init__.py (and can be appended by users).
@@ -196,6 +203,32 @@ class Key(metaclass=ABCMeta):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def get_hash_algorithm_str(self) -> Any:
+        """Returns payload hash algorithm used for this key as a str
+
+        Raises:
+            UnsupportedAlgorithmError: if key type not suported
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_hash_algorithm(self) -> Any:
+        """Returns payload hash algorithm used for this key as a HashAlgorithm"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_padding_name_str(self) -> Any:
+        """Return payload padding name used for this key as a str"""
+
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_padding_name(self, hash_algorithm: Any) -> Any:
+        """Return payload padding name used for this key as a AsymmetricPadding"""
+
+        raise NotImplementedError
+
 
 class SSlibKey(Key):
     """Key implementation for RSA, Ed25519, ECDSA keys"""
@@ -301,35 +334,6 @@ class SSlibKey(Key):
 
         return SSlibKey(keyid, keytype, scheme, keyval)
 
-    @staticmethod
-    def _get_hash_algorithm(name: str) -> "HashAlgorithm":
-        """Helper to return hash algorithm for name."""
-        algorithm: HashAlgorithm
-        if name == "sha224":
-            algorithm = SHA224()
-        if name == "sha256":
-            algorithm = SHA256()
-        if name == "sha384":
-            algorithm = SHA384()
-        if name == "sha512":
-            algorithm = SHA512()
-
-        return algorithm
-
-    @staticmethod
-    def _get_rsa_padding(
-        name: str, hash_algorithm: "HashAlgorithm"
-    ) -> "AsymmetricPadding":
-        """Helper to return rsa signature padding for name."""
-        padding: AsymmetricPadding
-        if name == "pss":
-            padding = PSS(mgf=MGF1(hash_algorithm), salt_length=PSS.AUTO)
-
-        if name == "pkcs1v15":
-            padding = PKCS1v15()
-
-        return padding
-
     def _verify_ed25519_fallback(self, signature: bytes, data: bytes) -> None:
         """Helper to verify ed25519 sig if pyca/cryptography is unavailable."""
         try:
@@ -364,9 +368,8 @@ class SSlibKey(Key):
             ]:
                 key = cast(RSAPublicKey, self._crypto_key())
                 _validate_type(key, RSAPublicKey)
-                padding_name, hash_name = self.scheme.split("-")[1:]
-                hash_algorithm = self._get_hash_algorithm(hash_name)
-                padding = self._get_rsa_padding(padding_name, hash_algorithm)
+                hash_algorithm = self.get_hash_algorithm()
+                padding = self.get_padding_name(hash_algorithm)
                 key.verify(signature, data, padding, hash_algorithm)
 
             elif (
@@ -428,3 +431,62 @@ class SSlibKey(Key):
             raise VerificationError(
                 f"Unknown failure to verify signature by {self.keyid}"
             ) from e
+
+    def get_hash_algorithm_str(self) -> str:
+        # key scheme should always be of format xxx-xxx-xxx
+        comps = self.scheme.split("-")
+        if len(comps) != 3:  # noqa: PLR2004
+            raise UnsupportedKeyType("Invalid scheme found")
+
+        if self.keytype == "rsa":
+            # hash algorithm is encoded as last scheme portion
+            hash_algo = self.scheme.split("-")[-1]
+        elif self.keytype in [
+            "ecdsa",
+            "ecdsa-sha2-nistp256",
+            "ecdsa-sha2-nistp384",
+        ]:
+            # nistp256 uses sha-256, nistp384 uses sha-384
+            bits = self.scheme.split("-nistp")[-1]
+            hash_algo = f"sha{bits}"
+        else:
+            raise UnsupportedAlgorithmError(
+                f"Unsupported key type {self.keytype} in key {self.keyid}"
+            )
+
+        # trigger UnsupportedAlgorithm if appropriate
+        _ = sslib_hash.digest(hash_algo)
+
+        return hash_algo
+
+    def get_hash_algorithm(self) -> "HashAlgorithm":
+        name = self.get_hash_algorithm_str()
+        algorithm: HashAlgorithm
+        if name == "sha224":
+            algorithm = SHA224()
+        if name == "sha256":
+            algorithm = SHA256()
+        if name == "sha384":
+            algorithm = SHA384()
+        if name == "sha512":
+            algorithm = SHA512()
+
+        return algorithm
+
+    def get_padding_name_str(self) -> str:
+        padding_name = self.scheme.split("-")[1]
+
+        return padding_name
+
+    def get_padding_name(
+        self, hash_algorithm: "HashAlgorithm"
+    ) -> "AsymmetricPadding":
+        name = self.get_padding_name_str()
+        padding: AsymmetricPadding
+        if name == "pss":
+            padding = PSS(mgf=MGF1(hash_algorithm), salt_length=PSS.AUTO)
+
+        if name == "pkcs1v15":
+            padding = PKCS1v15()
+
+        return padding

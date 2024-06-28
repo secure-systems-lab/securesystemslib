@@ -11,6 +11,7 @@ from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import SecretsHandler, Signer
 
+# ruff: noqa: F401
 CRYPTO_IMPORT_ERROR = None
 try:
     from cryptography.hazmat.primitives.asymmetric.ec import (
@@ -77,35 +78,6 @@ class _NoSignArgs:
 _ECDSA_KEYTYPES = ["ecdsa", "ecdsa-sha2-nistp256"]
 
 
-def _get_hash_algorithm(name: str) -> "HashAlgorithm":
-    """Helper to return hash algorithm for name."""
-    algorithm: HashAlgorithm
-    if name == "sha224":
-        algorithm = SHA224()
-    if name == "sha256":
-        algorithm = SHA256()
-    if name == "sha384":
-        algorithm = SHA384()
-    if name == "sha512":
-        algorithm = SHA512()
-
-    return algorithm
-
-
-def _get_rsa_padding(
-    name: str, hash_algorithm: "HashAlgorithm"
-) -> "AsymmetricPadding":
-    """Helper to return rsa signature padding for name."""
-    padding: AsymmetricPadding
-    if name == "pss":
-        padding = PSS(mgf=MGF1(hash_algorithm), salt_length=PSS.DIGEST_LENGTH)
-
-    if name == "pkcs1v15":
-        padding = PKCS1v15()
-
-    return padding
-
-
 class CryptoSigner(Signer):
     """PYCA/cryptography Signer implementations.
 
@@ -157,9 +129,8 @@ class CryptoSigner(Signer):
             if not isinstance(private_key, RSAPrivateKey):
                 raise ValueError(f"invalid rsa key: {type(private_key)}")
 
-            padding_name, hash_name = public_key.scheme.split("-")[1:]
-            hash_algo = _get_hash_algorithm(hash_name)
-            padding = _get_rsa_padding(padding_name, hash_algo)
+            hash_algo = public_key.get_hash_algorithm()
+            padding = public_key.get_padding_name(hash_algo)
             self._sign_args = _RSASignArgs(padding, hash_algo)
             self._private_key = private_key
 
