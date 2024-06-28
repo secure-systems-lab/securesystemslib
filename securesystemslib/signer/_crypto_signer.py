@@ -130,7 +130,7 @@ class CryptoSigner(Signer):
                 raise ValueError(f"invalid rsa key: {type(private_key)}")
 
             hash_algo = public_key.get_hash_algorithm()
-            padding = public_key.get_padding_name(hash_algo)
+            padding = public_key.get_padding_name(hash_algo, False)
             self._sign_args = _RSASignArgs(padding, hash_algo)
             self._private_key = private_key
 
