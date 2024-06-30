@@ -96,9 +96,7 @@ class SpxKey(Key):
     def get_padding_name_str(self) -> None:
         raise NotImplementedError
 
-    def get_padding_name(
-        self, hash_algorithm: None, pss_salt_auto: bool
-    ) -> None:
+    def get_padding_name(self, hash_algorithm: None, salt_length: None) -> None:
         raise NotImplementedError
 
 

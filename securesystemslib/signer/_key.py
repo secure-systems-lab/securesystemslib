@@ -224,7 +224,7 @@ class Key(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def get_padding_name(self, hash_algorithm: Any, pss_salt: bool) -> Any:
+    def get_padding_name(self, hash_algorithm: Any, salt_length: Any) -> Any:
         """Return payload padding name used for this key as a AsymmetricPadding"""
 
         raise NotImplementedError
@@ -369,7 +369,7 @@ class SSlibKey(Key):
                 key = cast(RSAPublicKey, self._crypto_key())
                 _validate_type(key, RSAPublicKey)
                 hash_algorithm = self.get_hash_algorithm()
-                padding = self.get_padding_name(hash_algorithm)
+                padding = self.get_padding_name(hash_algorithm, PSS.AUTO)
                 key.verify(signature, data, padding, hash_algorithm)
 
             elif (
@@ -478,17 +478,12 @@ class SSlibKey(Key):
         return padding_name
 
     def get_padding_name(
-        self, hash_algorithm: "HashAlgorithm", pss_salt_auto=True
+        self, hash_algorithm: "HashAlgorithm", salt_length: Any
     ) -> "AsymmetricPadding":
         name = self.get_padding_name_str()
         padding: AsymmetricPadding
         if name == "pss":
-            if pss_salt_auto:
-                padding = PSS(mgf=MGF1(hash_algorithm), salt_length=PSS.AUTO)
-            else:
-                padding = PSS(
-                    mgf=MGF1(hash_algorithm), salt_length=PSS.DIGEST_LENGTH
-                )
+            padding = PSS(mgf=MGF1(hash_algorithm), salt_length=salt_length)
         if name == "pkcs1v15":
             padding = PKCS1v15()
 
