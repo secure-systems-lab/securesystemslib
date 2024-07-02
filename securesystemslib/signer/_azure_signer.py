@@ -6,7 +6,7 @@ from urllib import parse
 
 import securesystemslib.hash as sslib_hash
 from securesystemslib.exceptions import UnsupportedLibraryError
-from securesystemslib.signer._key import Key, SSlibKey
+from securesystemslib.signer._key import SSlibKey
 from securesystemslib.signer._signer import SecretsHandler, Signature, Signer
 from securesystemslib.signer._utils import compute_default_keyid
 
@@ -28,7 +28,10 @@ try:
         PublicFormat,
     )
 except ImportError:
-    AZURE_IMPORT_ERROR = "Signing with Azure Key Vault requires azure-identity, azure-keyvault-keys and cryptography."
+    AZURE_IMPORT_ERROR = (
+        "Signing with Azure Key Vault requires azure-identity, "
+        "azure-keyvault-keys and cryptography."
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +65,7 @@ class AzureSigner(Signer):
 
     SCHEME = "azurekms"
 
-    def __init__(self, az_key_uri: str, public_key: Key):
+    def __init__(self, az_key_uri: str, public_key: SSlibKey):
         if AZURE_IMPORT_ERROR:
             raise UnsupportedLibraryError(AZURE_IMPORT_ERROR)
 
@@ -84,7 +87,7 @@ class AzureSigner(Signer):
         self._public_key = public_key
 
     @property
-    def public_key(self) -> Key:
+    def public_key(self) -> SSlibKey:
         return self._public_key
 
     @staticmethod
@@ -125,7 +128,7 @@ class AzureSigner(Signer):
             raise e
 
     @staticmethod
-    def _get_signature_algorithm(public_key: Key) -> "SignatureAlgorithm":
+    def _get_signature_algorithm(public_key: SSlibKey) -> "SignatureAlgorithm":
         """Return SignatureAlgorithm after parsing the public key"""
         if public_key.keytype != "ecdsa":
             logger.info("only EC keys are supported for now")
@@ -159,7 +162,7 @@ class AzureSigner(Signer):
     def from_priv_key_uri(
         cls,
         priv_key_uri: str,
-        public_key: Key,
+        public_key: SSlibKey,
         secrets_handler: Optional[SecretsHandler] = None,
     ) -> "AzureSigner":
         uri = parse.urlparse(priv_key_uri)
@@ -171,7 +174,9 @@ class AzureSigner(Signer):
         return cls(az_key_uri, public_key)
 
     @classmethod
-    def import_(cls, az_vault_name: str, az_key_name: str) -> Tuple[str, Key]:
+    def import_(
+        cls, az_vault_name: str, az_key_name: str
+    ) -> Tuple[str, SSlibKey]:
         """Load key and signer details from KMS
 
         Returns the private key uri and the public key. This method should only

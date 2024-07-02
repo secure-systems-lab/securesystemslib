@@ -87,18 +87,6 @@ class SpxKey(Key):
                 f"Failed to verify signature by {self.keyid}"
             )
 
-    def get_hash_algorithm_str(self) -> None:
-        raise NotImplementedError
-
-    def get_hash_algorithm(self) -> None:
-        raise NotImplementedError
-
-    def get_padding_name_str(self) -> None:
-        raise NotImplementedError
-
-    def get_padding_name(self, hash_algorithm: None, salt_length: None) -> None:
-        raise NotImplementedError
-
 
 class SpxSigner(Signer):
     """SPHINCS+ signer.

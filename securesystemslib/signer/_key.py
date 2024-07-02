@@ -203,32 +203,6 @@ class Key(metaclass=ABCMeta):
         """
         raise NotImplementedError
 
-    @abstractmethod
-    def get_hash_algorithm_str(self) -> Any:
-        """Returns payload hash algorithm used for this key as a str
-
-        Raises:
-            UnsupportedAlgorithmError: if key type not suported
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_hash_algorithm(self) -> Any:
-        """Returns payload hash algorithm used for this key as a HashAlgorithm"""
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_padding_name_str(self) -> Any:
-        """Return payload padding name used for this key as a str"""
-
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_padding_name(self, hash_algorithm: Any, salt_length: Any) -> Any:
-        """Return payload padding name used for this key as a AsymmetricPadding"""
-
-        raise NotImplementedError
-
 
 class SSlibKey(Key):
     """Key implementation for RSA, Ed25519, ECDSA keys"""
@@ -433,6 +407,7 @@ class SSlibKey(Key):
             ) from e
 
     def get_hash_algorithm_str(self) -> str:
+        """Returns the hash algorithm from the key scheme as a string."""
         # key scheme should always be of format xxx-xxx-xxx
         comps = self.scheme.split("-")
         if len(comps) != 3:  # noqa: PLR2004
@@ -460,6 +435,7 @@ class SSlibKey(Key):
         return hash_algo
 
     def get_hash_algorithm(self) -> "HashAlgorithm":
+        """Returns the hash algorithm from the key scheme as a HashAlgorithm"""
         name = self.get_hash_algorithm_str()
         algorithm: HashAlgorithm
         if name == "sha224":
@@ -474,12 +450,25 @@ class SSlibKey(Key):
         return algorithm
 
     def get_padding_name_str(self) -> str:
+        """Returns the padding name from the key scheme as a string"""
         padding_name = self.scheme.split("-")[1]
         return padding_name
 
     def get_padding_name(
         self, hash_algorithm: "HashAlgorithm", salt_length: Any
     ) -> "AsymmetricPadding":
+        """Returns the padding name from the key scheme as a AsymmetricPadding
+
+        Args:
+            hash_algorithm: the hash algorithm used as a HashAlgorithm
+                object, only for PSS.
+            selt_length: the salt length to use for PSS.
+                PSS.AUTO or PSS.DIGEST_LENGTH
+
+        Returns:
+            AsymmetricPadding
+
+        """
         name = self.get_padding_name_str()
         padding: AsymmetricPadding
         if name == "pss":

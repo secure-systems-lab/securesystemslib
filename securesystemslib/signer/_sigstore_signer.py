@@ -91,18 +91,6 @@ class SigstoreKey(Key):
                 f"Unknown failure to verify signature by {self.keyid}"
             ) from e
 
-    def get_hash_algorithm_str(self) -> None:
-        raise NotImplementedError
-
-    def get_hash_algorithm(self) -> None:
-        raise NotImplementedError
-
-    def get_padding_name_str(self) -> None:
-        raise NotImplementedError
-
-    def get_padding_name(self, hash_algorithm: None, salt_length: None) -> None:
-        raise NotImplementedError
-
 
 class SigstoreSigner(Signer):
     """Sigstore signer.
