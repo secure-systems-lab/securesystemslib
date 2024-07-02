@@ -76,6 +76,7 @@ lint.select = [
   "F",      # ruff default
   "I",      # isort: all
   "PL",     # pylint: all
+  "UP",     # pyupgrade: all
   "S",      # flake8-bandit: all
   "N",      # pep8-naming: all
   "RUF100"  # ruff: find unused noqa

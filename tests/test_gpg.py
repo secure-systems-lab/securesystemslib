@@ -368,8 +368,7 @@ class TestCommon(unittest.TestCase):
                 _assign_certified_key_info(bundle)
                 msg = str(mock_log.info.call_args[0][0])
                 self.assertTrue(
-                    expected_msg in msg,
-                    "'{}' not in '{}'".format(expected_msg, msg),
+                    expected_msg in msg, f"'{expected_msg}' not in '{msg}'"
                 )
 
     def test_assign_certified_key_info_expiration(self):
@@ -483,8 +482,7 @@ class TestCommon(unittest.TestCase):
                 _get_verified_subkeys(bundle)
                 msg = str(mock_log.info.call_args[0][0])
                 self.assertTrue(
-                    expected_msg in msg,
-                    "'{}' not in '{}'".format(expected_msg, msg),
+                    expected_msg in msg, f"'{expected_msg}' not in '{msg}'"
                 )
 
     def test_get_verified_subkeys(self):
@@ -545,9 +543,7 @@ class TestCommon(unittest.TestCase):
                 parse_signature_packet(data)
             self.assertTrue(
                 expected_error_str in str(ctx.exception),
-                "'{}' not in '{}'".format(
-                    expected_error_str, str(ctx.exception)
-                ),
+                f"'{expected_error_str}' not in '{str(ctx.exception)}'",
             )
 
 
@@ -607,7 +603,7 @@ class TestGPGRSA(unittest.TestCase):
 
         # load the equivalent ssh key, and make sure that we get the same RSA key
         # parameters
-        ssh_key_basename = "{}.ssh".format(self.default_keyid)
+        ssh_key_basename = f"{self.default_keyid}.ssh"
         ssh_key_path = os.path.join(self.gnupg_home, ssh_key_basename)
         with open(ssh_key_path, "rb") as fp:
             keydata = fp.read()
@@ -702,8 +698,7 @@ class TestGPGRSA(unittest.TestCase):
 
         expected = "returned non-zero exit status '2'"
         self.assertTrue(
-            expected in str(ctx.exception),
-            "{} not in {}".format(expected, ctx.exception),
+            expected in str(ctx.exception), f"{expected} not in {ctx.exception}"
         )
 
     def test_verify_signature_with_expired_key(self):
@@ -726,7 +721,7 @@ class TestGPGRSA(unittest.TestCase):
         )
         self.assertTrue(
             expected == str(ctx.exception),
-            "\nexpected: {}" "\ngot:      {}".format(expected, ctx.exception),
+            f"\nexpected: {expected}" "\ngot:      {ctx.exception}",
         )
 
 
@@ -772,7 +767,7 @@ class TestGPGDSA(unittest.TestCase):
         our_exported_key = dsa_create_pubkey(key_data)
 
         # load same key, pre-exported with 3rd-party tooling
-        pem_key_basename = "{}.pem".format(self.default_keyid)
+        pem_key_basename = f"{self.default_keyid}.pem"
         pem_key_path = os.path.join(self.gnupg_home, pem_key_basename)
         with open(pem_key_path, "rb") as fp:
             keydata = fp.read()
