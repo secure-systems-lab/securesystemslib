@@ -112,8 +112,8 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
 
     command = gpg_sign_command(keyarg=keyarg, homearg=homearg)
 
-    gpg_process = subprocess.run(
-        command,  # noqa: S603
+    gpg_process = subprocess.run(  # noqa: S603
+        command,
         input=content,
         check=False,
         capture_output=True,
@@ -280,8 +280,8 @@ def export_pubkey(keyid, homedir=None, timeout=GPG_TIMEOUT):
     # TODO: Consider adopting command error handling from `create_signature`
     # above, e.g. in a common 'run gpg command' utility function
     command = gpg_export_pubkey_command(keyid=keyid, homearg=homearg)
-    gpg_process = subprocess.run(
-        command,  # noqa: S603
+    gpg_process = subprocess.run(  # noqa: S603
+        command,
         capture_output=True,
         timeout=timeout,
         check=True,
