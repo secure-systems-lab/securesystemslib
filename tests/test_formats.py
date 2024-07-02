@@ -15,6 +15,8 @@
   Unit test for 'formats.py'
 """
 
+# ruff: noqa: E501
+
 import unittest
 
 import securesystemslib.formats
@@ -56,12 +58,8 @@ class TestFormats(unittest.TestCase):
             securesystemslib.exceptions.FormatError,
         )
         self.assertRaises(securesystemslib.exceptions.FormatError, encode, 8.0)
-        self.assertRaises(
-            securesystemslib.exceptions.FormatError, encode, {"x": 8.0}
-        )
-        self.assertRaises(
-            securesystemslib.exceptions.FormatError, encode, 8.0, output
-        )
+        self.assertRaises(securesystemslib.exceptions.FormatError, encode, {"x": 8.0})
+        self.assertRaises(securesystemslib.exceptions.FormatError, encode, 8.0, output)
 
         self.assertRaises(
             securesystemslib.exceptions.FormatError,

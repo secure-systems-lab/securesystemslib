@@ -1,5 +1,7 @@
 """Test HSMSigner"""
 
+# ruff: noqa: E501
+
 import os
 import shutil
 import tempfile
@@ -17,9 +19,7 @@ from securesystemslib.signer import HSMSigner, Signer
 from securesystemslib.signer._hsm_signer import PYKCS11LIB
 
 
-@unittest.skipUnless(
-    os.environ.get("PYKCS11LIB"), "set PYKCS11LIB to SoftHSM lib path"
-)
+@unittest.skipUnless(os.environ.get("PYKCS11LIB"), "set PYKCS11LIB to SoftHSM lib path")
 class TestHSM(unittest.TestCase):
     """Test HSMSigner with SoftHSM
 
@@ -37,9 +37,7 @@ class TestHSM(unittest.TestCase):
     @staticmethod
     def _generate_key_pair(session, keyid, curve):
         "Create ecdsa key pair on hsm"
-        params = ECDomainParameters(
-            name="named", value=NamedCurve(curve.name)
-        ).dump()
+        params = ECDomainParameters(name="named", value=NamedCurve(curve.name)).dump()
 
         public_template = [
             (PyKCS11.CKA_CLASS, PyKCS11.CKO_PUBLIC_KEY),
@@ -84,9 +82,7 @@ class TestHSM(unittest.TestCase):
 
         with open("softhsm2.conf", "w", encoding="utf-8") as f:
             f.write("directories.tokendir = " + os.path.join(cls.test_dir, ""))
-        os.environ["SOFTHSM2_CONF"] = os.path.join(
-            cls.test_dir, "softhsm2.conf"
-        )
+        os.environ["SOFTHSM2_CONF"] = os.path.join(cls.test_dir, "softhsm2.conf")
 
         # Only load shared library after above config
         lib = PYKCS11LIB()
@@ -135,9 +131,7 @@ class TestHSM(unittest.TestCase):
 
         # default import
         uri, key = HSMSigner.import_()
-        signer = Signer.from_priv_key_uri(
-            uri, key, lambda sec: self.hsm_user_pin
-        )
+        signer = Signer.from_priv_key_uri(uri, key, lambda sec: self.hsm_user_pin)
         sig = signer.sign(b"DATA")
         key.verify_signature(sig, b"DATA")
         with self.assertRaises(UnverifiedSignatureError):
@@ -145,9 +139,7 @@ class TestHSM(unittest.TestCase):
 
         # Import with specified values
         uri, key = HSMSigner.import_(self.hsm_keyid_default, self.token_filter)
-        signer = Signer.from_priv_key_uri(
-            uri, key, lambda sec: self.hsm_user_pin
-        )
+        signer = Signer.from_priv_key_uri(uri, key, lambda sec: self.hsm_user_pin)
         sig = signer.sign(b"DATA")
         key.verify_signature(sig, b"DATA")
         with self.assertRaises(UnverifiedSignatureError):

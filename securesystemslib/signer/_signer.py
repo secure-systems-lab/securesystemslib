@@ -106,9 +106,7 @@ class Signer(metaclass=ABCMeta):
             raise ValueError(f"Unsupported private key scheme {scheme}")
 
         signer = SIGNER_FOR_URI_SCHEME[scheme]
-        return signer.from_priv_key_uri(
-            priv_key_uri, public_key, secrets_handler
-        )
+        return signer.from_priv_key_uri(priv_key_uri, public_key, secrets_handler)
 
     @property
     @abstractmethod

@@ -17,6 +17,8 @@
 
 """
 
+# ruff: noqa: E501
+
 import os
 import shutil
 import tempfile
@@ -239,14 +241,10 @@ class TestCommon(unittest.TestCase):
         based on real gpg key data (see self.raw_key_bundle)."""
         # Extract sample (legitimate) user ID packet and pass as first packet to
         # raise first packet must be primary key error
-        user_id_packet = list(self.raw_key_bundle[PACKET_TYPE_USER_ID].keys())[
-            0
-        ]
+        user_id_packet = list(self.raw_key_bundle[PACKET_TYPE_USER_ID].keys())[0]
         # Extract sample (legitimate) primary key packet and pass as first two
         # packets to raise unexpected second primary key error
-        primary_key_packet = self.raw_key_bundle[PACKET_TYPE_PRIMARY_KEY][
-            "packet"
-        ]
+        primary_key_packet = self.raw_key_bundle[PACKET_TYPE_PRIMARY_KEY]["packet"]
         # Create incomplete packet to re-raise header parsing IndexError as
         # PacketParsingError
         incomplete_packet = bytearray([0b01111111])
@@ -293,9 +291,7 @@ class TestCommon(unittest.TestCase):
 
         parsed_raw_packet = parse_pubkey_payload(
             bytearray(
-                self.raw_key_bundle[PACKET_TYPE_PRIMARY_KEY]["packet"][
-                    header_len:
-                ]
+                self.raw_key_bundle[PACKET_TYPE_PRIMARY_KEY]["packet"][header_len:]
             )
         )
 
@@ -409,9 +405,7 @@ class TestCommon(unittest.TestCase):
         # Neither packet has the primary user ID flag set.
         # "Test Expiration III" has the highest priority.
         raw_key_bundle = deepcopy(self.raw_expired_key_bundle)
-        user_id_items = list(
-            reversed(raw_key_bundle[PACKET_TYPE_USER_ID].items())
-        )
+        user_id_items = list(reversed(raw_key_bundle[PACKET_TYPE_USER_ID].items()))
         del user_id_items[1]
         raw_key_bundle[PACKET_TYPE_USER_ID] = OrderedDict(user_id_items)
         key = _assign_certified_key_info(raw_key_bundle)
@@ -444,25 +438,21 @@ class TestCommon(unittest.TestCase):
 
         # Remove sigs to trigger not enough sigs error
         not_enough_sigs_bundle = deepcopy(self.raw_key_bundle)
-        packet, packet_data = not_enough_sigs_bundle[
-            PACKET_TYPE_SUB_KEY
-        ].popitem()
+        packet, packet_data = not_enough_sigs_bundle[PACKET_TYPE_SUB_KEY].popitem()
         packet_data["signatures"] = []
         not_enough_sigs_bundle[PACKET_TYPE_SUB_KEY][packet] = packet_data
 
         # Duplicate sig to trigger wrong amount signatures
         too_many_sigs_bundle = deepcopy(self.raw_key_bundle)
-        packet, packet_data = too_many_sigs_bundle[
-            PACKET_TYPE_SUB_KEY
-        ].popitem()
+        packet, packet_data = too_many_sigs_bundle[PACKET_TYPE_SUB_KEY].popitem()
         packet_data["signatures"] = packet_data["signatures"] * 2
         too_many_sigs_bundle[PACKET_TYPE_SUB_KEY][packet] = packet_data
 
         # Tamper with primary key to trigger signature verification error
         invalid_sig_bundle = deepcopy(self.raw_key_bundle)
-        invalid_sig_bundle[PACKET_TYPE_PRIMARY_KEY]["packet"] = (
-            invalid_sig_bundle[PACKET_TYPE_PRIMARY_KEY]["packet"][:-1]
-        )
+        invalid_sig_bundle[PACKET_TYPE_PRIMARY_KEY]["packet"] = invalid_sig_bundle[
+            PACKET_TYPE_PRIMARY_KEY
+        ]["packet"][:-1]
 
         test_data = [
             (bad_subkey_bundle, "Pubkey packet version '3' not supported"),
@@ -493,17 +483,13 @@ class TestCommon(unittest.TestCase):
         subkeys = _get_verified_subkeys(self.raw_expired_key_bundle)
         # Test subkey with validity period 175451, i.e. ~ 2 days
         self.assertTrue(
-            subkeys["0ce427fa3f0f50bc83a4a760ed95e1581691db4d"].get(
-                "validity_period"
-            )
+            subkeys["0ce427fa3f0f50bc83a4a760ed95e1581691db4d"].get("validity_period")
             == 175451  # noqa: PLR2004
         )
 
         # Test subkey  without validity period, i.e. it does not expire
         self.assertTrue(
-            subkeys["70cfabf1e2f1dc60ac5c7bca10cd20d3d5bcb6ef"].get(
-                "validity_period"
-            )
+            subkeys["70cfabf1e2f1dc60ac5c7bca10cd20d3d5bcb6ef"].get("validity_period")
             is None
         )
 
@@ -545,9 +531,7 @@ class TestCommon(unittest.TestCase):
                 parse_signature_packet(data)
             self.assertTrue(
                 expected_error_str in str(ctx.exception),
-                "'{}' not in '{}'".format(
-                    expected_error_str, str(ctx.exception)
-                ),
+                "'{}' not in '{}'".format(expected_error_str, str(ctx.exception)),
             )
 
 
@@ -576,18 +560,14 @@ class TestGPGRSA(unittest.TestCase):
 
         self.test_dir = os.path.realpath(tempfile.mkdtemp())
         self.gnupg_home = "rsa"
-        shutil.copytree(
-            gpg_keyring_path, os.path.join(self.test_dir, self.gnupg_home)
-        )
+        shutil.copytree(gpg_keyring_path, os.path.join(self.test_dir, self.gnupg_home))
         os.chdir(self.test_dir)
 
     @classmethod
     def tearDownClass(self):
         """Change back to initial working dir and remove temp test directory."""
         os.chdir(self.working_dir)
-        shutil.rmtree(
-            self.test_dir, onerror=GPGTestUtils.ignore_not_found_error
-        )
+        shutil.rmtree(self.test_dir, onerror=GPGTestUtils.ignore_not_found_error)
 
     def test_export_pubkey_error(self):
         """Test correct error is raised if function called incorrectly."""
@@ -612,9 +592,7 @@ class TestGPGRSA(unittest.TestCase):
         with open(ssh_key_path, "rb") as fp:
             keydata = fp.read()
 
-        ssh_key = serialization.load_ssh_public_key(
-            keydata, backends.default_backend()
-        )
+        ssh_key = serialization.load_ssh_public_key(keydata, backends.default_backend())
 
         self.assertEqual(
             ssh_key.public_numbers().n, our_exported_key.public_numbers().n
@@ -632,9 +610,7 @@ class TestGPGRSA(unittest.TestCase):
         self.assertFalse(self.unsupported_subkey_keyid.lower() in subkey_keyids)
 
         # When passing the subkey keyid we also export the whole keybundle
-        key_data2 = export_pubkey(
-            self.signing_subkey_keyid, homedir=self.gnupg_home
-        )
+        key_data2 = export_pubkey(self.signing_subkey_keyid, homedir=self.gnupg_home)
         self.assertDictEqual(key_data, key_data2)
 
     def test_export_pubkeys(self):
@@ -756,9 +732,7 @@ class TestGPGDSA(unittest.TestCase):
     def tearDownClass(self):
         """Change back to initial working dir and remove temp test directory."""
         os.chdir(self.working_dir)
-        shutil.rmtree(
-            self.test_dir, onerror=GPGTestUtils.ignore_not_found_error
-        )
+        shutil.rmtree(self.test_dir, onerror=GPGTestUtils.ignore_not_found_error)
 
     def test_export_pubkey(self):
         """export a public key and make sure the parameters are the right ones:
@@ -777,9 +751,7 @@ class TestGPGDSA(unittest.TestCase):
         with open(pem_key_path, "rb") as fp:
             keydata = fp.read()
 
-        pem_key = serialization.load_pem_public_key(
-            keydata, backends.default_backend()
-        )
+        pem_key = serialization.load_pem_public_key(keydata, backends.default_backend())
 
         # make sure keys match
         self.assertEqual(
@@ -851,9 +823,7 @@ class TestGPGEdDSA(unittest.TestCase):
     def tearDownClass(self):
         """Change back to initial working dir and remove temp test directory."""
         os.chdir(self.working_dir)
-        shutil.rmtree(
-            self.test_dir, onerror=GPGTestUtils.ignore_not_found_error
-        )
+        shutil.rmtree(self.test_dir, onerror=GPGTestUtils.ignore_not_found_error)
 
     def test_gpg_sign_and_verify_object_with_default_key(self):
         """Create a signature using the default key on the keyring"""

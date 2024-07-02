@@ -1,5 +1,7 @@
 """Test cases for "signer.py"."""
 
+# ruff: noqa: E501
+
 import copy
 import os
 import shutil
@@ -79,16 +81,10 @@ class TestKey(unittest.TestCase):
         ed25519_keyid = (
             "fc3920f44a1deec695ed9327f70513909a36f51ad19774167ddf28a12f8bbbed"
         )
-        ed25519_pub = (
-            "50a5768a7a577483c28e57a6742b4d2170b9be628a961355ef127c45f2aefdc5"
-        )
-        rsa_keyid = (
-            "b7c94258646e970d336b779eea6b90ef931ea56e2d356ce487201f6bb776e94b"
-        )
+        ed25519_pub = "50a5768a7a577483c28e57a6742b4d2170b9be628a961355ef127c45f2aefdc5"
+        rsa_keyid = "b7c94258646e970d336b779eea6b90ef931ea56e2d356ce487201f6bb776e94b"
         rsa_pub = "-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAsDqUoiFJZX+5gm5pyI1l\nVc/N3yjJVOIl9GyiK0mRyzV3IzUQzhjq8nhk0eLfzXw2XwIAYOJC6dR/tGRG4JDx\nJkez5FFH4zLosr/XzT7CG5zxJ3kKICLD1v9rZQr5ZgARQDOpkxzPz46rGnE0sHd7\nMpnpPMScA1pMIzwM1RoPS4ntZipI1cl9M7HMQ6mkBp8/DNKCqaDWixJqaGgWrhhK\nhI/1mzBliMKriNxPKSCGVlOk/QpZft+y1fs42s0DMd5BOFBo+ZcoXLYRncg9S3A2\nxx/jT69Bt3ceiAZqnp7f6M+ZzoUifSelaoL7QIYg/GkEl+0oxTD0yRphGiCKwn9c\npSbn7NgnbjqSgIMeEtlf/5Coyrs26pyFf/9GbusddPSxxxwIJ/7IJuF7P1Yy0WpZ\nkMeY83h9n2IdnEYi+rpdbLJPQd7Fpu2xrdA3Fokj8AvCpcmxn8NIXZuK++r8/xsE\nAUL30HH7dgVn50AvdPaJnqAORT3OlabW0DK9prcwKnyzAgMBAAE=\n-----END PUBLIC KEY-----"
-        ecdsa_keyid = (
-            "985171ff9ee901fbab17aa6f57347933aeae9d194f0f93e83e5c3dbc1755e754"
-        )
+        ecdsa_keyid = "985171ff9ee901fbab17aa6f57347933aeae9d194f0f93e83e5c3dbc1755e754"
         ecdsa_pub = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEsYJfSlYU3UlYbGOZfE/yOHkayWWq\nLPR/NeCa83szZmnJGc9wwCRPvJS87K+eDGIhhhKueTyrLqXQqmyHioQbOQ==\n-----END PUBLIC KEY-----\n"
         ecdsa_nistp384_keyid = (
             "0155661bdf705f621a74f55eef36c9ae041e456141eced7a45d4a1f75ded9ac0"
@@ -238,9 +234,7 @@ class TestKey(unittest.TestCase):
             """Fake keytype that actually uses ed25519 under the hood"""
 
             @classmethod
-            def from_dict(
-                cls, keyid: str, key_dict: Dict[str, Any]
-            ) -> "CustomKey":
+            def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "CustomKey":
                 assert key_dict.pop("keytype") == "custom"
                 keytype = "ed25519"
                 scheme = key_dict.pop("scheme")
@@ -345,9 +339,7 @@ class TestSSlibKey(unittest.TestCase):
 
     def test_verify_invalid_keytype_scheme(self):
         rsa = "-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAsDqUoiFJZX+5gm5pyI1l\nVc/N3yjJVOIl9GyiK0mRyzV3IzUQzhjq8nhk0eLfzXw2XwIAYOJC6dR/tGRG4JDx\nJkez5FFH4zLosr/XzT7CG5zxJ3kKICLD1v9rZQr5ZgARQDOpkxzPz46rGnE0sHd7\nMpnpPMScA1pMIzwM1RoPS4ntZipI1cl9M7HMQ6mkBp8/DNKCqaDWixJqaGgWrhhK\nhI/1mzBliMKriNxPKSCGVlOk/QpZft+y1fs42s0DMd5BOFBo+ZcoXLYRncg9S3A2\nxx/jT69Bt3ceiAZqnp7f6M+ZzoUifSelaoL7QIYg/GkEl+0oxTD0yRphGiCKwn9c\npSbn7NgnbjqSgIMeEtlf/5Coyrs26pyFf/9GbusddPSxxxwIJ/7IJuF7P1Yy0WpZ\nkMeY83h9n2IdnEYi+rpdbLJPQd7Fpu2xrdA3Fokj8AvCpcmxn8NIXZuK++r8/xsE\nAUL30HH7dgVn50AvdPaJnqAORT3OlabW0DK9prcwKnyzAgMBAAE=\n-----END PUBLIC KEY-----"
-        ed25519 = (
-            "50a5768a7a577483c28e57a6742b4d2170b9be628a961355ef127c45f2aefdc5"
-        )
+        ed25519 = "50a5768a7a577483c28e57a6742b4d2170b9be628a961355ef127c45f2aefdc5"
         ecdsa_nistp256 = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEsYJfSlYU3UlYbGOZfE/yOHkayWWq\nLPR/NeCa83szZmnJGc9wwCRPvJS87K+eDGIhhhKueTyrLqXQqmyHioQbOQ==\n-----END PUBLIC KEY-----\n"
         ecdsa_nistp384 = "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEksAG80nLUksODTEUBTPJJPYN0bfxhkrr\n2hlyokfRG4kDYsRRN86vWwxDTW7qhWNZPFhJMJxHmvHsCbLz/IF7hdo8Xv/vRO4M\nVHbwq0fiWznUvkZowHC5fH2EEvNF1R5t\n-----END PUBLIC KEY-----\n"
 
@@ -441,9 +433,7 @@ class TestGPGRSA(unittest.TestCase):
 
         cls.test_dir = os.path.realpath(tempfile.mkdtemp())
         cls.gnupg_home = "rsa"
-        shutil.copytree(
-            gpg_keyring_path, os.path.join(cls.test_dir, cls.gnupg_home)
-        )
+        shutil.copytree(gpg_keyring_path, os.path.join(cls.test_dir, cls.gnupg_home))
         os.chdir(cls.test_dir)
 
     @classmethod
@@ -456,9 +446,7 @@ class TestGPGRSA(unittest.TestCase):
     def test_gpg_sign_and_verify_object(self):
         """Create a signature using a specific key on the keyring."""
 
-        uri, public_key = GPGSigner.import_(
-            self.signing_subkey_keyid, self.gnupg_home
-        )
+        uri, public_key = GPGSigner.import_(self.signing_subkey_keyid, self.gnupg_home)
 
         signer = Signer.from_priv_key_uri(uri, public_key)
         sig = signer.sign(self.test_data)
@@ -508,9 +496,7 @@ class TestGPGRSA(unittest.TestCase):
 
     def test_gpg_signature_legacy_data_structure(self):
         """Test custom fields and legacy data structure in gpg signatures."""
-        _, public_key = GPGSigner.import_(
-            self.signing_subkey_keyid, self.gnupg_home
-        )
+        _, public_key = GPGSigner.import_(self.signing_subkey_keyid, self.gnupg_home)
         signer = GPGSigner(public_key, homedir=self.gnupg_home)
         sig = signer.sign(self.test_data)
         self.assertIn("other_headers", sig.unrecognized_fields)
@@ -523,9 +509,7 @@ class TestGPGRSA(unittest.TestCase):
 
     def test_gpg_key_legacy_data_structure(self):
         """Test legacy data structure conversion in gpg keys."""
-        _, public_key = GPGSigner.import_(
-            self.signing_subkey_keyid, self.gnupg_home
-        )
+        _, public_key = GPGSigner.import_(self.signing_subkey_keyid, self.gnupg_home)
         legacy_fields = {"keyid", "type", "method"}
         fields = {"keytype", "scheme"}
 
@@ -536,9 +520,7 @@ class TestGPGRSA(unittest.TestCase):
         for field in fields:
             self.assertNotIn(field, legacy_dict)
 
-        self.assertEqual(
-            public_key, GPGSigner._key_from_legacy_dict(legacy_dict)
-        )
+        self.assertEqual(public_key, GPGSigner._key_from_legacy_dict(legacy_dict))
 
     def test_gpg_key__eq__(self):
         """Test GPGKey.__eq__() ."""
@@ -549,9 +531,7 @@ class TestGPGRSA(unittest.TestCase):
         key2.keyid = "bb"
         self.assertNotEqual(key1, key2)
 
-        other_key = SSlibKey(
-            "aa", "rsa", "rsassa-pss-sha256", {"public": "val"}
-        )
+        other_key = SSlibKey("aa", "rsa", "rsassa-pss-sha256", {"public": "val"})
         self.assertNotEqual(key1, other_key)
 
 
@@ -560,9 +540,7 @@ class TestUtils(unittest.TestCase):
 
     def test_compute_default_keyid(self):
         self.assertEqual(
-            compute_default_keyid(
-                "rsa", "rsassa-pss-sha256", {"public": "abcd"}
-            ),
+            compute_default_keyid("rsa", "rsassa-pss-sha256", {"public": "abcd"}),
             "7b56b88ae790729d4e359d3fc5e889f1e0669a2e71a12d00e87473870c73fbcf",
         )
 
@@ -596,9 +574,7 @@ class TestSphincs(unittest.TestCase):
         # Test de/serialization
         self.assertEqual(
             signer.public_key,
-            SpxKey.from_dict(
-                signer.public_key.keyid, signer.public_key.to_dict()
-            ),
+            SpxKey.from_dict(signer.public_key.keyid, signer.public_key.to_dict()),
         )
 
 
@@ -650,9 +626,7 @@ class TestCryptoSigner(unittest.TestCase):
                 public_key.scheme = scheme
                 signer = CryptoSigner(private_key, public_key)
                 sig = signer.sign(b"DATA")
-                self.assertIsNone(
-                    signer.public_key.verify_signature(sig, b"DATA")
-                )
+                self.assertIsNone(signer.public_key.verify_signature(sig, b"DATA"))
                 with self.assertRaises(UnverifiedSignatureError):
                     signer.public_key.verify_signature(sig, b"NOT DATA")
 
@@ -703,9 +677,7 @@ class TestCryptoSigner(unittest.TestCase):
                 self.assertIsInstance(signer, CryptoSigner)
 
                 sig = signer.sign(b"DATA")
-                self.assertIsNone(
-                    signer.public_key.verify_signature(sig, b"DATA")
-                )
+                self.assertIsNone(signer.public_key.verify_signature(sig, b"DATA"))
                 with self.assertRaises(UnverifiedSignatureError):
                     signer.public_key.verify_signature(sig, b"NOT DATA")
 

@@ -16,9 +16,7 @@ try:
     )
 
 except ImportError:
-    VAULT_IMPORT_ERROR = (
-        "Signing with HashiCorp Vault requires hvac and cryptography."
-    )
+    VAULT_IMPORT_ERROR = "Signing with HashiCorp Vault requires hvac and cryptography."
 
 
 class VaultSigner(Signer):

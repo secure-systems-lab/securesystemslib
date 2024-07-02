@@ -80,13 +80,8 @@ lint.select = [
   "N",      # pep8-naming: all
   "RUF100"  # ruff: find unused noqa
 ]
-lint.ignore = [
-  "E501"    # ignore line-too-long
-]
 exclude = ["_vendor"]
 
-# Same as Black.
-line-length = 80
 indent-width = 4
 
 [tool.ruff.lint.per-file-ignores]

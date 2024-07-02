@@ -23,6 +23,8 @@
 
 """
 
+# ruff: noqa: E501
+
 import unittest
 
 from securesystemslib._gpg.constants import NO_GPG_MSG, have_gpg

@@ -393,9 +393,7 @@ class SSlibKey(Key):
                 key.verify(signature, data)
 
             else:
-                raise ValueError(
-                    f"Unsupported public key {self.keytype}/{self.scheme}"
-                )
+                raise ValueError(f"Unsupported public key {self.keytype}/{self.scheme}")
 
         except InvalidSignature as e:
             raise UnverifiedSignatureError from e

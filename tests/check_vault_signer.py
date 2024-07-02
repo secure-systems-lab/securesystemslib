@@ -1,5 +1,7 @@
 """Test VaultSigner"""
 
+# ruff: noqa: E501
+
 import unittest
 
 from securesystemslib.exceptions import UnverifiedSignatureError

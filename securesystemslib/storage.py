@@ -63,9 +63,7 @@ class StorageBackendInterface(metaclass=ABCMeta):
         raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
-    def put(
-        self, fileobj: IO, filepath: str, restrict: Optional[bool] = False
-    ) -> None:
+    def put(self, fileobj: IO, filepath: str, restrict: Optional[bool] = False) -> None:
         """
         <Purpose>
           Store a file-like object in the storage backend.
@@ -205,9 +203,7 @@ class FilesystemBackend(StorageBackendInterface):
             if file_object is not None:
                 file_object.close()
 
-    def put(
-        self, fileobj: IO, filepath: str, restrict: Optional[bool] = False
-    ) -> None:
+    def put(self, fileobj: IO, filepath: str, restrict: Optional[bool] = False) -> None:
         # If we are passed an open file, seek to the beginning such that we are
         # copying the entire contents
         if not fileobj.closed:
@@ -239,8 +235,9 @@ class FilesystemBackend(StorageBackendInterface):
 
             with os.fdopen(fd, "wb") as destination_file:
                 shutil.copyfileobj(fileobj, destination_file)
-                # Force the destination file to be written to disk from Python's internal
-                # and the operating system's buffers.  os.fsync() should follow flush().
+                # Force the destination file to be written to disk
+                # from Python's internal and the operating system's buffers.
+                # os.fsync() should follow flush().
                 destination_file.flush()
                 os.fsync(destination_file.fileno())
         except OSError:
@@ -276,9 +273,7 @@ class FilesystemBackend(StorageBackendInterface):
                     "Can't create a folder with an empty filepath!"
                 )
             else:
-                raise exceptions.StorageError(
-                    "Can't create folder at %s" % filepath
-                )
+                raise exceptions.StorageError("Can't create folder at %s" % filepath)
 
     def list_folder(self, filepath: str) -> List[str]:
         try:

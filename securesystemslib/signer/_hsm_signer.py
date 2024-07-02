@@ -216,14 +216,10 @@ class HSMSigner(Signer):
             ]
         )
         if not keys:
-            raise ValueError(
-                f"could not find {_KEY_TYPE_ECDSA} key for {keyid}"
-            )
+            raise ValueError(f"could not find {_KEY_TYPE_ECDSA} key for {keyid}")
 
         if len(keys) > 1:
-            raise ValueError(
-                f"found more than one {_KEY_TYPE_ECDSA} key for {keyid}"
-            )
+            raise ValueError(f"found more than one {_KEY_TYPE_ECDSA} key for {keyid}")
 
         return keys[0]
 
@@ -277,7 +273,8 @@ class HSMSigner(Signer):
         key should be stored for later use.
 
         Arguments:
-            hsm_keyid: Key identifier on the token. Default is 2 (meaning PIV key slot 9c).
+            hsm_keyid: Key identifier on the token.
+                Default is 2 (meaning PIV key slot 9c).
             token_filter: Dictionary of token field names and values used to
                 filter the correct cryptographic token. If no filter is
                 provided one is built from the fields found on the token.
@@ -310,7 +307,8 @@ class HSMSigner(Signer):
 
         if params.chosen.native not in _CURVE_NAMES:
             raise ValueError(
-                f"found key on {params.chosen.native}, should be on one of {_CURVE_NAMES}"
+                f"found key on {params.chosen.native}, "
+                f"should be on one of {_CURVE_NAMES}"
             )
 
         # Create PEM from key
@@ -376,9 +374,7 @@ class HSMSigner(Signer):
         pin = self.pin_handler(self.SECRETS_HANDLER_MSG)
         with self._get_session(self.token_filter) as session:
             session.login(pin)
-            key = self._find_key(
-                session, self.hsm_keyid, PyKCS11.CKO_PRIVATE_KEY
-            )
+            key = self._find_key(session, self.hsm_keyid, PyKCS11.CKO_PRIVATE_KEY)
             mechanism = PyKCS11.Mechanism(PyKCS11.CKM_ECDSA)
             signature = session.sign(key, hasher.digest(), mechanism)
             session.logout()
@@ -392,8 +388,6 @@ class HSMSigner(Signer):
         s = int.from_bytes(signature[r_s_len:], byteorder="big")
 
         # Create an ASN.1 encoded Dss-Sig-Value to be used with pyca/cryptography
-        dss_sig_value = binascii.hexlify(encode_dss_signature(r, s)).decode(
-            "ascii"
-        )
+        dss_sig_value = binascii.hexlify(encode_dss_signature(r, s)).decode("ascii")
 
         return Signature(self.public_key.keyid, dss_sig_value)

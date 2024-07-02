@@ -9,6 +9,8 @@ a longer time) the test file is named check_* and is not included in the default
 tests.
 """
 
+# ruff: noqa: E501
+
 import json
 import os
 import subprocess
@@ -98,9 +100,7 @@ class TestSigstoreSigner(unittest.TestCase):
 
     def test_sign(self):
         uri, public_key = SigstoreSigner.import_(TEST_IDENTITY, TEST_ISSUER)
-        with mock.patch(
-            "sigstore.oidc.detect_credential", return_value=self.token
-        ):
+        with mock.patch("sigstore.oidc.detect_credential", return_value=self.token):
             signer = Signer.from_priv_key_uri(uri, public_key)
 
         sig = signer.sign(b"data")

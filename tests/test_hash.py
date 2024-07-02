@@ -16,6 +16,8 @@
   Unit test for 'hash.py'.
 """
 
+# ruff: noqa: E501
+
 import io
 import logging
 import os
@@ -130,9 +132,7 @@ class TestHash(unittest.TestCase):
         self._run_with_all_hash_libraries(self._do_algorithm_update, "blake2b")
 
     def test_blake2b_256_update(self):
-        self._run_with_all_hash_libraries(
-            self._do_algorithm_update, "blake2b-256"
-        )
+        self._run_with_all_hash_libraries(self._do_algorithm_update, "blake2b-256")
 
     def test_sha224_update(self):
         self._run_with_all_hash_libraries(self._do_algorithm_update, "sha224")
@@ -147,9 +147,7 @@ class TestHash(unittest.TestCase):
         self._run_with_all_hash_libraries(self._do_algorithm_update, "sha512")
 
     def test_unsupported_algorithm(self):
-        self._run_with_all_hash_libraries(
-            self._do_unsupported_algorithm, "bogus"
-        )
+        self._run_with_all_hash_libraries(self._do_unsupported_algorithm, "bogus")
 
     def _do_unsupported_algorithm(self, library, algorithm):
         self.assertRaises(
@@ -186,16 +184,12 @@ class TestHash(unittest.TestCase):
         try:
             os.write(fd, data.encode("utf-8"))
             os.close(fd)
-            digest_object_truth = securesystemslib.hash.digest(
-                algorithm, library
-            )
+            digest_object_truth = securesystemslib.hash.digest(algorithm, library)
             digest_object_truth.update(data.encode("utf-8"))
             digest_object = securesystemslib.hash.digest_filename(
                 filename, algorithm, library
             )
-            self.assertEqual(
-                digest_object_truth.digest(), digest_object.digest()
-            )
+            self.assertEqual(digest_object_truth.digest(), digest_object.digest())
 
         finally:
             os.remove(filename)
@@ -210,16 +204,12 @@ class TestHash(unittest.TestCase):
         try:
             os.write(fd, data)
             os.close(fd)
-            digest_object_truth = securesystemslib.hash.digest(
-                algorithm, library
-            )
+            digest_object_truth = securesystemslib.hash.digest(algorithm, library)
             digest_object_truth.update(normalized_data)
             digest_object = securesystemslib.hash.digest_filename(
                 filename, algorithm, library, normalize_line_endings=True
             )
-            self.assertEqual(
-                digest_object_truth.digest(), digest_object.digest()
-            )
+            self.assertEqual(digest_object_truth.digest(), digest_object.digest())
 
         finally:
             os.remove(filename)
