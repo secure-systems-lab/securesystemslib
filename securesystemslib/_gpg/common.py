@@ -877,7 +877,7 @@ def parse_signature_packet(
     signature = handler.get_signature_params(data[ptr:])
 
     signature_data = {
-        "keyid": f"{keyid}",
+        "keyid": keyid,
         "other_headers": binascii.hexlify(data[:other_headers_ptr]).decode(
             "ascii"
         ),
