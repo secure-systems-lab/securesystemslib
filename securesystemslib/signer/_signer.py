@@ -4,7 +4,7 @@ import logging
 from abc import ABCMeta, abstractmethod
 from typing import Callable, Dict, Optional, Type
 
-from securesystemslib.signer._key import Key
+from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 
 logger = logging.getLogger(__name__)
@@ -80,7 +80,7 @@ class Signer(metaclass=ABCMeta):
     def from_priv_key_uri(
         cls,
         priv_key_uri: str,
-        public_key: Key,
+        public_key: SSlibKey,
         secrets_handler: Optional[SecretsHandler] = None,
     ) -> "Signer":
         """Factory constructor for a given private key URI

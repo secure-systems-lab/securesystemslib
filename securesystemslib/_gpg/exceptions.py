@@ -40,7 +40,7 @@ class SignatureAlgorithmNotSupportedError(Exception):
 
 class KeyExpirationError(Exception):
     def __init__(self, key):
-        super(KeyExpirationError, self).__init__()
+        super().__init__()
         self.key = key
 
     def __str__(self):
