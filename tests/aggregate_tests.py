@@ -21,15 +21,15 @@
   'securesystemslib/tests'.
 """
 
+# ruff: noqa: E501
+
 import sys
 import unittest
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().discover("tests", top_level_dir=".")
     all_tests_passed = (
-        unittest.TextTestRunner(verbosity=1, buffer=True)
-        .run(suite)
-        .wasSuccessful()
+        unittest.TextTestRunner(verbosity=1, buffer=True).run(suite).wasSuccessful()
     )
     if not all_tests_passed:
         sys.exit(1)

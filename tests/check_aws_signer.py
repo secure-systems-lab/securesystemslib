@@ -1,5 +1,7 @@
 """Test AWSSigner"""
 
+# ruff: noqa: E501
+
 import unittest
 
 from securesystemslib.exceptions import UnverifiedSignatureError
@@ -56,9 +58,7 @@ class TestAWSSigner(unittest.TestCase):
 
                 # Test sign and verify
                 signature = signer.sign(b"DATA")
-                self.assertIsNone(
-                    public_key.verify_signature(signature, b"DATA")
-                )
+                self.assertIsNone(public_key.verify_signature(signature, b"DATA"))
                 with self.assertRaises(UnverifiedSignatureError):
                     public_key.verify_signature(signature, b"NOT DATA")
 

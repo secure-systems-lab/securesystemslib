@@ -13,6 +13,8 @@ only run when explicitly invoked: The tests can only pass on Securesystemslib
 GitHub Action environment because of the above requirements.
 """
 
+# ruff: noqa: E501
+
 import unittest
 
 from securesystemslib.exceptions import UnverifiedSignatureError

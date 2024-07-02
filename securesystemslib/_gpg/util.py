@@ -159,8 +159,7 @@ def parse_packet_header(data, expected_type=None):  # noqa: PLR0912
 
         elif data[1] >= 224 and data[1] < 255:
             raise PacketParsingError(
-                "New length "
-                "format packets of partial body lengths are not supported"
+                "New length " "format packets of partial body lengths are not supported"
             )
 
         elif data[1] == 255:
@@ -193,8 +192,7 @@ def parse_packet_header(data, expected_type=None):  # noqa: PLR0912
 
         elif length_type == 3:
             raise PacketParsingError(
-                "Old length "
-                "format packets of indeterminate length are not supported"
+                "Old length " "format packets of indeterminate length are not supported"
             )
 
         else:  # pragma: no cover (unreachable)

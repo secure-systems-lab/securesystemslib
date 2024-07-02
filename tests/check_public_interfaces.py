@@ -27,6 +27,8 @@
   when explicitly invoked.
 """
 
+# ruff: noqa: E501
+
 import os
 import shutil
 import tempfile
@@ -85,9 +87,7 @@ class TestPublicInterfaces(unittest.TestCase):
     def test_crypto_signer_from_priv_key_uri(self):
         """Assert raise UnsupportedLibraryError on 'from_priv_key_uri'."""
 
-        public_key = SSlibKey(
-            "aa", "rsa", "rsa-pkcs1v15-sha512", {"public": "val"}
-        )
+        public_key = SSlibKey("aa", "rsa", "rsa-pkcs1v15-sha512", {"public": "val"})
         with self.assertRaises(UnsupportedLibraryError):
             CryptoSigner.from_priv_key_uri(
                 "file:should/fail/before/urlparse", public_key, None
@@ -133,9 +133,7 @@ class TestPublicInterfaces(unittest.TestCase):
         signers = [
             SpxSigner(
                 b"private",
-                SpxKey(
-                    "aa", "sphincs", "sphincs-shake-128s", {"public": "val"}
-                ),
+                SpxKey("aa", "sphincs", "sphincs-shake-128s", {"public": "val"}),
             )
         ]
 
@@ -167,9 +165,7 @@ class TestPublicInterfaces(unittest.TestCase):
 
         self.assertIsNone(key.verify_signature(sig, data))
 
-        with self.assertRaises(
-            securesystemslib.exceptions.UnverifiedSignatureError
-        ):
+        with self.assertRaises(securesystemslib.exceptions.UnverifiedSignatureError):
             key.verify_signature(sig, b"NOT DATA")
 
 
