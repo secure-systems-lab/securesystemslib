@@ -116,11 +116,11 @@ class TestHash(unittest.TestCase):
         digest_object = securesystemslib.hash.digest(algorithm, library)
 
         self.assertEqual(digest_object.hexdigest(), expected[algorithm][0])
-        digest_object.update("a".encode("utf-8"))
+        digest_object.update(b"a")
         self.assertEqual(digest_object.hexdigest(), expected[algorithm][1])
-        digest_object.update("bbb".encode("utf-8"))
+        digest_object.update(b"bbb")
         self.assertEqual(digest_object.hexdigest(), expected[algorithm][2])
-        digest_object.update("".encode("utf-8"))
+        digest_object.update(b"")
         self.assertEqual(digest_object.hexdigest(), expected[algorithm][3])
 
     def test_blake2s_update(self):

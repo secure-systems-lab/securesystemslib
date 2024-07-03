@@ -205,9 +205,7 @@ def parse_packet_header(data, expected_type=None):  # noqa: PLR0912
 
     if expected_type is not None and packet_type != expected_type:
         raise PacketParsingError(
-            "Expected packet " "{}, but got {} instead!".format(
-                expected_type, packet_type
-            )
+            f"Expected packet {expected_type}, but got {packet_type} instead!"
         )
 
     return packet_type, header_len, body_len, header_len + body_len
@@ -347,8 +345,7 @@ def get_hashing_class(hash_algorithm_id):
 
     except KeyError:
         raise ValueError(
-            "Hash algorithm '{}' not supported, must be one of '{}' "
-            "(see RFC4880 9.4. Hash Algorithms).".format(
-                hash_algorithm_id, supported_hashing_algorithms
-            )
+            f"Hash algorithm '{hash_algorithm_id}' not supported, "
+            f"must be one of '{supported_hashing_algorithms}' "
+            "(see RFC4880 9.4. Hash Algorithms)."
         )

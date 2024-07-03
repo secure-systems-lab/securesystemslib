@@ -49,7 +49,7 @@ try:
 
     SUPPORTED_LIBRARIES.append("pyca_crypto")
 
-    class PycaDiggestWrapper(object):
+    class PycaDiggestWrapper:
         """
         <Purpose>
           A wrapper around `cryptography.hazmat.primitives.hashes.Hash` which adds
