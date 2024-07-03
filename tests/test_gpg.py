@@ -361,9 +361,7 @@ class TestCommon(unittest.TestCase):
             with patch("securesystemslib._gpg.common.log") as mock_log:
                 _assign_certified_key_info(bundle)
                 msg = str(mock_log.info.call_args[0][0])
-                self.assertTrue(
-                    expected_msg in msg, f"'{expected_msg}' not in '{msg}'"
-                )
+                self.assertTrue(expected_msg in msg, f"'{expected_msg}' not in '{msg}'")
 
     def test_assign_certified_key_info_expiration(self):
         """Test assignment of key expiration date in
@@ -469,9 +467,7 @@ class TestCommon(unittest.TestCase):
             with patch("securesystemslib._gpg.common.log") as mock_log:
                 _get_verified_subkeys(bundle)
                 msg = str(mock_log.info.call_args[0][0])
-                self.assertTrue(
-                    expected_msg in msg, f"'{expected_msg}' not in '{msg}'"
-                )
+                self.assertTrue(expected_msg in msg, f"'{expected_msg}' not in '{msg}'")
 
     def test_get_verified_subkeys(self):
         """Test correct assignment of subkey expiration date in

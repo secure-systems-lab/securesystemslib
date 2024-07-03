@@ -273,9 +273,7 @@ class FilesystemBackend(StorageBackendInterface):
                     "Can't create a folder with an empty filepath!"
                 )
             else:
-                raise exceptions.StorageError(
-                    f"Can't create folder at {filepath}"
-                )
+                raise exceptions.StorageError(f"Can't create folder at {filepath}")
 
     def list_folder(self, filepath: str) -> List[str]:
         try:
