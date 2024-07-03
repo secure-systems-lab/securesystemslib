@@ -20,13 +20,18 @@
 
 """
 
+from typing import Callable, Optional, Union
+
 from securesystemslib import exceptions
 
 
-def _canonical_string_encoder(string):
+def _canonical_string_encoder(string: str) -> str:
     """
     <Purpose>
-      Encode 'string' to canonical string format.
+      Encode 'string' to canonical string format. By using the escape sequence ('\')
+      which is mandatory to use for quote and backslash. 
+      backslash: \\ translates to \\\\ 
+      quote: \" translates to \\".
 
     <Arguments>
       string:
@@ -41,13 +46,14 @@ def _canonical_string_encoder(string):
     <Returns>
       A string with the canonical-encoded 'string' embedded.
     """
-
     string = '"{}"'.format(string.replace("\\", "\\\\").replace('"', '\\"'))
 
     return string
 
 
-def _encode_canonical(object, output_function):
+def _encode_canonical(
+    object: Union[bool, None, str, int, tuple, list, dict], output_function: Callable
+) -> None:
     # Helper for encode_canonical.  Older versions of json.encoder don't
     # even let us replace the separators.
 
@@ -88,11 +94,15 @@ def _encode_canonical(object, output_function):
 
 
 def encode_canonical(
-    object,
-    output_function=None,
-):
+    object: Union[bool, None, str, int, tuple, list, dict],
+    output_function: Optional[Callable] = None,
+) -> Union[str, None]:
     """
     <Purpose>
+      Encoding an object so that it is always has the same string format
+      independent of the original format. This allows to compute always the same hash
+      or signature for that object.
+
       Encode 'object' in canonical JSON form, as specified at
       http://wiki.laptop.org/go/Canonical_JSON .  It's a restricted
       dialect of JSON in which keys are always lexically sorted,
@@ -140,7 +150,7 @@ def encode_canonical(
       A string representing the 'object' encoded in canonical JSON form.
     """
 
-    result = None
+    result: Union[None, list] = None
     # If 'output_function' is unset, treat it as
     # appending to a list.
     if output_function is None:
@@ -151,7 +161,7 @@ def encode_canonical(
         _encode_canonical(object, output_function)
 
     except (TypeError, exceptions.FormatError) as e:
-        message = "Could not encode " + repr(object) + ": " + str(e)
+        message: str = "Could not encode " + repr(object) + ": " + str(e)
         raise exceptions.FormatError(message)
 
     # Return the encoded 'object' as a string.
@@ -159,3 +169,4 @@ def encode_canonical(
     # otherwise results are sent to 'output_function'.
     if result is not None:
         return "".join(result)
+    return None
