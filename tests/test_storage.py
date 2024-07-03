@@ -15,8 +15,6 @@
   Unit test for 'storage.py'
 """
 
-# ruff: noqa: E501
-
 import os
 import shutil
 import stat

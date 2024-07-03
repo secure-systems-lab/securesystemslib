@@ -17,8 +17,6 @@
 
 """
 
-# ruff: noqa: E501
-
 import os
 import shutil
 import tempfile

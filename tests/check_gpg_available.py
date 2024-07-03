@@ -24,8 +24,6 @@
   when explicitly invoked.
 """
 
-# ruff: noqa: E501
-
 import unittest
 
 import securesystemslib._gpg.constants

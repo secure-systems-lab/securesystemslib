@@ -87,4 +87,5 @@ indent-width = 4
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = [
     "S",      # bandit: Not running bandit on tests
+    "E501"    # line-too-long
 ]

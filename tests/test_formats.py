@@ -15,8 +15,6 @@
   Unit test for 'formats.py'
 """
 
-# ruff: noqa: E501
-
 import unittest
 
 import securesystemslib.formats

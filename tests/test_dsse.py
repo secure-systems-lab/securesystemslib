@@ -1,7 +1,5 @@
 """Test cases for "metadata.py"."""
 
-# ruff: noqa: E501
-
 import copy
 import unittest
 from pathlib import Path

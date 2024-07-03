@@ -12,8 +12,6 @@ NOTE: the filename is purposefully check_ rather than test_ so that tests are
 only run when explicitly invoked.
 """
 
-# ruff: noqa: E501
-
 import unittest
 
 from securesystemslib.exceptions import UnverifiedSignatureError

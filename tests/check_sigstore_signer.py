@@ -9,8 +9,6 @@ a longer time) the test file is named check_* and is not included in the default
 tests.
 """
 
-# ruff: noqa: E501
-
 import json
 import os
 import subprocess

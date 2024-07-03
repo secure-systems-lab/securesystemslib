@@ -187,7 +187,7 @@ class GPGSigner(Signer):
 
         else:
             raise ValueError(
-                f"No exact match found for passed keyid" f" {keyid}, found: {keyids}."
+                f"No exact match found for passed keyid {keyid}, found: {keyids}."
             )
 
         return (uri, public_key)
@@ -211,7 +211,9 @@ class GPGSigner(Signer):
 
         """
         try:
-            raw_sig = gpg.create_signature(payload, self.public_key.keyid, self.homedir)
+            raw_sig = gpg.create_signature(
+                payload, self.public_key.keyid, self.homedir
+            )
         except gpg_exceptions.KeyNotFoundError as e:
             raise ValueError(e) from e
 
