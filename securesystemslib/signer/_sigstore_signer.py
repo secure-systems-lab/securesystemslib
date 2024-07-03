@@ -268,3 +268,26 @@ class SigstoreSigner(Signer):
             bundle_json["messageSignature"]["signature"],
             {"bundle": bundle_json},
         )
+
+    @classmethod
+    def import_github_actions(
+        cls, project: str, workflow_path: str, ref: Optional[str] = "refs/heads/main"
+    ) -> Tuple[str, SigstoreKey]:
+        """Convenience method to build identity and issuer string for import_() from
+        GitHub project and workflow path.
+
+        Args:
+            project: GitHub project
+            worfklow_path: GitHub workflow path
+            ref: optional GitHub ref, defaults to refs/heads/main
+
+        Returns:
+            uri: string
+            key: SigstoreKey
+
+        """
+        identity = f"https://github.com/{project}/{workflow_path}@{ref}"
+        issuer = "https://token.actions.githubusercontent.com"
+        uri, key = cls.import_(identity, issuer)
+
+        return uri, key
