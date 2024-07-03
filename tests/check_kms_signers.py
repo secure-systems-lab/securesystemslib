@@ -44,7 +44,7 @@ class TestKMSKeys(unittest.TestCase):
         assign @jku.
         """
 
-        data = "data".encode("utf-8")
+        data = b"data"
 
         signer = Signer.from_priv_key_uri(f"gcpkms:{self.gcp_id}", self.pubkey)
         sig = signer.sign(data)

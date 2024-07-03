@@ -39,7 +39,7 @@ class TestAzureKeys(unittest.TestCase):
         Note that this test requires valid credentials available.
         """
 
-        data = "data".encode("utf-8")
+        data = b"data"
 
         signer = Signer.from_priv_key_uri(self.azure_id, self.azure_pubkey)
         sig = signer.sign(data)

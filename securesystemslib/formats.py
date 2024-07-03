@@ -42,7 +42,7 @@ def _canonical_string_encoder(string):
       A string with the canonical-encoded 'string' embedded.
     """
 
-    string = '"%s"' % string.replace("\\", "\\\\").replace('"', '\\"')
+    string = '"{}"'.format(string.replace("\\", "\\\\").replace('"', '\\"'))
 
     return string
 
