@@ -44,9 +44,7 @@ class KeyExpirationError(Exception):
         self.key = key
 
     def __str__(self):
-        creation_time = datetime.datetime.utcfromtimestamp(
-            self.key["creation_time"]
-        )
+        creation_time = datetime.datetime.utcfromtimestamp(self.key["creation_time"])
         expiration_time = datetime.datetime.utcfromtimestamp(
             self.key["creation_time"] + self.key["validity_period"]
         )

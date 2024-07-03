@@ -227,9 +227,7 @@ def verify_signature(signature_object, pubkey_info, content, hash_algorithm_id):
     )
 
     try:
-        pubkey_object.verify(
-            binascii.unhexlify(signature_object["signature"]), digest
-        )
+        pubkey_object.verify(binascii.unhexlify(signature_object["signature"]), digest)
         return True
 
     except InvalidSignature:

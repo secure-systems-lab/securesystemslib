@@ -92,9 +92,7 @@ def _get_hash_algorithm(name: str) -> "HashAlgorithm":
     return algorithm
 
 
-def _get_rsa_padding(
-    name: str, hash_algorithm: "HashAlgorithm"
-) -> "AsymmetricPadding":
+def _get_rsa_padding(name: str, hash_algorithm: "HashAlgorithm") -> "AsymmetricPadding":
     """Helper to return rsa signature padding for name."""
     padding: AsymmetricPadding
     if name == "pss":
@@ -279,9 +277,7 @@ class CryptoSigner(Signer):
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
 
         private_key = Ed25519PrivateKey.generate()
-        public_key = SSlibKey.from_crypto(
-            private_key.public_key(), keyid, "ed25519"
-        )
+        public_key = SSlibKey.from_crypto(private_key.public_key(), keyid, "ed25519")
         return CryptoSigner(private_key, public_key)
 
     @staticmethod
@@ -310,9 +306,7 @@ class CryptoSigner(Signer):
             public_exponent=65537,
             key_size=size,
         )
-        public_key = SSlibKey.from_crypto(
-            private_key.public_key(), keyid, scheme
-        )
+        public_key = SSlibKey.from_crypto(private_key.public_key(), keyid, scheme)
         return CryptoSigner(private_key, public_key)
 
     @staticmethod

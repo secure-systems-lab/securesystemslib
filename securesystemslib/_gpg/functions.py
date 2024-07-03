@@ -161,9 +161,7 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
 
         # ... or one of the subkeys, and add the full keyid to the signature dict.
         else:
-            for sub_key_full_keyid in list(
-                public_key_bundle.get("subkeys", {}).keys()
-            ):
+            for sub_key_full_keyid in list(public_key_bundle.get("subkeys", {}).keys()):
                 if sub_key_full_keyid.endswith(short_keyid.lower()):
                     signature["keyid"] = sub_key_full_keyid
                     break
@@ -237,9 +235,7 @@ def verify_signature(signature_object, pubkey_info, content):
     ):
         raise KeyExpirationError(verification_key)
 
-    return handler.verify_signature(
-        signature_object, verification_key, content, SHA256
-    )
+    return handler.verify_signature(signature_object, verification_key, content, SHA256)
 
 
 def export_pubkey(keyid, homedir=None, timeout=GPG_TIMEOUT):

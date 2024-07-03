@@ -49,7 +49,9 @@ class TestEnvelope(unittest.TestCase):
         envelope_dict["signatures"].append(copy.deepcopy(self.signature_dict))
 
         # assert that calling from_dict will raise an error.
-        expected_error_message = f"Multiple signatures found for keyid {self.signature_dict['keyid']}"
+        expected_error_message = (
+            f"Multiple signatures found for keyid {self.signature_dict['keyid']}"
+        )
         with self.assertRaises(ValueError) as context:
             Envelope.from_dict(envelope_dict)
 
@@ -153,9 +155,7 @@ class TestEnvelope(unittest.TestCase):
         # Test with duplicate keys.
         duplicate_keys = key_list + key_list
         with self.assertRaises(VerificationError):
-            envelope_obj.verify(
-                duplicate_keys, 4
-            )  # 3 unique keys, threshold 4.
+            envelope_obj.verify(duplicate_keys, 4)  # 3 unique keys, threshold 4.
 
 
 # Run the unit tests.
