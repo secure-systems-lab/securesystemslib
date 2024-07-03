@@ -44,9 +44,7 @@ class SigstoreKey(Key):
     ):
         for content in ["identity", "issuer"]:
             if content not in keyval or not isinstance(keyval[content], str):
-                raise ValueError(
-                    f"{content} string required for scheme {scheme}"
-                )
+                raise ValueError(f"{content} string required for scheme {scheme}")
         super().__init__(keyid, keytype, scheme, keyval, unrecognized_fields)
 
     @classmethod

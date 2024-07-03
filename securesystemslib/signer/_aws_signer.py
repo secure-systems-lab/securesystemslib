@@ -128,7 +128,7 @@ class AWSSigner(Signer):
 
         Arguments:
             aws_key_id (str): AWS KMS key ID.
-            local_scheme (Optional[str]): The Secure Systems Library RSA or ECDSA scheme.
+            local_scheme (Optional[str]): The Secure Systems Library RSA/ECDSA scheme.
             Defaults to 'rsassa-pss-sha256' if not provided and RSA.
 
         Returns:

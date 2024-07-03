@@ -80,9 +80,7 @@ class AzureSigner(Signer):
             )
             self.hash_algorithm = public_key.get_hash_algorithm_str()
         except UnsupportedKeyType as e:
-            logger.info(
-                "Key %s has unsupported key type or unsupported elliptic curve"
-            )
+            logger.info("Key %s has unsupported key type or unsupported elliptic curve")
             raise e
         self._public_key = public_key
 
@@ -104,7 +102,8 @@ class AzureSigner(Signer):
             return key_client.get_key(key_name)
         except (HttpResponseError,) as e:
             logger.info(
-                "Key %s/%s failed to create key client from credentials, key ID, and Vault URL: %s",
+                "Key %s/%s failed to create key client from credentials, "
+                "key ID, and Vault URL: %s",
                 vault_name,
                 key_name,
                 str(e),
@@ -121,7 +120,8 @@ class AzureSigner(Signer):
             return CryptographyClient(kv_key, credential=cred)
         except (HttpResponseError,) as e:
             logger.info(
-                "Key %s failed to create crypto client from credentials and KeyVaultKey: %s",
+                "Key %s failed to create crypto client from "
+                "credentials and KeyVaultKey: %s",
                 kv_key,
                 str(e),
             )
@@ -186,14 +186,10 @@ class AzureSigner(Signer):
             raise UnsupportedLibraryError(AZURE_IMPORT_ERROR)
 
         credential = DefaultAzureCredential()
-        key_vault_key = cls._get_key_vault_key(
-            credential, az_vault_name, az_key_name
-        )
+        key_vault_key = cls._get_key_vault_key(credential, az_vault_name, az_key_name)
 
         if not key_vault_key.key.kty.startswith("EC"):
-            raise UnsupportedKeyType(
-                f"Unsupported key type {key_vault_key.key.kty}"
-            )
+            raise UnsupportedKeyType(f"Unsupported key type {key_vault_key.key.kty}")
 
         if key_vault_key.key.crv == KeyCurveName.p_256:
             crv: ec.EllipticCurve = ec.SECP256R1()
@@ -202,9 +198,7 @@ class AzureSigner(Signer):
         elif key_vault_key.key.crv == KeyCurveName.p_521:
             crv = ec.SECP521R1()
         else:
-            raise UnsupportedKeyType(
-                f"Unsupported curve type {key_vault_key.key.crv}"
-            )
+            raise UnsupportedKeyType(f"Unsupported curve type {key_vault_key.key.crv}")
 
         # Key is in JWK format, create a curve from it with the parameters
         x = int.from_bytes(key_vault_key.key.x, byteorder="big")
@@ -212,9 +206,7 @@ class AzureSigner(Signer):
 
         cpub = ec.EllipticCurvePublicNumbers(x, y, crv)
         pub_key = cpub.public_key()
-        pem = pub_key.public_bytes(
-            Encoding.PEM, PublicFormat.SubjectPublicKeyInfo
-        )
+        pem = pub_key.public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo)
 
         keytype, scheme = cls._get_keytype_and_scheme(key_vault_key.key.crv)
         keyval = {"public": pem.decode("utf-8")}

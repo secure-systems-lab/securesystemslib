@@ -266,7 +266,8 @@ def parse_pubkey_bundle(data):
                     PACKET_TYPE_USER_ID,
                 ]:
                     if key_bundle[_type]:
-                        # Add to most recently added packet's signatures of matching type
+                        # Add to most recently added packet's
+                        # signatures of matching type
                         key_bundle[_type][next(reversed(key_bundle[_type]))][
                             "signatures"
                         ].append(packet)
@@ -275,9 +276,7 @@ def parse_pubkey_bundle(data):
                 else:
                     # If no packets are available for any of above types (yet), the
                     # signature belongs to the primary key
-                    key_bundle[PACKET_TYPE_PRIMARY_KEY]["signatures"].append(
-                        packet
-                    )
+                    key_bundle[PACKET_TYPE_PRIMARY_KEY]["signatures"].append(packet)
 
             else:
                 packets_list = [
@@ -358,9 +357,7 @@ def _assign_certified_key_info(bundle):
                 )
                 # verify_signature requires a "keyid" even if it is short.
                 # (see parse_signature_packet for more information about keyids)
-                signature["keyid"] = (
-                    signature["keyid"] or signature["short_keyid"]
-                )
+                signature["keyid"] = signature["keyid"] or signature["short_keyid"]
 
             # TODO: Revise exception taxonomy:
             # It's okay to ignore some exceptions (unsupported algorithms etc.) but
@@ -430,10 +427,7 @@ def _assign_certified_key_info(bundle):
             if is_primary_user and not tmp_is_primary_user:
                 continue
 
-            if (
-                not sig_creation_time
-                or sig_creation_time < tmp_sig_creation_time
-            ):
+            if not sig_creation_time or sig_creation_time < tmp_sig_creation_time:
                 # This is the most recent certificate that has a validity_period and
                 # doesn't have lower priority in regard to the primary user id flag. We
                 # accept it the keys validty_period, until we get a newer value from
@@ -445,9 +439,7 @@ def _assign_certified_key_info(bundle):
                 sig_creation_time = tmp_sig_creation_time
 
     if validity_period is not None:
-        bundle[PACKET_TYPE_PRIMARY_KEY]["key"]["validity_period"] = (
-            validity_period
-        )
+        bundle[PACKET_TYPE_PRIMARY_KEY]["key"]["validity_period"] = validity_period
 
     return bundle[PACKET_TYPE_PRIMARY_KEY]["key"]
 
@@ -495,9 +487,7 @@ def _get_verified_subkeys(bundle):
 
         # Construct signed content (see RFC4880 section 5.2.4. paragraph 3)
         signed_content = (
-            bundle[PACKET_TYPE_PRIMARY_KEY]["packet"]
-            + b"\x99"
-            + subkey_packet[1:]
+            bundle[PACKET_TYPE_PRIMARY_KEY]["packet"] + b"\x99" + subkey_packet[1:]
         )
 
         # Filter sub key binding signature from other signatures, e.g. subkey
@@ -513,9 +503,7 @@ def _get_verified_subkeys(bundle):
                 )
                 # verify_signature requires a "keyid" even if it is short.
                 # (see parse_signature_packet for more information about keyids)
-                signature["keyid"] = (
-                    signature["keyid"] or signature["short_keyid"]
-                )
+                signature["keyid"] = signature["keyid"] or signature["short_keyid"]
                 key_binding_signatures.append(signature)
 
             # TODO: Revise exception taxonomy
@@ -555,9 +543,7 @@ def _get_verified_subkeys(bundle):
         # If the signature is valid, we may also extract relevant information from
         # its "info" field (e.g. subkey expiration date) and assign to it to the
         # subkey here
-        validity_period = signature["info"]["subpackets"].get(
-            KEY_EXPIRATION_SUBPACKET
-        )
+        validity_period = signature["info"]["subpackets"].get(KEY_EXPIRATION_SUBPACKET)
         if validity_period is not None:
             subkey["validity_period"] = struct.unpack(">I", validity_period)[0]
 
@@ -877,10 +863,8 @@ def parse_signature_packet(
     signature = handler.get_signature_params(data[ptr:])
 
     signature_data = {
-        "keyid": f"{keyid}",
-        "other_headers": binascii.hexlify(data[:other_headers_ptr]).decode(
-            "ascii"
-        ),
+        "keyid": keyid,
+        "other_headers": binascii.hexlify(data[:other_headers_ptr]).decode("ascii"),
         "signature": binascii.hexlify(signature).decode("ascii"),
     }
 

@@ -112,8 +112,8 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
 
     command = gpg_sign_command(keyarg=keyarg, homearg=homearg)
 
-    gpg_process = subprocess.run(
-        command,  # noqa: S603
+    gpg_process = subprocess.run(  # noqa: S603
+        command,
         input=content,
         check=False,
         capture_output=True,
@@ -161,9 +161,7 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
 
         # ... or one of the subkeys, and add the full keyid to the signature dict.
         else:
-            for sub_key_full_keyid in list(
-                public_key_bundle.get("subkeys", {}).keys()
-            ):
+            for sub_key_full_keyid in list(public_key_bundle.get("subkeys", {}).keys()):
                 if sub_key_full_keyid.endswith(short_keyid.lower()):
                     signature["keyid"] = sub_key_full_keyid
                     break
@@ -237,9 +235,7 @@ def verify_signature(signature_object, pubkey_info, content):
     ):
         raise KeyExpirationError(verification_key)
 
-    return handler.verify_signature(
-        signature_object, verification_key, content, SHA256
-    )
+    return handler.verify_signature(signature_object, verification_key, content, SHA256)
 
 
 def export_pubkey(keyid, homedir=None, timeout=GPG_TIMEOUT):
@@ -276,8 +272,8 @@ def export_pubkey(keyid, homedir=None, timeout=GPG_TIMEOUT):
     # TODO: Consider adopting command error handling from `create_signature`
     # above, e.g. in a common 'run gpg command' utility function
     command = gpg_export_pubkey_command(keyid=keyid, homearg=homearg)
-    gpg_process = subprocess.run(
-        command,  # noqa: S603
+    gpg_process = subprocess.run(  # noqa: S603
+        command,
         capture_output=True,
         timeout=timeout,
         check=True,
