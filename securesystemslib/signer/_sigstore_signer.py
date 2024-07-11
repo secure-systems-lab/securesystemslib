@@ -277,8 +277,10 @@ class SigstoreSigner(Signer):
         GitHub project and workflow path.
 
         Args:
-            project: GitHub project
-            worfklow_path: GitHub workflow path
+            project: GitHub project name (example:
+               "secure-systems-lab/securesystemslib")
+            workflow_path: GitHub workflow path (example:
+               ".github/workflows/online-sign.yml")
             ref: optional GitHub ref, defaults to refs/heads/main
 
         Returns:
