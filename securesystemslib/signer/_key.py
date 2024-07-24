@@ -23,6 +23,7 @@ try:
         ECDSA,
         SECP256R1,
         SECP384R1,
+        SECP521R1,
         EllipticCurvePublicKey,
     )
     from cryptography.hazmat.primitives.asymmetric.ed25519 import (
@@ -386,6 +387,15 @@ class SSlibKey(Key):
                 _validate_type(key, EllipticCurvePublicKey)
                 _validate_curve(key, SECP384R1)
                 key.verify(signature, data, ECDSA(SHA384()))
+
+            elif (
+                self.keytype in ["ecdsa", "ecdsa-sha2-nistp521"]
+                and self.scheme == "ecdsa-sha2-nistp521"
+            ):
+                key = cast(EllipticCurvePublicKey, self._crypto_key())
+                _validate_type(key, EllipticCurvePublicKey)
+                _validate_curve(key, SECP521R1)
+                key.verify(signature, data, ECDSA(SHA512()))
 
             elif self.keytype == "ed25519" and self.scheme == "ed25519":
                 public_bytes = bytes.fromhex(self.keyval["public"])
