@@ -256,6 +256,9 @@ class SSlibKey(Key):
             if isinstance(public_key.curve, SECP384R1):
                 return "ecdsa", "ecdsa-sha2-nistp384", _pem()
 
+            if isinstance(public_key.curve, SECP521R1):
+                return "ecdsa", "ecdsa-sha2-nistp521", _pem()
+
             raise ValueError(f"unsupported curve '{public_key.curve.name}'")
 
         if isinstance(public_key, Ed25519PublicKey):

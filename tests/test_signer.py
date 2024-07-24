@@ -304,6 +304,12 @@ class TestSSlibKey(unittest.TestCase):
                 "ecdsa_secp384r1_public.pem",
             ),
             (
+                "ecdsa",
+                "ecdsa-sha2-nistp521",
+                "3dddef3c311b151c5fe12f5fcfa3d9795e2b5fe1a6746c2691befacb13a6af4a",
+                "ecdsa_secp521r1_public.pem",
+            ),
+            (
                 "ed25519",
                 "ed25519",
                 "c6d8bf2e4f48b41ac2ce8eca21415ca8ef68c133b47fc33df03d4070a7e1e9cc",
