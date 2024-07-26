@@ -49,8 +49,10 @@ KEY_FOR_TYPE_AND_SCHEME.update(
     {
         ("ecdsa", "ecdsa-sha2-nistp256"): SSlibKey,
         ("ecdsa", "ecdsa-sha2-nistp384"): SSlibKey,
+        ("ecdsa", "ecdsa-sha2-nistp521"): SSlibKey,
         ("ecdsa-sha2-nistp256", "ecdsa-sha2-nistp256"): SSlibKey,
         ("ecdsa-sha2-nistp384", "ecdsa-sha2-nistp384"): SSlibKey,
+        ("ecdsa-sha2-nistp521", "ecdsa-sha2-nistp521"): SSlibKey,
         ("ed25519", "ed25519"): SSlibKey,
         ("rsa", "rsassa-pss-sha224"): SSlibKey,
         ("rsa", "rsassa-pss-sha256"): SSlibKey,
