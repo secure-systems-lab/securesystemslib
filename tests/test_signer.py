@@ -88,6 +88,10 @@ class TestKey(unittest.TestCase):
             "0155661bdf705f621a74f55eef36c9ae041e456141eced7a45d4a1f75ded9ac0"
         )
         ecdsa_nistp384_pub = "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEksAG80nLUksODTEUBTPJJPYN0bfxhkrr\n2hlyokfRG4kDYsRRN86vWwxDTW7qhWNZPFhJMJxHmvHsCbLz/IF7hdo8Xv/vRO4M\nVHbwq0fiWznUvkZowHC5fH2EEvNF1R5t\n-----END PUBLIC KEY-----\n"
+        ecdsa_nistp521_keyid = (
+            "3dddef3c311b151c5fe12f5fcfa3d9795e2b5fe1a6746c2691befacb13a6af4a"
+        )
+        ecdsa_nistp521_pub = "-----BEGIN PUBLIC KEY-----\nMIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQBXxFGyw9J9C43woa6huZ3IwrEZhku\neHDNZ1UqnHcFhNYFhM7witKxgv6OUpwlwPsPSUjqcBxkkpay4rT4UTwIP94AdsQL\nq3DQ+BuwrEELjAAMxvQGfoMlLJ5fHM4p4KhlKwpk2HiBQp4r1bjuA6MFq7s5yF0C\nnb9TH+ZZwV5/cjCewxY=\n-----END PUBLIC KEY-----"
 
         key_sig_data = [
             (
@@ -176,6 +180,13 @@ class TestKey(unittest.TestCase):
                 "30650230747ffab40d894dcacfa2da613a312b2423aa744c7b2365345467819c2af210983c5a7ce6810db995f2e6c90f90f9ad1c023100fdde5013796916af1989b757b64f2fad8496fa7b2b19e9568260868d4a670e6feb123b3337179a4d06b5fbe42b6937fb",
             ),
             (
+                ecdsa_nistp521_keyid,
+                "ecdsa",
+                "ecdsa-sha2-nistp521",
+                ecdsa_nistp521_pub,
+                "3081880242019c9621491de75e9b89c4956f6571840528923db953a0fdcf88f9c0221e8c181459af1d9f4e420ad7b971c5c429e457f1f67cfc968c655ea569c3185bfeb2bd943f024201bd2d51bee9ae0bbeb79c99c7bc1758dd256ce7caad9020fb2e2873efc80613826a45b96be25eab11dc521942b92af5820ddde08797d9d6ae236aa54036b41e1152",
+            ),
+            (
                 ecdsa_keyid,
                 "ecdsa-sha2-nistp256",
                 "ecdsa-sha2-nistp256",
@@ -188,6 +199,13 @@ class TestKey(unittest.TestCase):
                 "ecdsa-sha2-nistp384",
                 ecdsa_nistp384_pub,
                 "30650230747ffab40d894dcacfa2da613a312b2423aa744c7b2365345467819c2af210983c5a7ce6810db995f2e6c90f90f9ad1c023100fdde5013796916af1989b757b64f2fad8496fa7b2b19e9568260868d4a670e6feb123b3337179a4d06b5fbe42b6937fb",
+            ),
+            (
+                ecdsa_nistp521_keyid,
+                "ecdsa-sha2-nistp521",
+                "ecdsa-sha2-nistp521",
+                ecdsa_nistp521_pub,
+                "3081880242019c9621491de75e9b89c4956f6571840528923db953a0fdcf88f9c0221e8c181459af1d9f4e420ad7b971c5c429e457f1f67cfc968c655ea569c3185bfeb2bd943f024201bd2d51bee9ae0bbeb79c99c7bc1758dd256ce7caad9020fb2e2873efc80613826a45b96be25eab11dc521942b92af5820ddde08797d9d6ae236aa54036b41e1152",
             ),
         ]
         for keyid, keytype, scheme, pub, sig in key_sig_data:
@@ -304,6 +322,12 @@ class TestSSlibKey(unittest.TestCase):
                 "ecdsa_secp384r1_public.pem",
             ),
             (
+                "ecdsa",
+                "ecdsa-sha2-nistp521",
+                "3dddef3c311b151c5fe12f5fcfa3d9795e2b5fe1a6746c2691befacb13a6af4a",
+                "ecdsa_secp521r1_public.pem",
+            ),
+            (
                 "ed25519",
                 "ed25519",
                 "c6d8bf2e4f48b41ac2ce8eca21415ca8ef68c133b47fc33df03d4070a7e1e9cc",
@@ -340,12 +364,14 @@ class TestSSlibKey(unittest.TestCase):
         ed25519 = "50a5768a7a577483c28e57a6742b4d2170b9be628a961355ef127c45f2aefdc5"
         ecdsa_nistp256 = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEsYJfSlYU3UlYbGOZfE/yOHkayWWq\nLPR/NeCa83szZmnJGc9wwCRPvJS87K+eDGIhhhKueTyrLqXQqmyHioQbOQ==\n-----END PUBLIC KEY-----\n"
         ecdsa_nistp384 = "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEksAG80nLUksODTEUBTPJJPYN0bfxhkrr\n2hlyokfRG4kDYsRRN86vWwxDTW7qhWNZPFhJMJxHmvHsCbLz/IF7hdo8Xv/vRO4M\nVHbwq0fiWznUvkZowHC5fH2EEvNF1R5t\n-----END PUBLIC KEY-----\n"
+        ecdsa_nistp521 = "-----BEGIN PUBLIC KEY-----\nMIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQBXxFGyw9J9C43woa6huZ3IwrEZhku\neHDNZ1UqnHcFhNYFhM7witKxgv6OUpwlwPsPSUjqcBxkkpay4rT4UTwIP94AdsQL\nq3DQ+BuwrEELjAAMxvQGfoMlLJ5fHM4p4KhlKwpk2HiBQp4r1bjuA6MFq7s5yF0C\nnb9TH+ZZwV5/cjCewxY=\n-----END PUBLIC KEY-----"
 
         test_data = [
             # bad keytype / scheme
             ("ed25519", "rsassa-pss-sha256", rsa),
             ("ecdsa-sha2-nistp384", "ecdsa-sha2-nistp256", ecdsa_nistp256),
             ("ecdsa-sha2-nistp256", "ecdsa-sha2-nistp384", ecdsa_nistp384),
+            ("ecdsa-sha2-nistp256", "ecdsa-sha2-nistp521", ecdsa_nistp521),
             ("rsa", "ed25519", ed25519),
             # bad key type (pem formatted keys only)
             ("rsa", "rsassa-pss-sha256", ecdsa_nistp256),
@@ -353,6 +379,7 @@ class TestSSlibKey(unittest.TestCase):
             # bad curve (ecdsa keys only)
             ("ecdsa", "ecdsa-sha2-nistp256", ecdsa_nistp384),
             ("ecdsa", "ecdsa-sha2-nistp384", ecdsa_nistp256),
+            ("ecdsa", "ecdsa-sha2-nistp521", ecdsa_nistp256),
         ]
 
         for keytype, scheme, val in test_data:
