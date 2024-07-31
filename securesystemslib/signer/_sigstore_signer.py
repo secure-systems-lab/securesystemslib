@@ -34,7 +34,7 @@ class SigstoreKey(Key):
     DEFAULT_KEY_TYPE = "sigstore-oidc"
     DEFAULT_SCHEME = "Fulcio"
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         keyid: str,
         keytype: str,

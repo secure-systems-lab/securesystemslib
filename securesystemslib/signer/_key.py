@@ -88,7 +88,7 @@ class Key(metaclass=ABCMeta):
         TypeError: Invalid type for an argument.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         keyid: str,
         keytype: str,
@@ -201,7 +201,7 @@ class Key(metaclass=ABCMeta):
 class SSlibKey(Key):
     """Key implementation for RSA, Ed25519, ECDSA keys"""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         keyid: str,
         keytype: str,
