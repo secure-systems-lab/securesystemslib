@@ -6,7 +6,7 @@ from urllib import parse
 
 import securesystemslib.hash as sslib_hash
 from securesystemslib import exceptions
-from securesystemslib.signer._key import Key, SSlibKey
+from securesystemslib.signer._key import SSlibKey
 from securesystemslib.signer._signer import SecretsHandler, Signature, Signer
 from securesystemslib.signer._utils import compute_default_keyid
 
@@ -55,24 +55,24 @@ class GCPSigner(Signer):
 
     SCHEME = "gcpkms"
 
-    def __init__(self, gcp_keyid: str, public_key: Key):
+    def __init__(self, gcp_keyid: str, public_key: SSlibKey):
         if GCP_IMPORT_ERROR:
             raise exceptions.UnsupportedLibraryError(GCP_IMPORT_ERROR)
 
-        self.hash_algorithm = self._get_hash_algorithm(public_key)
+        self.hash_algorithm = public_key.get_hash_algorithm_str()
         self.gcp_keyid = gcp_keyid
         self._public_key = public_key
         self.client = kms.KeyManagementServiceClient()
 
     @property
-    def public_key(self) -> Key:
+    def public_key(self) -> SSlibKey:
         return self._public_key
 
     @classmethod
     def from_priv_key_uri(
         cls,
         priv_key_uri: str,
-        public_key: Key,
+        public_key: SSlibKey,
         secrets_handler: Optional[SecretsHandler] = None,
     ) -> "GCPSigner":
         uri = parse.urlparse(priv_key_uri)
@@ -83,7 +83,7 @@ class GCPSigner(Signer):
         return cls(uri.path, public_key)
 
     @classmethod
-    def import_(cls, gcp_keyid: str) -> Tuple[str, Key]:
+    def import_(cls, gcp_keyid: str) -> Tuple[str, SSlibKey]:
         """Load key and signer details from KMS
 
         Returns the private key uri and the public key. This method should only
@@ -154,33 +154,6 @@ class GCPSigner(Signer):
             ),
         }
         return keytypes_and_schemes[algorithm]
-
-    @staticmethod
-    def _get_hash_algorithm(public_key: Key) -> str:
-        """Helper function to return payload hash algorithm used for this key"""
-
-        # TODO: This could be a public abstract method on Key so that GCPSigner
-        # would not be tied to a specific Key implementation -- not all keys
-        # have a pre hash algorithm though.
-        if public_key.keytype == "rsa":
-            # hash algorithm is encoded as last scheme portion
-            algo = public_key.scheme.split("-")[-1]
-        elif public_key.keytype in [
-            "ecdsa",
-            "ecdsa-sha2-nistp256",
-            "ecdsa-sha2-nistp384",
-        ]:
-            # nistp256 uses sha-256, nistp384 uses sha-384
-            bits = public_key.scheme.split("-nistp")[-1]
-            algo = f"sha{bits}"
-        else:
-            raise exceptions.UnsupportedAlgorithmError(
-                f"Unsupported key type {public_key.keytype} in key {public_key.keyid}"
-            )
-
-        # trigger UnsupportedAlgorithm if appropriate
-        _ = sslib_hash.digest(algo)
-        return algo
 
     def sign(self, payload: bytes) -> Signature:
         """Signs payload with Google Cloud KMS.

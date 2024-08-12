@@ -6,7 +6,7 @@ from urllib import parse
 
 import securesystemslib.hash as sslib_hash
 from securesystemslib.exceptions import UnsupportedLibraryError
-from securesystemslib.signer._key import Key, SSlibKey
+from securesystemslib.signer._key import SSlibKey
 from securesystemslib.signer._signer import SecretsHandler, Signature, Signer
 from securesystemslib.signer._utils import compute_default_keyid
 
@@ -65,7 +65,7 @@ class AzureSigner(Signer):
 
     SCHEME = "azurekms"
 
-    def __init__(self, az_key_uri: str, public_key: Key):
+    def __init__(self, az_key_uri: str, public_key: SSlibKey):
         if AZURE_IMPORT_ERROR:
             raise UnsupportedLibraryError(AZURE_IMPORT_ERROR)
 
@@ -78,14 +78,14 @@ class AzureSigner(Signer):
             self.signature_algorithm = self._get_signature_algorithm(
                 public_key,
             )
-            self.hash_algorithm = self._get_hash_algorithm(public_key)
+            self.hash_algorithm = public_key.get_hash_algorithm_str()
         except UnsupportedKeyType as e:
             logger.info("Key %s has unsupported key type or unsupported elliptic curve")
             raise e
         self._public_key = public_key
 
     @property
-    def public_key(self) -> Key:
+    def public_key(self) -> SSlibKey:
         return self._public_key
 
     @staticmethod
@@ -128,7 +128,7 @@ class AzureSigner(Signer):
             raise e
 
     @staticmethod
-    def _get_signature_algorithm(public_key: Key) -> "SignatureAlgorithm":
+    def _get_signature_algorithm(public_key: SSlibKey) -> "SignatureAlgorithm":
         """Return SignatureAlgorithm after parsing the public key"""
         if public_key.keytype != "ecdsa":
             logger.info("only EC keys are supported for now")
@@ -148,23 +148,6 @@ class AzureSigner(Signer):
         raise UnsupportedKeyType("Unsupported curve supplied by key")
 
     @staticmethod
-    def _get_hash_algorithm(public_key: "Key") -> str:
-        """Return the hash algorithm used by the public key"""
-        # Format is "ecdsa-sha2-nistp256"
-        comps = public_key.scheme.split("-")
-        if len(comps) != 3:  # noqa: PLR2004
-            raise UnsupportedKeyType("Invalid scheme found")
-
-        if comps[2] == "nistp256":
-            return "sha256"
-        if comps[2] == "nistp384":
-            return "sha384"
-        if comps[2] == "nistp521":
-            return "sha512"
-
-        raise UnsupportedKeyType("Unsupported curve supplied by key")
-
-    @staticmethod
     def _get_keytype_and_scheme(crv: str) -> Tuple[str, str]:
         if crv == KeyCurveName.p_256:
             return "ecdsa", "ecdsa-sha2-nistp256"
@@ -179,7 +162,7 @@ class AzureSigner(Signer):
     def from_priv_key_uri(
         cls,
         priv_key_uri: str,
-        public_key: Key,
+        public_key: SSlibKey,
         secrets_handler: Optional[SecretsHandler] = None,
     ) -> "AzureSigner":
         uri = parse.urlparse(priv_key_uri)
@@ -191,7 +174,7 @@ class AzureSigner(Signer):
         return cls(az_key_uri, public_key)
 
     @classmethod
-    def import_(cls, az_vault_name: str, az_key_name: str) -> Tuple[str, Key]:
+    def import_(cls, az_vault_name: str, az_key_name: str) -> Tuple[str, SSlibKey]:
         """Load key and signer details from KMS
 
         Returns the private key uri and the public key. This method should only
