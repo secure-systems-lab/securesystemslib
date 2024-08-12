@@ -194,7 +194,7 @@ class TestCommon(unittest.TestCase):
     """Test common functions of the securesystemslib._gpg module."""
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         gpg_keyring_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "gpg_keyrings", "rsa"
         )
@@ -208,9 +208,9 @@ class TestCommon(unittest.TestCase):
             with open(path, "rb") as f:
                 data[keyid] = f.read()
 
-        self.raw_key_data = data[key]
-        self.raw_key_bundle = parse_pubkey_bundle(data[key])
-        self.raw_expired_key_bundle = parse_pubkey_bundle(data[key_expired])
+        cls.raw_key_data = data[key]
+        cls.raw_key_bundle = parse_pubkey_bundle(data[key])
+        cls.raw_expired_key_bundle = parse_pubkey_bundle(data[key_expired])
 
     def test_parse_pubkey_payload_errors(self):
         """Test parse_pubkey_payload errors with manually crafted data."""
@@ -541,25 +541,25 @@ class TestGPGRSA(unittest.TestCase):
     keyid_768C43 = "7B3ABB26B97B655AB9296BD15B0BD02E1C768C43"  # noqa: N815
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         # Create directory to run the tests without having everything blow up
-        self.working_dir = os.getcwd()
+        cls.working_dir = os.getcwd()
 
         # Find demo files
         gpg_keyring_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "gpg_keyrings", "rsa"
         )
 
-        self.test_dir = os.path.realpath(tempfile.mkdtemp())
-        self.gnupg_home = "rsa"
-        shutil.copytree(gpg_keyring_path, os.path.join(self.test_dir, self.gnupg_home))
-        os.chdir(self.test_dir)
+        cls.test_dir = os.path.realpath(tempfile.mkdtemp())
+        cls.gnupg_home = "rsa"
+        shutil.copytree(gpg_keyring_path, os.path.join(cls.test_dir, cls.gnupg_home))
+        os.chdir(cls.test_dir)
 
     @classmethod
-    def tearDownClass(self):
+    def tearDownClass(cls):
         """Change back to initial working dir and remove temp test directory."""
-        os.chdir(self.working_dir)
-        shutil.rmtree(self.test_dir, onerror=GPGTestUtils.ignore_not_found_error)
+        os.chdir(cls.working_dir)
+        shutil.rmtree(cls.test_dir, onerror=GPGTestUtils.ignore_not_found_error)
 
     def test_export_pubkey_error(self):
         """Test correct error is raised if function called incorrectly."""
@@ -705,25 +705,25 @@ class TestGPGDSA(unittest.TestCase):
     default_keyid = "C242A830DAAF1C2BEF604A9EF033A3A3E267B3B1"
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         # Create directory to run the tests without having everything blow up
-        self.working_dir = os.getcwd()
-        self.test_dir = os.path.realpath(tempfile.mkdtemp())
-        self.gnupg_home = "dsa"
+        cls.working_dir = os.getcwd()
+        cls.test_dir = os.path.realpath(tempfile.mkdtemp())
+        cls.gnupg_home = "dsa"
 
         # Find keyrings
         keyrings = os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "gpg_keyrings", "dsa"
         )
 
-        shutil.copytree(keyrings, os.path.join(self.test_dir, self.gnupg_home))
-        os.chdir(self.test_dir)
+        shutil.copytree(keyrings, os.path.join(cls.test_dir, cls.gnupg_home))
+        os.chdir(cls.test_dir)
 
     @classmethod
-    def tearDownClass(self):
+    def tearDownClass(cls):
         """Change back to initial working dir and remove temp test directory."""
-        os.chdir(self.working_dir)
-        shutil.rmtree(self.test_dir, onerror=GPGTestUtils.ignore_not_found_error)
+        os.chdir(cls.working_dir)
+        shutil.rmtree(cls.test_dir, onerror=GPGTestUtils.ignore_not_found_error)
 
     def test_export_pubkey(self):
         """export a public key and make sure the parameters are the right ones:
@@ -796,25 +796,25 @@ class TestGPGEdDSA(unittest.TestCase):
     default_keyid = "4E630F84838BF6F7447B830B22692F5FEA9E2DD2"
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         # Create directory to run the tests without having everything blow up
-        self.working_dir = os.getcwd()
-        self.test_dir = os.path.realpath(tempfile.mkdtemp())
-        self.gnupg_home = "dsa"
+        cls.working_dir = os.getcwd()
+        cls.test_dir = os.path.realpath(tempfile.mkdtemp())
+        cls.gnupg_home = "dsa"
 
         # Find keyrings
         keyrings = os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "gpg_keyrings", "eddsa"
         )
 
-        shutil.copytree(keyrings, os.path.join(self.test_dir, self.gnupg_home))
-        os.chdir(self.test_dir)
+        shutil.copytree(keyrings, os.path.join(cls.test_dir, cls.gnupg_home))
+        os.chdir(cls.test_dir)
 
     @classmethod
-    def tearDownClass(self):
+    def tearDownClass(cls):
         """Change back to initial working dir and remove temp test directory."""
-        os.chdir(self.working_dir)
-        shutil.rmtree(self.test_dir, onerror=GPGTestUtils.ignore_not_found_error)
+        os.chdir(cls.working_dir)
+        shutil.rmtree(cls.test_dir, onerror=GPGTestUtils.ignore_not_found_error)
 
     def test_gpg_sign_and_verify_object_with_default_key(self):
         """Create a signature using the default key on the keyring"""
