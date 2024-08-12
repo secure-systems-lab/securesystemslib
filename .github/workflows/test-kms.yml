@@ -32,7 +32,7 @@ jobs:
           pip install --upgrade tox
 
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@71fee32a0bb7e97b4d33d548e7d957010649d8fa
+        uses: google-github-actions/auth@f112390a2df9932162083945e46d439060d66ec2
         with:
           token_format: access_token
           workload_identity_provider: projects/843741030650/locations/global/workloadIdentityPools/securesystemslib-tests/providers/securesystemslib-tests
