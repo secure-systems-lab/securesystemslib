@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout securesystemslib
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871
 
       - name: Set up Python
         uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3
@@ -32,7 +32,7 @@ jobs:
           pip install --upgrade tox
 
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@62cf5bd3e4211a0a0b51f2c6d6a37129d828611d
+        uses: google-github-actions/auth@8254fb75a33b976a221574d287e93919e6a36f70
         with:
           token_format: access_token
           workload_identity_provider: projects/843741030650/locations/global/workloadIdentityPools/securesystemslib-tests/providers/securesystemslib-tests
