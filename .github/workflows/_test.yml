@@ -27,13 +27,13 @@ jobs:
             toxenv: py
           - python-version: "3.13"
             os: ubuntu-latest
-            toxenv: purepy311
+            toxenv: purepy
           - python-version: "3.13"
             os: ubuntu-latest
-            toxenv: py311-no-gpg
+            toxenv: py-no-gpg
           - python-version: "3.13"
             os: ubuntu-latest
-            toxenv: py311-test-gpg-fails
+            toxenv: py-test-gpg-fails
           - python-version: "3.13"
             os: ubuntu-latest
             toxenv: lint
