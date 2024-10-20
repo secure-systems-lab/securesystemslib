@@ -1,7 +1,7 @@
 """Signer implementation for OpenPGP"""
 
 import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 from urllib import parse
 
 from securesystemslib import exceptions
@@ -32,11 +32,11 @@ class GPGKey(Key):
     """
 
     @classmethod
-    def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "GPGKey":
+    def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> "GPGKey":
         keytype, scheme, keyval = cls._from_dict(key_dict)
         return cls(keyid, keytype, scheme, keyval, key_dict)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return self._to_dict()
 
     def verify_signature(self, signature: Signature, data: bytes) -> None:
@@ -113,20 +113,20 @@ class GPGSigner(Signer):
         return cls(public_key, homedir)
 
     @staticmethod
-    def _sig_to_legacy_dict(sig: Signature) -> Dict:
+    def _sig_to_legacy_dict(sig: Signature) -> dict:
         """Helper to convert Signature to internal gpg signature dict format."""
         sig_dict = sig.to_dict()
         sig_dict["signature"] = sig_dict.pop("sig")
         return sig_dict
 
     @staticmethod
-    def _sig_from_legacy_dict(sig_dict: Dict) -> Signature:
+    def _sig_from_legacy_dict(sig_dict: dict) -> Signature:
         """Helper to convert internal gpg signature format to Signature."""
         sig_dict["sig"] = sig_dict.pop("signature")
         return Signature.from_dict(sig_dict)
 
     @staticmethod
-    def _key_to_legacy_dict(key: GPGKey) -> Dict[str, Any]:
+    def _key_to_legacy_dict(key: GPGKey) -> dict[str, Any]:
         """Returns legacy dictionary representation of self."""
         return {
             "keyid": key.keyid,
@@ -137,7 +137,7 @@ class GPGSigner(Signer):
         }
 
     @staticmethod
-    def _key_from_legacy_dict(key_dict: Dict[str, Any]) -> GPGKey:
+    def _key_from_legacy_dict(key_dict: dict[str, Any]) -> GPGKey:
         """Create GPGKey from legacy dictionary representation."""
         keyid = key_dict["keyid"]
         keytype = key_dict["type"]
@@ -147,7 +147,7 @@ class GPGSigner(Signer):
         return GPGKey(keyid, keytype, scheme, keyval)
 
     @classmethod
-    def import_(cls, keyid: str, homedir: Optional[str] = None) -> Tuple[str, Key]:
+    def import_(cls, keyid: str, homedir: Optional[str] = None) -> tuple[str, Key]:
         """Load key and signer details from GnuPG keyring.
 
         NOTE: Information about the key validity (expiration, revocation, etc.)
