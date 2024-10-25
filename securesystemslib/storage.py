@@ -21,8 +21,9 @@ import os
 import shutil
 import stat
 from abc import ABCMeta, abstractmethod
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import IO, BinaryIO, Iterator, List, Optional
+from typing import IO, BinaryIO, Optional
 
 from securesystemslib import exceptions
 
@@ -152,7 +153,7 @@ class StorageBackendInterface(metaclass=ABCMeta):
         raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
-    def list_folder(self, filepath: str) -> List[str]:
+    def list_folder(self, filepath: str) -> list[str]:
         """
         <Purpose>
           List the contents of the folder at 'filepath'.
@@ -275,7 +276,7 @@ class FilesystemBackend(StorageBackendInterface):
             else:
                 raise exceptions.StorageError(f"Can't create folder at {filepath}")
 
-    def list_folder(self, filepath: str) -> List[str]:
+    def list_folder(self, filepath: str) -> list[str]:
         try:
             return os.listdir(filepath)
         except FileNotFoundError:

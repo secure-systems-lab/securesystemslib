@@ -1,13 +1,13 @@
 """Signer utils for internal use."""
 
-from typing import Any, Dict, Union
+from typing import Any, Union
 
 from securesystemslib.exceptions import FormatError
 from securesystemslib.formats import encode_canonical
 from securesystemslib.hash import digest
 
 
-def compute_default_keyid(keytype: str, scheme, keyval: Dict[str, Any]) -> str:
+def compute_default_keyid(keytype: str, scheme, keyval: dict[str, Any]) -> str:
     """Return sha256 hexdigest of the canonical json of the key."""
     data: Union[str, None] = encode_canonical(
         {

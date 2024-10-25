@@ -1,7 +1,7 @@
 """Signer implementation for HashiCorp Vault (Transit secrets engine)"""
 
 from base64 import b64decode, b64encode
-from typing import Optional, Tuple
+from typing import Optional
 from urllib import parse
 
 from securesystemslib.exceptions import UnsupportedLibraryError
@@ -95,7 +95,7 @@ class VaultSigner(Signer):
         return cls(name, public_key, int(version))
 
     @classmethod
-    def import_(cls, hv_key_name: str) -> Tuple[str, Key]:
+    def import_(cls, hv_key_name: str) -> tuple[str, Key]:
         """Load key and signer details from HashiCorp Vault.
 
         If multiple keys exist in the vault under the passed name, only the

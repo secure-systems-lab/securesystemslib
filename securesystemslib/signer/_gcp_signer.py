@@ -1,7 +1,7 @@
 """Signer implementation for Google Cloud KMS"""
 
 import logging
-from typing import Optional, Tuple
+from typing import Optional
 from urllib import parse
 
 import securesystemslib.hash as sslib_hash
@@ -83,7 +83,7 @@ class GCPSigner(Signer):
         return cls(uri.path, public_key)
 
     @classmethod
-    def import_(cls, gcp_keyid: str) -> Tuple[str, Key]:
+    def import_(cls, gcp_keyid: str) -> tuple[str, Key]:
         """Load key and signer details from KMS
 
         Returns the private key uri and the public key. This method should only
@@ -109,7 +109,7 @@ class GCPSigner(Signer):
         return f"{cls.SCHEME}:{gcp_keyid}", public_key
 
     @staticmethod
-    def _get_keytype_and_scheme(algorithm: int) -> Tuple[str, str]:
+    def _get_keytype_and_scheme(algorithm: int) -> tuple[str, str]:
         """Return keytype and scheme for the KMS algorithm enum"""
         keytypes_and_schemes = {
             CryptoKeyVersion.CryptoKeyVersionAlgorithm.EC_SIGN_P256_SHA256: (

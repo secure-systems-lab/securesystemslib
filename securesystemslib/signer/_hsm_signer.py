@@ -6,8 +6,9 @@ the related public keys.
 """
 
 import binascii
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Dict, Iterator, List, Optional, Tuple
+from typing import Optional
 from urllib import parse
 
 from securesystemslib.exceptions import UnsupportedLibraryError
@@ -125,7 +126,7 @@ class HSMSigner(Signer):
     def __init__(
         self,
         hsm_keyid: int,
-        token_filter: Dict[str, str],
+        token_filter: dict[str, str],
         public_key: Key,
         pin_handler: SecretsHandler,
     ):
@@ -151,13 +152,13 @@ class HSMSigner(Signer):
         return self._public_key
 
     @staticmethod
-    def _find_pkcs_slot(filters: Dict[str, str]) -> int:
+    def _find_pkcs_slot(filters: dict[str, str]) -> int:
         """Return the PKCS slot with initialized token that matches filter
 
         Raises ValueError if more or less than 1 PKCS slot is found.
         """
         lib = PYKCS11LIB()
-        slots: List[int] = []
+        slots: list[int] = []
         for slot in lib.getSlotList(tokenPresent=True):
             tokeninfo = lib.getTokenInfo(slot)
             if not tokeninfo.flags & PyKCS11.CKF_TOKEN_INITIALIZED:
@@ -183,7 +184,7 @@ class HSMSigner(Signer):
 
     @staticmethod
     @contextmanager
-    def _get_session(filters: Dict[str, str]) -> Iterator["PyKCS11.Session"]:
+    def _get_session(filters: dict[str, str]) -> Iterator["PyKCS11.Session"]:
         """Context manager to handle a HSM session.
 
         The cryptographic token is selected by filtering by token info fields.
@@ -226,7 +227,7 @@ class HSMSigner(Signer):
     @classmethod
     def _find_key_values(
         cls, session: "PyKCS11.Session", keyid: int
-    ) -> Tuple["ECDomainParameters", bytes]:
+    ) -> tuple["ECDomainParameters", bytes]:
         """Find ecdsa public key values on HSM."""
         key = cls._find_key(session, keyid)
         params, point = session.getAttributeValue(
@@ -235,7 +236,7 @@ class HSMSigner(Signer):
         return ECDomainParameters.load(bytes(params)), bytes(point)
 
     @classmethod
-    def _build_token_filter(cls) -> Dict[str, str]:
+    def _build_token_filter(cls) -> dict[str, str]:
         """Builds a token filter for the found cryptographic token.
 
         The filter will include 'label' if one is found on token.
@@ -261,8 +262,8 @@ class HSMSigner(Signer):
     def import_(
         cls,
         hsm_keyid: Optional[int] = None,
-        token_filter: Optional[Dict[str, str]] = None,
-    ) -> Tuple[str, SSlibKey]:
+        token_filter: Optional[dict[str, str]] = None,
+    ) -> tuple[str, SSlibKey]:
         """Import public key and signer details from HSM.
 
         Either only one cryptographic token must be present when importing or a

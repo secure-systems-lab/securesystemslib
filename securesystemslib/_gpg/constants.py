@@ -21,7 +21,7 @@ import logging
 import os
 import shlex
 import subprocess
-from typing import List, Optional
+from typing import Optional
 
 log = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ def have_gpg() -> bool:
     return bool(gpg_command())
 
 
-def gpg_version_command() -> List[str]:
+def gpg_version_command() -> list[str]:
     """Returns the command to get the current GPG version."""
     return shlex.split(f"{gpg_command()} --version")
 
@@ -84,14 +84,14 @@ NO_GPG_MSG = (
 )
 
 
-def gpg_sign_command(keyarg: str, homearg: str) -> List[str]:
+def gpg_sign_command(keyarg: str, homearg: str) -> list[str]:
     """Returns the command to use GPG to sign STDIN."""
     return shlex.split(
         f"{gpg_command()} --detach-sign --digest-algo SHA256 {keyarg} {homearg}"
     )
 
 
-def gpg_export_pubkey_command(homearg: str, keyid: str) -> List[str]:
+def gpg_export_pubkey_command(homearg: str, keyid: str) -> list[str]:
     """Returns the GPG command to export a public key."""
     return shlex.split(f"{gpg_command()} {homearg} --export {keyid}")
 

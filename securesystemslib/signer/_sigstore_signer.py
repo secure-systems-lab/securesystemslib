@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 from urllib import parse
 
 from securesystemslib.exceptions import (
@@ -39,8 +39,8 @@ class SigstoreKey(Key):
         keyid: str,
         keytype: str,
         scheme: str,
-        keyval: Dict[str, Any],
-        unrecognized_fields: Optional[Dict[str, Any]] = None,
+        keyval: dict[str, Any],
+        unrecognized_fields: Optional[dict[str, Any]] = None,
     ):
         for content in ["identity", "issuer"]:
             if content not in keyval or not isinstance(keyval[content], str):
@@ -48,11 +48,11 @@ class SigstoreKey(Key):
         super().__init__(keyid, keytype, scheme, keyval, unrecognized_fields)
 
     @classmethod
-    def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "SigstoreKey":
+    def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> "SigstoreKey":
         keytype, scheme, keyval = cls._from_dict(key_dict)
         return cls(keyid, keytype, scheme, keyval, key_dict)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return self._to_dict()
 
     def verify_signature(self, signature: Signature, data: bytes) -> None:
@@ -200,7 +200,7 @@ class SigstoreSigner(Signer):
     @classmethod
     def import_(
         cls, identity: str, issuer: str, ambient: bool = True
-    ) -> Tuple[str, SigstoreKey]:
+    ) -> tuple[str, SigstoreKey]:
         """Create public key and signer URI.
 
         Returns a private key URI (for Signer.from_priv_key_uri()) and a public
@@ -222,7 +222,7 @@ class SigstoreSigner(Signer):
         return uri, key
 
     @classmethod
-    def import_via_auth(cls) -> Tuple[str, SigstoreKey]:
+    def import_via_auth(cls) -> tuple[str, SigstoreKey]:
         """Create public key and signer URI by interactive authentication
 
         Returns a private key URI (for Signer.from_priv_key_uri()) and a public
@@ -272,7 +272,7 @@ class SigstoreSigner(Signer):
     @classmethod
     def import_github_actions(
         cls, project: str, workflow_path: str, ref: Optional[str] = "refs/heads/main"
-    ) -> Tuple[str, SigstoreKey]:
+    ) -> tuple[str, SigstoreKey]:
         """Convenience method to build identity and issuer string for import_() from
         GitHub project and workflow path.
 

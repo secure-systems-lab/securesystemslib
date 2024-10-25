@@ -2,7 +2,7 @@
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Dict, Optional, Tuple, Type, cast
+from typing import Any, Optional, cast
 
 from securesystemslib._vendor.ed25519.ed25519 import (
     SignatureMismatch,
@@ -59,7 +59,7 @@ logger = logging.getLogger(__name__)
 
 # NOTE Key dispatch table is defined here so it's usable by Key,
 # but is populated in __init__.py (and can be appended by users).
-KEY_FOR_TYPE_AND_SCHEME: Dict[Tuple[str, str], Type] = {}
+KEY_FOR_TYPE_AND_SCHEME: dict[tuple[str, str], type] = {}
 """Key dispatch table for ``Key.from_dict()``
 
 See ``securesystemslib.signer.KEY_FOR_TYPE_AND_SCHEME`` for default key types
@@ -93,8 +93,8 @@ class Key(metaclass=ABCMeta):
         keyid: str,
         keytype: str,
         scheme: str,
-        keyval: Dict[str, Any],
-        unrecognized_fields: Optional[Dict[str, Any]] = None,
+        keyval: dict[str, Any],
+        unrecognized_fields: Optional[dict[str, Any]] = None,
     ):
         if not all(
             isinstance(at, str) for at in [keyid, keytype, scheme]
@@ -124,7 +124,7 @@ class Key(metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "Key":
+    def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> "Key":
         """Creates ``Key`` object from a serialization dict
 
         Key implementations must override this factory constructor that is used
@@ -145,17 +145,17 @@ class Key(metaclass=ABCMeta):
         # NOTE: Explicitly not checking the keytype and scheme types to allow
         # intoto to use (None,None) to lookup GPGKey, see issue #450
         key_impl = KEY_FOR_TYPE_AND_SCHEME[(keytype, scheme)]  # type: ignore
-        return key_impl.from_dict(keyid, key_dict)
+        return key_impl.from_dict(keyid, key_dict)  # type: ignore
 
     @abstractmethod
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Returns a serialization dict.
 
         Key implementations must override this serialization helper.
         """
         raise NotImplementedError
 
-    def _to_dict(self) -> Dict[str, Any]:
+    def _to_dict(self) -> dict[str, Any]:
         """Serialization helper to add base Key fields to a dict.
 
         Key implementations may call this in their to_dict, which they must
@@ -169,7 +169,7 @@ class Key(metaclass=ABCMeta):
         }
 
     @staticmethod
-    def _from_dict(key_dict: Dict[str, Any]) -> Tuple[str, str, Dict[str, Any]]:
+    def _from_dict(key_dict: dict[str, Any]) -> tuple[str, str, dict[str, Any]]:
         """Deserialization helper to pop base Key fields off the dict.
 
         Key implementations may call this in their from_dict, in order to parse
@@ -206,21 +206,21 @@ class SSlibKey(Key):
         keyid: str,
         keytype: str,
         scheme: str,
-        keyval: Dict[str, Any],
-        unrecognized_fields: Optional[Dict[str, Any]] = None,
+        keyval: dict[str, Any],
+        unrecognized_fields: Optional[dict[str, Any]] = None,
     ):
         if "public" not in keyval or not isinstance(keyval["public"], str):
             raise ValueError(f"public key string required for scheme {scheme}")
         super().__init__(keyid, keytype, scheme, keyval, unrecognized_fields)
 
     @classmethod
-    def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "SSlibKey":
+    def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> "SSlibKey":
         keytype, scheme, keyval = cls._from_dict(key_dict)
 
         # All fields left in the key_dict are unrecognized.
         return cls(keyid, keytype, scheme, keyval, key_dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return self._to_dict()
 
     def _crypto_key(self) -> "PublicKeyTypes":
@@ -229,7 +229,7 @@ class SSlibKey(Key):
         return load_pem_public_key(public_bytes)
 
     @staticmethod
-    def _from_crypto(public_key: "PublicKeyTypes") -> Tuple[str, str, str]:
+    def _from_crypto(public_key: "PublicKeyTypes") -> tuple[str, str, str]:
         """Return tuple of keytype, default scheme and serialized public key
         value for the passed public key.
 
