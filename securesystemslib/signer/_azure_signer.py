@@ -1,7 +1,7 @@
 """Signer implementation for Azure Key Vault"""
 
 import logging
-from typing import Optional, Tuple
+from typing import Optional
 from urllib import parse
 
 import securesystemslib.hash as sslib_hash
@@ -165,7 +165,7 @@ class AzureSigner(Signer):
         raise UnsupportedKeyType("Unsupported curve supplied by key")
 
     @staticmethod
-    def _get_keytype_and_scheme(crv: str) -> Tuple[str, str]:
+    def _get_keytype_and_scheme(crv: str) -> tuple[str, str]:
         if crv == KeyCurveName.p_256:
             return "ecdsa", "ecdsa-sha2-nistp256"
         if crv == KeyCurveName.p_384:
@@ -191,7 +191,7 @@ class AzureSigner(Signer):
         return cls(az_key_uri, public_key)
 
     @classmethod
-    def import_(cls, az_vault_name: str, az_key_name: str) -> Tuple[str, Key]:
+    def import_(cls, az_vault_name: str, az_key_name: str) -> tuple[str, Key]:
         """Load key and signer details from KMS
 
         Returns the private key uri and the public key. This method should only

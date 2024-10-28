@@ -2,7 +2,7 @@
 
 import logging
 import os
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
 from securesystemslib.exceptions import (
     UnsupportedLibraryError,
@@ -25,7 +25,7 @@ _SHAKE_SEED_LEN = 48
 logger = logging.getLogger(__name__)
 
 
-def generate_spx_key_pair() -> Tuple[bytes, bytes]:
+def generate_spx_key_pair() -> tuple[bytes, bytes]:
     """Generate SPHINCS+ key pair and return public and private bytes."""
     if SPX_IMPORT_ERROR:
         raise UnsupportedLibraryError(SPX_IMPORT_ERROR)
@@ -48,7 +48,7 @@ class SpxKey(Key):
     DEFAULT_SCHEME = "sphincs-shake-128s"
 
     @classmethod
-    def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "SpxKey":
+    def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> "SpxKey":
         keytype, scheme, keyval = cls._from_dict(key_dict)
         return cls(keyid, keytype, scheme, keyval, key_dict)
 
@@ -62,7 +62,7 @@ class SpxKey(Key):
         keyid = compute_default_keyid(keytype, scheme, keyval)
         return cls(keyid, keytype, scheme, keyval)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return self._to_dict()
 
     def verify_signature(self, signature: Signature, data: bytes) -> None:

@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 from cryptography.hazmat.primitives.serialization import (
@@ -250,14 +250,14 @@ class TestKey(unittest.TestCase):
             """Fake keytype that actually uses ed25519 under the hood"""
 
             @classmethod
-            def from_dict(cls, keyid: str, key_dict: Dict[str, Any]) -> "CustomKey":
+            def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> "CustomKey":
                 assert key_dict.pop("keytype") == "custom"
                 keytype = "ed25519"
                 scheme = key_dict.pop("scheme")
                 keyval = key_dict.pop("keyval")
                 return cls(keyid, keytype, scheme, keyval, key_dict)
 
-            def to_dict(self) -> Dict[str, Any]:
+            def to_dict(self) -> dict[str, Any]:
                 return {
                     "keytype": "custom",
                     "scheme": self.scheme,

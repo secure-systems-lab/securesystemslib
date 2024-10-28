@@ -1,7 +1,7 @@
 """Dead Simple Signing Envelope"""
 
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 from securesystemslib import exceptions
 from securesystemslib._internal.utils import b64dec, b64enc
@@ -24,7 +24,7 @@ class Envelope:
         self,
         payload: bytes,
         payload_type: str,
-        signatures: Dict[str, Signature],
+        signatures: dict[str, Signature],
     ):
         self.payload = payload
         self.payload_type = payload_type
@@ -112,7 +112,7 @@ class Envelope:
 
         return signature
 
-    def verify(self, keys: List[Key], threshold: int) -> Dict[str, Key]:
+    def verify(self, keys: list[Key], threshold: int) -> dict[str, Key]:
         """Verify the payload with the provided Keys.
 
         Arguments:

@@ -2,7 +2,7 @@
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Callable, Dict, Optional, Type
+from typing import Callable, Optional
 
 from securesystemslib.signer._key import Key
 from securesystemslib.signer._signature import Signature
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 # NOTE Signer dispatch table is defined here so it's usable by Signer,
 # but is populated in __init__.py (and can be appended by users).
-SIGNER_FOR_URI_SCHEME: Dict[str, Type] = {}
+SIGNER_FOR_URI_SCHEME: dict[str, type] = {}
 """Signer dispatch table for ``Signer.from_priv_key()``
 
 See ``securesystemslib.signer.SIGNER_FOR_URI_SCHEME`` for default URI schemes,
@@ -106,7 +106,7 @@ class Signer(metaclass=ABCMeta):
             raise ValueError(f"Unsupported private key scheme {scheme}")
 
         signer = SIGNER_FOR_URI_SCHEME[scheme]
-        return signer.from_priv_key_uri(priv_key_uri, public_key, secrets_handler)
+        return signer.from_priv_key_uri(priv_key_uri, public_key, secrets_handler)  # type: ignore
 
     @property
     @abstractmethod

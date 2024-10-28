@@ -1,7 +1,7 @@
 """Signature container class"""
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class Signature:
         self,
         keyid: str,
         sig: str,
-        unrecognized_fields: Optional[Dict[str, Any]] = None,
+        unrecognized_fields: Optional[dict[str, Any]] = None,
     ):
         self.keyid = keyid
         self.signature = sig
@@ -54,7 +54,7 @@ class Signature:
         )
 
     @classmethod
-    def from_dict(cls, signature_dict: Dict) -> "Signature":
+    def from_dict(cls, signature_dict: dict) -> "Signature":
         """Creates a Signature object from its JSON/dict representation.
 
         Arguments:
@@ -79,7 +79,7 @@ class Signature:
         # All fields left in the signature_dict are unrecognized.
         return cls(keyid, sig, signature_dict)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Returns the JSON-serializable dictionary representation of self."""
 
         return {
