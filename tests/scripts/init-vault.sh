@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
-vault server -dev -dev-root-token-id="${VAULT_TOKEN}" &
+vault server -dev \
+    -dev-listen-address="${VAULT_ADDR#http://}" \
+    -dev-root-token-id="${VAULT_TOKEN}" \
+    -dev-no-store-token \
+    &
 
 until vault status
 do
