@@ -1,8 +1,10 @@
 """Key interface and the default implementations"""
 
+from __future__ import annotations
+
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from securesystemslib._vendor.ed25519.ed25519 import (
     SignatureMismatch,
@@ -94,7 +96,7 @@ class Key(metaclass=ABCMeta):
         keytype: str,
         scheme: str,
         keyval: dict[str, Any],
-        unrecognized_fields: Optional[dict[str, Any]] = None,
+        unrecognized_fields: dict[str, Any] | None = None,
     ):
         if not all(
             isinstance(at, str) for at in [keyid, keytype, scheme]
@@ -124,7 +126,7 @@ class Key(metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> "Key":
+    def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> Key:
         """Creates ``Key`` object from a serialization dict
 
         Key implementations must override this factory constructor that is used
@@ -207,14 +209,14 @@ class SSlibKey(Key):
         keytype: str,
         scheme: str,
         keyval: dict[str, Any],
-        unrecognized_fields: Optional[dict[str, Any]] = None,
+        unrecognized_fields: dict[str, Any] | None = None,
     ):
         if "public" not in keyval or not isinstance(keyval["public"], str):
             raise ValueError(f"public key string required for scheme {scheme}")
         super().__init__(keyid, keytype, scheme, keyval, unrecognized_fields)
 
     @classmethod
-    def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> "SSlibKey":
+    def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> SSlibKey:
         keytype, scheme, keyval = cls._from_dict(key_dict)
 
         # All fields left in the key_dict are unrecognized.
@@ -223,13 +225,13 @@ class SSlibKey(Key):
     def to_dict(self) -> dict[str, Any]:
         return self._to_dict()
 
-    def _crypto_key(self) -> "PublicKeyTypes":
+    def _crypto_key(self) -> PublicKeyTypes:
         """Helper to get a `cryptography` public key for this SSlibKey."""
         public_bytes = self.keyval["public"].encode("utf-8")
         return load_pem_public_key(public_bytes)
 
     @staticmethod
-    def _from_crypto(public_key: "PublicKeyTypes") -> tuple[str, str, str]:
+    def _from_crypto(public_key: PublicKeyTypes) -> tuple[str, str, str]:
         """Return tuple of keytype, default scheme and serialized public key
         value for the passed public key.
 
@@ -269,10 +271,10 @@ class SSlibKey(Key):
     @classmethod
     def from_crypto(
         cls,
-        public_key: "PublicKeyTypes",
-        keyid: Optional[str] = None,
-        scheme: Optional[str] = None,
-    ) -> "SSlibKey":
+        public_key: PublicKeyTypes,
+        keyid: str | None = None,
+        scheme: str | None = None,
+    ) -> SSlibKey:
         """Create SSlibKey from pyca/cryptography public key.
 
         Args:
@@ -306,7 +308,7 @@ class SSlibKey(Key):
         return SSlibKey(keyid, keytype, scheme, keyval)
 
     @staticmethod
-    def _get_hash_algorithm(name: str) -> "HashAlgorithm":
+    def _get_hash_algorithm(name: str) -> HashAlgorithm:
         """Helper to return hash algorithm for name."""
         algorithm: HashAlgorithm
         if name == "sha224":
@@ -321,9 +323,7 @@ class SSlibKey(Key):
         return algorithm
 
     @staticmethod
-    def _get_rsa_padding(
-        name: str, hash_algorithm: "HashAlgorithm"
-    ) -> "AsymmetricPadding":
+    def _get_rsa_padding(name: str, hash_algorithm: HashAlgorithm) -> AsymmetricPadding:
         """Helper to return rsa signature padding for name."""
         padding: AsymmetricPadding
         if name == "pss":

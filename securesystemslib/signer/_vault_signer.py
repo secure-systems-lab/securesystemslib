@@ -1,7 +1,8 @@
 """Signer implementation for HashiCorp Vault (Transit secrets engine)"""
 
+from __future__ import annotations
+
 from base64 import b64decode, b64encode
-from typing import Optional
 from urllib import parse
 
 from securesystemslib.exceptions import UnsupportedLibraryError
@@ -83,8 +84,8 @@ class VaultSigner(Signer):
         cls,
         priv_key_uri: str,
         public_key: Key,
-        secrets_handler: Optional[SecretsHandler] = None,
-    ) -> "VaultSigner":
+        secrets_handler: SecretsHandler | None = None,
+    ) -> VaultSigner:
         uri = parse.urlparse(priv_key_uri)
 
         if uri.scheme != cls.SCHEME:

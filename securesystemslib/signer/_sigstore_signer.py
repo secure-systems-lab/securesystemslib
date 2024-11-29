@@ -1,8 +1,10 @@
 """Signer implementation for project sigstore."""
 
+from __future__ import annotations
+
 import json
 import logging
-from typing import Any, Optional
+from typing import Any
 from urllib import parse
 
 from securesystemslib.exceptions import (
@@ -40,7 +42,7 @@ class SigstoreKey(Key):
         keytype: str,
         scheme: str,
         keyval: dict[str, Any],
-        unrecognized_fields: Optional[dict[str, Any]] = None,
+        unrecognized_fields: dict[str, Any] | None = None,
     ):
         for content in ["identity", "issuer"]:
             if content not in keyval or not isinstance(keyval[content], str):
@@ -48,7 +50,7 @@ class SigstoreKey(Key):
         super().__init__(keyid, keytype, scheme, keyval, unrecognized_fields)
 
     @classmethod
-    def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> "SigstoreKey":
+    def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> SigstoreKey:
         keytype, scheme, keyval = cls._from_dict(key_dict)
         return cls(keyid, keytype, scheme, keyval, key_dict)
 
@@ -149,8 +151,8 @@ class SigstoreSigner(Signer):
         cls,
         priv_key_uri: str,
         public_key: Key,
-        secrets_handler: Optional[SecretsHandler] = None,
-    ) -> "SigstoreSigner":
+        secrets_handler: SecretsHandler | None = None,
+    ) -> SigstoreSigner:
         try:
             from sigstore.oidc import IdentityToken, Issuer, detect_credential
         except ImportError as e:
@@ -271,7 +273,7 @@ class SigstoreSigner(Signer):
 
     @classmethod
     def import_github_actions(
-        cls, project: str, workflow_path: str, ref: Optional[str] = "refs/heads/main"
+        cls, project: str, workflow_path: str, ref: str | None = "refs/heads/main"
     ) -> tuple[str, SigstoreKey]:
         """Convenience method to build identity and issuer string for import_() from
         GitHub project and workflow path.

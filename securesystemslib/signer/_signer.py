@@ -1,8 +1,10 @@
 """Signer interface"""
 
+from __future__ import annotations
+
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Callable, Optional
+from typing import Callable
 
 from securesystemslib.signer._key import Key
 from securesystemslib.signer._signature import Signature
@@ -81,8 +83,8 @@ class Signer(metaclass=ABCMeta):
         cls,
         priv_key_uri: str,
         public_key: Key,
-        secrets_handler: Optional[SecretsHandler] = None,
-    ) -> "Signer":
+        secrets_handler: SecretsHandler | None = None,
+    ) -> Signer:
         """Factory constructor for a given private key URI
 
         Returns a specific Signer instance based on the private key URI and the

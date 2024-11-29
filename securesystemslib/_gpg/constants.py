@@ -16,12 +16,13 @@
   handling
 """
 
+from __future__ import annotations
+
 import functools
 import logging
 import os
 import shlex
 import subprocess
-from typing import Optional
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ GPG_TIMEOUT = 10
 
 
 @functools.lru_cache(maxsize=3)
-def is_available_gnupg(gnupg: str, timeout: Optional[int] = None) -> bool:
+def is_available_gnupg(gnupg: str, timeout: int | None = None) -> bool:
     """Returns whether gnupg points to a gpg binary."""
     if timeout is None:
         timeout = GPG_TIMEOUT

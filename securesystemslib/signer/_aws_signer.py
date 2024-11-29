@@ -1,7 +1,8 @@
 """Signer implementation for AWS Key Management Service"""
 
+from __future__ import annotations
+
 import logging
-from typing import Optional
 from urllib import parse
 
 from securesystemslib.exceptions import (
@@ -91,8 +92,8 @@ class AWSSigner(Signer):
         cls,
         priv_key_uri: str,
         public_key: Key,
-        secrets_handler: Optional[SecretsHandler] = None,
-    ) -> "AWSSigner":
+        secrets_handler: SecretsHandler | None = None,
+    ) -> AWSSigner:
         uri = parse.urlparse(priv_key_uri)
 
         if uri.scheme != cls.SCHEME:
@@ -101,7 +102,7 @@ class AWSSigner(Signer):
         return cls(uri.path, public_key)
 
     @classmethod
-    def _get_default_scheme(cls, supported_by_key: list[str]) -> Optional[str]:
+    def _get_default_scheme(cls, supported_by_key: list[str]) -> str | None:
         # Iterate over supported AWS algorithms, pick the **first** that is also
         # supported by the key, and return the related securesystemslib scheme.
         for scheme, algo in cls.aws_algos.items():
@@ -119,7 +120,7 @@ class AWSSigner(Signer):
 
     @classmethod
     def import_(
-        cls, aws_key_id: str, local_scheme: Optional[str] = None
+        cls, aws_key_id: str, local_scheme: str | None = None
     ) -> tuple[str, Key]:
         """Loads a key and signer details from AWS KMS.
 
