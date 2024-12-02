@@ -1,7 +1,9 @@
 """Signer implementation for OpenPGP"""
 
+from __future__ import annotations
+
 import logging
-from typing import Any, Optional
+from typing import Any
 from urllib import parse
 
 from securesystemslib import exceptions
@@ -32,7 +34,7 @@ class GPGKey(Key):
     """
 
     @classmethod
-    def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> "GPGKey":
+    def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> GPGKey:
         keytype, scheme, keyval = cls._from_dict(key_dict)
         return cls(keyid, keytype, scheme, keyval, key_dict)
 
@@ -84,7 +86,7 @@ class GPGSigner(Signer):
     def __init__(
         self,
         public_key: Key,
-        homedir: Optional[str] = None,
+        homedir: str | None = None,
     ):
         self.homedir = homedir
         self._public_key = public_key
@@ -98,8 +100,8 @@ class GPGSigner(Signer):
         cls,
         priv_key_uri: str,
         public_key: Key,
-        secrets_handler: Optional[SecretsHandler] = None,
-    ) -> "GPGSigner":
+        secrets_handler: SecretsHandler | None = None,
+    ) -> GPGSigner:
         if not isinstance(public_key, GPGKey):
             raise ValueError(f"expected GPGKey for {priv_key_uri}")
 
@@ -147,7 +149,7 @@ class GPGSigner(Signer):
         return GPGKey(keyid, keytype, scheme, keyval)
 
     @classmethod
-    def import_(cls, keyid: str, homedir: Optional[str] = None) -> tuple[str, Key]:
+    def import_(cls, keyid: str, homedir: str | None = None) -> tuple[str, Key]:
         """Load key and signer details from GnuPG keyring.
 
         NOTE: Information about the key validity (expiration, revocation, etc.)

@@ -1,7 +1,8 @@
 """Signer implementation for Azure Key Vault"""
 
+from __future__ import annotations
+
 import logging
-from typing import Optional
 from urllib import parse
 
 import securesystemslib.hash as sslib_hash
@@ -90,10 +91,10 @@ class AzureSigner(Signer):
 
     @staticmethod
     def _get_key_vault_key(
-        cred: "DefaultAzureCredential",
+        cred: DefaultAzureCredential,
         vault_name: str,
         key_name: str,
-    ) -> "KeyVaultKey":
+    ) -> KeyVaultKey:
         """Return KeyVaultKey created from the Vault name and key name"""
         vault_url = f"https://{vault_name}.vault.azure.net/"
 
@@ -112,9 +113,9 @@ class AzureSigner(Signer):
 
     @staticmethod
     def _create_crypto_client(
-        cred: "DefaultAzureCredential",
-        kv_key: "KeyVaultKey",
-    ) -> "CryptographyClient":
+        cred: DefaultAzureCredential,
+        kv_key: KeyVaultKey,
+    ) -> CryptographyClient:
         """Return CryptographyClient created Azure credentials and a KeyVaultKey"""
         try:
             return CryptographyClient(kv_key, credential=cred)
@@ -128,7 +129,7 @@ class AzureSigner(Signer):
             raise e
 
     @staticmethod
-    def _get_signature_algorithm(public_key: Key) -> "SignatureAlgorithm":
+    def _get_signature_algorithm(public_key: Key) -> SignatureAlgorithm:
         """Return SignatureAlgorithm after parsing the public key"""
         if public_key.keytype != "ecdsa":
             logger.info("only EC keys are supported for now")
@@ -148,7 +149,7 @@ class AzureSigner(Signer):
         raise UnsupportedKeyType("Unsupported curve supplied by key")
 
     @staticmethod
-    def _get_hash_algorithm(public_key: "Key") -> str:
+    def _get_hash_algorithm(public_key: Key) -> str:
         """Return the hash algorithm used by the public key"""
         # Format is "ecdsa-sha2-nistp256"
         comps = public_key.scheme.split("-")
@@ -180,8 +181,8 @@ class AzureSigner(Signer):
         cls,
         priv_key_uri: str,
         public_key: Key,
-        secrets_handler: Optional[SecretsHandler] = None,
-    ) -> "AzureSigner":
+        secrets_handler: SecretsHandler | None = None,
+    ) -> AzureSigner:
         uri = parse.urlparse(priv_key_uri)
 
         if uri.scheme != cls.SCHEME:

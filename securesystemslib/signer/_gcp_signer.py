@@ -1,7 +1,8 @@
 """Signer implementation for Google Cloud KMS"""
 
+from __future__ import annotations
+
 import logging
-from typing import Optional
 from urllib import parse
 
 import securesystemslib.hash as sslib_hash
@@ -73,8 +74,8 @@ class GCPSigner(Signer):
         cls,
         priv_key_uri: str,
         public_key: Key,
-        secrets_handler: Optional[SecretsHandler] = None,
-    ) -> "GCPSigner":
+        secrets_handler: SecretsHandler | None = None,
+    ) -> GCPSigner:
         uri = parse.urlparse(priv_key_uri)
 
         if uri.scheme != cls.SCHEME:

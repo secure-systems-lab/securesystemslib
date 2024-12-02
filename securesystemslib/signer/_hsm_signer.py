@@ -5,10 +5,11 @@ the related public keys.
 
 """
 
+from __future__ import annotations
+
 import binascii
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Optional
 from urllib import parse
 
 from securesystemslib.exceptions import UnsupportedLibraryError
@@ -184,7 +185,7 @@ class HSMSigner(Signer):
 
     @staticmethod
     @contextmanager
-    def _get_session(filters: dict[str, str]) -> Iterator["PyKCS11.Session"]:
+    def _get_session(filters: dict[str, str]) -> Iterator[PyKCS11.Session]:
         """Context manager to handle a HSM session.
 
         The cryptographic token is selected by filtering by token info fields.
@@ -201,9 +202,9 @@ class HSMSigner(Signer):
     @classmethod
     def _find_key(
         cls,
-        session: "PyKCS11.Session",
+        session: PyKCS11.Session,
         keyid: int,
-        key_type: Optional[int] = None,
+        key_type: int | None = None,
     ) -> int:
         """Find ecdsa key on HSM."""
         if key_type is None:
@@ -226,8 +227,8 @@ class HSMSigner(Signer):
 
     @classmethod
     def _find_key_values(
-        cls, session: "PyKCS11.Session", keyid: int
-    ) -> tuple["ECDomainParameters", bytes]:
+        cls, session: PyKCS11.Session, keyid: int
+    ) -> tuple[ECDomainParameters, bytes]:
         """Find ecdsa public key values on HSM."""
         key = cls._find_key(session, keyid)
         params, point = session.getAttributeValue(
@@ -261,8 +262,8 @@ class HSMSigner(Signer):
     @classmethod
     def import_(
         cls,
-        hsm_keyid: Optional[int] = None,
-        token_filter: Optional[dict[str, str]] = None,
+        hsm_keyid: int | None = None,
+        token_filter: dict[str, str] | None = None,
     ) -> tuple[str, SSlibKey]:
         """Import public key and signer details from HSM.
 
@@ -337,8 +338,8 @@ class HSMSigner(Signer):
         cls,
         priv_key_uri: str,
         public_key: Key,
-        secrets_handler: Optional[SecretsHandler] = None,
-    ) -> "HSMSigner":
+        secrets_handler: SecretsHandler | None = None,
+    ) -> HSMSigner:
         if not isinstance(public_key, SSlibKey):
             raise ValueError(f"expected SSlibKey for {priv_key_uri}")
 

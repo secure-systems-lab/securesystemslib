@@ -1,5 +1,7 @@
 """Dead Simple Signing Envelope"""
 
+from __future__ import annotations
+
 import logging
 from typing import Any
 
@@ -41,7 +43,7 @@ class Envelope:
         )
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Envelope":
+    def from_dict(cls, data: dict) -> Envelope:
         """Creates a DSSE Envelope from its JSON/dict representation.
 
         Arguments:

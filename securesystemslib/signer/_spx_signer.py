@@ -1,8 +1,10 @@
 """Signer implementation for project SPHINCS+ post-quantum signature support."""
 
+from __future__ import annotations
+
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
 from securesystemslib.exceptions import (
     UnsupportedLibraryError,
@@ -48,12 +50,12 @@ class SpxKey(Key):
     DEFAULT_SCHEME = "sphincs-shake-128s"
 
     @classmethod
-    def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> "SpxKey":
+    def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> SpxKey:
         keytype, scheme, keyval = cls._from_dict(key_dict)
         return cls(keyid, keytype, scheme, keyval, key_dict)
 
     @classmethod
-    def from_bytes(cls, public: bytes) -> "SpxKey":
+    def from_bytes(cls, public: bytes) -> SpxKey:
         """Create SpxKey instance from public key bytes."""
         keytype = cls.DEFAULT_KEY_TYPE
         scheme = cls.DEFAULT_SCHEME
@@ -121,8 +123,8 @@ class SpxSigner(Signer):
         cls,
         priv_key_uri: str,
         public_key: Key,
-        secrets_handler: Optional[SecretsHandler] = None,
-    ) -> "SpxSigner":
+        secrets_handler: SecretsHandler | None = None,
+    ) -> SpxSigner:
         raise NotImplementedError
 
     def sign(self, payload: bytes) -> Signature:

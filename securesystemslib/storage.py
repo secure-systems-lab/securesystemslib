@@ -15,6 +15,8 @@
   Provides an interface for filesystem interactions, StorageBackendInterface.
 """
 
+from __future__ import annotations
+
 import errno
 import logging
 import os
@@ -23,7 +25,7 @@ import stat
 from abc import ABCMeta, abstractmethod
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import IO, BinaryIO, Optional
+from typing import IO, BinaryIO
 
 from securesystemslib import exceptions
 
@@ -64,7 +66,7 @@ class StorageBackendInterface(metaclass=ABCMeta):
         raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
-    def put(self, fileobj: IO, filepath: str, restrict: Optional[bool] = False) -> None:
+    def put(self, fileobj: IO, filepath: str, restrict: bool | None = False) -> None:
         """
         <Purpose>
           Store a file-like object in the storage backend.
@@ -204,7 +206,7 @@ class FilesystemBackend(StorageBackendInterface):
             if file_object is not None:
                 file_object.close()
 
-    def put(self, fileobj: IO, filepath: str, restrict: Optional[bool] = False) -> None:
+    def put(self, fileobj: IO, filepath: str, restrict: bool | None = False) -> None:
         # If we are passed an open file, seek to the beginning such that we are
         # copying the entire contents
         if not fileobj.closed:
