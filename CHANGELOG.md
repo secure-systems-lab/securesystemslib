@@ -1,5 +1,20 @@
 # Changelog
 
+## securesystemslib v1.2.0
+
+Small release with mostly internal changes.
+
+Thanks to @L77H and @NicholasTanz for the bulk of the work on this release.
+
+### Added
+* ecdsa-sha2-nistp521 supported in signer API (#852)
+* SigstoreSigner now has a convenience function for creating a signing
+  identity for GitHub Actions workflow (#842)
+
+### Internals
+* Linting refactoring, switched to ruff
+* Modern annotations used in most of the code base
+
 ## securesystemslib v1.1.0
 
 This is a small release that only re-enables the use of SigstoreSigner.
