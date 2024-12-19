@@ -81,3 +81,10 @@ jobs:
 
       - name: Run tox
         run: tox -e ${{ matrix.toxenv }}
+
+  summary:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: All tests completed
+        run: echo "All matrix jobs have completed successfully."
