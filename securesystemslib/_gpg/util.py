@@ -192,7 +192,7 @@ def parse_packet_header(data, expected_type=None):  # noqa: PLR0912
 
         elif length_type == 3:
             raise PacketParsingError(
-                "Old length " "format packets of indeterminate length are not supported"
+                "Old length format packets of indeterminate length are not supported"
             )
 
         else:  # pragma: no cover (unreachable)
