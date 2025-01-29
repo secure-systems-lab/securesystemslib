@@ -79,8 +79,7 @@ def get_pubkey_params(data):
     # See 9.2. ECC Curve OID
     if curve_oid != ED25519_PUBLIC_KEY_OID:
         raise PacketParsingError(
-            f"bad ed25519 curve OID '{curve_oid}', "
-            f"expected {ED25519_PUBLIC_KEY_OID}'"
+            f"bad ed25519 curve OID '{curve_oid}', expected {ED25519_PUBLIC_KEY_OID}'"
         )
 
     # See 13.3. EdDSA Point Format

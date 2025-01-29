@@ -693,7 +693,7 @@ class TestGPGRSA(unittest.TestCase):
         )
         self.assertTrue(
             expected == str(ctx.exception),
-            f"\nexpected: {expected}" "\ngot:      {ctx.exception}",
+            f"\nexpected: {expected}\ngot:      {{ctx.exception}}",
         )
 
 

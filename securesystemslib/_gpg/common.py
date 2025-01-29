@@ -385,8 +385,9 @@ def _assign_certified_key_info(bundle):
 
             if not is_valid:
                 log.info(
-                    "Ignoring invalid User ID self-certificate issued "
-                    "by '{}'.".format(signature["keyid"])
+                    "Ignoring invalid User ID self-certificate issued by '{}'.".format(
+                        signature["keyid"]
+                    )
                 )
                 continue
 
@@ -752,11 +753,9 @@ def parse_signature_packet(
     hashed_subpackets = data[ptr : ptr + hashed_octet_count]
     hashed_subpacket_info = gpg_util.parse_subpackets(hashed_subpackets)
 
-    # Check whether we were actually able to read this much hashed octets
     if len(hashed_subpackets) != hashed_octet_count:  # pragma: no cover
         raise ValueError(
-            "This signature packet seems to be corrupted."
-            "It is missing hashed octets!"
+            "Signature packet contains an unexpected amount of hashed octets"
         )
 
     ptr += hashed_octet_count

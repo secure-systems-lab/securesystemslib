@@ -39,9 +39,9 @@ from securesystemslib.signer import GPGKey, GPGSigner, Signer
 class TestPublicInterfacesGPG(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        assert (
-            not have_gpg()
-        ), "please remove GnuPG from your environment to run this test case"
+        assert not have_gpg(), (
+            "please remove GnuPG from your environment to run this test case"
+        )
 
     def test_gpg_functions(self):
         """Signing, key export and util functions must raise on missing gpg."""
