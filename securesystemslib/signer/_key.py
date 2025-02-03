@@ -26,6 +26,7 @@ try:
         SECP256R1,
         SECP384R1,
         SECP521R1,
+        EllipticCurve,
         EllipticCurvePublicKey,
     )
     from cryptography.hazmat.primitives.asymmetric.ed25519 import (
@@ -346,11 +347,13 @@ class SSlibKey(Key):
     def _verify(self, signature: bytes, data: bytes) -> None:
         """Helper to verify signature using pyca/cryptography (default)."""
 
-        def _validate_type(key, type_):
+        def _validate_type(key: object, type_: type) -> None:
             if not isinstance(key, type_):
                 raise ValueError(f"bad key {key} for {self.scheme}")
 
-        def _validate_curve(key, curve):
+        def _validate_curve(
+            key: EllipticCurvePublicKey, curve: type[EllipticCurve]
+        ) -> None:
             if not isinstance(key.curve, curve):
                 raise ValueError(f"bad curve {key.curve} for {self.scheme}")
 
