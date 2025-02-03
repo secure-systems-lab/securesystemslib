@@ -62,7 +62,6 @@ include = [
   "/securesystemslib",
   "/requirements*.txt",
   "/tox.ini",
-  "/mypy.ini",
   "/CHANGELOG.md",
   "/.coveragerc",
 ]
@@ -88,3 +87,40 @@ indent-width = 4
     "S",      # bandit: Not running bandit on tests
     "E501"    # line-too-long
 ]
+
+[tool.mypy]
+warn_unused_configs = "True"
+warn_redundant_casts = "True"
+warn_unused_ignores = "True"
+warn_unreachable = "True"
+strict_equality = "True"
+disallow_untyped_defs = "True"
+show_error_codes = "True"
+
+exclude = [
+  "^securesystemslib/_vendor/",
+  "^securesystemslib/_gpg/"
+]
+
+[[tool.mypy.overrides]]
+module = [
+  # let's not install typeshed annotations for GCPSigner
+  "google.*",
+  # Suppress error messages for non-annotating dependencies
+  "PyKCS11.*",
+  "asn1crypto.*",
+  "sigstore_protobuf_specs.*",
+  "pyspx.*",
+  "azure.*",
+  "boto3.*",
+  "botocore.*",
+  "hvac.*",
+]
+ignore_missing_imports = "True"
+
+[[tool.mypy.overrides]]
+module = [
+  "securesystemslib._gpg.*",
+  "securesystemslib._vendor.*",
+]
+follow_imports = "skip"
