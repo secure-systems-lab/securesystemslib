@@ -28,22 +28,9 @@ import securesystemslib.hash
 logger = logging.getLogger(__name__)
 
 
-if "hashlib" not in securesystemslib.hash.SUPPORTED_LIBRARIES:
-    logger.warning("Not testing hashlib: could not be imported.")
-
-
 class TestHash(unittest.TestCase):
     @staticmethod
-    def _is_supported_combination(library, algorithm):
-        blake_algos = ["blake2b", "blake2b-256", "blake2s"]
-
-        # pyca does not support blake2*
-        if algorithm in blake_algos:
-            if library == "pyca_crypto":
-                return False
-        return True
-
-    def _run_with_all_algos_and_libs(self, test_func):
+    def _run_with_all_algos(test_func):
         algorithms = [
             "sha224",
             "sha256",
@@ -54,21 +41,9 @@ class TestHash(unittest.TestCase):
             "blake2s",
         ]
         for algorithm in algorithms:
-            self._run_with_all_hash_libraries(test_func, algorithm)
+            test_func(algorithm)
 
-    def _run_with_all_hash_libraries(self, test_func, algorithm):
-        for lib in securesystemslib.hash.SUPPORTED_LIBRARIES:
-            if self._is_supported_combination(lib, algorithm):
-                test_func(lib, algorithm)
-            else:
-                self.assertRaises(
-                    securesystemslib.exceptions.UnsupportedAlgorithmError,
-                    test_func,
-                    lib,
-                    algorithm,
-                )
-
-    def _do_algorithm_update(self, library, algorithm):
+    def _do_algorithm_update(self, algorithm):
         expected = {
             "blake2b": [
                 "786a02f742015903c6c6fd852552d272912f4740e15847618a86e217f71f5419d25e1031afee585313896444934eb04b903a685b1448b755d56f701afe9be2ce",
@@ -113,7 +88,7 @@ class TestHash(unittest.TestCase):
                 "09ade82ae3c5d54f8375f348563a372106488adef16a74b63b5591849f740bff55ceab22e117b4b09349b860f8a644adb32a9ea542abdecb80bf625160604251",
             ],
         }
-        digest_object = securesystemslib.hash.digest(algorithm, library)
+        digest_object = securesystemslib.hash.digest(algorithm)
 
         self.assertEqual(digest_object.hexdigest(), expected[algorithm][0])
         digest_object.update(b"a")
@@ -124,41 +99,37 @@ class TestHash(unittest.TestCase):
         self.assertEqual(digest_object.hexdigest(), expected[algorithm][3])
 
     def test_blake2s_update(self):
-        self._run_with_all_hash_libraries(self._do_algorithm_update, "blake2s")
+        self._do_algorithm_update("blake2s")
 
     def test_blake2b_update(self):
-        self._run_with_all_hash_libraries(self._do_algorithm_update, "blake2b")
+        self._do_algorithm_update("blake2b")
 
     def test_blake2b_256_update(self):
-        self._run_with_all_hash_libraries(self._do_algorithm_update, "blake2b-256")
+        self._do_algorithm_update("blake2b-256")
 
     def test_sha224_update(self):
-        self._run_with_all_hash_libraries(self._do_algorithm_update, "sha224")
+        self._do_algorithm_update("sha224")
 
     def test_sha256_update(self):
-        self._run_with_all_hash_libraries(self._do_algorithm_update, "sha256")
+        self._do_algorithm_update("sha256")
 
     def test_sha384_update(self):
-        self._run_with_all_hash_libraries(self._do_algorithm_update, "sha384")
+        self._do_algorithm_update("sha384")
 
     def test_sha512_update(self):
-        self._run_with_all_hash_libraries(self._do_algorithm_update, "sha512")
+        self._do_algorithm_update("sha512")
 
     def test_unsupported_algorithm(self):
-        self._run_with_all_hash_libraries(self._do_unsupported_algorithm, "bogus")
-
-    def _do_unsupported_algorithm(self, library, algorithm):
         self.assertRaises(
             securesystemslib.exceptions.UnsupportedAlgorithmError,
             securesystemslib.hash.digest,
-            algorithm,
-            library,
+            "bogus",
         )
 
     def test_digest_size(self):
-        self._run_with_all_algos_and_libs(self._do_digest_size)
+        self._run_with_all_algos(self._do_digest_size)
 
-    def _do_digest_size(self, library, algorithm):
+    def _do_digest_size(self, algorithm):
         digest_sizes = {
             "sha224": 28,
             "sha256": 32,
@@ -170,42 +141,40 @@ class TestHash(unittest.TestCase):
         }
         self.assertEqual(
             digest_sizes[algorithm],
-            securesystemslib.hash.digest(algorithm, library).digest_size,
+            securesystemslib.hash.digest(algorithm).digest_size,
         )
 
     def test_update_filename(self):
-        self._run_with_all_algos_and_libs(self._do_update_filename)
+        self._run_with_all_algos(self._do_update_filename)
 
-    def _do_update_filename(self, library, algorithm):
+    def _do_update_filename(self, algorithm):
         data = "abcdefgh" * 4096
         fd, filename = tempfile.mkstemp()
         try:
             os.write(fd, data.encode("utf-8"))
             os.close(fd)
-            digest_object_truth = securesystemslib.hash.digest(algorithm, library)
+            digest_object_truth = securesystemslib.hash.digest(algorithm)
             digest_object_truth.update(data.encode("utf-8"))
-            digest_object = securesystemslib.hash.digest_filename(
-                filename, algorithm, library
-            )
+            digest_object = securesystemslib.hash.digest_filename(filename, algorithm)
             self.assertEqual(digest_object_truth.digest(), digest_object.digest())
 
         finally:
             os.remove(filename)
 
     def test_update_filename_normalize(self):
-        self._run_with_all_algos_and_libs(self._do_update_filename_normalize)
+        self._run_with_all_algos(self._do_update_filename_normalize)
 
-    def _do_update_filename_normalize(self, library, algorithm):
+    def _do_update_filename_normalize(self, algorithm):
         data = b"ab\r\nd\nf\r" * 4096
         normalized_data = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
         fd, filename = tempfile.mkstemp()
         try:
             os.write(fd, data)
             os.close(fd)
-            digest_object_truth = securesystemslib.hash.digest(algorithm, library)
+            digest_object_truth = securesystemslib.hash.digest(algorithm)
             digest_object_truth.update(normalized_data)
             digest_object = securesystemslib.hash.digest_filename(
-                filename, algorithm, library, normalize_line_endings=True
+                filename, algorithm, normalize_line_endings=True
             )
             self.assertEqual(digest_object_truth.digest(), digest_object.digest())
 
@@ -213,34 +182,28 @@ class TestHash(unittest.TestCase):
             os.remove(filename)
 
     def test_update_file_obj(self):
-        self._run_with_all_algos_and_libs(self._do_update_file_obj)
+        self._run_with_all_algos(self._do_update_file_obj)
 
-    def _do_update_file_obj(self, library, algorithm):
+    def _do_update_file_obj(self, algorithm):
         data = "abcdefgh" * 4096
         file_obj = io.StringIO()
         file_obj.write(data)
-        digest_object_truth = securesystemslib.hash.digest(algorithm, library)
+        digest_object_truth = securesystemslib.hash.digest(algorithm)
         digest_object_truth.update(data.encode("utf-8"))
         digest_object = securesystemslib.hash.digest_fileobject(
-            file_obj, algorithm, library
+            file_obj,
+            algorithm,
         )
 
         # Note: we don't seek because the update_file_obj call is supposed
         # to always seek to the beginning.
         self.assertEqual(digest_object_truth.digest(), digest_object.digest())
 
-    def test_unsupported_digest_algorithm_and_library(self):
+    def test_unsupported_digest_algorithm(self):
         self.assertRaises(
             securesystemslib.exceptions.UnsupportedAlgorithmError,
             securesystemslib.hash.digest,
             "sha123",
-            "hashlib",
-        )
-        self.assertRaises(
-            securesystemslib.exceptions.UnsupportedLibraryError,
-            securesystemslib.hash.digest,
-            "sha256",
-            "badlib",
         )
 
 

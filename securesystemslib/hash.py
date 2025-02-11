@@ -17,111 +17,32 @@
   creation of digest objects, and providing a central location for hash
   routines are the main goals of this module.  Support routines implemented
   include functions to create digest objects given a filename or file object.
-  Only the standard hashlib library is currently supported, but
-  pyca/cryptography support will be added in the future.
+  This is a thin wrapper over hashlib.
 """
 
+from __future__ import annotations
+
 import hashlib
+from typing import IO, cast
 
 from securesystemslib import exceptions
-from securesystemslib.storage import FilesystemBackend
+from securesystemslib.storage import FilesystemBackend, StorageBackendInterface
 
 DEFAULT_CHUNK_SIZE = 4096
 DEFAULT_HASH_ALGORITHM = "sha256"
-DEFAULT_HASH_LIBRARY = "hashlib"
-SUPPORTED_LIBRARIES = ["hashlib"]
 
 
-# If `pyca_crypto` is installed, add it to supported libraries
-try:
-    import binascii
-
-    from cryptography.hazmat.backends import default_backend
-    from cryptography.hazmat.primitives import hashes as _pyca_hashes
-
-    # Dictionary of `pyca/cryptography` supported hash algorithms.
-    PYCA_DIGEST_OBJECTS_CACHE = {
-        "sha224": _pyca_hashes.SHA224,
-        "sha256": _pyca_hashes.SHA256,
-        "sha384": _pyca_hashes.SHA384,
-        "sha512": _pyca_hashes.SHA512,
-    }
-
-    SUPPORTED_LIBRARIES.append("pyca_crypto")
-
-    class PycaDiggestWrapper:
-        """
-        <Purpose>
-          A wrapper around `cryptography.hazmat.primitives.hashes.Hash` which adds
-          additional methods to meet expected interface for digest objects:
-
-            digest_object.digest_size
-            digest_object.hexdigest()
-            digest_object.update('data')
-            digest_object.digest()
-
-        <Properties>
-          algorithm:
-            Specific for `cryptography.hazmat.primitives.hashes.Hash` object.
-
-          digest_size:
-            Returns original's object digest size.
-
-        <Methods>
-          digest(self) -> bytes:
-            Calls original's object `finalize` method and returns digest as bytes.
-            NOTE: `cryptography.hazmat.primitives.hashes.Hash` allows calling
-            `finalize` method just once on the same instance, so everytime `digest`
-            methods is called, we replace internal object (`_digest_obj`).
-
-          hexdigest(self) -> str:
-            Returns a string hex representation of digest.
-
-          update(self, data) -> None:
-            Updates digest object data by calling the original's object `update`
-            method.
-        """
-
-        def __init__(self, digest_obj):
-            self._digest_obj = digest_obj
-
-        @property
-        def algorithm(self):
-            return self._digest_obj.algorithm
-
-        @property
-        def digest_size(self):
-            return self._digest_obj.algorithm.digest_size
-
-        def digest(self):
-            digest_obj_copy = self._digest_obj.copy()
-            digest = self._digest_obj.finalize()
-            self._digest_obj = digest_obj_copy
-            return digest
-
-        def hexdigest(self):
-            return binascii.hexlify(self.digest()).decode("utf-8")
-
-        def update(self, data):
-            self._digest_obj.update(data)
-
-except ImportError:  # pragma: no cover
-    pass
-
-
-def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
+def digest(algorithm: str = DEFAULT_HASH_ALGORITHM) -> hashlib._Hash:
     """
     <Purpose>
-      Provide the caller with the ability to create digest objects without having
-      to worry about crypto library availability or which library to use.  The
-      caller also has the option of specifying which hash algorithm and/or
-      library to use.
+      Provide the caller with the ability to create digest objects.  The
+      caller also has the option of specifying which hash algorithm to use.
+      This is a thin wrapper over hashlib.
 
       # Creation of a digest object using defaults or by specifying hash
-      # algorithm and library.
+      # algorithm.
       digest_object = securesystemslib.hash.digest()
       digest_object = securesystemslib.hash.digest('sha384')
-      digest_object = securesystemslib.hash.digest('sha256', 'hashlib')
 
       # The expected interface for digest objects.
       digest_object.digest_size
@@ -137,68 +58,34 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
       algorithm:
         The hash algorithm (e.g., 'sha256', 'sha512').
 
-      hash_library:
-        The crypto library to use for the given hash algorithm (e.g., 'hashlib').
-
     <Exceptions>
       securesystemslib.exceptions.UnsupportedAlgorithmError, if an unsupported
       hashing algorithm is specified, or digest could not be generated with given
       the algorithm.
-
-      securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported
-      library was requested via 'hash_library'.
 
     <Side Effects>
       None.
 
     <Returns>
       Digest object
-
-      e.g.
-        hashlib.new(algorithm) or
-        PycaDiggestWrapper object
     """
 
-    # Was a hashlib digest object requested and is it supported?
-    # If so, return the digest object.
-    if hash_library == "hashlib" and hash_library in SUPPORTED_LIBRARIES:
-        try:
-            if algorithm == "blake2b-256":
-                return hashlib.new("blake2b", digest_size=32)
-            else:
-                return hashlib.new(algorithm)
+    try:
+        if algorithm == "blake2b-256":
+            return cast(hashlib._Hash, hashlib.blake2b(digest_size=32))
+        return hashlib.new(algorithm)
 
-        except (ValueError, TypeError):
-            # ValueError: the algorithm value was unknown
-            # TypeError: unexpected argument digest_size (on old python)
-            raise exceptions.UnsupportedAlgorithmError(algorithm)
-
-    # Was a pyca_crypto digest object requested and is it supported?
-    elif hash_library == "pyca_crypto" and hash_library in SUPPORTED_LIBRARIES:
-        try:
-            hash_algorithm = PYCA_DIGEST_OBJECTS_CACHE[algorithm]()
-            return PycaDiggestWrapper(
-                _pyca_hashes.Hash(hash_algorithm, default_backend())
-            )
-
-        except KeyError:
-            raise exceptions.UnsupportedAlgorithmError(algorithm)
-
-    # The requested hash library is not supported.
-    else:
-        raise exceptions.UnsupportedLibraryError(
-            "Unsupported"
-            " library requested.  Supported hash"
-            " libraries: " + repr(SUPPORTED_LIBRARIES)
-        )
+    except (ValueError, TypeError):
+        # ValueError: the algorithm value was unknown
+        # TypeError: unexpected argument digest_size (on old python)
+        raise exceptions.UnsupportedAlgorithmError(algorithm)
 
 
 def digest_fileobject(
-    file_object,
-    algorithm=DEFAULT_HASH_ALGORITHM,
-    hash_library=DEFAULT_HASH_LIBRARY,
-    normalize_line_endings=False,
-):
+    file_object: IO,
+    algorithm: str = DEFAULT_HASH_ALGORITHM,
+    normalize_line_endings: bool = False,
+) -> hashlib._Hash:
     """
     <Purpose>
       Generate a digest object given a file object.  The new digest object
@@ -212,9 +99,6 @@ def digest_fileobject(
 
       algorithm:
         The hash algorithm (e.g., 'sha256', 'sha512').
-
-      hash_library:
-        The library providing the hash algorithms (e.g., 'hashlib').
 
       normalize_line_endings: (default False)
         Whether or not to normalize line endings for cross-platform support.
@@ -231,24 +115,16 @@ def digest_fileobject(
       securesystemslib.exceptions.UnsupportedAlgorithmError, if an unsupported
       hashing algorithm was specified via 'algorithm'.
 
-      securesystemslib.exceptions.UnsupportedLibraryError, if an unsupported
-      crypto library was specified via 'hash_library'.
-
     <Side Effects>
       None.
 
     <Returns>
       Digest object
-
-      e.g.
-        hashlib.new(algorithm) or
-        PycaDiggestWrapper object
     """
     # Digest object returned whose hash will be updated using 'file_object'.
     # digest() raises:
     # securesystemslib.exceptions.UnsupportedAlgorithmError
-    # securesystemslib.exceptions.UnsupportedLibraryError
-    digest_object = digest(algorithm, hash_library)
+    digest_object = digest(algorithm)
 
     # Defensively seek to beginning, as there's no case where we don't
     # intend to start from the beginning of the file.
@@ -288,12 +164,11 @@ def digest_fileobject(
 
 
 def digest_filename(
-    filename,
-    algorithm=DEFAULT_HASH_ALGORITHM,
-    hash_library=DEFAULT_HASH_LIBRARY,
-    normalize_line_endings=False,
-    storage_backend=None,
-):
+    filename: str,
+    algorithm: str = DEFAULT_HASH_ALGORITHM,
+    normalize_line_endings: bool = False,
+    storage_backend: StorageBackendInterface | None = None,
+) -> hashlib._Hash:
     """
     <Purpose>
       Generate a digest object, update its hash using a file object
@@ -305,9 +180,6 @@ def digest_filename(
 
       algorithm:
         The hash algorithm (e.g., 'sha256', 'sha512').
-
-      hash_library:
-        The library providing the hash algorithms (e.g., 'hashlib').
 
       normalize_line_endings:
         Whether or not to normalize line endings for cross-platform support.
@@ -321,9 +193,6 @@ def digest_filename(
       securesystemslib.exceptions.UnsupportedAlgorithmError, if the given
       'algorithm' is unsupported.
 
-      securesystemslib.exceptions.UnsupportedLibraryError, if the given
-      'hash_library' is unsupported.
-
       securesystemslib.exceptions.StorageError, if the file cannot be opened.
 
     <Side Effects>
@@ -331,10 +200,6 @@ def digest_filename(
 
     <Returns>
       Digest object
-
-      e.g.
-        hashlib.new(algorithm) or
-        PycaDiggestWrapper object
     """
     digest_object = None
 
@@ -346,9 +211,8 @@ def digest_filename(
         # Create digest_object and update its hash data from file_object.
         # digest_fileobject() raises:
         # securesystemslib.exceptions.UnsupportedAlgorithmError
-        # securesystemslib.exceptions.UnsupportedLibraryError
         digest_object = digest_fileobject(
-            file_object, algorithm, hash_library, normalize_line_endings
+            file_object, algorithm, normalize_line_endings
         )
 
     return digest_object
