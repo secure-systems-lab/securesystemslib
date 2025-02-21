@@ -32,7 +32,7 @@ jobs:
         run: python3 -m pip install --constraint requirements-build.txt build
 
       - name: Build binary wheel and source tarball
-        run: PIP_CONSTRAINT=requirements-build.txt python3 -m build --sdist --wheel --outdir dist/ .
+        run: python3 -m build --sdist --wheel --outdir dist/ .
 
       - name: Store build artifacts
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
