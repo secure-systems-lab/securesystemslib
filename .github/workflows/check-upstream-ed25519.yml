@@ -17,6 +17,8 @@ jobs:
     steps:
     - name: Check out repository
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      with:
+        persist-credentials: false
     - name: Test if ed25519 upstream main HEAD is what we expect
       id: test_ed25519
       run: |
@@ -30,7 +32,7 @@ jobs:
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
       if: ${{ steps.test_ed25519.outputs.result == '1' }}
       with:
-        script: |
+        script: | # zizmor: ignore[template-injection]
           console.log("ed25519 upstream main has changed!")
           console.log("${{ steps.test_ed25519.outputs.output }}")
           const repo = context.repo.owner + "/" + context.repo.repo

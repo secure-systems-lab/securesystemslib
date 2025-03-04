@@ -43,6 +43,8 @@ jobs:
     steps:
       - name: Checkout securesystemslib
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
