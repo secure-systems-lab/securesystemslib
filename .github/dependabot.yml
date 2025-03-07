@@ -17,6 +17,7 @@ updates:
         - "ruff"
         - "coverage"
         - "mypy"
+        - "zizmor"
     dependencies:
       # Python (developer) runtime dependencies. Also any new dependencies not
       # caught by earlier groups
