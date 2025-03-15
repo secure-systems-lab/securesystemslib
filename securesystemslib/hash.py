@@ -22,9 +22,10 @@
 """
 
 import hashlib
+from typing import IO, Any
 
 from securesystemslib import exceptions
-from securesystemslib.storage import FilesystemBackend
+from securesystemslib.storage import FilesystemBackend, StorageBackendInterface
 
 DEFAULT_CHUNK_SIZE = 4096
 DEFAULT_HASH_ALGORITHM = "sha256"
@@ -40,7 +41,7 @@ try:
     from cryptography.hazmat.primitives import hashes as _pyca_hashes
 
     # Dictionary of `pyca/cryptography` supported hash algorithms.
-    PYCA_DIGEST_OBJECTS_CACHE = {
+    PYCA_DIGEST_OBJECTS_CACHE: dict[str, type[_pyca_hashes.HashAlgorithm]] = {
         "sha224": _pyca_hashes.SHA224,
         "sha256": _pyca_hashes.SHA256,
         "sha384": _pyca_hashes.SHA384,
@@ -82,34 +83,36 @@ try:
             method.
         """
 
-        def __init__(self, digest_obj):
+        def __init__(self, digest_obj: Any) -> None:
             self._digest_obj = digest_obj
 
         @property
-        def algorithm(self):
+        def algorithm(self) -> str:
             return self._digest_obj.algorithm
 
         @property
-        def digest_size(self):
+        def digest_size(self) -> int:
             return self._digest_obj.algorithm.digest_size
 
-        def digest(self):
+        def digest(self) -> bytes:
             digest_obj_copy = self._digest_obj.copy()
             digest = self._digest_obj.finalize()
             self._digest_obj = digest_obj_copy
             return digest
 
-        def hexdigest(self):
+        def hexdigest(self) -> str:
             return binascii.hexlify(self.digest()).decode("utf-8")
 
-        def update(self, data):
+        def update(self, data: Any) -> None:
             self._digest_obj.update(data)
 
 except ImportError:  # pragma: no cover
     pass
 
 
-def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
+def digest(
+    algorithm: str = DEFAULT_HASH_ALGORITHM, hash_library: str = DEFAULT_HASH_LIBRARY
+) -> Any:
     """
     <Purpose>
       Provide the caller with the ability to create digest objects without having
@@ -164,7 +167,7 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
     if hash_library == "hashlib" and hash_library in SUPPORTED_LIBRARIES:
         try:
             if algorithm == "blake2b-256":
-                return hashlib.new("blake2b", digest_size=32)
+                return hashlib.blake2b(digest_size=32)
             else:
                 return hashlib.new(algorithm)
 
@@ -194,11 +197,11 @@ def digest(algorithm=DEFAULT_HASH_ALGORITHM, hash_library=DEFAULT_HASH_LIBRARY):
 
 
 def digest_fileobject(
-    file_object,
-    algorithm=DEFAULT_HASH_ALGORITHM,
-    hash_library=DEFAULT_HASH_LIBRARY,
-    normalize_line_endings=False,
-):
+    file_object: IO,
+    algorithm: str = DEFAULT_HASH_ALGORITHM,
+    hash_library: str = DEFAULT_HASH_LIBRARY,
+    normalize_line_endings: bool = False,
+) -> Any:
     """
     <Purpose>
       Generate a digest object given a file object.  The new digest object
@@ -288,12 +291,12 @@ def digest_fileobject(
 
 
 def digest_filename(
-    filename,
-    algorithm=DEFAULT_HASH_ALGORITHM,
-    hash_library=DEFAULT_HASH_LIBRARY,
-    normalize_line_endings=False,
-    storage_backend=None,
-):
+    filename: str,
+    algorithm: str = DEFAULT_HASH_ALGORITHM,
+    hash_library: str = DEFAULT_HASH_LIBRARY,
+    normalize_line_endings: bool = False,
+    storage_backend: StorageBackendInterface | None = None,
+) -> Any:
     """
     <Purpose>
       Generate a digest object, update its hash using a file object
