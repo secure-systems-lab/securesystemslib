@@ -1,2 +1,2 @@
 # additional test tools
-coverage==7.6.12
+coverage==7.7.0
