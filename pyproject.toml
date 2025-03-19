@@ -99,7 +99,8 @@ show_error_codes = "True"
 
 exclude = [
   "^securesystemslib/_vendor/",
-  "^securesystemslib/_gpg/"
+  "^securesystemslib/_gpg/",
+  "^securesystemslib/hash.py",
 ]
 
 [[tool.mypy.overrides]]
@@ -122,5 +123,6 @@ ignore_missing_imports = "True"
 module = [
   "securesystemslib._gpg.*",
   "securesystemslib._vendor.*",
+  "securesystemslib.hash",
 ]
 follow_imports = "skip"
