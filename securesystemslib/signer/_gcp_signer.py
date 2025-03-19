@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from urllib import parse
 
-import securesystemslib.hash as sslib_hash
 from securesystemslib import exceptions
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signer import SecretsHandler, Signature, Signer
@@ -180,7 +180,7 @@ class GCPSigner(Signer):
             )
 
         # trigger UnsupportedAlgorithm if appropriate
-        _ = sslib_hash.digest(algo)
+        _ = hashlib.new(algo)
         return algo
 
     def sign(self, payload: bytes) -> Signature:
@@ -198,7 +198,7 @@ class GCPSigner(Signer):
         # NOTE: request and response can contain CRC32C of the digest/sig:
         # Verifying could be useful but would require another dependency...
 
-        hasher = sslib_hash.digest(self.hash_algorithm)
+        hasher = hashlib.new(self.hash_algorithm)
         hasher.update(payload)
         digest = {self.hash_algorithm: hasher.digest()}
         request = {"name": self.gcp_keyid, "digest": digest}

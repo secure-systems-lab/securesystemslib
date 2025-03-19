@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import hashlib
 from typing import Any
 
 from securesystemslib.exceptions import FormatError
 from securesystemslib.formats import encode_canonical
-from securesystemslib.hash import digest
 
 
 def compute_default_keyid(keytype: str, scheme, keyval: dict[str, Any]) -> str:
@@ -22,6 +22,5 @@ def compute_default_keyid(keytype: str, scheme, keyval: dict[str, Any]) -> str:
         byte_data: bytes = data.encode("utf-8")
     else:
         raise FormatError("Failed to encode data into canonical json")
-    hasher = digest("sha256")
-    hasher.update(byte_data)
-    return hasher.hexdigest()
+
+    return hashlib.sha256(byte_data).hexdigest()

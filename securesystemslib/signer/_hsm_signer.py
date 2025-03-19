@@ -8,12 +8,12 @@ the related public keys.
 from __future__ import annotations
 
 import binascii
+import hashlib
 from collections.abc import Iterator
 from contextlib import contextmanager
 from urllib import parse
 
 from securesystemslib.exceptions import UnsupportedLibraryError
-from securesystemslib.hash import digest
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import SecretsHandler, Signer
@@ -370,7 +370,7 @@ class HSMSigner(Signer):
             Signature.
         """
 
-        hasher = digest(algorithm=f"sha{self.public_key.scheme[-3:]}")
+        hasher = hashlib.new(name=f"sha{self.public_key.scheme[-3:]}")
         hasher.update(payload)
 
         pin = self.pin_handler(self.SECRETS_HANDLER_MSG)
