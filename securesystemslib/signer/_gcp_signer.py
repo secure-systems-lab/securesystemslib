@@ -180,7 +180,7 @@ class GCPSigner(Signer):
             )
 
         # trigger UnsupportedAlgorithm if appropriate
-        # TODO: validate scheme/algo in constructor (#766)
+        # TODO: deduplicate scheme parsing and improve validation (#594, #766)
         try:
             _ = hashlib.new(algo)
         except (ValueError, TypeError) as e:
