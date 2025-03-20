@@ -163,21 +163,28 @@ class GCPSigner(Signer):
         # TODO: This could be a public abstract method on Key so that GCPSigner
         # would not be tied to a specific Key implementation -- not all keys
         # have a pre hash algorithm though.
-        if (
-            public_key.keytype == "rsa" and public_key.scheme.endswith(("256", "512"))
-        ) or (
+        if public_key.keytype == "rsa":
+            # hash algorithm is encoded as last scheme portion
+            algo = public_key.scheme.split("-")[-1]
+        elif public_key.keytype in [
+            "ecdsa",
+            "ecdsa-sha2-nistp256",
+            "ecdsa-sha2-nistp384",
+        ]:
             # nistp256 uses sha-256, nistp384 uses sha-384
-            # TODO: Check for invalid type/scheme combinations (#766)
-            public_key.keytype
-            in ["ecdsa", "ecdsa-sha2-nistp256", "ecdsa-sha2-nistp384"]
-            and public_key.scheme.endswith(("256", "384"))
-        ):
-            algo = public_key.scheme[-3:]
+            bits = public_key.scheme.split("-nistp")[-1]
+            algo = f"sha{bits}"
         else:
             raise exceptions.UnsupportedAlgorithmError(
-                f"Unsupported {public_key.keytype}/{public_key.scheme} "
-                f"(type/scheme) in key {public_key.keyid}"
+                f"Unsupported key type {public_key.keytype} in key {public_key.keyid}"
             )
+
+        # trigger UnsupportedAlgorithm if appropriate
+        # TODO: validate scheme/algo in constructor (#766)
+        try:
+            _ = hashlib.new(algo)
+        except (ValueError, TypeError) as e:
+            raise exceptions.UnsupportedAlgorithmError(algo) from e
 
         return algo
 
