@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from urllib import parse
 
-import securesystemslib.hash as sslib_hash
 from securesystemslib.exceptions import UnsupportedLibraryError
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signer import SecretsHandler, Signature, Signer
@@ -245,7 +245,7 @@ class AzureSigner(Signer):
             Signature.
         """
 
-        hasher = sslib_hash.digest(self.hash_algorithm)
+        hasher = hashlib.new(self.hash_algorithm)
         hasher.update(payload)
         digest = hasher.digest()
         response = self.crypto_client.sign(self.signature_algorithm, digest)
