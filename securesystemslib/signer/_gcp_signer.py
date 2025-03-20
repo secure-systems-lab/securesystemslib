@@ -180,7 +180,12 @@ class GCPSigner(Signer):
             )
 
         # trigger UnsupportedAlgorithm if appropriate
-        _ = hashlib.new(algo)
+        # TODO: validate scheme/algo in constructor (#766)
+        try:
+            _ = hashlib.new(algo)
+        except (ValueError, TypeError) as e:
+            raise exceptions.UnsupportedAlgorithmError(algo) from e
+
         return algo
 
     def sign(self, payload: bytes) -> Signature:
