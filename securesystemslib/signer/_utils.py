@@ -9,7 +9,7 @@ from securesystemslib.exceptions import FormatError
 from securesystemslib.formats import encode_canonical
 
 
-def compute_default_keyid(keytype: str, scheme, keyval: dict[str, Any]) -> str:
+def compute_default_keyid(keytype: str, scheme: str, keyval: dict[str, Any]) -> str:
     """Return sha256 hexdigest of the canonical json of the key."""
     data: str | None = encode_canonical(
         {
