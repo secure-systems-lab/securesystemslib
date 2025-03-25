@@ -25,7 +25,7 @@ import stat
 from abc import ABCMeta, abstractmethod
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import IO, BinaryIO
+from typing import IO, Any, BinaryIO
 
 from securesystemslib import exceptions
 
@@ -189,7 +189,7 @@ class FilesystemBackend(StorageBackendInterface):
     # objects.
     _instance = None
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args: Any, **kwargs: Any) -> FilesystemBackend:
         if cls._instance is None:
             cls._instance = object.__new__(cls, *args, **kwargs)
         return cls._instance
