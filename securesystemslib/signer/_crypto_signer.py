@@ -140,9 +140,12 @@ class CryptoSigner(Signer):
             if not isinstance(private_key, RSAPrivateKey):
                 raise ValueError(f"invalid rsa key: {type(private_key)}")
 
-            padding_name, hash_name = public_key.scheme.split("-")[1:]
+            hash_name = public_key.get_hash_algorithm_name()
             hash_algo = get_hash_algorithm(hash_name)
+
+            padding_name = public_key.get_padding_name()
             padding = _get_rsa_padding(padding_name, hash_algo)
+
             self._sign_args = _RSASignArgs(padding, hash_algo)
             self._private_key = private_key
 

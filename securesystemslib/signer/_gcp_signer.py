@@ -109,7 +109,7 @@ class GCPSigner(Signer):
                 f"in key {public_key.keyid}"
             )
 
-        self.hash_algorithm = self._get_hash_algorithm(public_key)
+        self.hash_algorithm = public_key.get_hash_algorithm_name()
         self.gcp_keyid = gcp_keyid
         self._public_key = public_key
         self.client = kms.KeyManagementServiceClient()
@@ -165,38 +165,6 @@ class GCPSigner(Signer):
     def _get_keytype_and_scheme(algorithm: int) -> tuple[str, str]:
         """Return keytype and scheme for the KMS algorithm enum"""
         return KEYTYPES_AND_SCHEMES[algorithm]
-
-    @staticmethod
-    def _get_hash_algorithm(public_key: Key) -> str:
-        """Helper function to return payload hash algorithm used for this key"""
-
-        # TODO: This could be a public abstract method on Key so that GCPSigner
-        # would not be tied to a specific Key implementation -- not all keys
-        # have a pre hash algorithm though.
-        if public_key.keytype == "rsa":
-            # hash algorithm is encoded as last scheme portion
-            algo = public_key.scheme.split("-")[-1]
-        elif public_key.keytype in [
-            "ecdsa",
-            "ecdsa-sha2-nistp256",
-            "ecdsa-sha2-nistp384",
-        ]:
-            # nistp256 uses sha-256, nistp384 uses sha-384
-            bits = public_key.scheme.split("-nistp")[-1]
-            algo = f"sha{bits}"
-        else:
-            raise exceptions.UnsupportedAlgorithmError(
-                f"Unsupported key type {public_key.keytype} in key {public_key.keyid}"
-            )
-
-        # trigger UnsupportedAlgorithm if appropriate
-        # TODO: deduplicate scheme parsing and improve validation (#594, #766)
-        try:
-            _ = hashlib.new(algo)
-        except (ValueError, TypeError) as e:
-            raise exceptions.UnsupportedAlgorithmError(algo) from e
-
-        return algo
 
     def sign(self, payload: bytes) -> Signature:
         """Signs payload with Google Cloud KMS.

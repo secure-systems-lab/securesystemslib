@@ -218,6 +218,45 @@ class SSlibKey(Key):
             raise ValueError(f"public key string required for scheme {scheme}")
         super().__init__(keyid, keytype, scheme, keyval, unrecognized_fields)
 
+    def get_hash_algorithm_name(self) -> str:
+        """Get hash algorithm name for scheme. Raise
+        ValueError if the scheme is not a supported pre-hash scheme."""
+        if self.scheme in [
+            "rsassa-pss-sha224",
+            "rsassa-pss-sha256",
+            "rsassa-pss-sha384",
+            "rsassa-pss-sha512",
+            "rsa-pkcs1v15-sha224",
+            "rsa-pkcs1v15-sha256",
+            "rsa-pkcs1v15-sha384",
+            "rsa-pkcs1v15-sha512",
+            "ecdsa-sha2-nistp256",
+            "ecdsa-sha2-nistp384",
+        ]:
+            return f"sha{self.scheme[-3:]}"
+
+        elif self.scheme == "ecdsa-sha2-nistp521":
+            return "sha512"
+
+        raise ValueError(f"method not supported for scheme {self.scheme}")
+
+    def get_padding_name(self) -> str:
+        """Get padding name for scheme. Raise
+        ValueError if the scheme is not a supported padded rsa scheme."""
+        if self.scheme in [
+            "rsassa-pss-sha224",
+            "rsassa-pss-sha256",
+            "rsassa-pss-sha384",
+            "rsassa-pss-sha512",
+            "rsa-pkcs1v15-sha224",
+            "rsa-pkcs1v15-sha256",
+            "rsa-pkcs1v15-sha384",
+            "rsa-pkcs1v15-sha512",
+        ]:
+            return self.scheme.split("-")[1]
+
+        raise ValueError(f"method not supported for scheme {self.scheme}")
+
     @classmethod
     def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> SSlibKey:
         keytype, scheme, keyval = cls._from_dict(key_dict)
@@ -358,8 +397,9 @@ class SSlibKey(Key):
             ]:
                 key = cast(RSAPublicKey, self._crypto_key())
                 _validate_type(key, RSAPublicKey)
-                padding_name, hash_name = self.scheme.split("-")[1:]
+                hash_name = self.get_hash_algorithm_name()
                 hash_algorithm = get_hash_algorithm(hash_name)
+                padding_name = self.get_padding_name()
                 padding = self._get_rsa_padding(padding_name, hash_algorithm)
                 key.verify(signature, data, padding, hash_algorithm)
 
