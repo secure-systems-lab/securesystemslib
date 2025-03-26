@@ -28,6 +28,20 @@ try:
         Encoding,
         PublicFormat,
     )
+
+    KEYTYPES_AND_SCHEMES = {
+        KeyCurveName.p_256: ("ecdsa", "ecdsa-sha2-nistp256"),
+        KeyCurveName.p_384: ("ecdsa", "ecdsa-sha2-nistp384"),
+        KeyCurveName.p_521: ("ecdsa", "ecdsa-sha2-nistp521"),
+    }
+
+    SIGNATURE_ALGORITHMS = {
+        "ecdsa-sha2-nistp256": SignatureAlgorithm.es256,
+        "ecdsa-sha2-nistp384": SignatureAlgorithm.es384,
+        "ecdsa-sha2-nistp521": SignatureAlgorithm.es512,
+    }
+
+
 except ImportError:
     AZURE_IMPORT_ERROR = (
         "Signing with Azure Key Vault requires azure-identity, "
@@ -70,19 +84,22 @@ class AzureSigner(Signer):
         if AZURE_IMPORT_ERROR:
             raise UnsupportedLibraryError(AZURE_IMPORT_ERROR)
 
-        try:
-            cred = DefaultAzureCredential()
-            self.crypto_client = CryptographyClient(
-                az_key_uri,
-                credential=cred,
+        if (public_key.keytype, public_key.scheme) not in KEYTYPES_AND_SCHEMES.values():
+            logger.info("only EC keys are supported for now")
+            raise UnsupportedKeyType(
+                "Supplied key must be an EC key on curve "
+                "nistp256, nistp384, or nistp521"
             )
-            self.signature_algorithm = self._get_signature_algorithm(
-                public_key,
-            )
-            self.hash_algorithm = self._get_hash_algorithm(public_key)
-        except UnsupportedKeyType as e:
-            logger.info("Key %s has unsupported key type or unsupported elliptic curve")
-            raise e
+
+        cred = DefaultAzureCredential()
+        self.crypto_client = CryptographyClient(
+            az_key_uri,
+            credential=cred,
+        )
+        self.signature_algorithm = self._get_signature_algorithm(
+            public_key.scheme,
+        )
+        self.hash_algorithm = self._get_hash_algorithm(public_key)
         self._public_key = public_key
 
     @property
@@ -129,24 +146,9 @@ class AzureSigner(Signer):
             raise e
 
     @staticmethod
-    def _get_signature_algorithm(public_key: SSlibKey) -> SignatureAlgorithm:
+    def _get_signature_algorithm(scheme: str) -> SignatureAlgorithm:
         """Return SignatureAlgorithm after parsing the public key"""
-        if public_key.keytype != "ecdsa":
-            logger.info("only EC keys are supported for now")
-            raise UnsupportedKeyType("Supplied key must be an EC key")
-        # Format is "ecdsa-sha2-nistp256"
-        comps = public_key.scheme.split("-")
-        if len(comps) != 3:  # noqa: PLR2004
-            raise UnsupportedKeyType("Invalid scheme found")
-
-        if comps[2] == "nistp256":
-            return SignatureAlgorithm.es256
-        if comps[2] == "nistp384":
-            return SignatureAlgorithm.es384
-        if comps[2] == "nistp521":
-            return SignatureAlgorithm.es512
-
-        raise UnsupportedKeyType("Unsupported curve supplied by key")
+        return SIGNATURE_ALGORITHMS[scheme]
 
     @staticmethod
     def _get_hash_algorithm(public_key: Key) -> str:
@@ -167,14 +169,10 @@ class AzureSigner(Signer):
 
     @staticmethod
     def _get_keytype_and_scheme(crv: str) -> tuple[str, str]:
-        if crv == KeyCurveName.p_256:
-            return "ecdsa", "ecdsa-sha2-nistp256"
-        if crv == KeyCurveName.p_384:
-            return "ecdsa", "ecdsa-sha2-nistp384"
-        if crv == KeyCurveName.p_521:
-            return "ecdsa", "ecdsa-sha2-nistp521"
-
-        raise UnsupportedKeyType("Unsupported curve supplied by key")
+        try:
+            return KEYTYPES_AND_SCHEMES[crv]
+        except KeyError:
+            raise UnsupportedKeyType("Unsupported curve supplied by key")
 
     @classmethod
     def from_priv_key_uri(

@@ -17,6 +17,49 @@ GCP_IMPORT_ERROR = None
 try:
     from google.cloud import kms
     from google.cloud.kms_v1.types import CryptoKeyVersion
+
+    KEYTYPES_AND_SCHEMES = {
+        CryptoKeyVersion.CryptoKeyVersionAlgorithm.EC_SIGN_P256_SHA256: (
+            "ecdsa",
+            "ecdsa-sha2-nistp256",
+        ),
+        CryptoKeyVersion.CryptoKeyVersionAlgorithm.EC_SIGN_P384_SHA384: (
+            "ecdsa",
+            "ecdsa-sha2-nistp384",
+        ),
+        CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PSS_2048_SHA256: (
+            "rsa",
+            "rsassa-pss-sha256",
+        ),
+        CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PSS_3072_SHA256: (
+            "rsa",
+            "rsassa-pss-sha256",
+        ),
+        CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PSS_4096_SHA256: (
+            "rsa",
+            "rsassa-pss-sha256",
+        ),
+        CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PSS_4096_SHA512: (
+            "rsa",
+            "rsassa-pss-sha512",
+        ),
+        CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PKCS1_2048_SHA256: (
+            "rsa",
+            "rsa-pkcs1v15-sha256",
+        ),
+        CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PKCS1_3072_SHA256: (
+            "rsa",
+            "rsa-pkcs1v15-sha256",
+        ),
+        CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PKCS1_4096_SHA256: (
+            "rsa",
+            "rsa-pkcs1v15-sha256",
+        ),
+        CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PKCS1_4096_SHA512: (
+            "rsa",
+            "rsa-pkcs1v15-sha512",
+        ),
+    }
 except ImportError:
     GCP_IMPORT_ERROR = (
         "google-cloud-kms library required to sign with Google Cloud keys."
@@ -59,6 +102,12 @@ class GCPSigner(Signer):
     def __init__(self, gcp_keyid: str, public_key: SSlibKey):
         if GCP_IMPORT_ERROR:
             raise exceptions.UnsupportedLibraryError(GCP_IMPORT_ERROR)
+
+        if (public_key.keytype, public_key.scheme) not in KEYTYPES_AND_SCHEMES.values():
+            raise exceptions.UnsupportedAlgorithmError(
+                f"Unsupported key ({public_key.keytype}/{public_key.scheme}) "
+                f"in key {public_key.keyid}"
+            )
 
         self.hash_algorithm = self._get_hash_algorithm(public_key)
         self.gcp_keyid = gcp_keyid
@@ -115,49 +164,7 @@ class GCPSigner(Signer):
     @staticmethod
     def _get_keytype_and_scheme(algorithm: int) -> tuple[str, str]:
         """Return keytype and scheme for the KMS algorithm enum"""
-        keytypes_and_schemes = {
-            CryptoKeyVersion.CryptoKeyVersionAlgorithm.EC_SIGN_P256_SHA256: (
-                "ecdsa",
-                "ecdsa-sha2-nistp256",
-            ),
-            CryptoKeyVersion.CryptoKeyVersionAlgorithm.EC_SIGN_P384_SHA384: (
-                "ecdsa",
-                "ecdsa-sha2-nistp384",
-            ),
-            CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PSS_2048_SHA256: (
-                "rsa",
-                "rsassa-pss-sha256",
-            ),
-            CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PSS_3072_SHA256: (
-                "rsa",
-                "rsassa-pss-sha256",
-            ),
-            CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PSS_4096_SHA256: (
-                "rsa",
-                "rsassa-pss-sha256",
-            ),
-            CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PSS_4096_SHA512: (
-                "rsa",
-                "rsassa-pss-sha512",
-            ),
-            CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PKCS1_2048_SHA256: (
-                "rsa",
-                "rsa-pkcs1v15-sha256",
-            ),
-            CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PKCS1_3072_SHA256: (
-                "rsa",
-                "rsa-pkcs1v15-sha256",
-            ),
-            CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PKCS1_4096_SHA256: (
-                "rsa",
-                "rsa-pkcs1v15-sha256",
-            ),
-            CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PKCS1_4096_SHA512: (
-                "rsa",
-                "rsa-pkcs1v15-sha512",
-            ),
-        }
-        return keytypes_and_schemes[algorithm]
+        return KEYTYPES_AND_SCHEMES[algorithm]
 
     @staticmethod
     def _get_hash_algorithm(public_key: Key) -> str:
