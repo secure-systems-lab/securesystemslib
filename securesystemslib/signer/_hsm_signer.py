@@ -128,7 +128,7 @@ class HSMSigner(Signer):
         self,
         hsm_keyid: int,
         token_filter: dict[str, str],
-        public_key: Key,
+        public_key: SSlibKey,
         pin_handler: SecretsHandler,
     ):
         if CRYPTO_IMPORT_ERROR:
@@ -149,7 +149,7 @@ class HSMSigner(Signer):
         self.pin_handler = pin_handler
 
     @property
-    def public_key(self) -> Key:
+    def public_key(self) -> SSlibKey:
         return self._public_key
 
     @staticmethod

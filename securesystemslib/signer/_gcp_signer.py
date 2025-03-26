@@ -56,7 +56,7 @@ class GCPSigner(Signer):
 
     SCHEME = "gcpkms"
 
-    def __init__(self, gcp_keyid: str, public_key: Key):
+    def __init__(self, gcp_keyid: str, public_key: SSlibKey):
         if GCP_IMPORT_ERROR:
             raise exceptions.UnsupportedLibraryError(GCP_IMPORT_ERROR)
 
@@ -66,7 +66,7 @@ class GCPSigner(Signer):
         self.client = kms.KeyManagementServiceClient()
 
     @property
-    def public_key(self) -> Key:
+    def public_key(self) -> SSlibKey:
         return self._public_key
 
     @classmethod
@@ -76,6 +76,9 @@ class GCPSigner(Signer):
         public_key: Key,
         secrets_handler: SecretsHandler | None = None,
     ) -> GCPSigner:
+        if not isinstance(public_key, SSlibKey):
+            raise ValueError(f"Expected SSlibKey for {priv_key_uri}")
+
         uri = parse.urlparse(priv_key_uri)
 
         if uri.scheme != cls.SCHEME:
@@ -84,7 +87,7 @@ class GCPSigner(Signer):
         return cls(uri.path, public_key)
 
     @classmethod
-    def import_(cls, gcp_keyid: str) -> tuple[str, Key]:
+    def import_(cls, gcp_keyid: str) -> tuple[str, SSlibKey]:
         """Load key and signer details from KMS
 
         Returns the private key uri and the public key. This method should only

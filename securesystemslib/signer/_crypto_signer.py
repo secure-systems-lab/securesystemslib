@@ -187,7 +187,7 @@ class CryptoSigner(Signer):
         self._public_key = public_key
 
     @property
-    def public_key(self) -> Key:
+    def public_key(self) -> SSlibKey:
         return self._public_key
 
     @property
