@@ -43,7 +43,6 @@ try:
     )
     from cryptography.hazmat.primitives.asymmetric.types import PublicKeyTypes
     from cryptography.hazmat.primitives.hashes import (
-        SHA224,
         SHA256,
         SHA384,
         SHA512,
@@ -54,6 +53,9 @@ try:
         PublicFormat,
         load_pem_public_key,
     )
+
+    from securesystemslib.signer._crypto_utils import get_hash_algorithm
+
 except ImportError:
     CRYPTO_IMPORT_ERROR = "'pyca/cryptography' library required"
 
@@ -309,21 +311,6 @@ class SSlibKey(Key):
         return SSlibKey(keyid, keytype, scheme, keyval)
 
     @staticmethod
-    def _get_hash_algorithm(name: str) -> HashAlgorithm:
-        """Helper to return hash algorithm for name."""
-        algorithm: HashAlgorithm
-        if name == "sha224":
-            algorithm = SHA224()
-        if name == "sha256":
-            algorithm = SHA256()
-        if name == "sha384":
-            algorithm = SHA384()
-        if name == "sha512":
-            algorithm = SHA512()
-
-        return algorithm
-
-    @staticmethod
     def _get_rsa_padding(name: str, hash_algorithm: HashAlgorithm) -> AsymmetricPadding:
         """Helper to return rsa signature padding for name."""
         padding: AsymmetricPadding
@@ -372,7 +359,7 @@ class SSlibKey(Key):
                 key = cast(RSAPublicKey, self._crypto_key())
                 _validate_type(key, RSAPublicKey)
                 padding_name, hash_name = self.scheme.split("-")[1:]
-                hash_algorithm = self._get_hash_algorithm(hash_name)
+                hash_algorithm = get_hash_algorithm(hash_name)
                 padding = self._get_rsa_padding(padding_name, hash_algorithm)
                 key.verify(signature, data, padding, hash_algorithm)
 
