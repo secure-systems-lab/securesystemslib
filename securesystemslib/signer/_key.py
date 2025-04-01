@@ -43,7 +43,6 @@ try:
     )
     from cryptography.hazmat.primitives.asymmetric.types import PublicKeyTypes
     from cryptography.hazmat.primitives.hashes import (
-        SHA224,
         SHA256,
         SHA384,
         SHA512,
@@ -54,6 +53,9 @@ try:
         PublicFormat,
         load_pem_public_key,
     )
+
+    from securesystemslib.signer._crypto_utils import get_hash_algorithm
+
 except ImportError:
     CRYPTO_IMPORT_ERROR = "'pyca/cryptography' library required"
 
@@ -216,6 +218,45 @@ class SSlibKey(Key):
             raise ValueError(f"public key string required for scheme {scheme}")
         super().__init__(keyid, keytype, scheme, keyval, unrecognized_fields)
 
+    def get_hash_algorithm_name(self) -> str:
+        """Get hash algorithm name for scheme. Raise
+        ValueError if the scheme is not a supported pre-hash scheme."""
+        if self.scheme in [
+            "rsassa-pss-sha224",
+            "rsassa-pss-sha256",
+            "rsassa-pss-sha384",
+            "rsassa-pss-sha512",
+            "rsa-pkcs1v15-sha224",
+            "rsa-pkcs1v15-sha256",
+            "rsa-pkcs1v15-sha384",
+            "rsa-pkcs1v15-sha512",
+            "ecdsa-sha2-nistp256",
+            "ecdsa-sha2-nistp384",
+        ]:
+            return f"sha{self.scheme[-3:]}"
+
+        elif self.scheme == "ecdsa-sha2-nistp521":
+            return "sha512"
+
+        raise ValueError(f"method not supported for scheme {self.scheme}")
+
+    def get_padding_name(self) -> str:
+        """Get padding name for scheme. Raise
+        ValueError if the scheme is not a supported padded rsa scheme."""
+        if self.scheme in [
+            "rsassa-pss-sha224",
+            "rsassa-pss-sha256",
+            "rsassa-pss-sha384",
+            "rsassa-pss-sha512",
+            "rsa-pkcs1v15-sha224",
+            "rsa-pkcs1v15-sha256",
+            "rsa-pkcs1v15-sha384",
+            "rsa-pkcs1v15-sha512",
+        ]:
+            return self.scheme.split("-")[1]
+
+        raise ValueError(f"method not supported for scheme {self.scheme}")
+
     @classmethod
     def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> SSlibKey:
         keytype, scheme, keyval = cls._from_dict(key_dict)
@@ -309,21 +350,6 @@ class SSlibKey(Key):
         return SSlibKey(keyid, keytype, scheme, keyval)
 
     @staticmethod
-    def _get_hash_algorithm(name: str) -> HashAlgorithm:
-        """Helper to return hash algorithm for name."""
-        algorithm: HashAlgorithm
-        if name == "sha224":
-            algorithm = SHA224()
-        if name == "sha256":
-            algorithm = SHA256()
-        if name == "sha384":
-            algorithm = SHA384()
-        if name == "sha512":
-            algorithm = SHA512()
-
-        return algorithm
-
-    @staticmethod
     def _get_rsa_padding(name: str, hash_algorithm: HashAlgorithm) -> AsymmetricPadding:
         """Helper to return rsa signature padding for name."""
         padding: AsymmetricPadding
@@ -371,8 +397,9 @@ class SSlibKey(Key):
             ]:
                 key = cast(RSAPublicKey, self._crypto_key())
                 _validate_type(key, RSAPublicKey)
-                padding_name, hash_name = self.scheme.split("-")[1:]
-                hash_algorithm = self._get_hash_algorithm(hash_name)
+                hash_name = self.get_hash_algorithm_name()
+                hash_algorithm = get_hash_algorithm(hash_name)
+                padding_name = self.get_padding_name()
                 padding = self._get_rsa_padding(padding_name, hash_algorithm)
                 key.verify(signature, data, padding, hash_algorithm)
 
