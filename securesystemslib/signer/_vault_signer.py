@@ -40,7 +40,7 @@ class VaultSigner(Signer):
 
     SCHEME = "hv"
 
-    def __init__(self, hv_key_name: str, public_key: Key, hv_key_version: int):
+    def __init__(self, hv_key_name: str, public_key: SSlibKey, hv_key_version: int):
         if VAULT_IMPORT_ERROR:
             raise UnsupportedLibraryError(VAULT_IMPORT_ERROR)
 
@@ -76,7 +76,7 @@ class VaultSigner(Signer):
         return Signature(self.public_key.keyid, sig)
 
     @property
-    def public_key(self) -> Key:
+    def public_key(self) -> SSlibKey:
         return self._public_key
 
     @classmethod
@@ -86,6 +86,9 @@ class VaultSigner(Signer):
         public_key: Key,
         secrets_handler: SecretsHandler | None = None,
     ) -> VaultSigner:
+        if not isinstance(public_key, SSlibKey):
+            raise ValueError(f"Expected SSlibKey for {priv_key_uri}")
+
         uri = parse.urlparse(priv_key_uri)
 
         if uri.scheme != cls.SCHEME:
@@ -96,7 +99,7 @@ class VaultSigner(Signer):
         return cls(name, public_key, int(version))
 
     @classmethod
-    def import_(cls, hv_key_name: str) -> tuple[str, Key]:
+    def import_(cls, hv_key_name: str) -> tuple[str, SSlibKey]:
         """Load key and signer details from HashiCorp Vault.
 
         If multiple keys exist in the vault under the passed name, only the
