@@ -149,7 +149,7 @@ class GCPSigner(Signer):
         request = {"name": gcp_keyid}
         kms_pubkey = client.get_public_key(request)
         try:
-            keytype, scheme = cls._get_keytype_and_scheme(kms_pubkey.algorithm)
+            keytype, scheme = KEYTYPES_AND_SCHEMES[kms_pubkey.algorithm]
         except KeyError as e:
             raise exceptions.UnsupportedAlgorithmError(
                 f"{kms_pubkey.algorithm} is not a supported signing algorithm"
@@ -160,11 +160,6 @@ class GCPSigner(Signer):
         public_key = SSlibKey(keyid, keytype, scheme, keyval)
 
         return f"{cls.SCHEME}:{gcp_keyid}", public_key
-
-    @staticmethod
-    def _get_keytype_and_scheme(algorithm: int) -> tuple[str, str]:
-        """Return keytype and scheme for the KMS algorithm enum"""
-        return KEYTYPES_AND_SCHEMES[algorithm]
 
     def sign(self, payload: bytes) -> Signature:
         """Signs payload with Google Cloud KMS.

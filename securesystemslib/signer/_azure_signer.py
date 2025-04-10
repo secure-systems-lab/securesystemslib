@@ -96,9 +96,7 @@ class AzureSigner(Signer):
             az_key_uri,
             credential=cred,
         )
-        self.signature_algorithm = self._get_signature_algorithm(
-            public_key.scheme,
-        )
+        self.signature_algorithm = SIGNATURE_ALGORITHMS[public_key.scheme]
         self.hash_algorithm = public_key.get_hash_algorithm_name()
         self._public_key = public_key
 
@@ -144,11 +142,6 @@ class AzureSigner(Signer):
                 str(e),
             )
             raise e
-
-    @staticmethod
-    def _get_signature_algorithm(scheme: str) -> SignatureAlgorithm:
-        """Return SignatureAlgorithm after parsing the public key"""
-        return SIGNATURE_ALGORITHMS[scheme]
 
     @staticmethod
     def _get_keytype_and_scheme(crv: str) -> tuple[str, str]:
