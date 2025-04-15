@@ -1,5 +1,21 @@
 # Changelog
 
+## securesystemslib v1.3.0
+
+The `hash` module will be removed in the next major version. Consider using
+`hashlib` from the standard library directly instead.
+
+### Added
+* Annotate library (#970)
+
+### Changed
+* Deprecate hash module (#977)
+* Modernize license metadata (#942)
+
+### Internals
+* Refactor signing scheme parsing (#981)
+* Misc test and ci/cd improvements (#926, #953, #958, #965, #966)
+
 ## securesystemslib v1.2.0
 
 Small release with mostly internal changes.
