@@ -83,7 +83,9 @@ jobs:
           fi
 
       - name: Run tox
-        run: tox -e ${{ matrix.toxenv }}
+        env:
+          TOXENV: ${{ matrix.toxenv }}
+        run: tox
 
   summary:
     needs: test
