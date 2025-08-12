@@ -127,6 +127,17 @@ class Key(metaclass=ABCMeta):
             and self.unrecognized_fields == other.unrecognized_fields
         )
 
+    def __hash__(self) -> int:
+        return hash(
+            (
+                self.keyid,
+                self.keytype,
+                self.scheme,
+                self.keyval,
+                self.unrecognized_fields,
+            )
+        )
+
     @classmethod
     @abstractmethod
     def from_dict(cls, keyid: str, key_dict: dict[str, Any]) -> Key:

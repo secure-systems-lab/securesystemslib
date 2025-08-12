@@ -22,6 +22,8 @@ from securesystemslib.signer._utils import compute_default_keyid
 
 IMPORT_ERROR = "sigstore library required to use 'sigstore-oidc' keys"
 
+# ruff: noqa: PLC0415
+
 logger = logging.getLogger(__name__)
 
 

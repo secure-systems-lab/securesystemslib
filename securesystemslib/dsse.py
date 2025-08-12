@@ -42,6 +42,9 @@ class Envelope:
             and self.signatures == other.signatures
         )
 
+    def __hash__(self) -> int:
+        return hash((self.payload, self.payload_type, self.signatures))
+
     @classmethod
     def from_dict(cls, data: dict) -> Envelope:
         """Creates a DSSE Envelope from its JSON/dict representation.
