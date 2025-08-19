@@ -69,9 +69,11 @@ jobs:
             echo "PYKCS11LIB=/usr/lib/softhsm/libsofthsm2.so" >> $GITHUB_ENV
 
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            brew install softhsm
-            echo "PYKCS11LIB=$(brew --prefix softhsm)/lib/softhsm/libsofthsm2.so" >> $GITHUB_ENV
-
+            ## disabled due to https://github.com/secure-systems-lab/securesystemslib/issues/1015
+            unset PYKCS11LIB
+            echo "Skipping HSM tests on MacOS"
+            # brew install softhsm
+            # echo "PYKCS11LIB=$(brew --prefix softhsm)/lib/softhsm/libsofthsm2.so" >> $GITHUB_ENV
           elif [ "$RUNNER_OS" == "Windows" ]; then
             echo "Skipping HSM tests on Windows"
             # see https://github.com/secure-systems-lab/securesystemslib/issues/520

@@ -55,6 +55,9 @@ class Signature:
             and self.unrecognized_fields == other.unrecognized_fields
         )
 
+    def __hash__(self) -> int:
+        return hash((self.keyid, self.signature, self.unrecognized_fields))
+
     @classmethod
     def from_dict(cls, signature_dict: dict) -> Signature:
         """Creates a Signature object from its JSON/dict representation.
