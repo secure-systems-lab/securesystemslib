@@ -6,13 +6,13 @@
 #
 asn1crypto==1.5.1
     # via -r requirements.txt
-cffi==1.17.1
+cffi==2.0.0
     # via
     #   cryptography
     #   pyspx
-cryptography==45.0.7
+cryptography==46.0.1
     # via -r requirements.txt
-pycparser==2.22
+pycparser==2.23
     # via cffi
 pykcs11==1.5.18
     # via -r requirements.txt

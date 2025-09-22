@@ -50,7 +50,7 @@ azurekms = ["azure-identity", "azure-keyvault-keys", "cryptography>=40.0.0"]
 awskms = ["boto3", "botocore", "cryptography>=40.0.0"]
 hsm = ["asn1crypto", "cryptography>=40.0.0", "PyKCS11"]
 PySPX = ["PySPX>=0.5.0"]
-sigstore = ["sigstore~=3.0"]
+sigstore = ["sigstore>=3,<5"]
 vault = ["hvac", "cryptography>=40.0.0"]
 
 [tool.hatch.version]
