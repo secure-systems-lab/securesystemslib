@@ -16,5 +16,8 @@ tests/htmlcov/*
 .DS_Store
 .python-version
 
+# PyCharm IDE
+.idea/
+
 # Sphinx documentation
 docs/_build/
