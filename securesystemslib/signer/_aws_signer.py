@@ -33,8 +33,7 @@ class AWSSigner(Signer):
     AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_SESSION_TOKEN. These will
     be recognized by the boto3 SDK, which underlies the aws_kms Python module.
 
-    The signer computes hash digests locally and sends only the digest to AWS KMS,
-    removing the 4KB message size limitation that exists with raw message signing.
+    The signer computes hash digests locally and sends only the digest to AWS KMS.
 
     For more details on AWS authentication, refer to the AWS Command Line
     Interface User Guide:
@@ -192,8 +191,7 @@ class AWSSigner(Signer):
         """Sign the payload with the AWS KMS key
 
         This method computes the hash of the payload locally and sends only the
-        digest to AWS KMS for signing, removing the 4KB message size limitation
-        that exists when using MessageType="RAW".
+        digest to AWS KMS for signing.
 
         Arguments:
             payload (bytes): The payload to be signed.
@@ -205,7 +203,6 @@ class AWSSigner(Signer):
             Signature: A signature object containing the key ID and the signature.
         """
         try:
-            # Compute hash locally to remove 4KB payload size limit
             hash_algorithm = self.public_key.get_hash_algorithm_name()
             hasher = hashlib.new(hash_algorithm)
             hasher.update(payload)
