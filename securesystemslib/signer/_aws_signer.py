@@ -191,7 +191,7 @@ class AWSSigner(Signer):
     def sign(self, payload: bytes) -> Signature:
         """Sign the payload with the AWS KMS key
 
-        This method computes the hash of the payload locally and sends only the 
+        This method computes the hash of the payload locally and sends only the
         digest to AWS KMS for signing, removing the 4KB message size limitation
         that exists when using MessageType="RAW".
 
