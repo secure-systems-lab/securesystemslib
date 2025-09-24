@@ -1,5 +1,15 @@
 # Changelog
 
+## securesystemslib v1.3.1
+
+### Fixed
+* AWSSigner: Don't send payload to AWS for signing, send hash only (#1026)
+* Set Development status classifier to "production/stable" in Python
+  packaging (#1030)
+
+### Internals
+* Minor infrastructure changes (#1005, #1013)
+
 ## securesystemslib v1.3.0
 
 The `hash` module will be removed in the next major version. Consider using
