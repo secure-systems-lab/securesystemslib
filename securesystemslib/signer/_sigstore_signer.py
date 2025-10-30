@@ -156,6 +156,7 @@ class SigstoreSigner(Signer):
         secrets_handler: SecretsHandler | None = None,
     ) -> SigstoreSigner:
         try:
+            from sigstore.models import ClientTrustConfig
             from sigstore.oidc import IdentityToken, Issuer, detect_credential
         except ImportError as e:
             raise UnsupportedLibraryError(IMPORT_ERROR) from e
@@ -174,7 +175,9 @@ class SigstoreSigner(Signer):
         if not ambient:
             # TODO: Restrict oauth flow to use identity/issuer from public_key
             # TODO: Use secrets_handler for identity_token() secret arg
-            token = Issuer.production().identity_token()
+            trust_config = ClientTrustConfig.production()
+            issuer = Issuer(trust_config.signing_config.get_oidc_url())
+            token = issuer.identity_token()
         else:
             credential = detect_credential()
             if not credential:
@@ -233,12 +236,15 @@ class SigstoreSigner(Signer):
         key. This method always uses the interactive authentication.
         """
         try:
+            from sigstore.models import ClientTrustConfig
             from sigstore.oidc import Issuer
         except ImportError as e:
             raise UnsupportedLibraryError(IMPORT_ERROR) from e
 
         # authenticate to get the identity and issuer
-        token = Issuer.production().identity_token()
+        trust_config = ClientTrustConfig.production()
+        issuer = Issuer(trust_config.signing_config.get_oidc_url())
+        token = issuer.identity_token()
         return cls.import_(token.identity, token.federated_issuer, False)
 
     def sign(self, payload: bytes) -> Signature:
@@ -257,11 +263,12 @@ class SigstoreSigner(Signer):
 
         """
         try:
+            from sigstore.models import ClientTrustConfig
             from sigstore.sign import SigningContext
         except ImportError as e:
             raise UnsupportedLibraryError(IMPORT_ERROR) from e
 
-        context = SigningContext.production()
+        context = SigningContext.from_trust_config(ClientTrustConfig.production())
         with context.signer(self._token) as sigstore_signer:
             bundle = sigstore_signer.sign_artifact(payload)
         # We want to access the actual signature, see
