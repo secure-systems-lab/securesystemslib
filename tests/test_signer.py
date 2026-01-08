@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 from cryptography.hazmat.primitives.serialization import (
@@ -760,7 +760,7 @@ class TestCryptoSigner(unittest.TestCase):
                 cls,
                 priv_key_uri: str,
                 public_key: Key,
-                secrets_handler: Optional[SecretsHandler] = None,
+                secrets_handler: SecretsHandler | None = None,
             ) -> "CustomSigner":
                 return cls(key)
 
