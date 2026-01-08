@@ -20,7 +20,7 @@
 
 """
 
-from typing import Callable, Optional, Union
+from collections.abc import Callable
 
 from securesystemslib import exceptions
 
@@ -52,7 +52,7 @@ def _canonical_string_encoder(string: str) -> str:
 
 
 def _encode_canonical(
-    object: Union[bool, None, str, int, tuple, list, dict], output_function: Callable
+    object: bool | None | str | int | tuple | list | dict, output_function: Callable
 ) -> None:
     # Helper for encode_canonical.  Older versions of json.encoder don't
     # even let us replace the separators.
@@ -94,9 +94,9 @@ def _encode_canonical(
 
 
 def encode_canonical(
-    object: Union[bool, None, str, int, tuple, list, dict],
-    output_function: Optional[Callable] = None,
-) -> Union[str, None]:
+    object: bool | None | str | int | tuple | list | dict,
+    output_function: Callable | None = None,
+) -> str | None:
     """
     <Purpose>
       Encoding an object so that it is always has the same string format
@@ -150,7 +150,7 @@ def encode_canonical(
       A string representing the 'object' encoded in canonical JSON form.
     """
 
-    result: Union[None, list] = None
+    result: None | list = None
     # If 'output_function' is unset, treat it as
     # appending to a list.
     if output_function is None:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Callable
+from collections.abc import Callable
 
 from securesystemslib.signer._key import Key
 from securesystemslib.signer._signature import Signature

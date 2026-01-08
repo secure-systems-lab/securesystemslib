@@ -3,7 +3,6 @@
 import logging
 import os
 from dataclasses import astuple, dataclass
-from typing import Optional, Union
 from urllib import parse
 
 from securesystemslib.exceptions import UnsupportedLibraryError
@@ -116,7 +115,7 @@ class CryptoSigner(Signer):
     def __init__(
         self,
         private_key: "PrivateKeyTypes",
-        public_key: Optional[SSlibKey] = None,
+        public_key: SSlibKey | None = None,
     ):
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
@@ -125,7 +124,7 @@ class CryptoSigner(Signer):
             public_key = SSlibKey.from_crypto(private_key.public_key())
 
         self._private_key: PrivateKeyTypes
-        self._sign_args: Union[_RSASignArgs, _ECDSASignArgs, _NoSignArgs]
+        self._sign_args: _RSASignArgs | _ECDSASignArgs | _NoSignArgs
 
         if public_key.keytype == "rsa" and public_key.scheme in [
             "rsassa-pss-sha224",
@@ -195,7 +194,7 @@ class CryptoSigner(Signer):
         cls,
         priv_key_uri: str,
         public_key: Key,
-        secrets_handler: Optional[SecretsHandler] = None,
+        secrets_handler: SecretsHandler | None = None,
     ) -> "CryptoSigner":
         """Constructor for Signer to call
 
@@ -248,7 +247,7 @@ class CryptoSigner(Signer):
 
     @staticmethod
     def generate_ed25519(
-        keyid: Optional[str] = None,
+        keyid: str | None = None,
     ) -> "CryptoSigner":
         """Generate new key pair as "ed25519" signer.
 
@@ -270,8 +269,8 @@ class CryptoSigner(Signer):
 
     @staticmethod
     def generate_rsa(
-        keyid: Optional[str] = None,
-        scheme: Optional[str] = "rsassa-pss-sha256",
+        keyid: str | None = None,
+        scheme: str | None = "rsassa-pss-sha256",
         size: int = 3072,
     ) -> "CryptoSigner":
         """Generate new key pair as rsa signer.
@@ -299,7 +298,7 @@ class CryptoSigner(Signer):
 
     @staticmethod
     def generate_ecdsa(
-        keyid: Optional[str] = None,
+        keyid: str | None = None,
     ) -> "CryptoSigner":
         """Generate new key pair as "ecdsa-sha2-nistp256" signer.
 
