@@ -12,7 +12,7 @@ cffi==2.0.0
     #   pyspx
 cryptography==46.0.3
     # via -r requirements.txt
-pycparser==2.23
+pycparser==3.0
     # via cffi
 pykcs11==1.5.18
     # via -r requirements.txt
