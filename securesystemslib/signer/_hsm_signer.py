@@ -269,6 +269,7 @@ class HSMSigner(Signer):
         cls,
         hsm_keyid: int | None = None,
         token_filter: dict[str, str] | None = None,
+        pin_handler
     ) -> tuple[str, SSlibKey]:
         """Import public key and signer details from HSM.
 
@@ -308,8 +309,8 @@ class HSMSigner(Signer):
             token_filter = cls._build_token_filter()
 
         uri = f"{cls.SCHEME}:{hsm_keyid}?{parse.urlencode(token_filter)}"
-
-        with cls._get_session(token_filter) as session:
+        pin = self.pin_handler(self.SECRETS_HANDLER_MSG)
+        with cls._get_session(token_filter) as session:            
             params, point = cls._find_key_values(session, hsm_keyid)
 
         if params.chosen.native not in _CURVE_NAMES:
