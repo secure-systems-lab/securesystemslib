@@ -210,16 +210,11 @@ class HSMSigner(Signer):
         if key_type is None:
             key_type = PyKCS11.CKO_PUBLIC_KEY
 
-        keyid_hexstr = hex(keyid)[2::]
-        cka_id_filter = [
-            int(keyid_hexstr[i : i + 2], 16) for i in range(0, len(keyid_hexstr), 2)
-        ]
-
         keys = session.findObjects(
             [
                 (PyKCS11.CKA_CLASS, key_type),
                 (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_ECDSA),
-                (PyKCS11.CKA_ID, cka_id_filter),
+                (PyKCS11.CKA_ID, (keyid,)),
             ]
         )
         if not keys:
@@ -269,7 +264,7 @@ class HSMSigner(Signer):
         cls,
         hsm_keyid: int | None = None,
         token_filter: dict[str, str] | None = None,
-        pin_handler
+        pin_handler: SecretsHandler | None = None,
     ) -> tuple[str, SSlibKey]:
         """Import public key and signer details from HSM.
 
@@ -309,8 +304,10 @@ class HSMSigner(Signer):
             token_filter = cls._build_token_filter()
 
         uri = f"{cls.SCHEME}:{hsm_keyid}?{parse.urlencode(token_filter)}"
-        pin = self.pin_handler(self.SECRETS_HANDLER_MSG)
-        with cls._get_session(token_filter) as session:            
+        with cls._get_session(token_filter) as session:
+            if pin_handler is not None:
+                pin = pin_handler(cls.SECRETS_HANDLER_MSG)
+                session.login(pin)
             params, point = cls._find_key_values(session, hsm_keyid)
 
         if params.chosen.native not in _CURVE_NAMES:
