@@ -74,6 +74,10 @@ def PYKCS11LIB():  # type: ignore[no-untyped-def] # noqa: N802
     return _PYKCS11LIB
 
 
+class KeyNotFoundError(ValueError):
+    pass
+
+
 class HSMSigner(Signer):
     """Hardware Security Module (HSM) Signer.
 
@@ -218,7 +222,7 @@ class HSMSigner(Signer):
             ]
         )
         if not keys:
-            raise ValueError(f"could not find {_KEY_TYPE_ECDSA} key for {keyid}")
+            raise KeyNotFoundError(f"could not find {_KEY_TYPE_ECDSA} key for {keyid}")
 
         if len(keys) > 1:
             raise ValueError(f"found more than one {_KEY_TYPE_ECDSA} key for {keyid}")
@@ -264,6 +268,7 @@ class HSMSigner(Signer):
         cls,
         hsm_keyid: int | None = None,
         token_filter: dict[str, str] | None = None,
+        pin_handler: SecretsHandler | None = None,
     ) -> tuple[str, SSlibKey]:
         """Import public key and signer details from HSM.
 
@@ -303,9 +308,15 @@ class HSMSigner(Signer):
             token_filter = cls._build_token_filter()
 
         uri = f"{cls.SCHEME}:{hsm_keyid}?{parse.urlencode(token_filter)}"
-
         with cls._get_session(token_filter) as session:
-            params, point = cls._find_key_values(session, hsm_keyid)
+            try:
+                params, point = cls._find_key_values(session, hsm_keyid)
+            except KeyNotFoundError as e:
+                if pin_handler is not None:
+                    session.login(pin_handler(cls.SECRETS_HANDLER_MSG))
+                    params, point = cls._find_key_values(session, hsm_keyid)
+                else:
+                    raise e
 
         if params.chosen.native not in _CURVE_NAMES:
             raise ValueError(
