@@ -9,16 +9,10 @@ a longer time) the test file is named check_* and is not included in the default
 tests.
 """
 
-import json
-import os
-import subprocess
-import time
+import functools
 import unittest
-from base64 import b64decode
-from datetime import datetime, timedelta
-from pathlib import Path
-from tempfile import TemporaryDirectory
 from unittest import mock
+from urllib import request
 
 from securesystemslib.exceptions import (
     UnverifiedSignatureError,
@@ -32,73 +26,24 @@ from securesystemslib.signer import (
 
 SIGNER_FOR_URI_SCHEME[SigstoreSigner.SCHEME] = SigstoreSigner
 
-TEST_IDENTITY = (
-    "https://github.com/sigstore-conformance/extremely-dangerous-public-oidc-beacon/.github/"
-    "workflows/extremely-dangerous-oidc-beacon.yml@refs/heads/main"
-)
-TEST_ISSUER = "https://token.actions.githubusercontent.com"
+TEST_IDENTITY = "untrusted-sa@sigstore-conformance.iam.gserviceaccount.com"
+TEST_ISSUER = "https://accounts.google.com"
+TOKEN_URL = "https://storage.googleapis.com/sigstore-conformance-testing-token/untrusted-testing-token.txt"
 
 
-def identity_token() -> str:
-    """Return identity token for TEST_IDENTITY"""
-    # following code is modified from extremely-dangerous-public-oidc-beacon download-token.py.
-    # Caching can be made smarter (to return the cached token only if it is valid) if token
-    # starts going invalid during runs
-    min_validity = timedelta(seconds=5)
-    max_retry_time = timedelta(minutes=5 if os.getenv("CI") else 1)
-    retry_sleep_secs = 30 if os.getenv("CI") else 5
-    git_url = "https://github.com/sigstore-conformance/extremely-dangerous-public-oidc-beacon.git"
-
-    def git_clone(url: str, dir_: str) -> None:
-        base_cmd = [
-            "git",
-            "clone",
-            "--quiet",
-            "--branch",
-            "current-token",
-            "--depth",
-            "1",
-        ]
-        subprocess.run(base_cmd + [url, dir_], check=True)
-
-    def is_valid_at(token: str, reference_time: datetime) -> bool:
-        # split token, b64 decode (with padding), parse as json, validate expiry
-        payload = token.split(".")[1]
-        payload += "=" * (4 - len(payload) % 4)
-        payload_json = json.loads(b64decode(payload))
-
-        expiry = datetime.fromtimestamp(payload_json["exp"])
-        return reference_time < expiry
-
-    start_time = datetime.now()
-    while datetime.now() <= start_time + max_retry_time:
-        with TemporaryDirectory() as tempdir:
-            git_clone(git_url, tempdir)
-
-            with Path(tempdir, "oidc-token.txt").open(encoding="utf-8") as f:
-                token = f.read().rstrip()
-
-            if is_valid_at(token, datetime.now() + min_validity):
-                return token
-
-        print(
-            f"Current token expires too early, retrying in {retry_sleep_secs} seconds."
-        )
-        time.sleep(retry_sleep_secs)
-
-    raise TimeoutError(f"Failed to find a valid token in {max_retry_time}")
+@functools.cache
+def token() -> str:
+    """Fetch and cache testing token"""
+    with request.urlopen(TOKEN_URL) as response:
+        return response.read().decode()
 
 
 class TestSigstoreSigner(unittest.TestCase):
     """Test public key parsing, signature creation and verification."""
 
-    @classmethod
-    def setUpClass(cls):
-        cls.token = identity_token()
-
-    def test_sign(self):
+    def test_sign(self) -> None:
         uri, public_key = SigstoreSigner.import_(TEST_IDENTITY, TEST_ISSUER)
-        with mock.patch("sigstore.oidc.detect_credential", return_value=self.token):
+        with mock.patch("sigstore.oidc.detect_credential", return_value=token()):
             signer = Signer.from_priv_key_uri(uri, public_key)
 
         sig = signer.sign(b"data")
