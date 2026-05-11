@@ -36,8 +36,18 @@ try:
         generate_private_key as generate_rsa_private_key,
     )
     from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
+    from cryptography.hazmat.primitives.asymmetric.mldsa import (
+        MLDSA44PrivateKey,
+        MLDSA44PublicKey,
+        MLDSA65PrivateKey,
+        MLDSA65PublicKey,
+        MLDSA87PrivateKey,
+        MLDSA87PublicKey,
+    )
     from cryptography.hazmat.primitives.hashes import (
         SHA256,
+        SHA512,
+        Hash,
         HashAlgorithm,
     )
     from cryptography.hazmat.primitives.serialization import (
@@ -69,6 +79,14 @@ class _ECDSASignArgs:
 @dataclass
 class _NoSignArgs:
     pass
+
+
+@dataclass
+class _MLDSASignArgs:
+    prefix: bytes
+
+    def __init__(self, version: int) -> None:
+        self.prefix = b"tuf" + bytes([version])
 
 
 # for backwards compat: use when spec-deprecated keytype ecdsa-sha2-nistp256
@@ -124,7 +142,7 @@ class CryptoSigner(Signer):
             public_key = SSlibKey.from_crypto(private_key.public_key())
 
         self._private_key: PrivateKeyTypes
-        self._sign_args: _RSASignArgs | _ECDSASignArgs | _NoSignArgs
+        self._sign_args: _RSASignArgs | _ECDSASignArgs | _NoSignArgs | _MLDSASignArgs
 
         if public_key.keytype == "rsa" and public_key.scheme in [
             "rsassa-pss-sha224",
@@ -164,6 +182,27 @@ class CryptoSigner(Signer):
                 raise ValueError(f"invalid ed25519 key: {type(private_key)}")
 
             self._sign_args = _NoSignArgs()
+            self._private_key = private_key
+
+        elif public_key.keytype == "ml-dsa" and  public_key.scheme == "ml-dsa-44/1":
+            if not isinstance(private_key, MLDSA44PrivateKey):
+                raise ValueError(f"invalid ml-dsa-44 key: {type(private_key)}")
+
+            self._sign_args = _MLDSASignArgs(1)
+            self._private_key = private_key
+
+        elif public_key.keytype == "ml-dsa" and  public_key.scheme == "ml-dsa-65/1":
+            if not isinstance(private_key, MLDSA65PrivateKey):
+                raise ValueError(f"invalid ml-dsa-65 key: {type(private_key)}")
+
+            self._sign_args = _MLDSASignArgs(1)
+            self._private_key = private_key
+
+        elif public_key.keytype == "ml-dsa" and  public_key.scheme == "ml-dsa-87/1":
+            if not isinstance(private_key, MLDSA87PrivateKey):
+                raise ValueError(f"invalid ml-dsa-87 key: {type(private_key)}")
+
+            self._sign_args = _MLDSASignArgs(1)
             self._private_key = private_key
 
         else:
@@ -321,5 +360,14 @@ class CryptoSigner(Signer):
         return CryptoSigner(private_key, public_key)
 
     def sign(self, payload: bytes) -> Signature:
-        sig = self._private_key.sign(payload, *astuple(self._sign_args))  # type: ignore
+        if isinstance(self._private_key, (MLDSA44PrivateKey, MLDSA65PrivateKey, MLDSA87PrivateKey)):
+            assert isinstance(self._sign_args, _MLDSASignArgs)
+
+            digest = Hash(SHA512())
+            digest.update(payload)
+
+            sig = self._private_key.sign(self._sign_args.prefix + digest.finalize())
+        else:
+            sig = self._private_key.sign(payload, *astuple(self._sign_args))  # type: ignore
+
         return Signature(self.public_key.keyid, sig.hex())

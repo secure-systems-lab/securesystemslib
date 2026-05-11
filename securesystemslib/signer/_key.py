@@ -32,6 +32,11 @@ try:
     from cryptography.hazmat.primitives.asymmetric.ed25519 import (
         Ed25519PublicKey,
     )
+    from cryptography.hazmat.primitives.asymmetric.mldsa import (
+        MLDSA44PublicKey,
+        MLDSA65PublicKey,
+        MLDSA87PublicKey,
+    )
     from cryptography.hazmat.primitives.asymmetric.padding import (
         MGF1,
         PSS,
@@ -43,6 +48,7 @@ try:
     )
     from cryptography.hazmat.primitives.asymmetric.types import PublicKeyTypes
     from cryptography.hazmat.primitives.hashes import (
+        Hash,
         SHA256,
         SHA384,
         SHA512,
@@ -319,6 +325,15 @@ class SSlibKey(Key):
         if isinstance(public_key, Ed25519PublicKey):
             return "ed25519", "ed25519", _raw()
 
+        if isinstance(public_key, MLDSA44PublicKey):
+            return "ml-dsa", "ml-dsa-44/1", _pem()
+
+        if isinstance(public_key, MLDSA65PublicKey):
+            return "ml-dsa", "ml-dsa-65/1", _pem()
+
+        if isinstance(public_key, MLDSA87PublicKey):
+            return "ml-dsa", "ml-dsa-87/1", _pem()
+
         raise ValueError(f"unsupported key '{type(public_key)}'")
 
     @classmethod
@@ -445,6 +460,30 @@ class SSlibKey(Key):
                 public_bytes = bytes.fromhex(self.keyval["public"])
                 key = Ed25519PublicKey.from_public_bytes(public_bytes)
                 key.verify(signature, data)
+
+            elif self.keytype == "ml-dsa" and self.scheme == "ml-dsa-44/1":
+                key = cast(MLDSA44PublicKey, self._crypto_key())
+                _validate_type(key, MLDSA44PublicKey)
+
+                digest = Hash(SHA512())
+                digest.update(data)
+                key.verify(signature, b"tuf" + bytes([1]) + digest.finalize())
+
+            elif self.keytype == "ml-dsa" and self.scheme == "ml-dsa-65/1":
+                key = cast(MLDSA65PublicKey, self._crypto_key())
+                _validate_type(key, MLDSA65PublicKey)
+
+                digest = Hash(SHA512())
+                digest.update(data)
+                key.verify(signature, b"tuf" + bytes([1]) + digest.finalize())
+
+            elif self.keytype == "ml-dsa" and self.scheme == "ml-dsa-87/1":
+                key = cast(MLDSA87PublicKey, self._crypto_key())
+                _validate_type(key, MLDSA87PublicKey)
+
+                digest = Hash(SHA512())
+                digest.update(data)
+                key.verify(signature, b"tuf" + bytes([1]) + digest.finalize())
 
             else:
                 raise ValueError(f"Unsupported public key {self.keytype}/{self.scheme}")
