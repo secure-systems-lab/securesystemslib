@@ -252,7 +252,12 @@ class SSlibKey(Key):
         ]:
             return f"sha{self.scheme[-3:]}"
 
-        elif self.scheme == "ecdsa-sha2-nistp521":
+        elif self.scheme in [
+            "ecdsa-sha2-nistp521",
+            "ml-dsa-44/1",
+            "ml-dsa-65/1",
+            "ml-dsa-87/1",
+        ]:
             return "sha512"
 
         raise ValueError(f"method not supported for scheme {self.scheme}")
