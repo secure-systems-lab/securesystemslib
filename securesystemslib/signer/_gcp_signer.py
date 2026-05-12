@@ -59,6 +59,18 @@ try:
             "rsa",
             "rsa-pkcs1v15-sha512",
         ),
+        CryptoKeyVersion.CryptoKeyVersionAlgorithm.PQ_SIGN_ML_DSA_44: (
+            "ml-dsa",
+            "ml-dsa-44/1",
+        ),
+        CryptoKeyVersion.CryptoKeyVersionAlgorithm.PQ_SIGN_ML_DSA_65: (
+            "ml-dsa",
+            "ml-dsa-65/1",
+        ),
+        CryptoKeyVersion.CryptoKeyVersionAlgorithm.PQ_SIGN_ML_DSA_87: (
+            "ml-dsa",
+            "ml-dsa-87/1",
+        ),
     }
 except ImportError:
     GCP_IMPORT_ERROR = (
@@ -176,10 +188,16 @@ class GCPSigner(Signer):
         # NOTE: request and response can contain CRC32C of the digest/sig:
         # Verifying could be useful but would require another dependency...
 
-        hasher = hashlib.new(self.hash_algorithm)
-        hasher.update(payload)
-        digest = {self.hash_algorithm: hasher.digest()}
-        request = {"name": self.gcp_keyid, "digest": digest}
+        if self.public_key.keytype == "ml-dsa":
+            hasher = hashlib.new("sha512")
+            hasher.update(payload)
+            pre_signing_string = b"tuf" + bytes([1]) + hasher.digest()
+            request = {"name": self.gcp_keyid, "data": pre_signing_string}
+        else:
+            hasher = hashlib.new(self.hash_algorithm)
+            hasher.update(payload)
+            digest = {self.hash_algorithm: hasher.digest()}
+            request = {"name": self.gcp_keyid, "digest": digest}
 
         logger.debug("signing request %s", request)
         response = self.client.asymmetric_sign(request)
