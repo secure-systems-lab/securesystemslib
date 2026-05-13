@@ -48,10 +48,10 @@ try:
     )
     from cryptography.hazmat.primitives.asymmetric.types import PublicKeyTypes
     from cryptography.hazmat.primitives.hashes import (
-        Hash,
         SHA256,
         SHA384,
         SHA512,
+        Hash,
         HashAlgorithm,
     )
     from cryptography.hazmat.primitives.serialization import (
