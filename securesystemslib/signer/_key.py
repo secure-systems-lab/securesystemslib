@@ -398,6 +398,7 @@ class SSlibKey(Key):
 
     def _verify(self, signature: bytes, data: bytes) -> None:
         """Helper to verify signature using pyca/cryptography (default)."""
+        # ruff: noqa: PLR0915
 
         def _validate_type(key: object, type_: type) -> None:
             if not isinstance(key, type_):
