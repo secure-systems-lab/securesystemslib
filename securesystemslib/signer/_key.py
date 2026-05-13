@@ -313,33 +313,28 @@ class SSlibKey(Key):
             ).decode()
 
         if isinstance(public_key, RSAPublicKey):
-            return "rsa", "rsassa-pss-sha256", _pem()
-
-        if isinstance(public_key, EllipticCurvePublicKey):
+            ret = ("rsa", "rsassa-pss-sha256", _pem())
+        elif isinstance(public_key, EllipticCurvePublicKey):
             if isinstance(public_key.curve, SECP256R1):
-                return "ecdsa", "ecdsa-sha2-nistp256", _pem()
+                ret = ("ecdsa", "ecdsa-sha2-nistp256", _pem())
+            elif isinstance(public_key.curve, SECP384R1):
+                ret = ("ecdsa", "ecdsa-sha2-nistp384", _pem())
+            elif isinstance(public_key.curve, SECP521R1):
+                ret = ("ecdsa", "ecdsa-sha2-nistp521", _pem())
+            else:
+                raise ValueError(f"unsupported curve '{public_key.curve.name}'")
+        elif isinstance(public_key, Ed25519PublicKey):
+            ret = ("ed25519", "ed25519", _raw())
+        elif isinstance(public_key, MLDSA44PublicKey):
+            ret = ("ml-dsa", "ml-dsa-44/1", _pem())
+        elif isinstance(public_key, MLDSA65PublicKey):
+            ret = ("ml-dsa", "ml-dsa-65/1", _pem())
+        elif isinstance(public_key, MLDSA87PublicKey):
+            ret = ("ml-dsa", "ml-dsa-87/1", _pem())
+        else:
+            raise ValueError(f"unsupported key '{type(public_key)}'")
 
-            if isinstance(public_key.curve, SECP384R1):
-                return "ecdsa", "ecdsa-sha2-nistp384", _pem()
-
-            if isinstance(public_key.curve, SECP521R1):
-                return "ecdsa", "ecdsa-sha2-nistp521", _pem()
-
-            raise ValueError(f"unsupported curve '{public_key.curve.name}'")
-
-        if isinstance(public_key, Ed25519PublicKey):
-            return "ed25519", "ed25519", _raw()
-
-        if isinstance(public_key, MLDSA44PublicKey):
-            return "ml-dsa", "ml-dsa-44/1", _pem()
-
-        if isinstance(public_key, MLDSA65PublicKey):
-            return "ml-dsa", "ml-dsa-65/1", _pem()
-
-        if isinstance(public_key, MLDSA87PublicKey):
-            return "ml-dsa", "ml-dsa-87/1", _pem()
-
-        raise ValueError(f"unsupported key '{type(public_key)}'")
+        return ret
 
     @classmethod
     def from_crypto(
