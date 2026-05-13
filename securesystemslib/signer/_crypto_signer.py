@@ -134,7 +134,7 @@ class CryptoSigner(Signer):
     ):
         def assert_type(
             name: str, key: PrivateKeyTypes, typ: type[PrivateKeyTypes]
-        )-> None:
+        ) -> None:
             if not isinstance(key, typ):
                 raise ValueError(f"invalid {name} key: {type(key)}")
 
@@ -178,15 +178,15 @@ class CryptoSigner(Signer):
             assert_type("ed25519", private_key, Ed25519PrivateKey)
             self._sign_args = _NoSignArgs()
 
-        elif public_key.keytype == "ml-dsa" and  public_key.scheme == "ml-dsa-44/1":
+        elif public_key.keytype == "ml-dsa" and public_key.scheme == "ml-dsa-44/1":
             assert_type("ml-dsa-44", private_key, MLDSA44PrivateKey)
             self._sign_args = _MLDSASignArgs(1)
 
-        elif public_key.keytype == "ml-dsa" and  public_key.scheme == "ml-dsa-65/1":
+        elif public_key.keytype == "ml-dsa" and public_key.scheme == "ml-dsa-65/1":
             assert_type("ml-dsa-65", private_key, MLDSA65PrivateKey)
             self._sign_args = _MLDSASignArgs(1)
 
-        elif public_key.keytype == "ml-dsa" and  public_key.scheme == "ml-dsa-87/1":
+        elif public_key.keytype == "ml-dsa" and public_key.scheme == "ml-dsa-87/1":
             assert_type("ml-dsa-87", private_key, MLDSA87PrivateKey)
             self._sign_args = _MLDSASignArgs(1)
 
