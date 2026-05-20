@@ -30,12 +30,17 @@ class TestHSM(unittest.TestCase):
 
     hsm_keyid = 1
     hsm_keyid_default = 2
+    hsm_keyid_odd = 258
     hsm_user_pin = "123456"
 
     @staticmethod
     def _generate_key_pair(session, keyid, curve):
         "Create ecdsa key pair on hsm"
         params = ECDomainParameters(name="named", value=NamedCurve(curve.name)).dump()
+
+        cka_id = list(
+            keyid.to_bytes((keyid.bit_length() + 7) // 8 or 1, "big")
+        )
 
         public_template = [
             (PyKCS11.CKA_CLASS, PyKCS11.CKO_PUBLIC_KEY),
@@ -47,7 +52,7 @@ class TestHSM(unittest.TestCase):
             (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_ECDSA),
             (PyKCS11.CKA_EC_PARAMS, params),
             (PyKCS11.CKA_LABEL, curve.name),
-            (PyKCS11.CKA_ID, (keyid,)),
+            (PyKCS11.CKA_ID, cka_id),
         ]
         private_template = [
             (PyKCS11.CKA_CLASS, PyKCS11.CKO_PRIVATE_KEY),
@@ -58,7 +63,7 @@ class TestHSM(unittest.TestCase):
             (PyKCS11.CKA_SIGN, PyKCS11.CK_TRUE),
             (PyKCS11.CKA_UNWRAP, PyKCS11.CK_FALSE),
             (PyKCS11.CKA_LABEL, curve.name),
-            (PyKCS11.CKA_ID, (keyid,)),
+            (PyKCS11.CKA_ID, cka_id),
         ]
 
         session.generateKeyPair(
@@ -100,6 +105,7 @@ class TestHSM(unittest.TestCase):
         # Generate test ecdsa key pairs for curves secp256r1 and secp384r1 on test token
         cls._generate_key_pair(session, cls.hsm_keyid, SECP256R1)
         cls._generate_key_pair(session, cls.hsm_keyid_default, SECP384R1)
+        cls._generate_key_pair(session, cls.hsm_keyid_odd, SECP256R1)
 
         session.logout()
         session.closeSession()
@@ -113,7 +119,7 @@ class TestHSM(unittest.TestCase):
     def test_hsm(self):
         """Test HSM key export and signing."""
 
-        for hsm_keyid in [self.hsm_keyid, self.hsm_keyid_default]:
+        for hsm_keyid in [self.hsm_keyid, self.hsm_keyid_default, self.hsm_keyid_odd]:
             _, key = HSMSigner.import_(hsm_keyid, self.token_filter)
             signer = HSMSigner(
                 hsm_keyid, self.token_filter, key, lambda sec: self.hsm_user_pin
