@@ -38,9 +38,7 @@ class TestHSM(unittest.TestCase):
         "Create ecdsa key pair on hsm"
         params = ECDomainParameters(name="named", value=NamedCurve(curve.name)).dump()
 
-        cka_id = list(
-            keyid.to_bytes((keyid.bit_length() + 7) // 8 or 1, "big")
-        )
+        cka_id = list(keyid.to_bytes((keyid.bit_length() + 7) // 8 or 1, "big"))
 
         public_template = [
             (PyKCS11.CKA_CLASS, PyKCS11.CKO_PUBLIC_KEY),
