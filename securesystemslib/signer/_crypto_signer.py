@@ -78,14 +78,6 @@ class _NoSignArgs:
     pass
 
 
-@dataclass
-class _MLDSASignArgs:
-    prefix: bytes
-
-    def __init__(self, version: int) -> None:
-        self.prefix = b"tuf" + bytes([version])
-
-
 # for backwards compat: use when spec-deprecated keytype ecdsa-sha2-nistp256
 # should be accepted in addition to "ecdsa"
 _ECDSA_KEYTYPES = ["ecdsa", "ecdsa-sha2-nistp256"]
@@ -145,7 +137,7 @@ class CryptoSigner(Signer):
             public_key = SSlibKey.from_crypto(private_key.public_key())
 
         self._private_key: PrivateKeyTypes
-        self._sign_args: _RSASignArgs | _ECDSASignArgs | _NoSignArgs | _MLDSASignArgs
+        self._sign_args: _RSASignArgs | _ECDSASignArgs | _NoSignArgs
 
         if public_key.keytype == "rsa" and public_key.scheme in [
             "rsassa-pss-sha224",
@@ -180,15 +172,15 @@ class CryptoSigner(Signer):
 
         elif public_key.keytype == "ml-dsa" and public_key.scheme == "ml-dsa-44/1":
             assert_type("ml-dsa-44", private_key, MLDSA44PrivateKey)
-            self._sign_args = _MLDSASignArgs(1)
+            self._sign_args = _NoSignArgs()
 
         elif public_key.keytype == "ml-dsa" and public_key.scheme == "ml-dsa-65/1":
             assert_type("ml-dsa-65", private_key, MLDSA65PrivateKey)
-            self._sign_args = _MLDSASignArgs(1)
+            self._sign_args = _NoSignArgs()
 
         elif public_key.keytype == "ml-dsa" and public_key.scheme == "ml-dsa-87/1":
             assert_type("ml-dsa-87", private_key, MLDSA87PrivateKey)
-            self._sign_args = _MLDSASignArgs(1)
+            self._sign_args = _NoSignArgs()
 
         else:
             raise ValueError(
@@ -349,13 +341,10 @@ class CryptoSigner(Signer):
         if isinstance(
             self._private_key, (MLDSA44PrivateKey, MLDSA65PrivateKey, MLDSA87PrivateKey)
         ):
-            if not isinstance(self._sign_args, _MLDSASignArgs):
-                raise AssertionError("Unexpected MLDSA signer state")
-
             digest = Hash(SHA512())
             digest.update(payload)
 
-            sig = self._private_key.sign(self._sign_args.prefix + digest.finalize())
+            sig = self._private_key.sign(b"tuf" + bytes([1]) + digest.finalize())
         else:
             sig = self._private_key.sign(payload, *astuple(self._sign_args))  # type: ignore
 
