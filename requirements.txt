@@ -9,3 +9,4 @@ cryptography >= 48.0.0
 PySPX; platform_system != 'Windows'
 PyKCS11
 asn1crypto
+keylet
