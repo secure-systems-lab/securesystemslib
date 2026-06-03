@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+from typing import Any
 from urllib import parse
 
 from securesystemslib import exceptions
@@ -188,16 +189,13 @@ class GCPSigner(Signer):
         # NOTE: request and response can contain CRC32C of the digest/sig:
         # Verifying could be useful but would require another dependency...
 
+        hasher = hashlib.new(self.hash_algorithm)
+        hasher.update(payload)
+        request: dict[str, Any] = {"name": self.gcp_keyid}
         if self.public_key.keytype == "ml-dsa":
-            hasher = hashlib.new("sha512")
-            hasher.update(payload)
-            pre_signing_string = b"tuf" + bytes([1]) + hasher.digest()
-            request = {"name": self.gcp_keyid, "data": pre_signing_string}
+            request["data"] = b"tuf" + bytes([1]) + hasher.digest()
         else:
-            hasher = hashlib.new(self.hash_algorithm)
-            hasher.update(payload)
-            digest = {self.hash_algorithm: hasher.digest()}
-            request = {"name": self.gcp_keyid, "digest": digest}
+            request["digest"] = {self.hash_algorithm: hasher.digest()}
 
         logger.debug("signing request %s", request)
         response = self.client.asymmetric_sign(request)
