@@ -9,7 +9,6 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Any
 
-from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
     load_pem_public_key,
@@ -613,16 +612,20 @@ class TestCryptoSigner(unittest.TestCase):
         cls.expected_keytypes = {}
 
         key_info = [
-            ("rsa", "rsa", [
-                "rsassa-pss-sha224",
-                "rsassa-pss-sha256",
-                "rsassa-pss-sha384",
-                "rsassa-pss-sha512",
-                "rsa-pkcs1v15-sha224",
-                "rsa-pkcs1v15-sha256",
-                "rsa-pkcs1v15-sha384",
-                "rsa-pkcs1v15-sha512",
-            ]),
+            (
+                "rsa",
+                "rsa",
+                [
+                    "rsassa-pss-sha224",
+                    "rsassa-pss-sha256",
+                    "rsassa-pss-sha384",
+                    "rsassa-pss-sha512",
+                    "rsa-pkcs1v15-sha224",
+                    "rsa-pkcs1v15-sha256",
+                    "rsa-pkcs1v15-sha384",
+                    "rsa-pkcs1v15-sha512",
+                ],
+            ),
             ("ecdsa", "ecdsa", ["ecdsa-sha2-nistp256"]),
             ("ed25519", "ed25519", ["ed25519"]),
             ("mldsa44", "ml-dsa", ["ml-dsa-44/1"]),
@@ -664,7 +667,6 @@ class TestCryptoSigner(unittest.TestCase):
                 self.assertIsNone(signer.public_key.verify_signature(sig, b"DATA"))
                 with self.assertRaises(UnverifiedSignatureError):
                     signer.public_key.verify_signature(sig, b"NOT DATA")
-
 
     def test_from_priv_key_uri(self):
         """Test load and use PEM/PKCS#8 files for each sslib keytype"""
