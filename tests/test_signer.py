@@ -9,7 +9,6 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Any
 
-from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
     load_pem_public_key,
@@ -608,20 +607,48 @@ class TestCryptoSigner(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.keys: list[PrivateKeyTypes] = []
-        for keytype in ["rsa", "ecdsa", "ed25519"]:
-            path = PEMS_DIR / f"{keytype}_private.pem"
+        cls.keys = {}
+        cls.schemes = {}
+        cls.expected_keytypes = {}
+
+        key_info = [
+            (
+                "rsa",
+                "rsa",
+                [
+                    "rsassa-pss-sha224",
+                    "rsassa-pss-sha256",
+                    "rsassa-pss-sha384",
+                    "rsassa-pss-sha512",
+                    "rsa-pkcs1v15-sha224",
+                    "rsa-pkcs1v15-sha256",
+                    "rsa-pkcs1v15-sha384",
+                    "rsa-pkcs1v15-sha512",
+                ],
+            ),
+            ("ecdsa", "ecdsa", ["ecdsa-sha2-nistp256"]),
+            ("ed25519", "ed25519", ["ed25519"]),
+            ("mldsa44", "ml-dsa", ["ml-dsa-44/1"]),
+            ("mldsa65", "ml-dsa", ["ml-dsa-65/1"]),
+            ("mldsa87", "ml-dsa", ["ml-dsa-87/1"]),
+        ]
+
+        for name, keytype, schemes in key_info:
+            path = PEMS_DIR / f"{name}_private.pem"
 
             with open(path, "rb") as f:
                 data = f.read()
 
             private_key = load_pem_private_key(data, None)
 
-            cls.keys.append(private_key)
+            cls.keys[name] = private_key
+            cls.expected_keytypes[name] = keytype
+            cls.schemes[name] = schemes
 
     def test_init(self):
         """Test CryptoSigner constructor."""
-        for keytype, private_key in zip(["rsa", "ecdsa", "ed25519"], self.keys):
+        for name, private_key in self.keys.items():
+            keytype = self.expected_keytypes[name]
             # Init w/o public key (public key is created from private key)
             signer = CryptoSigner(private_key)
             self.assertEqual(keytype, signer.public_key.keytype)
@@ -631,23 +658,9 @@ class TestCryptoSigner(unittest.TestCase):
             self.assertEqual(keytype, signer2.public_key.keytype)
 
     def test_sign(self):
-        rsa_schemes = [
-            "rsassa-pss-sha224",
-            "rsassa-pss-sha256",
-            "rsassa-pss-sha384",
-            "rsassa-pss-sha512",
-            "rsa-pkcs1v15-sha224",
-            "rsa-pkcs1v15-sha256",
-            "rsa-pkcs1v15-sha384",
-            "rsa-pkcs1v15-sha512",
-        ]
-        ecdsa_schemes = ["ecdsa-sha2-nistp256"]
-        ed25519_schemes = ["ed25519"]
-        schemes = [rsa_schemes, ecdsa_schemes, ed25519_schemes]
-
-        for private_key, key_schemes in zip(self.keys, schemes):
+        for name, private_key in self.keys.items():
             public_key = SSlibKey.from_crypto(private_key.public_key())
-            for scheme in key_schemes:
+            for scheme in self.schemes[name]:
                 public_key.scheme = scheme
                 signer = CryptoSigner(private_key, public_key)
                 sig = signer.sign(b"DATA")
@@ -747,7 +760,7 @@ class TestCryptoSigner(unittest.TestCase):
 
     def test_custom_crypto_signer(self):
         # setup
-        key = self.keys[0]
+        key = self.keys["rsa"]
         pubkey = SSlibKey.from_crypto(key.public_key())
 
         class CustomSigner(CryptoSigner):
