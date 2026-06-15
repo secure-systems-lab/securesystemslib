@@ -67,6 +67,7 @@ KEY_FOR_TYPE_AND_SCHEME.update(
         (KEY_TYPE_ECDSA, ECDSA_SHA2_NISTP256): SSlibKey,
         (KEY_TYPE_ECDSA, ECDSA_SHA2_NISTP384): SSlibKey,
         (KEY_TYPE_ECDSA, ECDSA_SHA2_NISTP521): SSlibKey,
+        # Deprecated: legacy keytype strings (keytype == scheme), use KEY_TYPE_ECDSA
         (ECDSA_SHA2_NISTP256, ECDSA_SHA2_NISTP256): SSlibKey,
         (ECDSA_SHA2_NISTP384, ECDSA_SHA2_NISTP384): SSlibKey,
         (ECDSA_SHA2_NISTP521, ECDSA_SHA2_NISTP521): SSlibKey,
