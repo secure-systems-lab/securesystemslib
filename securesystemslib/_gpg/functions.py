@@ -17,8 +17,10 @@
 """
 
 import logging
+import os
 import subprocess
 import time
+from pathlib import PureWindowsPath
 
 from securesystemslib import exceptions
 from securesystemslib._gpg.common import (
@@ -41,6 +43,23 @@ from securesystemslib._gpg.rsa import CRYPTO
 log = logging.getLogger(__name__)
 
 NO_CRYPTO_MSG = "GPG support requires the cryptography library"
+
+
+def _homedir_to_gpg_arg(homedir: str) -> str:
+    """Convert a homedir path to a GPG-compatible --homedir argument.
+
+    On Windows, GPG expects cygwin-style POSIX paths (e.g. /d/path/to/dir)
+    rather than Windows absolute paths (e.g. D:\\path\\to\\dir or D:/path/to/dir).
+    See https://github.com/secure-systems-lab/securesystemslib/issues/517
+    """
+    if os.name == "nt":
+        p = PureWindowsPath(homedir)
+        if p.drive:
+            # Convert "D:\path\to\dir" -> "/d/path/to/dir"
+            drive_letter = p.drive[0].lower()
+            rest = p.as_posix()[len(p.drive) :]  # strip "D:"
+            return f"/{drive_letter}{rest}"
+    return homedir.replace("\\", "/")
 
 
 def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
@@ -108,7 +127,7 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
 
     homearg = ""
     if homedir:
-        homearg = f"--homedir {homedir}".replace("\\", "/")
+        homearg = f"--homedir {_homedir_to_gpg_arg(homedir)}"
 
     command = gpg_sign_command(keyarg=keyarg, homearg=homearg)
 
@@ -267,7 +286,7 @@ def export_pubkey(keyid, homedir=None, timeout=GPG_TIMEOUT):
 
     homearg = ""
     if homedir:
-        homearg = f"--homedir {homedir}".replace("\\", "/")
+        homearg = f"--homedir {_homedir_to_gpg_arg(homedir)}"
 
     # TODO: Consider adopting command error handling from `create_signature`
     # above, e.g. in a common 'run gpg command' utility function

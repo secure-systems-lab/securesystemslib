@@ -59,6 +59,7 @@ from securesystemslib._gpg.exceptions import (
     SignatureAlgorithmNotSupportedError,
 )
 from securesystemslib._gpg.functions import (
+    _homedir_to_gpg_arg,
     create_signature,
     export_pubkey,
     export_pubkeys,
@@ -97,6 +98,16 @@ class TestUtil(unittest.TestCase):
         # Assert raises ValueError with non-supported hashing id
         with self.assertRaises(ValueError):
             get_hashing_class("bogus_hashing_id")
+
+    def test_homedir_to_gpg_arg_windows_path(self):
+        """Test Windows absolute path conversion for GPG homedir."""
+        with patch("os.name", "nt"):
+            result = _homedir_to_gpg_arg("D:\\path\\to\\dir")
+            self.assertEqual(result, "/d/path/to/dir")
+
+        with patch("os.name", "posix"):
+            result = _homedir_to_gpg_arg("/home/user/gpg")
+            self.assertEqual(result, "/home/user/gpg")
 
     def test_parse_packet_header(self):
         """Test parse_packet_header with manually crafted data."""
