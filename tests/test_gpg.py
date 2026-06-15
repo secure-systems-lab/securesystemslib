@@ -101,10 +101,22 @@ class TestUtil(unittest.TestCase):
 
     def test_homedir_to_gpg_arg_windows_path(self):
         """Test Windows absolute path conversion for GPG homedir."""
-        with patch("os.name", "nt"):
-            result = _homedir_to_gpg_arg("D:\\path\\to\\dir")
-            self.assertEqual(result, "/d/path/to/dir")
+        # Native Gpg4win (.exe) — forward slashes, keep drive letter
+        with patch(
+            "securesystemslib._gpg.functions.gpg_command", return_value="gpg.exe"
+        ):
+            result = _homedir_to_gpg_arg("C:\\Users\\me\\gnupg")
+            self.assertEqual(result, "C:/Users/me/gnupg")
 
+        # Cygwin/MSYS2 GPG on Windows — cygwin-style path
+        with (
+            patch("securesystemslib._gpg.functions.gpg_command", return_value="gpg"),
+            patch("os.name", "nt"),
+        ):
+            result = _homedir_to_gpg_arg("C:\\Users\\me\\gnupg")
+            self.assertEqual(result, "/c/Users/me/gnupg")
+
+        # POSIX — unchanged
         with patch("os.name", "posix"):
             result = _homedir_to_gpg_arg("/home/user/gpg")
             self.assertEqual(result, "/home/user/gpg")

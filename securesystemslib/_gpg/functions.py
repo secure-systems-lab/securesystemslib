@@ -32,6 +32,7 @@ from securesystemslib._gpg.constants import (
     GPG_TIMEOUT,
     NO_GPG_MSG,
     SHA256,
+    gpg_command,
     gpg_export_pubkey_command,
     gpg_sign_command,
     have_gpg,
@@ -48,16 +49,18 @@ NO_CRYPTO_MSG = "GPG support requires the cryptography library"
 def _homedir_to_gpg_arg(homedir: str) -> str:
     """Convert a homedir path to a GPG-compatible --homedir argument.
 
-    On Windows, GPG expects cygwin-style POSIX paths (e.g. /d/path/to/dir)
-    rather than Windows absolute paths (e.g. D:\\path\\to\\dir or D:/path/to/dir).
+    On Windows, path format depends on the GPG binary:
+    - Native Gpg4win (.exe): accepts forward-slash Windows paths (C:/path)
+    - Cygwin/MSYS2 GPG: requires cygwin-style paths (/c/path)
     See https://github.com/secure-systems-lab/securesystemslib/issues/517
     """
+    if gpg_command().endswith(".exe"):
+        return homedir.replace("\\", "/")
     if os.name == "nt":
         p = PureWindowsPath(homedir)
         if p.drive:
-            # Convert "D:\path\to\dir" -> "/d/path/to/dir"
             drive_letter = p.drive[0].lower()
-            rest = p.as_posix()[len(p.drive) :]  # strip "D:"
+            rest = p.as_posix()[len(p.drive) :]
             return f"/{drive_letter}{rest}"
     return homedir.replace("\\", "/")
 
