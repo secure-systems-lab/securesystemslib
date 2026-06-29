@@ -106,7 +106,9 @@ class TestTKeySignerOffline(unittest.TestCase):
 
         # digest only
         TKeySigner.from_priv_key_uri("tkey:?digest=7c75714", self.mock_public_key)
-        mock_tkey_class.assert_called_with(SignApp(b"dummy", None, ("test", "app"), 10, 20), None, None)
+        mock_tkey_class.assert_called_with(
+            SignApp(b"dummy", None, ("test", "app"), 10, 20), None, None
+        )
 
         # No digest
         with self.assertRaises(ValueError):
@@ -359,7 +361,11 @@ class TestTKeySignerOffline(unittest.TestCase):
 
         secret = "my_super_secret_passphrase"
         # We instantiate _TKey which should call _ensure_app_loaded -> _load_app
-        tk = TKeySign(app=SignApp(b"mock_app_data", 3, ("test", "app"), 10, 20), device=None, secret=secret)
+        tk = TKeySign(
+            app=SignApp(b"mock_app_data", 3, ("test", "app"), 10, 20),
+            device=None,
+            secret=secret,
+        )
         tk.disconnect()
 
         # Now, let's inspect the written data for the LOAD_APP command.

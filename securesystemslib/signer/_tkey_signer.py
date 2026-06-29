@@ -44,9 +44,6 @@ class TKeySigner(Signer):
         tkey:/dev/ttyACM0?digest=7c75714&passphrase=true
     """
 
-    # TODO the privkey uri possibly should include binary hash as it is critical that
-    # the binary does not change: Unsure uf we can rely on it otherwise
-
     SCHEME = "tkey"
 
     def __init__(
@@ -162,9 +159,6 @@ class TKeySigner(Signer):
 
     def sign(self, payload: bytes) -> Signature:
         """Signs payload with Tillitis TKey."""
-
-        if self.public_key.keytype != "ml-dsa":
-            raise ValueError(f"unsupported keytype {self.public_key.keytype}")
 
         # Use TUF-specific message prefix and digest as payload
         digest = hashlib.sha512(payload).digest()
