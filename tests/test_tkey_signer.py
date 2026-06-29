@@ -85,7 +85,7 @@ class TestTKeySignerOffline(unittest.TestCase):
         mock_tkey_class: MagicMock,
     ) -> None:
         mock_load_mldsa.side_effect = lambda version=None, digest=None: SignApp(
-            b"dummy", version
+            b"dummy", version, ("test", "app"), 10, 20
         )
         mock_key = MagicMock(spec=SSlibKey)
         mock_key.keyval = self.mock_public_key.keyval
@@ -101,12 +101,12 @@ class TestTKeySignerOffline(unittest.TestCase):
             "tkey:/dev/ttyACM0?digest=7c75714", self.mock_public_key
         )
         mock_tkey_class.assert_called_with(
-            SignApp(b"dummy", None), "/dev/ttyACM0", None
+            SignApp(b"dummy", None, ("test", "app"), 10, 20), "/dev/ttyACM0", None
         )
 
         # digest only
         TKeySigner.from_priv_key_uri("tkey:?digest=7c75714", self.mock_public_key)
-        mock_tkey_class.assert_called_with(SignApp(b"dummy", None), None, None)
+        mock_tkey_class.assert_called_with(SignApp(b"dummy", None, ("test", "app"), 10, 20), None, None)
 
         # No digest
         with self.assertRaises(ValueError):
@@ -129,7 +129,7 @@ class TestTKeySignerOffline(unittest.TestCase):
         )
         secrets_handler.assert_called_once_with("Passphrase")
         mock_tkey_class.assert_called_with(
-            SignApp(b"dummy", None), "/dev/ttyACM0", "mysecret"
+            SignApp(b"dummy", None, ("test", "app"), 10, 20), "/dev/ttyACM0", "mysecret"
         )
 
         # passphrase=false
@@ -142,7 +142,7 @@ class TestTKeySignerOffline(unittest.TestCase):
         )
         secrets_handler.assert_not_called()
         mock_tkey_class.assert_called_with(
-            SignApp(b"dummy", None), "/dev/ttyACM0", None
+            SignApp(b"dummy", None, ("test", "app"), 10, 20), "/dev/ttyACM0", None
         )
 
     @patch.object(TKey, "_get_connection")
@@ -161,7 +161,7 @@ class TestTKeySignerOffline(unittest.TestCase):
         mock_conn_class: MagicMock,
     ) -> None:
         mock_load_mldsa.side_effect = lambda version=None, digest=None: SignApp(
-            b"dummy", version
+            b"dummy", version, ("test", "app"), 10, 20
         )
         # Prepare connection mock (needs enough reads for two sequential import calls)
         app_name_payload = b"tk1 " + b"pqsn" + (3).to_bytes(4, byteorder="little")
@@ -210,7 +210,7 @@ class TestTKeySignerOffline(unittest.TestCase):
         mock_conn_class: MagicMock,
     ) -> None:
         mock_load_mldsa.side_effect = lambda version=None, digest=None: SignApp(
-            b"dummy", version
+            b"dummy", version, ("test", "app"), 10, 20
         )
         # Setup serial response: GET_NAMEVERSION returns version 3
         app_name_payload = b"tk1 " + b"pqsn" + (3).to_bytes(4, byteorder="little")
@@ -245,7 +245,7 @@ class TestTKeySignerOffline(unittest.TestCase):
         mock_conn_class: MagicMock,
     ) -> None:
         mock_load_mldsa.side_effect = lambda version=None, digest=None: SignApp(
-            b"dummy", version
+            b"dummy", version, ("test", "app"), 10, 20
         )
         # Setup serial response: NAME_VERSION FW command succeeds
         fw_name_payload = b"tk1 " + b"mkdf"
@@ -287,7 +287,7 @@ class TestTKeySignerOffline(unittest.TestCase):
         mock_conn_class: MagicMock,
     ) -> None:
         mock_load_mldsa.side_effect = lambda version=None, digest=None: SignApp(
-            b"dummy", version
+            b"dummy", version, ("test", "app"), 10, 20
         )
         # Setup serial response: NAME_VERSION FW command succeeds
         fw_name_payload = b"tk1 " + b"mkdf"
@@ -359,7 +359,7 @@ class TestTKeySignerOffline(unittest.TestCase):
 
         secret = "my_super_secret_passphrase"
         # We instantiate _TKey which should call _ensure_app_loaded -> _load_app
-        tk = TKeySign(app=SignApp(b"mock_app_data", 3), device=None, secret=secret)
+        tk = TKeySign(app=SignApp(b"mock_app_data", 3, ("test", "app"), 10, 20), device=None, secret=secret)
         tk.disconnect()
 
         # Now, let's inspect the written data for the LOAD_APP command.
@@ -400,7 +400,7 @@ class TestTKeySignerOffline(unittest.TestCase):
         mock_tkey_class: MagicMock,
     ) -> None:
         mock_load_mldsa.side_effect = lambda version=None, digest=None: SignApp(
-            b"dummy", version
+            b"dummy", version, ("test", "app"), 10, 20
         )
         mock_key = MagicMock(spec=SSlibKey)
         mock_key.keyval = self.mock_public_key.keyval
@@ -432,7 +432,7 @@ class TestTKeySignerOffline(unittest.TestCase):
         # secrets_handler should have been called with "uss" during construction
         secrets_handler.assert_called_once_with("Passphrase")
         mock_tkey_class.assert_called_once_with(
-            SignApp(b"dummy", None), "/dev/ttyACM0", "mysecret"
+            SignApp(b"dummy", None, ("test", "app"), 10, 20), "/dev/ttyACM0", "mysecret"
         )
 
         # _TKey.sign should have been called with expected tuf formatted message and pk_bytes
@@ -454,7 +454,7 @@ class TestTKeySignerOffline(unittest.TestCase):
         mock_tkey_class: MagicMock,
     ) -> None:
         mock_load_mldsa.side_effect = lambda version=None, digest=None: SignApp(
-            b"dummy", version
+            b"dummy", version, ("test", "app"), 10, 20
         )
         mock_key = MagicMock(spec=SSlibKey)
         mock_key.keyval = self.mock_public_key.keyval
@@ -483,7 +483,7 @@ class TestTKeySignerOffline(unittest.TestCase):
 
         # _TKey constructor should have been called with secret=None and expected app
         mock_tkey_class.assert_called_once_with(
-            SignApp(b"dummy", None), "/dev/ttyACM0", None
+            SignApp(b"dummy", None, ("test", "app"), 10, 20), "/dev/ttyACM0", None
         )
 
         # _TKey.sign should have been called with expected tuf formatted message and pk_bytes
@@ -503,7 +503,7 @@ class TestTKeySignerOffline(unittest.TestCase):
         mock_tkey_class: MagicMock,
     ) -> None:
         mock_load_mldsa.side_effect = lambda version=None, digest=None: SignApp(
-            b"dummy", version
+            b"dummy", version, ("test", "app"), 10, 20
         )
         # Mock the derived key to have a mismatched keyval
         mock_derived_key = MagicMock(spec=SSlibKey)
