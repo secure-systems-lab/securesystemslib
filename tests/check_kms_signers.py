@@ -17,6 +17,11 @@ import unittest
 
 from securesystemslib.exceptions import UnverifiedSignatureError
 from securesystemslib.signer import GCPSigner, Key, Signer
+from securesystemslib.signer._key import KEY_FOR_TYPE_AND_SCHEME, SSlibKey
+
+# Temporarily enable ml-dsa keys so they can be parsed for this test.
+# TODO: Remove this once ml-dsa is supported by default.
+KEY_FOR_TYPE_AND_SCHEME[("ml-dsa", "ml-dsa-65/1")] = SSlibKey
 
 
 class TestKMSKeys(unittest.TestCase):

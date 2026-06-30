@@ -57,6 +57,26 @@ class TestKey(unittest.TestCase):
             self.assertIsInstance(key, key_impl)
             self.assertDictEqual(keydict, key.to_dict())
 
+    def test_mldsa_key_from_to_dict(self):
+        """Test to/from_dict for ml-dsa until it's officially supported."""
+        # Temporarily enable ml-dsa keys so they can be parsed for this test.
+        # TODO: Remove this once ml-dsa is supported by default.
+        KEY_FOR_TYPE_AND_SCHEME[("ml-dsa", "ml-dsa-65/1")] = SSlibKey
+        try:
+            keydict = {
+                "keytype": "ml-dsa",
+                "scheme": "ml-dsa-65/1",
+                "keyval": {
+                    "public": "pubkeyval",
+                },
+            }
+
+            key = Key.from_dict("aa", copy.deepcopy(keydict))
+            self.assertIsInstance(key, SSlibKey)
+            self.assertDictEqual(keydict, key.to_dict())
+        finally:
+            del KEY_FOR_TYPE_AND_SCHEME[("ml-dsa", "ml-dsa-65/1")]
+
     def test_sslib_key_from_dict_invalid(self):
         """Test from_dict for invalid data"""
         invalid_dicts = [
