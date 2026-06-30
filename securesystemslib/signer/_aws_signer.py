@@ -10,6 +10,18 @@ from securesystemslib.exceptions import (
     UnsupportedAlgorithmError,
     UnsupportedLibraryError,
 )
+from securesystemslib.signer._constants import (
+    ECDSA_SHA2_NISTP256,
+    ECDSA_SHA2_NISTP384,
+    KEY_TYPE_ECDSA,
+    KEY_TYPE_RSA,
+    RSA_PKCS1V15_SHA256,
+    RSA_PKCS1V15_SHA384,
+    RSA_PKCS1V15_SHA512,
+    RSASSA_PSS_SHA256,
+    RSASSA_PSS_SHA384,
+    RSASSA_PSS_SHA512,
+)
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signer import SecretsHandler, Signature, Signer
 from securesystemslib.signer._utils import compute_default_keyid
@@ -66,15 +78,15 @@ class AWSSigner(Signer):
     # Ordered dict of securesystemslib schemes to aws signing algorithms
     # NOTE: the order matters when choosing a default (see _get_default_scheme)
     aws_algos = {
-        "ecdsa-sha2-nistp256": "ECDSA_SHA_256",
-        "ecdsa-sha2-nistp384": "ECDSA_SHA_384",
+        ECDSA_SHA2_NISTP256: "ECDSA_SHA_256",
+        ECDSA_SHA2_NISTP384: "ECDSA_SHA_384",
         # "ecdsa-sha2-nistp521": "ECDSA_SHA_512", # FIXME: needs SSlibKey support
-        "rsassa-pss-sha256": "RSASSA_PSS_SHA_256",
-        "rsassa-pss-sha384": "RSASSA_PSS_SHA_384",
-        "rsassa-pss-sha512": "RSASSA_PSS_SHA_512",
-        "rsa-pkcs1v15-sha256": "RSASSA_PKCS1_V1_5_SHA_256",
-        "rsa-pkcs1v15-sha384": "RSASSA_PKCS1_V1_5_SHA_384",
-        "rsa-pkcs1v15-sha512": "RSASSA_PKCS1_V1_5_SHA_512",
+        RSASSA_PSS_SHA256: "RSASSA_PSS_SHA_256",
+        RSASSA_PSS_SHA384: "RSASSA_PSS_SHA_384",
+        RSASSA_PSS_SHA512: "RSASSA_PSS_SHA_512",
+        RSA_PKCS1V15_SHA256: "RSASSA_PKCS1_V1_5_SHA_256",
+        RSA_PKCS1V15_SHA384: "RSASSA_PKCS1_V1_5_SHA_384",
+        RSA_PKCS1V15_SHA512: "RSASSA_PKCS1_V1_5_SHA_512",
     }
 
     def __init__(self, aws_key_id: str, public_key: SSlibKey):
@@ -118,10 +130,10 @@ class AWSSigner(Signer):
 
     @staticmethod
     def _get_keytype_for_scheme(scheme: str) -> str:
-        if scheme.startswith("ecdsa"):
-            return "ecdsa"
-        if scheme.startswith("rsa"):
-            return "rsa"
+        if scheme.startswith(KEY_TYPE_ECDSA):
+            return KEY_TYPE_ECDSA
+        if scheme.startswith(KEY_TYPE_RSA):
+            return KEY_TYPE_RSA
         raise RuntimeError
 
     @classmethod

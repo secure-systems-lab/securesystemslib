@@ -7,6 +7,12 @@ import logging
 from urllib import parse
 
 from securesystemslib.exceptions import UnsupportedLibraryError
+from securesystemslib.signer._constants import (
+    ECDSA_SHA2_NISTP256,
+    ECDSA_SHA2_NISTP384,
+    ECDSA_SHA2_NISTP521,
+    KEY_TYPE_ECDSA,
+)
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signer import SecretsHandler, Signature, Signer
 from securesystemslib.signer._utils import compute_default_keyid
@@ -30,15 +36,15 @@ try:
     )
 
     KEYTYPES_AND_SCHEMES = {
-        KeyCurveName.p_256: ("ecdsa", "ecdsa-sha2-nistp256"),
-        KeyCurveName.p_384: ("ecdsa", "ecdsa-sha2-nistp384"),
-        KeyCurveName.p_521: ("ecdsa", "ecdsa-sha2-nistp521"),
+        KeyCurveName.p_256: (KEY_TYPE_ECDSA, ECDSA_SHA2_NISTP256),
+        KeyCurveName.p_384: (KEY_TYPE_ECDSA, ECDSA_SHA2_NISTP384),
+        KeyCurveName.p_521: (KEY_TYPE_ECDSA, ECDSA_SHA2_NISTP521),
     }
 
     SIGNATURE_ALGORITHMS = {
-        "ecdsa-sha2-nistp256": SignatureAlgorithm.es256,
-        "ecdsa-sha2-nistp384": SignatureAlgorithm.es384,
-        "ecdsa-sha2-nistp521": SignatureAlgorithm.es512,
+        ECDSA_SHA2_NISTP256: SignatureAlgorithm.es256,
+        ECDSA_SHA2_NISTP384: SignatureAlgorithm.es384,
+        ECDSA_SHA2_NISTP521: SignatureAlgorithm.es512,
     }
 
 
