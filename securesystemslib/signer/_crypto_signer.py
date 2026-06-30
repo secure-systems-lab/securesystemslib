@@ -6,6 +6,21 @@ from dataclasses import astuple, dataclass
 from urllib import parse
 
 from securesystemslib.exceptions import UnsupportedLibraryError
+from securesystemslib.signer._constants import (
+    ECDSA_SHA2_NISTP256,
+    ED25519,
+    KEY_TYPE_ECDSA,
+    KEY_TYPE_ED25519,
+    KEY_TYPE_RSA,
+    RSA_PKCS1V15_SHA224,
+    RSA_PKCS1V15_SHA256,
+    RSA_PKCS1V15_SHA384,
+    RSA_PKCS1V15_SHA512,
+    RSASSA_PSS_SHA224,
+    RSASSA_PSS_SHA256,
+    RSASSA_PSS_SHA384,
+    RSASSA_PSS_SHA512,
+)
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import SecretsHandler, Signer
@@ -73,7 +88,7 @@ class _NoSignArgs:
 
 # for backwards compat: use when spec-deprecated keytype ecdsa-sha2-nistp256
 # should be accepted in addition to "ecdsa"
-_ECDSA_KEYTYPES = ["ecdsa", "ecdsa-sha2-nistp256"]
+_ECDSA_KEYTYPES = [KEY_TYPE_ECDSA, ECDSA_SHA2_NISTP256]
 
 
 def _get_rsa_padding(name: str, hash_algorithm: "HashAlgorithm") -> "AsymmetricPadding":
@@ -126,15 +141,15 @@ class CryptoSigner(Signer):
         self._private_key: PrivateKeyTypes
         self._sign_args: _RSASignArgs | _ECDSASignArgs | _NoSignArgs
 
-        if public_key.keytype == "rsa" and public_key.scheme in [
-            "rsassa-pss-sha224",
-            "rsassa-pss-sha256",
-            "rsassa-pss-sha384",
-            "rsassa-pss-sha512",
-            "rsa-pkcs1v15-sha224",
-            "rsa-pkcs1v15-sha256",
-            "rsa-pkcs1v15-sha384",
-            "rsa-pkcs1v15-sha512",
+        if public_key.keytype == KEY_TYPE_RSA and public_key.scheme in [
+            RSASSA_PSS_SHA224,
+            RSASSA_PSS_SHA256,
+            RSASSA_PSS_SHA384,
+            RSASSA_PSS_SHA512,
+            RSA_PKCS1V15_SHA224,
+            RSA_PKCS1V15_SHA256,
+            RSA_PKCS1V15_SHA384,
+            RSA_PKCS1V15_SHA512,
         ]:
             if not isinstance(private_key, RSAPrivateKey):
                 raise ValueError(f"invalid rsa key: {type(private_key)}")
@@ -150,7 +165,7 @@ class CryptoSigner(Signer):
 
         elif (
             public_key.keytype in _ECDSA_KEYTYPES
-            and public_key.scheme == "ecdsa-sha2-nistp256"
+            and public_key.scheme == ECDSA_SHA2_NISTP256
         ):
             if not isinstance(private_key, EllipticCurvePrivateKey):
                 raise ValueError(f"invalid ecdsa key: {type(private_key)}")
@@ -159,7 +174,7 @@ class CryptoSigner(Signer):
             self._sign_args = _ECDSASignArgs(signature_algorithm)
             self._private_key = private_key
 
-        elif public_key.keytype == "ed25519" and public_key.scheme == "ed25519":
+        elif public_key.keytype == KEY_TYPE_ED25519 and public_key.scheme == ED25519:
             if not isinstance(private_key, Ed25519PrivateKey):
                 raise ValueError(f"invalid ed25519 key: {type(private_key)}")
 
@@ -264,13 +279,13 @@ class CryptoSigner(Signer):
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
 
         private_key = Ed25519PrivateKey.generate()
-        public_key = SSlibKey.from_crypto(private_key.public_key(), keyid, "ed25519")
+        public_key = SSlibKey.from_crypto(private_key.public_key(), keyid, ED25519)
         return CryptoSigner(private_key, public_key)
 
     @staticmethod
     def generate_rsa(
         keyid: str | None = None,
-        scheme: str | None = "rsassa-pss-sha256",
+        scheme: str | None = RSASSA_PSS_SHA256,
         size: int = 3072,
     ) -> "CryptoSigner":
         """Generate new key pair as rsa signer.
@@ -316,7 +331,7 @@ class CryptoSigner(Signer):
 
         private_key = generate_ec_private_key(SECP256R1())
         public_key = SSlibKey.from_crypto(
-            private_key.public_key(), keyid, "ecdsa-sha2-nistp256"
+            private_key.public_key(), keyid, ECDSA_SHA2_NISTP256
         )
         return CryptoSigner(private_key, public_key)
 

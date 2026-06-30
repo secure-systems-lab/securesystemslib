@@ -14,12 +14,15 @@ from contextlib import contextmanager
 from urllib import parse
 
 from securesystemslib.exceptions import UnsupportedLibraryError
+from securesystemslib.signer._constants import (
+    ECDSA_SHA2_NISTP256,
+    ECDSA_SHA2_NISTP384,
+    KEY_TYPE_ECDSA,
+)
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import SecretsHandler, Signer
 from securesystemslib.signer._utils import compute_default_keyid
-
-_KEY_TYPE_ECDSA = "ecdsa"
 
 CRYPTO_IMPORT_ERROR = None
 try:
@@ -35,10 +38,9 @@ try:
         encode_dss_signature,
     )
 
-    # TODO: Don't hardcode schemes
     _SCHEME_FOR_CURVE = {
-        SECP256R1: "ecdsa-sha2-nistp256",
-        SECP384R1: "ecdsa-sha2-nistp384",
+        SECP256R1: ECDSA_SHA2_NISTP256,
+        SECP384R1: ECDSA_SHA2_NISTP384,
     }
     _CURVE_NAMES = [curve.name for curve in _SCHEME_FOR_CURVE]
 
@@ -138,8 +140,8 @@ class HSMSigner(Signer):
             raise UnsupportedLibraryError(PYKCS11_IMPORT_ERROR)
 
         if public_key.scheme not in [
-            "ecdsa-sha2-nistp256",
-            "ecdsa-sha2-nistp384",
+            ECDSA_SHA2_NISTP256,
+            ECDSA_SHA2_NISTP384,
         ]:
             raise ValueError(f"unsupported scheme {public_key.scheme}")
 
@@ -220,10 +222,10 @@ class HSMSigner(Signer):
             ]
         )
         if not keys:
-            raise ValueError(f"could not find {_KEY_TYPE_ECDSA} key for {keyid}")
+            raise ValueError(f"could not find {KEY_TYPE_ECDSA} key for {keyid}")
 
         if len(keys) > 1:
-            raise ValueError(f"found more than one {_KEY_TYPE_ECDSA} key for {keyid}")
+            raise ValueError(f"found more than one {KEY_TYPE_ECDSA} key for {keyid}")
 
         return keys[0]
 
@@ -330,8 +332,8 @@ class HSMSigner(Signer):
 
         keyval = {"public": public_pem}
         scheme = _SCHEME_FOR_CURVE[curve]
-        keyid = compute_default_keyid(_KEY_TYPE_ECDSA, scheme, keyval)
-        key = SSlibKey(keyid, _KEY_TYPE_ECDSA, scheme, keyval)
+        keyid = compute_default_keyid(KEY_TYPE_ECDSA, scheme, keyval)
+        key = SSlibKey(keyid, KEY_TYPE_ECDSA, scheme, keyval)
 
         return uri, key
 

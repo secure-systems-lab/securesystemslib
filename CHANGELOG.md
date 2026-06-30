@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Deprecated
+
+* `ecdsa-sha2-nistp256`, `ecdsa-sha2-nistp384`, and `ecdsa-sha2-nistp521` as
+  keytype values. Use `ecdsa` instead. (#363)
+
 ## securesystemslib v1.4.0
 
 ### Fixed

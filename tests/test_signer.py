@@ -5,6 +5,7 @@ import os
 import shutil
 import tempfile
 import unittest
+import warnings
 from contextlib import suppress
 from pathlib import Path
 from typing import Any
@@ -230,6 +231,48 @@ class TestKey(unittest.TestCase):
             key.verify_signature(sig, b"DATA")
             with self.assertRaises(UnverifiedSignatureError, msg=scheme):
                 key.verify_signature(sig, b"NOT DATA")
+
+    def test_verify_signature_legacy_ecdsa_keytype_deprecated(self):
+        """Legacy ecdsa keytypes (keytype == scheme) verify but warn (#363)."""
+        keyid = "985171ff9ee901fbab17aa6f57347933aeae9d194f0f93e83e5c3dbc1755e754"
+        pub = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEsYJfSlYU3UlYbGOZfE/yOHkayWWq\nLPR/NeCa83szZmnJGc9wwCRPvJS87K+eDGIhhhKueTyrLqXQqmyHioQbOQ==\n-----END PUBLIC KEY-----\n"
+        sig = Signature.from_dict(
+            {
+                "keyid": keyid,
+                "sig": "304502207d0058b745b2259501204c2ba287ba3769ec2420e12463a325c59670c24df9b6022100836ca63a1b870f755c1596711a003a505e72e25cb0970e823a331e044adc63ec",
+            }
+        )
+
+        # Creating a key with the legacy keytype still works
+        legacy_key = Key.from_dict(
+            keyid,
+            {
+                "keytype": "ecdsa-sha2-nistp256",
+                "scheme": "ecdsa-sha2-nistp256",
+                "keyval": {"public": pub},
+            },
+        )
+
+        # Verifying with the legacy keytype emits a DeprecationWarning
+        with self.assertWarns(DeprecationWarning):
+            legacy_key.verify_signature(sig, b"DATA")
+
+        # The correct "ecdsa" keytype verifies without a DeprecationWarning
+        key = Key.from_dict(
+            keyid,
+            {
+                "keytype": "ecdsa",
+                "scheme": "ecdsa-sha2-nistp256",
+                "keyval": {"public": pub},
+            },
+        )
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            key.verify_signature(sig, b"DATA")
+        self.assertEqual(
+            [w for w in caught if issubclass(w.category, DeprecationWarning)],
+            [],
+        )
 
     def test_unsupported_key(self):
         keydict = {
