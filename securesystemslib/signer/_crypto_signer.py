@@ -301,7 +301,7 @@ class CryptoSigner(Signer):
             UnsupportedLibraryError: pyca/cryptography not installed
 
         Returns:
-            RSASigner
+            CryptoSigner
         """
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
@@ -326,7 +326,7 @@ class CryptoSigner(Signer):
             UnsupportedLibraryError: pyca/cryptography not installed
 
         Returns:
-            ECDSASigner
+            CryptoSigner
         """
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
@@ -335,6 +335,39 @@ class CryptoSigner(Signer):
         public_key = SSlibKey.from_crypto(
             private_key.public_key(), keyid, "ecdsa-sha2-nistp256"
         )
+        return CryptoSigner(private_key, public_key)
+
+    @staticmethod
+    def generate_mldsa(
+        keyid: str | None = None,
+        scheme: str | None = None,
+    ) -> "CryptoSigner":
+        """Generate new key pair for a ML-DSA signer.
+
+        Args:
+            keyid: Key identifier. If not passed, a default keyid is computed.
+            scheme: A valid key scheme for ml-dsa. If not passed, "ml-dsa-65/1" is used
+
+        Raises:
+            UnsupportedLibraryError: pyca/cryptography not installed
+
+        Returns:
+            CryptoSigner
+        """
+        if CRYPTO_IMPORT_ERROR:
+            raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
+
+        scheme = "ml-dsa-65/1" if scheme is None else scheme
+        if scheme == "ml-dsa-44/1":
+            private_key: PrivateKeyTypes = MLDSA44PrivateKey.generate()
+        elif scheme in "ml-dsa-65/1":
+            private_key = MLDSA65PrivateKey.generate()
+        elif scheme == "ml-dsa-87/1":
+            private_key = MLDSA87PrivateKey.generate()
+        else:
+            raise ValueError(f"Invalid scheme for ML-DSA: {scheme}")
+
+        public_key = SSlibKey.from_crypto(private_key.public_key(), keyid, scheme)
         return CryptoSigner(private_key, public_key)
 
     def sign(self, payload: bytes) -> Signature:

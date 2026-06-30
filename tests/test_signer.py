@@ -750,6 +750,7 @@ class TestCryptoSigner(unittest.TestCase):
             (CryptoSigner.generate_rsa, "rsa", "rsassa-pss-sha256"),
             (CryptoSigner.generate_ecdsa, "ecdsa", "ecdsa-sha2-nistp256"),
             (CryptoSigner.generate_ed25519, "ed25519", "ed25519"),
+            (CryptoSigner.generate_mldsa, "ml-dsa", "ml-dsa-65/1"),
         ]
         for generate, keytype, default_scheme in test_data:
             signer = generate()
