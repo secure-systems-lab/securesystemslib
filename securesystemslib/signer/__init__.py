@@ -69,5 +69,8 @@ KEY_FOR_TYPE_AND_SCHEME.update(
 )
 
 # Keys with currently unstable metadata formats, not supported by default:
+#       ("ml-dsa", "ml-dsa-44/1"): SSlibKey,
+#       ("ml-dsa", "ml-dsa-65/1"): SSlibKey,
+#       ("ml-dsa", "ml-dsa-87/1"): SSlibKey,
 #       ("sphincs", "sphincs-shake-128s"): SpxKey,
 #       ("sigstore-oidc", "Fulcio"): SigstoreKey,
