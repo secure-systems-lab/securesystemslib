@@ -7,5 +7,4 @@
 # triggers CI/CD builds to automatically test against updated dependencies.
 cryptography >= 37.0.0
 PySPX; platform_system != 'Windows'
-PyKCS11
-asn1crypto
+python-pkcs11
