@@ -1,6 +1,6 @@
 import logging
 
-__version__ = "1.3.1"
+__version__ = "1.4.0"
 
 # Configure a basic 'securesystemslib' top-level logger with a StreamHandler
 # (print to console) and the WARNING log level (print messages of type

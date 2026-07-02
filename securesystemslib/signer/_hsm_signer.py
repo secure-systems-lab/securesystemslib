@@ -214,11 +214,13 @@ class HSMSigner(Signer):
         if key_type is None:
             key_type = PyKCS11.CKO_PUBLIC_KEY
 
+        cka_id_filter = list(keyid.to_bytes((keyid.bit_length() + 7) // 8 or 1, "big"))
+
         keys = session.findObjects(
             [
                 (PyKCS11.CKA_CLASS, key_type),
                 (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_ECDSA),
-                (PyKCS11.CKA_ID, (keyid,)),
+                (PyKCS11.CKA_ID, cka_id_filter),
             ]
         )
         if not keys:

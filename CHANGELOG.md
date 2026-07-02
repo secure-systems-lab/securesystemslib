@@ -1,5 +1,18 @@
 # Changelog
 
+## securesystemslib v1.4.0
+
+### Fixed
+
+* HSMSigner: Fix usage with multi-byte keyids (#1107)
+
+### Changed
+
+* SigstoreSigner: Update to current sigstore-python API (#1035)
+* Deprecate Python 3.9 support (#1069)
+* Various testing changes -- note that AWS is currently not tested
+  in CI (see #1104)
+
 ## securesystemslib v1.3.1
 
 ### Fixed

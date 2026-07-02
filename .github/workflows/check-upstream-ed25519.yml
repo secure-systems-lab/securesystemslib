@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - name: Check out repository
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       with:
         persist-credentials: false
     - name: Test if ed25519 upstream main HEAD is what we expect
@@ -29,7 +29,7 @@ jobs:
           echo "output=$output" >> $GITHUB_OUTPUT
         fi
     - name: Create issue (unless one is open already)
-      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
       if: ${{ steps.test_ed25519.outputs.result == '1' }}
       with:
         script: | # zizmor: ignore[template-injection]
