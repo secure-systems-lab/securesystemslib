@@ -155,6 +155,7 @@ class HSMSigner(Signer):
         cls,
         hsm_keyid: int | None = None,
         token_label: str | None = None,
+        secrets_handler: SecretsHandler | None = None,
     ) -> tuple[str, SSlibKey]:
         """Import public key and signer details from HSM.
 
@@ -188,11 +189,24 @@ class HSMSigner(Signer):
         if token.label:
             uri = f"{uri}?{parse.urlencode({'label': token.label})}"
 
-        with token.open() as session:
+        def _get_pubkey_der(session: pkcs11.Session) -> bytes:
             pkcs11_key = cls._find_key(session, hsm_keyid)
             if not isinstance(pkcs11_key, pkcs11.PublicKey):
                 raise AssertionError("PKCS key is not a public key")
-            pubkey_der = pkcs11.util.ec.encode_ec_public_key(pkcs11_key)
+            return pkcs11.util.ec.encode_ec_public_key(pkcs11_key)
+
+        try:
+            with token.open() as session:
+                pubkey_der = _get_pubkey_der(session)
+        except ValueError:
+            # key not found while unauthenticated: it may be set to CKA_PRIVATE
+            if secrets_handler is None:
+                raise ValueError(
+                    "No keys found unauthenticated and no secrets handler provided"
+                )
+            pin = secrets_handler(cls.SECRETS_HANDLER_MSG)
+            with token.open(user_pin=pin) as session:
+                pubkey_der = _get_pubkey_der(session)
 
         pubkey = load_der_public_key(pubkey_der)
         if not isinstance(pubkey, EllipticCurvePublicKey):
