@@ -183,9 +183,10 @@ class TestHSM(unittest.TestCase):
             _, key = HSMSigner.import_(
                 hsm_keyid, self.token_filter, pin_handler=good_pinh
             )
+            # Pin handler must be called only if public key is private
             if hsm_keyid == self.hsm_keyid_priv:
                 good_pinh.assert_called_once()
-            else:  # If pin not necessary handler must not be called
+            else:  
                 good_pinh.assert_not_called()
 
             signer = HSMSigner(hsm_keyid, self.token_filter, key, good_pinh)
