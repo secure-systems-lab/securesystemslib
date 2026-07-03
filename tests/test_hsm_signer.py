@@ -172,7 +172,7 @@ class TestHSM(unittest.TestCase):
             self.assertTrue("could not fin" in context.exception)
         self.assertTrue(bad_pinh.assert_called_once)
 
-        # And sign ok with good pin or if pin is not necessary
+        # And check sign ok cases (good pin or not required pin)
         for hsm_keyid in [
             self.hsm_keyid,
             self.hsm_keyid_default,
