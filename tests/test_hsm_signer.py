@@ -4,6 +4,7 @@ import os
 import shutil
 import tempfile
 import unittest
+from unittest.mock import Mock
 
 from asn1crypto.keys import (
     ECDomainParameters,
@@ -31,10 +32,11 @@ class TestHSM(unittest.TestCase):
     hsm_keyid = 1
     hsm_keyid_default = 2
     hsm_keyid_odd = 258
+    hsm_keyid_priv = 512
     hsm_user_pin = "123456"
 
     @staticmethod
-    def _generate_key_pair(session, keyid, curve):
+    def _generate_key_pair(session, keyid, curve, is_pubkey_private=False):
         "Create ecdsa key pair on hsm"
         params = ECDomainParameters(name="named", value=NamedCurve(curve.name)).dump()
 
@@ -42,7 +44,10 @@ class TestHSM(unittest.TestCase):
 
         public_template = [
             (PyKCS11.CKA_CLASS, PyKCS11.CKO_PUBLIC_KEY),
-            (PyKCS11.CKA_PRIVATE, PyKCS11.CK_FALSE),
+            (
+                PyKCS11.CKA_PRIVATE,
+                PyKCS11.CK_TRUE if is_pubkey_private else PyKCS11.CK_FALSE,
+            ),
             (PyKCS11.CKA_TOKEN, PyKCS11.CK_TRUE),
             (PyKCS11.CKA_ENCRYPT, PyKCS11.CK_FALSE),
             (PyKCS11.CKA_VERIFY, PyKCS11.CK_TRUE),
@@ -104,6 +109,9 @@ class TestHSM(unittest.TestCase):
         cls._generate_key_pair(session, cls.hsm_keyid, SECP256R1)
         cls._generate_key_pair(session, cls.hsm_keyid_default, SECP384R1)
         cls._generate_key_pair(session, cls.hsm_keyid_odd, SECP256R1)
+        cls._generate_key_pair(
+            session, cls.hsm_keyid_priv, SECP256R1, is_pubkey_private=True
+        )
 
         session.logout()
         session.closeSession()
@@ -146,6 +154,47 @@ class TestHSM(unittest.TestCase):
         key.verify_signature(sig, b"DATA")
         with self.assertRaises(UnverifiedSignatureError):
             key.verify_signature(sig, b"NOT DATA")
+
+    def test_hsm_private_pubkey(self):
+        """Test PIN"""
+
+        # Test pub key not found without pin
+        with self.assertRaises(Exception) as context:
+            _, _ = HSMSigner.import_(self.hsm_keyid_priv, self.token_filter)
+            self.assertTrue("could not fin" in context.exception)
+
+        # or with bad pin
+        bad_pinh = Mock(return_value="987")
+        with self.assertRaises(Exception) as context:
+            _, _ = HSMSigner.import_(
+                self.hsm_keyid_priv, self.token_filter, pin_handler=bad_pinh
+            )
+            self.assertTrue("could not fin" in context.exception)
+        self.assertTrue(bad_pinh.assert_called_once)
+
+        # And sign ok with good pin or if pin is not necessary
+        for hsm_keyid in [
+            self.hsm_keyid,
+            self.hsm_keyid_default,
+            self.hsm_keyid_odd,
+            self.hsm_keyid_priv,
+        ]:
+            good_pinh = Mock(return_value=self.hsm_user_pin)
+            _, key = HSMSigner.import_(
+                hsm_keyid, self.token_filter, pin_handler=good_pinh
+            )
+            if hsm_keyid == self.hsm_keyid_priv:
+                good_pinh.assert_called_once()
+            else:  # If pin not necessary handler must not be called
+                good_pinh.assert_not_called()
+
+            signer = HSMSigner(hsm_keyid, self.token_filter, key, good_pinh)
+
+            sig = signer.sign(b"DATA")
+            key.verify_signature(sig, b"DATA")
+
+            with self.assertRaises(UnverifiedSignatureError):
+                key.verify_signature(sig, b"NOT DATA")
 
 
 # Run the unit tests.
