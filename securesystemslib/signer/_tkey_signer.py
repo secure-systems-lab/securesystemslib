@@ -50,15 +50,14 @@ class TKeySigner(Signer):
         self,
         device_path: str | None,
         public_key: SSlibKey,
-        secrets_handler: SecretsHandler | None = None,
-        digest: str | None = None,
+        passphrase: str | None,
+        digest: str | None,
     ) -> None:
         if TKEY_IMPORT_ERROR:
             raise UnsupportedLibraryError(TKEY_IMPORT_ERROR)
 
         self._public_key = public_key
 
-        passphrase = secrets_handler("Passphrase") if secrets_handler else None
         app = SignApp.load_mldsa(digest=digest)
         self._tkey = TKeySign(app, device_path, passphrase)
 
@@ -107,8 +106,10 @@ class TKeySigner(Signer):
 
         pass_str = query_params.get("passphrase", ["false"])[0]
         if pass_str.lower() != "true":
-            secrets_handler = None
-        elif secrets_handler is None:
+            passphrase = None
+        elif secrets_handler is not None:
+            passphrase = secrets_handler("passphrase")
+        else:
             raise ValueError(
                 "TKey URI has 'passphrase' but no secrets_handler was given"
             )
@@ -116,7 +117,7 @@ class TKeySigner(Signer):
         return cls(
             device_path,
             public_key=public_key,
-            secrets_handler=secrets_handler,
+            passphrase=passphrase,
             digest=digest,
         )
 
