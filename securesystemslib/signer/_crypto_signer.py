@@ -371,14 +371,12 @@ class CryptoSigner(Signer):
         return CryptoSigner(private_key, public_key)
 
     def sign(self, payload: bytes) -> Signature:
-        if isinstance(
-            self._private_key, (MLDSA44PrivateKey, MLDSA65PrivateKey, MLDSA87PrivateKey)
-        ):
+        if self.public_key.keytype == "ml-dsa":
+            # ml-dsa keytype specifies a domain-specific hash prefixing scheme
             digest = Hash(SHA512())
             digest.update(payload)
+            payload = b"tuf" + bytes([1]) + digest.finalize()
 
-            sig = self._private_key.sign(b"tuf" + bytes([1]) + digest.finalize())
-        else:
-            sig = self._private_key.sign(payload, *astuple(self._sign_args))  # type: ignore
+        sig = self._private_key.sign(payload, *astuple(self._sign_args))  # type: ignore
 
         return Signature(self.public_key.keyid, sig.hex())
