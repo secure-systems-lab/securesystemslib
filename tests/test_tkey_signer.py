@@ -39,6 +39,7 @@ class TestTKeySigner(unittest.TestCase):
             TKeySigner(
                 device_path="/dev/ttyACM0",
                 public_key=self.mock_public_key,
+                passphrase=None,
                 digest="7c75714",
             )
         self.assertIn("unsupported scheme unsupported-scheme", str(ctx.exception))
@@ -72,6 +73,7 @@ class TestTKeySigner(unittest.TestCase):
             TKeySigner(
                 device_path="/dev/ttyACM0",
                 public_key=self.mock_public_key,
+                passphrase=None,
                 digest="7c75714",
             )
         self.assertIn("TKey public key does not match", str(ctx.exception))
@@ -87,7 +89,7 @@ class TestTKeySigner(unittest.TestCase):
         mock_init.assert_called_with(
             "/dev/ttyACM0",
             public_key=self.mock_public_key,
-            secrets_handler=None,
+            passphrase=None,
             digest="7c75714",
         )
 
@@ -96,7 +98,7 @@ class TestTKeySigner(unittest.TestCase):
         mock_init.assert_called_with(
             None,
             public_key=self.mock_public_key,
-            secrets_handler=None,
+            passphrase=None,
             digest="7c75714",
         )
 
@@ -110,7 +112,7 @@ class TestTKeySigner(unittest.TestCase):
         mock_init.assert_called_with(
             None,
             public_key=self.mock_public_key,
-            secrets_handler=secrets_handler,
+            passphrase="mysecret",
             digest="7c75714",
         )
 
@@ -124,7 +126,7 @@ class TestTKeySigner(unittest.TestCase):
         mock_init.assert_called_with(
             None,
             public_key=self.mock_public_key,
-            secrets_handler=None,
+            passphrase=None,
             digest="7c75714",
         )
 
@@ -234,6 +236,7 @@ class TestTKeySigner(unittest.TestCase):
         signer = TKeySigner(
             device_path="/dev/ttyACM0",
             public_key=self.mock_public_key,
+            passphrase=None,
             digest="7c75714",
         )
 
