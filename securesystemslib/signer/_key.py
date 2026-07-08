@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from abc import ABCMeta, abstractmethod
 from typing import Any, cast
@@ -160,8 +161,8 @@ class Key(metaclass=ABCMeta):
                 self.keyid,
                 self.keytype,
                 self.scheme,
-                self.keyval,
-                self.unrecognized_fields,
+                json.dumps(self.keyval, sort_keys=True),
+                json.dumps(self.unrecognized_fields, sort_keys=True),
             )
         )
 

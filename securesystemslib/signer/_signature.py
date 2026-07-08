@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from typing import Any
 
@@ -56,7 +57,13 @@ class Signature:
         )
 
     def __hash__(self) -> int:
-        return hash((self.keyid, self.signature, self.unrecognized_fields))
+        return hash(
+            (
+                self.keyid,
+                self.signature,
+                json.dumps(self.unrecognized_fields, sort_keys=True),
+            )
+        )
 
     @classmethod
     def from_dict(cls, signature_dict: dict) -> Signature:
