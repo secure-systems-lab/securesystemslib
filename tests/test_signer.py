@@ -58,6 +58,21 @@ class TestKey(unittest.TestCase):
             self.assertIsInstance(key, key_impl)
             self.assertDictEqual(keydict, key.to_dict())
 
+    def test_key_hash(self):
+        """Keys should be hashable, even with dict keyval and extra fields."""
+        keydict = {
+            "keytype": "ed25519",
+            "scheme": "ed25519",
+            "extra": "somedata",
+            "keyval": {"public": "pubkeyval", "foo": "bar"},
+        }
+        key = Key.from_dict("aa", copy.deepcopy(keydict))
+        key_2 = Key.from_dict("aa", copy.deepcopy(keydict))
+
+        # Equal keys hash equally and collapse in a set.
+        self.assertEqual(hash(key), hash(key_2))
+        self.assertEqual(len({key, key_2}), 1)
+
     def test_sslib_key_from_dict_invalid(self):
         """Test from_dict for invalid data"""
         invalid_dicts = [
@@ -435,6 +450,20 @@ class TestSigner(unittest.TestCase):
         # Assert that making sig_obj_2 None will make the objects not equal.
         sig_obj_2 = None
         self.assertNotEqual(sig_obj, sig_obj_2)
+
+    def test_signature_hash(self):
+        """Signatures should be hashable, even with unrecognized fields."""
+        signature_dict = {
+            "sig": "30460221009342e4566528fcecf6a7a5d53ebacdb1df151e242f55f8775883469cb01dbc6602210086b426cc826709acfa2c3f9214610cb0a832db94bbd266fd7c5939a48064a851",
+            "keyid": "11fa391a0ed7a447cbfeb4b2667e286fc248f64d5e6d0eeed2e5e23f97f9f714",
+            "extra": "unrecognized",
+        }
+        sig_obj = Signature.from_dict(copy.deepcopy(signature_dict))
+        sig_obj_2 = Signature.from_dict(copy.deepcopy(signature_dict))
+
+        # Equal signatures hash equally and collapse in a set.
+        self.assertEqual(hash(sig_obj), hash(sig_obj_2))
+        self.assertEqual(len({sig_obj, sig_obj_2}), 1)
 
 
 @unittest.skipIf(not have_gpg(), "gpg not found")
