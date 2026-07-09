@@ -2,20 +2,20 @@
 
 import os
 import shutil
+import subprocess
 import tempfile
 import unittest
-from unittest.mock import Mock
+from unittest import mock
 
+import pkcs11
 from asn1crypto.keys import (
     ECDomainParameters,
     NamedCurve,
 )
 from cryptography.hazmat.primitives.asymmetric.ec import SECP256R1, SECP384R1
-from PyKCS11 import PyKCS11
 
 from securesystemslib.exceptions import UnverifiedSignatureError
 from securesystemslib.signer import HSMSigner, Signer
-from securesystemslib.signer._hsm_signer import PYKCS11LIB
 
 
 @unittest.skipUnless(os.environ.get("PYKCS11LIB"), "set PYKCS11LIB to SoftHSM lib path")
@@ -34,52 +34,50 @@ class TestHSM(unittest.TestCase):
     hsm_keyid_odd = 258
     hsm_keyid_priv = 512
     hsm_user_pin = "123456"
+    token_label = "Test SoftHSM"
 
     @staticmethod
     def _generate_key_pair(session, keyid, curve, is_pubkey_private=False):
         "Create ecdsa key pair on hsm"
         params = ECDomainParameters(name="named", value=NamedCurve(curve.name)).dump()
+        cka_id = pkcs11.util.biginteger(keyid)
 
-        cka_id = list(keyid.to_bytes((keyid.bit_length() + 7) // 8 or 1, "big"))
+        public_template = {
+            pkcs11.Attribute.CLASS: pkcs11.ObjectClass.PUBLIC_KEY,
+            pkcs11.Attribute.PRIVATE: is_pubkey_private,
+            pkcs11.Attribute.TOKEN: True,
+            pkcs11.Attribute.ENCRYPT: False,
+            pkcs11.Attribute.VERIFY: True,
+            pkcs11.Attribute.WRAP: False,
+            pkcs11.Attribute.KEY_TYPE: pkcs11.KeyType.EC,
+            pkcs11.Attribute.EC_PARAMS: params,
+            pkcs11.Attribute.LABEL: curve.name,
+            pkcs11.Attribute.ID: cka_id,
+        }
+        private_template = {
+            pkcs11.Attribute.CLASS: pkcs11.ObjectClass.PRIVATE_KEY,
+            pkcs11.Attribute.KEY_TYPE: pkcs11.KeyType.EC,
+            pkcs11.Attribute.TOKEN: True,
+            pkcs11.Attribute.SENSITIVE: True,
+            pkcs11.Attribute.DECRYPT: False,
+            pkcs11.Attribute.SIGN: True,
+            pkcs11.Attribute.UNWRAP: False,
+            pkcs11.Attribute.LABEL: curve.name,
+            pkcs11.Attribute.ID: cka_id,
+        }
 
-        public_template = [
-            (PyKCS11.CKA_CLASS, PyKCS11.CKO_PUBLIC_KEY),
-            (
-                PyKCS11.CKA_PRIVATE,
-                PyKCS11.CK_TRUE if is_pubkey_private else PyKCS11.CK_FALSE,
-            ),
-            (PyKCS11.CKA_TOKEN, PyKCS11.CK_TRUE),
-            (PyKCS11.CKA_ENCRYPT, PyKCS11.CK_FALSE),
-            (PyKCS11.CKA_VERIFY, PyKCS11.CK_TRUE),
-            (PyKCS11.CKA_WRAP, PyKCS11.CK_FALSE),
-            (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_ECDSA),
-            (PyKCS11.CKA_EC_PARAMS, params),
-            (PyKCS11.CKA_LABEL, curve.name),
-            (PyKCS11.CKA_ID, cka_id),
-        ]
-        private_template = [
-            (PyKCS11.CKA_CLASS, PyKCS11.CKO_PRIVATE_KEY),
-            (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_ECDSA),
-            (PyKCS11.CKA_TOKEN, PyKCS11.CK_TRUE),
-            (PyKCS11.CKA_SENSITIVE, PyKCS11.CK_TRUE),
-            (PyKCS11.CKA_DECRYPT, PyKCS11.CK_FALSE),
-            (PyKCS11.CKA_SIGN, PyKCS11.CK_TRUE),
-            (PyKCS11.CKA_UNWRAP, PyKCS11.CK_FALSE),
-            (PyKCS11.CKA_LABEL, curve.name),
-            (PyKCS11.CKA_ID, cka_id),
-        ]
-
-        session.generateKeyPair(
-            public_template,
-            private_template,
-            mecha=PyKCS11.MechanismECGENERATEKEYPAIR,
+        session.generate_keypair(
+            pkcs11.KeyType.EC,
+            256,
+            store=True,
+            mechanism=pkcs11.Mechanism.EC_KEY_PAIR_GEN,
+            public_template=public_template,
+            private_template=private_template,
         )
 
     @classmethod
     def setUpClass(cls):
         """Initialize SoftHSM token and generate ecdsa test keys"""
-        so_pin = "abcd"
-        token_label = "Test SoftHSM"
 
         # Configure SoftHSM to create test token in temporary test directory
         cls.original_cwd = os.getcwd()
@@ -90,31 +88,35 @@ class TestHSM(unittest.TestCase):
             f.write("directories.tokendir = " + os.path.join(cls.test_dir, ""))
         os.environ["SOFTHSM2_CONF"] = os.path.join(cls.test_dir, "softhsm2.conf")
 
-        # Only load shared library after above config
-        lib = PYKCS11LIB()
-        slot = lib.getSlotList(tokenPresent=True)[0]
-        lib.initToken(slot, so_pin, token_label)
-
-        tokeninfo = lib.getTokenInfo(slot)
-        cls.token_filter = {"label": getattr(tokeninfo, "label")}
-
-        session = PYKCS11LIB().openSession(slot, PyKCS11.CKF_RW_SESSION)
-        session.login(so_pin, PyKCS11.CKU_SO)
-        session.initPin(cls.hsm_user_pin)
-        session.logout()
-
-        session.login(cls.hsm_user_pin)
-
-        # Generate test ecdsa key pairs for curves secp256r1 and secp384r1 on test token
-        cls._generate_key_pair(session, cls.hsm_keyid, SECP256R1)
-        cls._generate_key_pair(session, cls.hsm_keyid_default, SECP384R1)
-        cls._generate_key_pair(session, cls.hsm_keyid_odd, SECP256R1)
-        cls._generate_key_pair(
-            session, cls.hsm_keyid_priv, SECP256R1, is_pubkey_private=True
+        # Initialize the token using softhsm2-util
+        subprocess.run(
+            [
+                "softhsm2-util",
+                "--init-token",
+                "--slot",
+                "0",
+                "--label",
+                cls.token_label,
+                "--so-pin",
+                "abcd",
+                "--pin",
+                cls.hsm_user_pin,
+            ],
+            check=True,
+            stdout=subprocess.DEVNULL,
         )
 
-        session.logout()
-        session.closeSession()
+        lib = pkcs11.lib(os.environ["PYKCS11LIB"])
+        token = lib.get_token(token_label=cls.token_label)
+
+        with token.open(rw=True, user_pin=cls.hsm_user_pin) as session:
+            # Generate test ecdsa key pairs for curves secp256r1 and secp384r1 on test token
+            cls._generate_key_pair(session, cls.hsm_keyid, SECP256R1)
+            cls._generate_key_pair(session, cls.hsm_keyid_default, SECP384R1)
+            cls._generate_key_pair(session, cls.hsm_keyid_odd, SECP256R1)
+            cls._generate_key_pair(
+                session, cls.hsm_keyid_priv, SECP256R1, is_pubkey_private=True
+            )
 
     @classmethod
     def tearDownClass(cls):
@@ -126,9 +128,9 @@ class TestHSM(unittest.TestCase):
         """Test HSM key export and signing."""
 
         for hsm_keyid in [self.hsm_keyid, self.hsm_keyid_default, self.hsm_keyid_odd]:
-            _, key = HSMSigner.import_(hsm_keyid, self.token_filter)
+            _, key = HSMSigner.import_(hsm_keyid, self.token_label)
             signer = HSMSigner(
-                hsm_keyid, self.token_filter, key, lambda sec: self.hsm_user_pin
+                hsm_keyid, key, lambda sec: self.hsm_user_pin, self.token_label
             )
             sig = signer.sign(b"DATA")
             key.verify_signature(sig, b"DATA")
@@ -147,8 +149,8 @@ class TestHSM(unittest.TestCase):
         with self.assertRaises(UnverifiedSignatureError):
             key.verify_signature(sig, b"NOT DATA")
 
-        # Import with specified values
-        uri, key = HSMSigner.import_(self.hsm_keyid_default, self.token_filter)
+        # import using arguments
+        uri, key = HSMSigner.import_(self.hsm_keyid_default, self.token_label)
         signer = Signer.from_priv_key_uri(uri, key, lambda sec: self.hsm_user_pin)
         sig = signer.sign(b"DATA")
         key.verify_signature(sig, b"DATA")
@@ -156,21 +158,20 @@ class TestHSM(unittest.TestCase):
             key.verify_signature(sig, b"NOT DATA")
 
     def test_hsm_private_pubkey(self):
-        """Test PIN"""
+        """Test import_() PIN fallback when public key has CKA_PRIVATE=True."""
 
         # Test pub key not found without pin
         with self.assertRaises(Exception) as context:
-            _, _ = HSMSigner.import_(self.hsm_keyid_priv, self.token_filter)
-            self.assertTrue("could not fin" in context.exception)
+            _, _ = HSMSigner.import_(self.hsm_keyid_priv, self.token_label)
+        self.assertIn("No keys found unauthenticated", str(context.exception))
 
-        # or with bad pin
-        bad_pinh = Mock(return_value="987")
+        # Test with bad pin
+        bad_pinh = mock.Mock(return_value="987")
         with self.assertRaises(Exception) as context:
             _, _ = HSMSigner.import_(
-                self.hsm_keyid_priv, self.token_filter, pin_handler=bad_pinh
+                self.hsm_keyid_priv, self.token_label, secrets_handler=bad_pinh
             )
-            self.assertTrue("could not fin" in context.exception)
-        self.assertTrue(bad_pinh.assert_called_once)
+        bad_pinh.assert_called_once()
 
         # And check sign ok cases (good pin or not required pin)
         for hsm_keyid in [
@@ -179,9 +180,9 @@ class TestHSM(unittest.TestCase):
             self.hsm_keyid_odd,
             self.hsm_keyid_priv,
         ]:
-            good_pinh = Mock(return_value=self.hsm_user_pin)
+            good_pinh = mock.Mock(return_value=self.hsm_user_pin)
             _, key = HSMSigner.import_(
-                hsm_keyid, self.token_filter, pin_handler=good_pinh
+                hsm_keyid, self.token_label, secrets_handler=good_pinh
             )
             # Pin handler must be called only if public key is private
             if hsm_keyid == self.hsm_keyid_priv:
@@ -189,8 +190,7 @@ class TestHSM(unittest.TestCase):
             else:
                 good_pinh.assert_not_called()
 
-            signer = HSMSigner(hsm_keyid, self.token_filter, key, good_pinh)
-
+            signer = HSMSigner(hsm_keyid, key, good_pinh, self.token_label)
             sig = signer.sign(b"DATA")
             key.verify_signature(sig, b"DATA")
 
