@@ -135,20 +135,34 @@ class HSMSigner(Signer):
             raise ValueError(f"No PKCS#11 token found{label_str}")
 
     @staticmethod
-    def _find_key(
-        session: pkcs11.Session, keyid: int, private: bool = False
-    ) -> pkcs11.Key:
-        """Find ecdsa key on HSM."""
-        cka_id_filter = pkcs11.util.biginteger(keyid)
-        if private:
-            object_class = pkcs11.ObjectClass.PRIVATE_KEY
-        else:
-            object_class = pkcs11.ObjectClass.PUBLIC_KEY
-
+    def _find_pub_key(session: pkcs11.Session, keyid: int) -> EllipticCurvePublicKey:
+        """Find ecdsa public key on HSM, return corresponding `cryptography` EC key."""
+        id_bytes = pkcs11.util.biginteger(keyid)
+        object_class = pkcs11.ObjectClass.PUBLIC_KEY
         try:
-            return session.get_key(object_class, pkcs11.KeyType.EC, id=cka_id_filter)
+            pkcs11_key = session.get_key(object_class, pkcs11.KeyType.EC, id=id_bytes)
         except NoSuchKey:
             raise ValueError("could not find ECDSA key on the PKCS#11 token")
+
+        if not isinstance(pkcs11_key, pkcs11.PublicKey):
+            raise AssertionError("PKCS key is not a public key")
+        key = load_der_public_key(pkcs11.util.ec.encode_ec_public_key(pkcs11_key))
+        if not isinstance(key, EllipticCurvePublicKey):
+            raise AssertionError("PKCS key is not an EC key")
+        return key
+
+    @staticmethod
+    def _find_signing_key(session: pkcs11.Session, keyid: int) -> pkcs11.SignMixin:
+        """Find ecdsa signing key on HSM."""
+        id_bytes = pkcs11.util.biginteger(keyid)
+        object_class = pkcs11.ObjectClass.PRIVATE_KEY
+        try:
+            pkcs11_key = session.get_key(object_class, pkcs11.KeyType.EC, id=id_bytes)
+        except NoSuchKey:
+            raise ValueError("could not find ECDSA private key on the PKCS#11 token")
+        if not isinstance(pkcs11_key, pkcs11.SignMixin):
+            raise AssertionError("Found private key cannot be used for signing")
+        return pkcs11_key
 
     @classmethod
     def import_(
@@ -189,15 +203,9 @@ class HSMSigner(Signer):
         if token.label:
             uri = f"{uri}?{parse.urlencode({'label': token.label})}"
 
-        def _get_pubkey_der(session: pkcs11.Session) -> bytes:
-            pkcs11_key = cls._find_key(session, hsm_keyid)
-            if not isinstance(pkcs11_key, pkcs11.PublicKey):
-                raise AssertionError("PKCS key is not a public key")
-            return pkcs11.util.ec.encode_ec_public_key(pkcs11_key)
-
         try:
             with token.open() as session:
-                pubkey_der = _get_pubkey_der(session)
+                pubkey = cls._find_pub_key(session, hsm_keyid)
         except ValueError:
             # key not found while unauthenticated: it may be set to CKA_PRIVATE
             if secrets_handler is None:
@@ -206,11 +214,8 @@ class HSMSigner(Signer):
                 )
             pin = secrets_handler(cls.SECRETS_HANDLER_MSG)
             with token.open(user_pin=pin) as session:
-                pubkey_der = _get_pubkey_der(session)
+                pubkey = cls._find_pub_key(session, hsm_keyid)
 
-        pubkey = load_der_public_key(pubkey_der)
-        if not isinstance(pubkey, EllipticCurvePublicKey):
-            raise ValueError("expected EllipticCurvePublicKey")
         if type(pubkey.curve) not in _SCHEME_FOR_CURVE:
             raise ValueError(f"{pubkey.curve.name} is not a supported EC curve")
 
@@ -261,9 +266,7 @@ class HSMSigner(Signer):
         token = self._find_token(self.token_label)
 
         with token.open(rw=True, user_pin=pin) as session:
-            key = self._find_key(session, self.hsm_keyid, private=True)
-            if not isinstance(key, pkcs11.SignMixin):
-                raise AssertionError("Signing key is not a SignMixin")
+            key = self._find_signing_key(session, self.hsm_keyid)
             signature = key.sign(hasher.digest(), mechanism=pkcs11.Mechanism.ECDSA)
 
         # Convert the PKCS#11 raw signature to ASN.1 DER
