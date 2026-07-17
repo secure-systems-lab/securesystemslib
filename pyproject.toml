@@ -44,8 +44,8 @@ Source = "https://github.com/secure-systems-lab/securesystemslib"
 Issues = "https://github.com/secure-systems-lab/securesystemslib/issues"
 
 [project.optional-dependencies]
-crypto = ["cryptography>=40.0.0"]
-gcpkms = ["google-cloud-kms", "cryptography>=40.0.0"]
+crypto = ["cryptography>=48.0.0"]
+gcpkms = ["google-cloud-kms", "cryptography>=48.0.0"]
 azurekms = ["azure-identity", "azure-keyvault-keys", "cryptography>=40.0.0"]
 awskms = ["boto3", "botocore", "cryptography>=40.0.0"]
 hsm = ["asn1crypto", "cryptography>=40.0.0", "PyKCS11"]
