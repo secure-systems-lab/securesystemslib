@@ -43,7 +43,13 @@ class Envelope:
         )
 
     def __hash__(self) -> int:
-        return hash((self.payload, self.payload_type, self.signatures))
+        return hash(
+            (
+                self.payload,
+                self.payload_type,
+                frozenset(self.signatures.items()),
+            )
+        )
 
     @classmethod
     def from_dict(cls, data: dict) -> Envelope:
