@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 vault server -dev -dev-root-token-id="${VAULT_TOKEN}" &
 
