@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+from typing import Any
 from urllib import parse
 
 from securesystemslib import exceptions
@@ -58,6 +59,18 @@ try:
         CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PKCS1_4096_SHA512: (
             "rsa",
             "rsa-pkcs1v15-sha512",
+        ),
+        CryptoKeyVersion.CryptoKeyVersionAlgorithm.PQ_SIGN_ML_DSA_44: (
+            "ml-dsa",
+            "ml-dsa-44/1",
+        ),
+        CryptoKeyVersion.CryptoKeyVersionAlgorithm.PQ_SIGN_ML_DSA_65: (
+            "ml-dsa",
+            "ml-dsa-65/1",
+        ),
+        CryptoKeyVersion.CryptoKeyVersionAlgorithm.PQ_SIGN_ML_DSA_87: (
+            "ml-dsa",
+            "ml-dsa-87/1",
         ),
     }
 except ImportError:
@@ -178,8 +191,11 @@ class GCPSigner(Signer):
 
         hasher = hashlib.new(self.hash_algorithm)
         hasher.update(payload)
-        digest = {self.hash_algorithm: hasher.digest()}
-        request = {"name": self.gcp_keyid, "digest": digest}
+        request: dict[str, Any] = {"name": self.gcp_keyid}
+        if self.public_key.keytype == "ml-dsa":
+            request["data"] = b"tuf" + bytes([1]) + hasher.digest()
+        else:
+            request["digest"] = {self.hash_algorithm: hasher.digest()}
 
         logger.debug("signing request %s", request)
         response = self.client.asymmetric_sign(request)
