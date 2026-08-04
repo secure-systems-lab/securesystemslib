@@ -360,7 +360,7 @@ class CryptoSigner(Signer):
         scheme = "ml-dsa-65/1" if scheme is None else scheme
         if scheme == "ml-dsa-44/1":
             private_key: PrivateKeyTypes = MLDSA44PrivateKey.generate()
-        elif scheme in "ml-dsa-65/1":
+        elif scheme == "ml-dsa-65/1":
             private_key = MLDSA65PrivateKey.generate()
         elif scheme == "ml-dsa-87/1":
             private_key = MLDSA87PrivateKey.generate()

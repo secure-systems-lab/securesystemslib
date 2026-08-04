@@ -715,6 +715,12 @@ class TestCryptoSigner(unittest.TestCase):
                 "4f66dabebcf30628963786001984c0b75c175cdcf3bc4855933a2628f0cd0a0f",
                 "ed25519_private.pem",
             ),
+            (
+                "ml-dsa",
+                "ml-dsa-65/1",
+                "-----BEGIN PUBLIC KEY-----\n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\nNhwDWkT4\n-----END PUBLIC KEY-----\n",
+                "mldsa65_private.pem",
+            ),
         ]
 
         for keytype, scheme, public_key_value, fname in test_data:
@@ -766,7 +772,7 @@ class TestCryptoSigner(unittest.TestCase):
         """Test private_bytes -> from_priv_key_uri"""
         with tempfile.TemporaryDirectory() as tempdir:
             priv_key_path = os.path.join(tempdir, "privkey.pem")
-            for pem in ["rsa", "ecdsa", "ed25519"]:
+            for pem in ["rsa", "ecdsa", "ed25519", "mldsa65"]:
                 with open(PEMS_DIR / f"{pem}_private.pem", "rb") as f:
                     privkey = load_pem_private_key(f.read(), None)
                     signer = CryptoSigner(privkey)
