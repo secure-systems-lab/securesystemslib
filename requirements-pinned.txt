@@ -10,7 +10,7 @@ cffi==2.1.0
     # via
     #   cryptography
     #   pyspx
-cryptography==49.0.0
+cryptography==50.0.0
     # via -r requirements.txt
 pycparser==3.0
     # via cffi
