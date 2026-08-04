@@ -691,52 +691,33 @@ class TestCryptoSigner(unittest.TestCase):
     def test_from_priv_key_uri(self):
         """Test load and use PEM/PKCS#8 files for each sslib keytype"""
         test_data = [
+            ("rsa_public.pem", "rsa_private.pem", None),
+            ("ecdsa_public.pem", "ecdsa_private.pem", None),
             (
-                "rsa",
-                "rsassa-pss-sha256",
-                "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwhX6rioiL/cX5Ys32InF\nU52H8tL14QeX0tacZdb+AwcH6nIh97h3RSHvGD7Xy6uaMRmGldAnSVYwJHqoJ5j2\nynVzU/RFpr+6n8Ps0QFg5GmlEqZboFjLbS0bsRQcXXnqJNsVLEPT3ULvu1rFRbWz\nAMFjNtNNk5W/u0GEzXn3D03jIdhD8IKAdrTRf0VMD9TRCXLdMmEU2vkf1NVUnOTb\n/dRX5QA8TtBylVnouZknbavQ0J/pPlHLfxUgsKzodwDlJmbPG9BWwXqQCmP0DgOG\nNIZ1X281MOBaGbkNVEuntNjCSaQxQjfALVVU5NAfal2cwMINtqaoc7Wa+TWvpFEI\nWwIDAQAB\n-----END PUBLIC KEY-----\n",
-                "rsa_private.pem",
-            ),
-            (
-                "ecdsa",
-                "ecdsa-sha2-nistp256",
-                "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcLYSZyFGeKdWNt5dWFbnv6N9NyHC\noUNLcG6GZIxLwN8Q8MUdHdOOxGkDnyBRSJpIZ/r/oDECSTwfCYhdogweLA==\n-----END PUBLIC KEY-----\n",
+                "ecdsa_public.pem",
                 "ecdsa_private.pem",
-            ),
-            (
                 "ecdsa-sha2-nistp256",  # keytype deprecated in TUF spec, tested for backwards compat with older metadata
-                "ecdsa-sha2-nistp256",
-                "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcLYSZyFGeKdWNt5dWFbnv6N9NyHC\noUNLcG6GZIxLwN8Q8MUdHdOOxGkDnyBRSJpIZ/r/oDECSTwfCYhdogweLA==\n-----END PUBLIC KEY-----\n",
-                "ecdsa_private.pem",
             ),
-            (
-                "ed25519",
-                "ed25519",
-                "4f66dabebcf30628963786001984c0b75c175cdcf3bc4855933a2628f0cd0a0f",
-                "ed25519_private.pem",
-            ),
-            (
-                "ml-dsa",
-                "ml-dsa-65/1",
-                "-----BEGIN PUBLIC KEY-----\n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\nNhwDWkT4\n-----END PUBLIC KEY-----\n",
-                "mldsa65_private.pem",
-            ),
+            ("ed25519_public.pem", "ed25519_private.pem", None),
+            ("mldsa65_public.pem", "mldsa65_private.pem", None),
         ]
 
-        for keytype, scheme, public_key_value, fname in test_data:
+        for pub_fname, priv_fname, keytype_override in test_data:
+            pub_crypto_key = load_pem_public_key((PEMS_DIR / pub_fname).read_bytes())
+            public_key = SSlibKey.from_crypto(pub_crypto_key)
+            if keytype_override:
+                public_key.keytype = keytype_override
+
             for use_prefix in [True, False]:
                 if use_prefix:
                     # uri path is relative from CRYPTO_SIGNER_PATH_PREFIX
                     os.environ["CRYPTO_SIGNER_PATH_PREFIX"] = str(PEMS_DIR)
-                    uri = f"file2:{fname}"
+                    uri = f"file2:{priv_fname}"
                 else:
                     with suppress(KeyError):
                         del os.environ["CRYPTO_SIGNER_PATH_PREFIX"]
-                    uri = f"file2:{PEMS_DIR / fname}"
+                    uri = f"file2:{PEMS_DIR / priv_fname}"
 
-                public_key = SSlibKey(
-                    "abcdefg", keytype, scheme, {"public": public_key_value}
-                )
                 signer = Signer.from_priv_key_uri(uri, public_key)
                 self.assertIsInstance(signer, CryptoSigner)
 
