@@ -1,7 +1,7 @@
 
 # CryptoSigner
 
-`CryptoSigner` implements signing with file-based *rsa*, *ecdsa* and *ed25519*
+`CryptoSigner` implements signing with file-based *rsa*, *ecdsa*, *ed25519* and *ml-dsa*
 keys. New private key material can be created with the provided simple API
 or with [cryptography](https://cryptography.io/).
 
@@ -12,7 +12,7 @@ Loading the signer at signing time works through the generic
 
 ### 1. Generate key content
 
-`CryptoSigner` provides `generate_{rsa, ed25519, ecdsa}` methods to create new
+`CryptoSigner` provides `generate_{rsa, ed25519, ecdsa, mldsa}` methods to create new
 private key material.
 
 ```python

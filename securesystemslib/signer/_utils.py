@@ -24,3 +24,12 @@ def compute_default_keyid(keytype: str, scheme: str, keyval: dict[str, Any]) -> 
         raise FormatError("Failed to encode data into canonical json")
 
     return hashlib.sha256(byte_data).hexdigest()
+
+
+def get_mldsa_payload(data: bytes, version: int) -> bytes:
+    """Compute and format ML-DSA payload per TAP 21 spec."""
+    if version != 1:
+        raise ValueError(f"Unsupported ml-dsa key version {version}")
+
+    # Version 1 uses SHA-512
+    return b"tuf" + bytes([version]) + hashlib.sha512(data).digest()
