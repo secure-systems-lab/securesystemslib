@@ -159,7 +159,10 @@ class GCPSigner(Signer):
             raise exceptions.UnsupportedLibraryError(GCP_IMPORT_ERROR)
 
         client = kms.KeyManagementServiceClient()
-        request = {"name": gcp_keyid}
+        request = {
+            "name": gcp_keyid,
+            "public_key_format": kms.PublicKey.PublicKeyFormat.PEM,
+        }
         kms_pubkey = client.get_public_key(request)
         try:
             keytype, scheme = KEYTYPES_AND_SCHEMES[kms_pubkey.algorithm]
@@ -168,7 +171,7 @@ class GCPSigner(Signer):
                 f"{kms_pubkey.algorithm} is not a supported signing algorithm"
             ) from e
 
-        keyval = {"public": kms_pubkey.pem}
+        keyval = {"public": kms_pubkey.public_key.data.decode("utf-8")}
         keyid = compute_default_keyid(keytype, scheme, keyval)
         public_key = SSlibKey(keyid, keytype, scheme, keyval)
 
