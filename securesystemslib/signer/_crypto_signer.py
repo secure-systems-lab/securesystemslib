@@ -9,6 +9,7 @@ from securesystemslib.exceptions import UnsupportedLibraryError
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import SecretsHandler, Signer
+from securesystemslib.signer._utils import get_mldsa_payload
 
 CRYPTO_IMPORT_ERROR = None
 try:
@@ -43,8 +44,6 @@ try:
     from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
     from cryptography.hazmat.primitives.hashes import (
         SHA256,
-        SHA512,
-        Hash,
         HashAlgorithm,
     )
     from cryptography.hazmat.primitives.serialization import (
@@ -373,9 +372,7 @@ class CryptoSigner(Signer):
     def sign(self, payload: bytes) -> Signature:
         if self.public_key.keytype == "ml-dsa":
             # ml-dsa keytype specifies a domain-specific hash prefixing scheme
-            digest = Hash(SHA512())
-            digest.update(payload)
-            payload = b"tuf" + bytes([1]) + digest.finalize()
+            payload = get_mldsa_payload(payload, 1)
 
         sig = self._private_key.sign(payload, *astuple(self._sign_args))  # type: ignore
 

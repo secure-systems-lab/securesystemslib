@@ -16,7 +16,7 @@ from securesystemslib.exceptions import (
     VerificationError,
 )
 from securesystemslib.signer._signature import Signature
-from securesystemslib.signer._utils import compute_default_keyid
+from securesystemslib.signer._utils import compute_default_keyid, get_mldsa_payload
 
 CRYPTO_IMPORT_ERROR = None
 try:
@@ -51,7 +51,6 @@ try:
         SHA256,
         SHA384,
         SHA512,
-        Hash,
         HashAlgorithm,
     )
     from cryptography.hazmat.primitives.serialization import (
@@ -396,9 +395,8 @@ class SSlibKey(Key):
         except SignatureMismatch as e:
             raise UnverifiedSignatureError from e
 
-    def _verify(self, signature: bytes, data: bytes) -> None:
+    def _verify(self, signature: bytes, data: bytes) -> None:  # noqa: PLR0915
         """Helper to verify signature using pyca/cryptography (default)."""
-        # ruff: noqa: PLR0915
 
         def _validate_type(key: object, type_: type) -> None:
             if not isinstance(key, type_):
@@ -465,26 +463,17 @@ class SSlibKey(Key):
             elif self.keytype == "ml-dsa" and self.scheme == "ml-dsa-44/1":
                 key = cast(MLDSA44PublicKey, self._crypto_key())
                 _validate_type(key, MLDSA44PublicKey)
-
-                digest = Hash(SHA512())
-                digest.update(data)
-                key.verify(signature, b"tuf" + bytes([1]) + digest.finalize())
+                key.verify(signature, get_mldsa_payload(data, 1))
 
             elif self.keytype == "ml-dsa" and self.scheme == "ml-dsa-65/1":
                 key = cast(MLDSA65PublicKey, self._crypto_key())
                 _validate_type(key, MLDSA65PublicKey)
-
-                digest = Hash(SHA512())
-                digest.update(data)
-                key.verify(signature, b"tuf" + bytes([1]) + digest.finalize())
+                key.verify(signature, get_mldsa_payload(data, 1))
 
             elif self.keytype == "ml-dsa" and self.scheme == "ml-dsa-87/1":
                 key = cast(MLDSA87PublicKey, self._crypto_key())
                 _validate_type(key, MLDSA87PublicKey)
-
-                digest = Hash(SHA512())
-                digest.update(data)
-                key.verify(signature, b"tuf" + bytes([1]) + digest.finalize())
+                key.verify(signature, get_mldsa_payload(data, 1))
 
             else:
                 raise ValueError(f"Unsupported public key {self.keytype}/{self.scheme}")

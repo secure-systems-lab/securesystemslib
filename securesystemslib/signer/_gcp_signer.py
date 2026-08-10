@@ -10,7 +10,7 @@ from urllib import parse
 from securesystemslib import exceptions
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signer import SecretsHandler, Signature, Signer
-from securesystemslib.signer._utils import compute_default_keyid
+from securesystemslib.signer._utils import compute_default_keyid, get_mldsa_payload
 
 logger = logging.getLogger(__name__)
 
@@ -189,12 +189,12 @@ class GCPSigner(Signer):
         # NOTE: request and response can contain CRC32C of the digest/sig:
         # Verifying could be useful but would require another dependency...
 
-        hasher = hashlib.new(self.hash_algorithm)
-        hasher.update(payload)
         request: dict[str, Any] = {"name": self.gcp_keyid}
         if self.public_key.keytype == "ml-dsa":
-            request["data"] = b"tuf" + bytes([1]) + hasher.digest()
+            request["data"] = get_mldsa_payload(payload, 1)
         else:
+            hasher = hashlib.new(self.hash_algorithm)
+            hasher.update(payload)
             request["digest"] = {self.hash_algorithm: hasher.digest()}
 
         logger.debug("signing request %s", request)
