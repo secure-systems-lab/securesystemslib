@@ -770,6 +770,8 @@ class TestCryptoSigner(unittest.TestCase):
                 ],
             ),
             ("ecdsa", "ecdsa", ["ecdsa-sha2-nistp256"]),
+            ("ecdsa_secp384r1", "ecdsa", ["ecdsa-sha2-nistp384"]),
+            ("ecdsa_secp521r1", "ecdsa", ["ecdsa-sha2-nistp521"]),
             ("ed25519", "ed25519", ["ed25519"]),
             ("mldsa44", "ml-dsa", ["ml-dsa-44/1"]),
             ("mldsa65", "ml-dsa", ["ml-dsa-65/1"]),
@@ -871,6 +873,36 @@ class TestCryptoSigner(unittest.TestCase):
             self.assertIsNone(signer.public_key.verify_signature(sig, b"DATA"))
             with self.assertRaises(UnverifiedSignatureError):
                 signer.public_key.verify_signature(sig, b"NOT DATA")
+
+    def test_generate_ecdsa_scheme(self):
+        """Test generate ecdsa signer for each ecdsa scheme"""
+        for scheme in [
+            "ecdsa-sha2-nistp256",
+            "ecdsa-sha2-nistp384",
+            "ecdsa-sha2-nistp521",
+        ]:
+            signer = CryptoSigner.generate_ecdsa(scheme=scheme)
+            self.assertEqual(signer.public_key.keytype, "ecdsa")
+            self.assertEqual(signer.public_key.scheme, scheme)
+
+            sig = signer.sign(b"DATA")
+            self.assertIsNone(signer.public_key.verify_signature(sig, b"DATA"))
+
+        with self.assertRaises(ValueError):
+            CryptoSigner.generate_ecdsa(scheme="ecdsa-sha2-nistp192")
+
+    def test_init_ecdsa_curve_mismatch(self):
+        """Test that an ecdsa private key must match the scheme's curve.
+
+        Signing with a mismatched curve produces signatures that can never
+        be verified, because SSlibKey._verify() validates the curve.
+        """
+        signer = CryptoSigner.generate_ecdsa(scheme="ecdsa-sha2-nistp384")
+        for scheme in ["ecdsa-sha2-nistp256", "ecdsa-sha2-nistp521"]:
+            public_key = copy.copy(signer.public_key)
+            public_key.scheme = scheme
+            with self.assertRaises(ValueError):
+                CryptoSigner(signer._private_key, public_key)
 
     def test_private_bytes(self):
         """Test private_bytes -> from_priv_key_uri"""
