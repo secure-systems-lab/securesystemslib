@@ -97,6 +97,7 @@ class TestPublicInterfaces(unittest.TestCase):
             CryptoSigner.generate_rsa,
             CryptoSigner.generate_ecdsa,
             CryptoSigner.generate_ed25519,
+            CryptoSigner.generate_mldsa,
         ]:
             with self.assertRaises(UnsupportedLibraryError):
                 generate()

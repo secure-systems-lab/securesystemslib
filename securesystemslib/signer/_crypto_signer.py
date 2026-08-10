@@ -24,6 +24,7 @@ from securesystemslib.signer._constants import (
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import SecretsHandler, Signer
+from securesystemslib.signer._utils import get_mldsa_payload
 
 CRYPTO_IMPORT_ERROR = None
 try:
@@ -37,6 +38,11 @@ try:
     )
     from cryptography.hazmat.primitives.asymmetric.ed25519 import (
         Ed25519PrivateKey,
+    )
+    from cryptography.hazmat.primitives.asymmetric.mldsa import (
+        MLDSA44PrivateKey,
+        MLDSA65PrivateKey,
+        MLDSA87PrivateKey,
     )
     from cryptography.hazmat.primitives.asymmetric.padding import (
         MGF1,
@@ -132,6 +138,12 @@ class CryptoSigner(Signer):
         private_key: "PrivateKeyTypes",
         public_key: SSlibKey | None = None,
     ):
+        def assert_type(
+            name: str, key: PrivateKeyTypes, typ: type[PrivateKeyTypes]
+        ) -> None:
+            if not isinstance(key, typ):
+                raise ValueError(f"invalid {name} key: {type(key)}")
+
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
 
@@ -151,8 +163,7 @@ class CryptoSigner(Signer):
             RSA_PKCS1V15_SHA384,
             RSA_PKCS1V15_SHA512,
         ]:
-            if not isinstance(private_key, RSAPrivateKey):
-                raise ValueError(f"invalid rsa key: {type(private_key)}")
+            assert_type(KEY_TYPE_RSA, private_key, RSAPrivateKey)
 
             hash_name = public_key.get_hash_algorithm_name()
             hash_algo = get_hash_algorithm(hash_name)
@@ -161,31 +172,36 @@ class CryptoSigner(Signer):
             padding = _get_rsa_padding(padding_name, hash_algo)
 
             self._sign_args = _RSASignArgs(padding, hash_algo)
-            self._private_key = private_key
 
         elif (
             public_key.keytype in _ECDSA_KEYTYPES
             and public_key.scheme == ECDSA_SHA2_NISTP256
         ):
-            if not isinstance(private_key, EllipticCurvePrivateKey):
-                raise ValueError(f"invalid ecdsa key: {type(private_key)}")
-
-            signature_algorithm = ECDSA(SHA256())
-            self._sign_args = _ECDSASignArgs(signature_algorithm)
-            self._private_key = private_key
+            assert_type(KEY_TYPE_ECDSA, private_key, EllipticCurvePrivateKey)
+            self._sign_args = _ECDSASignArgs(ECDSA(SHA256()))
 
         elif public_key.keytype == KEY_TYPE_ED25519 and public_key.scheme == ED25519:
-            if not isinstance(private_key, Ed25519PrivateKey):
-                raise ValueError(f"invalid ed25519 key: {type(private_key)}")
-
+            assert_type(KEY_TYPE_ED25519, private_key, Ed25519PrivateKey)
             self._sign_args = _NoSignArgs()
-            self._private_key = private_key
+
+        elif public_key.keytype == "ml-dsa" and public_key.scheme == "ml-dsa-44/1":
+            assert_type("ml-dsa-44", private_key, MLDSA44PrivateKey)
+            self._sign_args = _NoSignArgs()
+
+        elif public_key.keytype == "ml-dsa" and public_key.scheme == "ml-dsa-65/1":
+            assert_type("ml-dsa-65", private_key, MLDSA65PrivateKey)
+            self._sign_args = _NoSignArgs()
+
+        elif public_key.keytype == "ml-dsa" and public_key.scheme == "ml-dsa-87/1":
+            assert_type("ml-dsa-87", private_key, MLDSA87PrivateKey)
+            self._sign_args = _NoSignArgs()
 
         else:
             raise ValueError(
                 f"unsupported public key {public_key.keytype}/{public_key.scheme}"
             )
 
+        self._private_key = private_key
         self._public_key = public_key
 
     @property
@@ -299,7 +315,7 @@ class CryptoSigner(Signer):
             UnsupportedLibraryError: pyca/cryptography not installed
 
         Returns:
-            RSASigner
+            CryptoSigner
         """
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
@@ -324,7 +340,7 @@ class CryptoSigner(Signer):
             UnsupportedLibraryError: pyca/cryptography not installed
 
         Returns:
-            ECDSASigner
+            CryptoSigner
         """
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
@@ -335,6 +351,44 @@ class CryptoSigner(Signer):
         )
         return CryptoSigner(private_key, public_key)
 
+    @staticmethod
+    def generate_mldsa(
+        keyid: str | None = None,
+        scheme: str | None = None,
+    ) -> "CryptoSigner":
+        """Generate new key pair for a ML-DSA signer.
+
+        Args:
+            keyid: Key identifier. If not passed, a default keyid is computed.
+            scheme: A valid key scheme for ml-dsa. If not passed, "ml-dsa-65/1" is used
+
+        Raises:
+            UnsupportedLibraryError: pyca/cryptography not installed
+
+        Returns:
+            CryptoSigner
+        """
+        if CRYPTO_IMPORT_ERROR:
+            raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
+
+        scheme = "ml-dsa-65/1" if scheme is None else scheme
+        if scheme == "ml-dsa-44/1":
+            private_key: PrivateKeyTypes = MLDSA44PrivateKey.generate()
+        elif scheme == "ml-dsa-65/1":
+            private_key = MLDSA65PrivateKey.generate()
+        elif scheme == "ml-dsa-87/1":
+            private_key = MLDSA87PrivateKey.generate()
+        else:
+            raise ValueError(f"Invalid scheme for ML-DSA: {scheme}")
+
+        public_key = SSlibKey.from_crypto(private_key.public_key(), keyid, scheme)
+        return CryptoSigner(private_key, public_key)
+
     def sign(self, payload: bytes) -> Signature:
+        if self.public_key.keytype == "ml-dsa":
+            # ml-dsa keytype specifies a domain-specific hash prefixing scheme
+            payload = get_mldsa_payload(payload, 1)
+
         sig = self._private_key.sign(payload, *astuple(self._sign_args))  # type: ignore
+
         return Signature(self.public_key.keyid, sig.hex())

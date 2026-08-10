@@ -5,7 +5,7 @@
 #
 # 'requirements-pinned.txt' is updated on GitHub with Dependabot, which
 # triggers CI/CD builds to automatically test against updated dependencies.
-cryptography >= 37.0.0
+cryptography >= 48.0.0
 PySPX; platform_system != 'Windows'
 PyKCS11
 asn1crypto

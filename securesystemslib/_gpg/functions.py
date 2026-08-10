@@ -17,8 +17,10 @@
 """
 
 import logging
+import os
 import subprocess
 import time
+from pathlib import PureWindowsPath
 
 from securesystemslib import exceptions
 from securesystemslib._gpg.common import (
@@ -30,6 +32,7 @@ from securesystemslib._gpg.constants import (
     GPG_TIMEOUT,
     NO_GPG_MSG,
     SHA256,
+    gpg_command,
     gpg_export_pubkey_command,
     gpg_sign_command,
     have_gpg,
@@ -41,6 +44,25 @@ from securesystemslib._gpg.rsa import CRYPTO
 log = logging.getLogger(__name__)
 
 NO_CRYPTO_MSG = "GPG support requires the cryptography library"
+
+
+def _homedir_to_gpg_arg(homedir: str) -> str:
+    """Convert a homedir path to a GPG-compatible --homedir argument.
+
+    On Windows, path format depends on the GPG binary:
+    - Native Gpg4win (.exe): accepts forward-slash Windows paths (C:/path)
+    - Cygwin/MSYS2 GPG: requires cygwin-style paths (/c/path)
+    See https://github.com/secure-systems-lab/securesystemslib/issues/517
+    """
+    if gpg_command().endswith(".exe"):
+        return homedir.replace("\\", "/")
+    if os.name == "nt":
+        p = PureWindowsPath(homedir)
+        if p.drive:
+            drive_letter = p.drive[0].lower()
+            rest = p.as_posix()[len(p.drive) :]
+            return f"/{drive_letter}{rest}"
+    return homedir.replace("\\", "/")
 
 
 def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
@@ -108,7 +130,7 @@ def create_signature(content, keyid=None, homedir=None, timeout=GPG_TIMEOUT):
 
     homearg = ""
     if homedir:
-        homearg = f"--homedir {homedir}".replace("\\", "/")
+        homearg = f"--homedir {_homedir_to_gpg_arg(homedir)}"
 
     command = gpg_sign_command(keyarg=keyarg, homearg=homearg)
 
@@ -267,7 +289,7 @@ def export_pubkey(keyid, homedir=None, timeout=GPG_TIMEOUT):
 
     homearg = ""
     if homedir:
-        homearg = f"--homedir {homedir}".replace("\\", "/")
+        homearg = f"--homedir {_homedir_to_gpg_arg(homedir)}"
 
     # TODO: Consider adopting command error handling from `create_signature`
     # above, e.g. in a common 'run gpg command' utility function

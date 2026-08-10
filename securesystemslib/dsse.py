@@ -68,13 +68,10 @@ class Envelope:
         signatures = {}
         for signature in data["signatures"]:
             signature["sig"] = b64dec(signature["sig"]).hex()
-            signature = Signature.from_dict(signature)  # noqa: PLW2901
-            if signature.keyid in signatures:
-                raise ValueError(
-                    f"Multiple signatures found for keyid {signature.keyid}"
-                )
-            signatures[signature.keyid] = signature
-
+            sig = Signature.from_dict(signature)
+            if sig.keyid in signatures:
+                raise ValueError(f"Multiple signatures found for keyid {sig.keyid}")
+            signatures[sig.keyid] = sig
         return cls(payload, payload_type, signatures)
 
     def to_dict(self) -> dict:
