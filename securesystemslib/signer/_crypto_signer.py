@@ -11,7 +11,11 @@ from securesystemslib.signer._constants import (
     ED25519,
     KEY_TYPE_ECDSA,
     KEY_TYPE_ED25519,
+    KEY_TYPE_MLDSA,
     KEY_TYPE_RSA,
+    MLDSA_44_1,
+    MLDSA_65_1,
+    MLDSA_87_1,
     RSA_PKCS1V15_SHA224,
     RSA_PKCS1V15_SHA256,
     RSA_PKCS1V15_SHA384,
@@ -184,16 +188,16 @@ class CryptoSigner(Signer):
             assert_type(KEY_TYPE_ED25519, private_key, Ed25519PrivateKey)
             self._sign_args = _NoSignArgs()
 
-        elif public_key.keytype == "ml-dsa" and public_key.scheme == "ml-dsa-44/1":
-            assert_type("ml-dsa-44", private_key, MLDSA44PrivateKey)
+        elif public_key.keytype == KEY_TYPE_MLDSA and public_key.scheme == MLDSA_44_1:
+            assert_type(KEY_TYPE_MLDSA, private_key, MLDSA44PrivateKey)
             self._sign_args = _NoSignArgs()
 
-        elif public_key.keytype == "ml-dsa" and public_key.scheme == "ml-dsa-65/1":
-            assert_type("ml-dsa-65", private_key, MLDSA65PrivateKey)
+        elif public_key.keytype == KEY_TYPE_MLDSA and public_key.scheme == MLDSA_65_1:
+            assert_type(KEY_TYPE_MLDSA, private_key, MLDSA65PrivateKey)
             self._sign_args = _NoSignArgs()
 
-        elif public_key.keytype == "ml-dsa" and public_key.scheme == "ml-dsa-87/1":
-            assert_type("ml-dsa-87", private_key, MLDSA87PrivateKey)
+        elif public_key.keytype == KEY_TYPE_MLDSA and public_key.scheme == MLDSA_87_1:
+            assert_type(KEY_TYPE_MLDSA, private_key, MLDSA87PrivateKey)
             self._sign_args = _NoSignArgs()
 
         else:
@@ -371,12 +375,12 @@ class CryptoSigner(Signer):
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
 
-        scheme = "ml-dsa-65/1" if scheme is None else scheme
-        if scheme == "ml-dsa-44/1":
+        scheme = MLDSA_65_1 if scheme is None else scheme
+        if scheme == MLDSA_44_1:
             private_key: PrivateKeyTypes = MLDSA44PrivateKey.generate()
-        elif scheme == "ml-dsa-65/1":
+        elif scheme == MLDSA_65_1:
             private_key = MLDSA65PrivateKey.generate()
-        elif scheme == "ml-dsa-87/1":
+        elif scheme == MLDSA_87_1:
             private_key = MLDSA87PrivateKey.generate()
         else:
             raise ValueError(f"Invalid scheme for ML-DSA: {scheme}")
@@ -385,7 +389,7 @@ class CryptoSigner(Signer):
         return CryptoSigner(private_key, public_key)
 
     def sign(self, payload: bytes) -> Signature:
-        if self.public_key.keytype == "ml-dsa":
+        if self.public_key.keytype == KEY_TYPE_MLDSA:
             # ml-dsa keytype specifies a domain-specific hash prefixing scheme
             payload = get_mldsa_payload(payload, 1)
 

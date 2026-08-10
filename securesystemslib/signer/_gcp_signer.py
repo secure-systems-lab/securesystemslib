@@ -12,7 +12,11 @@ from securesystemslib.signer._constants import (
     ECDSA_SHA2_NISTP256,
     ECDSA_SHA2_NISTP384,
     KEY_TYPE_ECDSA,
+    KEY_TYPE_MLDSA,
     KEY_TYPE_RSA,
+    MLDSA_44_1,
+    MLDSA_65_1,
+    MLDSA_87_1,
     RSA_PKCS1V15_SHA256,
     RSA_PKCS1V15_SHA512,
     RSASSA_PSS_SHA256,
@@ -71,16 +75,16 @@ try:
             RSA_PKCS1V15_SHA512,
         ),
         CryptoKeyVersion.CryptoKeyVersionAlgorithm.PQ_SIGN_ML_DSA_44: (
-            "ml-dsa",
-            "ml-dsa-44/1",
+            KEY_TYPE_MLDSA,
+            MLDSA_44_1,
         ),
         CryptoKeyVersion.CryptoKeyVersionAlgorithm.PQ_SIGN_ML_DSA_65: (
-            "ml-dsa",
-            "ml-dsa-65/1",
+            KEY_TYPE_MLDSA,
+            MLDSA_65_1,
         ),
         CryptoKeyVersion.CryptoKeyVersionAlgorithm.PQ_SIGN_ML_DSA_87: (
-            "ml-dsa",
-            "ml-dsa-87/1",
+            KEY_TYPE_MLDSA,
+            MLDSA_87_1,
         ),
     }
 except ImportError:
@@ -203,7 +207,7 @@ class GCPSigner(Signer):
         # Verifying could be useful but would require another dependency...
 
         request: dict[str, Any] = {"name": self.gcp_keyid}
-        if self.public_key.keytype == "ml-dsa":
+        if self.public_key.keytype == KEY_TYPE_MLDSA:
             request["data"] = get_mldsa_payload(payload, 1)
         else:
             hasher = hashlib.new(self.hash_algorithm)

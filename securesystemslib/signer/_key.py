@@ -22,7 +22,11 @@ from securesystemslib.signer._constants import (
     ED25519,
     KEY_TYPE_ECDSA,
     KEY_TYPE_ED25519,
+    KEY_TYPE_MLDSA,
     KEY_TYPE_RSA,
+    MLDSA_44_1,
+    MLDSA_65_1,
+    MLDSA_87_1,
     RSA_PKCS1V15_SHA224,
     RSA_PKCS1V15_SHA256,
     RSA_PKCS1V15_SHA384,
@@ -270,9 +274,9 @@ class SSlibKey(Key):
 
         elif self.scheme in [
             ECDSA_SHA2_NISTP521,
-            "ml-dsa-44/1",
-            "ml-dsa-65/1",
-            "ml-dsa-87/1",
+            MLDSA_44_1,
+            MLDSA_65_1,
+            MLDSA_87_1,
         ]:
             return "sha512"
 
@@ -342,11 +346,11 @@ class SSlibKey(Key):
         elif isinstance(public_key, Ed25519PublicKey):
             ret = (KEY_TYPE_ED25519, ED25519, _raw())
         elif isinstance(public_key, MLDSA44PublicKey):
-            ret = ("ml-dsa", "ml-dsa-44/1", _pem())
+            ret = (KEY_TYPE_MLDSA, MLDSA_44_1, _pem())
         elif isinstance(public_key, MLDSA65PublicKey):
-            ret = ("ml-dsa", "ml-dsa-65/1", _pem())
+            ret = (KEY_TYPE_MLDSA, MLDSA_65_1, _pem())
         elif isinstance(public_key, MLDSA87PublicKey):
-            ret = ("ml-dsa", "ml-dsa-87/1", _pem())
+            ret = (KEY_TYPE_MLDSA, MLDSA_87_1, _pem())
         else:
             raise ValueError(f"unsupported key '{type(public_key)}'")
 
@@ -477,17 +481,17 @@ class SSlibKey(Key):
                 key = Ed25519PublicKey.from_public_bytes(public_bytes)
                 key.verify(signature, data)
 
-            elif self.keytype == "ml-dsa" and self.scheme == "ml-dsa-44/1":
+            elif self.keytype == KEY_TYPE_MLDSA and self.scheme == MLDSA_44_1:
                 key = cast(MLDSA44PublicKey, self._crypto_key())
                 _validate_type(key, MLDSA44PublicKey)
                 key.verify(signature, get_mldsa_payload(data, 1))
 
-            elif self.keytype == "ml-dsa" and self.scheme == "ml-dsa-65/1":
+            elif self.keytype == KEY_TYPE_MLDSA and self.scheme == MLDSA_65_1:
                 key = cast(MLDSA65PublicKey, self._crypto_key())
                 _validate_type(key, MLDSA65PublicKey)
                 key.verify(signature, get_mldsa_payload(data, 1))
 
-            elif self.keytype == "ml-dsa" and self.scheme == "ml-dsa-87/1":
+            elif self.keytype == KEY_TYPE_MLDSA and self.scheme == MLDSA_87_1:
                 key = cast(MLDSA87PublicKey, self._crypto_key())
                 _validate_type(key, MLDSA87PublicKey)
                 key.verify(signature, get_mldsa_payload(data, 1))

@@ -9,6 +9,7 @@ in ``securesystemslib.signer.KEY_FOR_TYPE_AND_SCHEME``.
 KEY_TYPE_RSA = "rsa"
 KEY_TYPE_ECDSA = "ecdsa"
 KEY_TYPE_ED25519 = "ed25519"
+KEY_TYPE_MLDSA = "ml-dsa"
 
 # ECDSA schemes
 ECDSA_SHA2_NISTP256 = "ecdsa-sha2-nistp256"
@@ -29,3 +30,8 @@ RSA_PKCS1V15_SHA512 = "rsa-pkcs1v15-sha512"
 
 # Ed25519
 ED25519 = "ed25519"
+
+# ML-DSA schemes
+MLDSA_44_1 = "ml-dsa-44/1"
+MLDSA_65_1 = "ml-dsa-65/1"
+MLDSA_87_1 = "ml-dsa-87/1"

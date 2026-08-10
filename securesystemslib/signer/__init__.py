@@ -15,7 +15,11 @@ from securesystemslib.signer._constants import (
     ED25519,
     KEY_TYPE_ECDSA,
     KEY_TYPE_ED25519,
+    KEY_TYPE_MLDSA,
     KEY_TYPE_RSA,
+    MLDSA_44_1,
+    MLDSA_65_1,
+    MLDSA_87_1,
     RSA_PKCS1V15_SHA224,
     RSA_PKCS1V15_SHA256,
     RSA_PKCS1V15_SHA384,
@@ -86,8 +90,8 @@ KEY_FOR_TYPE_AND_SCHEME.update(
 )
 
 # Keys with currently unstable metadata formats, not supported by default:
-#       ("ml-dsa", "ml-dsa-44/1"): SSlibKey,  # ML-DSA keytype defined in https://github.com/theupdateframework/taps/blob/master/tap21.md
-#       ("ml-dsa", "ml-dsa-65/1"): SSlibKey,
-#       ("ml-dsa", "ml-dsa-87/1"): SSlibKey,
+#       (KEY_TYPE_MLDSA, MLDSA_44_1): SSlibKey,  # ML-DSA keytype defined in https://github.com/theupdateframework/taps/blob/master/tap21.md
+#       (KEY_TYPE_MLDSA, MLDSA_65_1): SSlibKey,
+#       (KEY_TYPE_MLDSA, MLDSA_87_1): SSlibKey,
 #       ("sphincs", "sphincs-shake-128s"): SpxKey,
 #       ("sigstore-oidc", "Fulcio"): SigstoreKey,
