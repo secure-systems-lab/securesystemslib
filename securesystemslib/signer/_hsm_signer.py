@@ -13,6 +13,7 @@ import os
 from urllib import parse
 
 from securesystemslib.exceptions import UnsupportedLibraryError
+from securesystemslib.signer._constants import ECDSA_SHA2_NISTP256, ECDSA_SHA2_NISTP384
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import SecretsHandler, Signer
@@ -28,10 +29,9 @@ try:
     )
     from cryptography.hazmat.primitives.serialization import load_der_public_key
 
-    # TODO: Don't hardcode schemes
     _SCHEME_FOR_CURVE = {
-        SECP256R1: "ecdsa-sha2-nistp256",
-        SECP384R1: "ecdsa-sha2-nistp384",
+        SECP256R1: ECDSA_SHA2_NISTP256,
+        SECP384R1: ECDSA_SHA2_NISTP384,
     }
 
 except ImportError:
@@ -40,6 +40,7 @@ except ImportError:
 PKCS11_IMPORT_ERROR = None
 try:
     import pkcs11
+    import pkcs11.util.ec
     from pkcs11.exceptions import NoSuchKey, NoSuchToken
 except ImportError:
     PKCS11_IMPORT_ERROR = "'python-pkcs11' required"
@@ -48,7 +49,7 @@ except ImportError:
 class HSMSigner(Signer):
     """Hardware Security Module (HSM) Signer.
 
-    Supports signing schemes "ecdsa-sha2-nistp256" and "ecdsa-sha2-nistp384".
+    Supports signing schemes ECDSA_SHA2_NISTP256 and ECDSA_SHA2_NISTP384.
 
     HSMSigners should be instantiated with Signer.from_priv_key_uri() as in the usage
     example below.
@@ -108,7 +109,7 @@ class HSMSigner(Signer):
         if PKCS11_IMPORT_ERROR:
             raise UnsupportedLibraryError(PKCS11_IMPORT_ERROR)
 
-        if public_key.scheme not in ["ecdsa-sha2-nistp256", "ecdsa-sha2-nistp384"]:
+        if public_key.scheme not in [ECDSA_SHA2_NISTP256, ECDSA_SHA2_NISTP384]:
             raise ValueError(f"unsupported scheme {public_key.scheme}")
 
         self.hsm_keyid = hsm_keyid
