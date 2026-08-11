@@ -2,6 +2,29 @@
 
 import base64
 import binascii
+from typing import Any
+
+
+def make_hashable(value: Any) -> Any:
+    """Return a hashable equivalent of a dict or list, for use in __hash__
+
+    Dicts become frozensets of their items and lists become tuples, both
+    recursively. Values that are already hashable are returned as they are, so
+    the result compares equal whenever the input does, which is what __hash__
+    needs.
+
+    Arguments:
+        value: Value to convert
+
+    Returns:
+        A hashable equivalent of the value
+    """
+
+    if isinstance(value, dict):
+        return frozenset((k, make_hashable(v)) for k, v in value.items())
+    if isinstance(value, (list, tuple)):
+        return tuple(make_hashable(v) for v in value)
+    return value
 
 
 def b64enc(data: bytes) -> str:

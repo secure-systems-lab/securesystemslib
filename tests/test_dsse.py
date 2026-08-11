@@ -97,6 +97,15 @@ class TestEnvelope(unittest.TestCase):
         envelope_obj_2.signatures = [sig_obg]
         self.assertNotEqual(envelope_obj, envelope_obj_2)
 
+    def test_envelope_hash(self):
+        """Envelopes should be hashable despite the signatures dict."""
+        envelope_obj = Envelope.from_dict(copy.deepcopy(self.envelope_dict))
+        envelope_obj_2 = copy.deepcopy(envelope_obj)
+
+        # Equal envelopes hash equally and collapse in a set.
+        self.assertEqual(hash(envelope_obj), hash(envelope_obj_2))
+        self.assertEqual(len({envelope_obj, envelope_obj_2}), 1)
+
     def test_preauthencoding(self):
         """Test envelope Pre-Auth-Encoding."""
 

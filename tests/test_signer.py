@@ -9,7 +9,6 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Any
 
-from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
     load_pem_public_key,
@@ -58,6 +57,41 @@ class TestKey(unittest.TestCase):
             key = Key.from_dict("aa", copy.deepcopy(keydict))
             self.assertIsInstance(key, key_impl)
             self.assertDictEqual(keydict, key.to_dict())
+
+    def test_mldsa_key_from_to_dict(self):
+        """Test to/from_dict for ml-dsa until it's officially supported."""
+        # Temporarily enable ml-dsa keys so they can be parsed for this test.
+        # TODO: Remove this once ml-dsa is supported by default.
+        KEY_FOR_TYPE_AND_SCHEME[("ml-dsa", "ml-dsa-65/1")] = SSlibKey
+        try:
+            keydict = {
+                "keytype": "ml-dsa",
+                "scheme": "ml-dsa-65/1",
+                "keyval": {
+                    "public": "pubkeyval",
+                },
+            }
+
+            key = Key.from_dict("aa", copy.deepcopy(keydict))
+            self.assertIsInstance(key, SSlibKey)
+            self.assertDictEqual(keydict, key.to_dict())
+        finally:
+            del KEY_FOR_TYPE_AND_SCHEME[("ml-dsa", "ml-dsa-65/1")]
+
+    def test_key_hash(self):
+        """Keys should be hashable, even with dict keyval and extra fields."""
+        keydict = {
+            "keytype": "ed25519",
+            "scheme": "ed25519",
+            "extra": "somedata",
+            "keyval": {"public": "pubkeyval", "foo": "bar"},
+        }
+        key = Key.from_dict("aa", copy.deepcopy(keydict))
+        key_2 = Key.from_dict("aa", copy.deepcopy(keydict))
+
+        # Equal keys hash equally and collapse in a set.
+        self.assertEqual(hash(key), hash(key_2))
+        self.assertEqual(len({key, key_2}), 1)
 
     def test_sslib_key_from_dict_invalid(self):
         """Test from_dict for invalid data"""
@@ -462,6 +496,45 @@ class TestSigner(unittest.TestCase):
         sig_obj_2 = None
         self.assertNotEqual(sig_obj, sig_obj_2)
 
+    def test_signature_hash(self):
+        """Signatures should be hashable, even with unrecognized fields."""
+        signature_dict = {
+            "sig": "30460221009342e4566528fcecf6a7a5d53ebacdb1df151e242f55f8775883469cb01dbc6602210086b426cc826709acfa2c3f9214610cb0a832db94bbd266fd7c5939a48064a851",
+            "keyid": "11fa391a0ed7a447cbfeb4b2667e286fc248f64d5e6d0eeed2e5e23f97f9f714",
+            "extra": "unrecognized",
+        }
+        sig_obj = Signature.from_dict(copy.deepcopy(signature_dict))
+        sig_obj_2 = Signature.from_dict(copy.deepcopy(signature_dict))
+
+        # Equal signatures hash equally and collapse in a set.
+        self.assertEqual(hash(sig_obj), hash(sig_obj_2))
+        self.assertEqual(len({sig_obj, sig_obj_2}), 1)
+
+    def test_signature_hash_equal_for_equal_field_values(self):
+        """Values that compare equal must hash equally.
+
+        Python treats 1, 1.0 and True as equal, so unrecognized fields that
+        differ only in those types make two equal Signatures, which have to
+        share a hash.
+        """
+        for first, second in [
+            ({"extra": 1}, {"extra": True}),
+            ({"extra": 1}, {"extra": 1.0}),
+            ({"extra": [{"nested": 1}]}, {"extra": [{"nested": True}]}),
+        ]:
+            with self.subTest(first=first, second=second):
+                sig = Signature("aa", "bb", first)
+                sig_2 = Signature("aa", "bb", second)
+
+                self.assertEqual(sig, sig_2)
+                self.assertEqual(hash(sig), hash(sig_2))
+
+    def test_signature_hash_non_json_field_value(self):
+        """Unrecognized field values need not be JSON types."""
+        sig = Signature("aa", "bb", {"extra": b"binary"})
+
+        self.assertIsInstance(hash(sig), int)
+
 
 @unittest.skipIf(not have_gpg(), "gpg not found")
 class TestGPGRSA(unittest.TestCase):
@@ -634,20 +707,48 @@ class TestCryptoSigner(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.keys: list[PrivateKeyTypes] = []
-        for keytype in ["rsa", "ecdsa", "ed25519"]:
-            path = PEMS_DIR / f"{keytype}_private.pem"
+        cls.keys = {}
+        cls.schemes = {}
+        cls.expected_keytypes = {}
+
+        key_info = [
+            (
+                "rsa",
+                "rsa",
+                [
+                    "rsassa-pss-sha224",
+                    "rsassa-pss-sha256",
+                    "rsassa-pss-sha384",
+                    "rsassa-pss-sha512",
+                    "rsa-pkcs1v15-sha224",
+                    "rsa-pkcs1v15-sha256",
+                    "rsa-pkcs1v15-sha384",
+                    "rsa-pkcs1v15-sha512",
+                ],
+            ),
+            ("ecdsa", "ecdsa", ["ecdsa-sha2-nistp256"]),
+            ("ed25519", "ed25519", ["ed25519"]),
+            ("mldsa44", "ml-dsa", ["ml-dsa-44/1"]),
+            ("mldsa65", "ml-dsa", ["ml-dsa-65/1"]),
+            ("mldsa87", "ml-dsa", ["ml-dsa-87/1"]),
+        ]
+
+        for name, keytype, schemes in key_info:
+            path = PEMS_DIR / f"{name}_private.pem"
 
             with open(path, "rb") as f:
                 data = f.read()
 
             private_key = load_pem_private_key(data, None)
 
-            cls.keys.append(private_key)
+            cls.keys[name] = private_key
+            cls.expected_keytypes[name] = keytype
+            cls.schemes[name] = schemes
 
     def test_init(self):
         """Test CryptoSigner constructor."""
-        for keytype, private_key in zip(["rsa", "ecdsa", "ed25519"], self.keys):
+        for name, private_key in self.keys.items():
+            keytype = self.expected_keytypes[name]
             # Init w/o public key (public key is created from private key)
             signer = CryptoSigner(private_key)
             self.assertEqual(keytype, signer.public_key.keytype)
@@ -657,23 +758,9 @@ class TestCryptoSigner(unittest.TestCase):
             self.assertEqual(keytype, signer2.public_key.keytype)
 
     def test_sign(self):
-        rsa_schemes = [
-            "rsassa-pss-sha224",
-            "rsassa-pss-sha256",
-            "rsassa-pss-sha384",
-            "rsassa-pss-sha512",
-            "rsa-pkcs1v15-sha224",
-            "rsa-pkcs1v15-sha256",
-            "rsa-pkcs1v15-sha384",
-            "rsa-pkcs1v15-sha512",
-        ]
-        ecdsa_schemes = ["ecdsa-sha2-nistp256"]
-        ed25519_schemes = ["ed25519"]
-        schemes = [rsa_schemes, ecdsa_schemes, ed25519_schemes]
-
-        for private_key, key_schemes in zip(self.keys, schemes):
+        for name, private_key in self.keys.items():
             public_key = SSlibKey.from_crypto(private_key.public_key())
-            for scheme in key_schemes:
+            for scheme in self.schemes[name]:
                 public_key.scheme = scheme
                 signer = CryptoSigner(private_key, public_key)
                 sig = signer.sign(b"DATA")
@@ -684,46 +771,33 @@ class TestCryptoSigner(unittest.TestCase):
     def test_from_priv_key_uri(self):
         """Test load and use PEM/PKCS#8 files for each sslib keytype"""
         test_data = [
+            ("rsa_public.pem", "rsa_private.pem", None),
+            ("ecdsa_public.pem", "ecdsa_private.pem", None),
             (
-                "rsa",
-                "rsassa-pss-sha256",
-                "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwhX6rioiL/cX5Ys32InF\nU52H8tL14QeX0tacZdb+AwcH6nIh97h3RSHvGD7Xy6uaMRmGldAnSVYwJHqoJ5j2\nynVzU/RFpr+6n8Ps0QFg5GmlEqZboFjLbS0bsRQcXXnqJNsVLEPT3ULvu1rFRbWz\nAMFjNtNNk5W/u0GEzXn3D03jIdhD8IKAdrTRf0VMD9TRCXLdMmEU2vkf1NVUnOTb\n/dRX5QA8TtBylVnouZknbavQ0J/pPlHLfxUgsKzodwDlJmbPG9BWwXqQCmP0DgOG\nNIZ1X281MOBaGbkNVEuntNjCSaQxQjfALVVU5NAfal2cwMINtqaoc7Wa+TWvpFEI\nWwIDAQAB\n-----END PUBLIC KEY-----\n",
-                "rsa_private.pem",
-            ),
-            (
-                "ecdsa",
-                "ecdsa-sha2-nistp256",
-                "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcLYSZyFGeKdWNt5dWFbnv6N9NyHC\noUNLcG6GZIxLwN8Q8MUdHdOOxGkDnyBRSJpIZ/r/oDECSTwfCYhdogweLA==\n-----END PUBLIC KEY-----\n",
+                "ecdsa_public.pem",
                 "ecdsa_private.pem",
-            ),
-            (
                 "ecdsa-sha2-nistp256",  # keytype deprecated in TUF spec, tested for backwards compat with older metadata
-                "ecdsa-sha2-nistp256",
-                "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcLYSZyFGeKdWNt5dWFbnv6N9NyHC\noUNLcG6GZIxLwN8Q8MUdHdOOxGkDnyBRSJpIZ/r/oDECSTwfCYhdogweLA==\n-----END PUBLIC KEY-----\n",
-                "ecdsa_private.pem",
             ),
-            (
-                "ed25519",
-                "ed25519",
-                "4f66dabebcf30628963786001984c0b75c175cdcf3bc4855933a2628f0cd0a0f",
-                "ed25519_private.pem",
-            ),
+            ("ed25519_public.pem", "ed25519_private.pem", None),
+            ("mldsa65_public.pem", "mldsa65_private.pem", None),
         ]
 
-        for keytype, scheme, public_key_value, fname in test_data:
+        for pub_fname, priv_fname, keytype_override in test_data:
+            pub_crypto_key = load_pem_public_key((PEMS_DIR / pub_fname).read_bytes())
+            public_key = SSlibKey.from_crypto(pub_crypto_key)
+            if keytype_override:
+                public_key.keytype = keytype_override
+
             for use_prefix in [True, False]:
                 if use_prefix:
                     # uri path is relative from CRYPTO_SIGNER_PATH_PREFIX
                     os.environ["CRYPTO_SIGNER_PATH_PREFIX"] = str(PEMS_DIR)
-                    uri = f"file2:{fname}"
+                    uri = f"file2:{priv_fname}"
                 else:
                     with suppress(KeyError):
                         del os.environ["CRYPTO_SIGNER_PATH_PREFIX"]
-                    uri = f"file2:{PEMS_DIR / fname}"
+                    uri = f"file2:{PEMS_DIR / priv_fname}"
 
-                public_key = SSlibKey(
-                    "abcdefg", keytype, scheme, {"public": public_key_value}
-                )
                 signer = Signer.from_priv_key_uri(uri, public_key)
                 self.assertIsInstance(signer, CryptoSigner)
 
@@ -743,6 +817,7 @@ class TestCryptoSigner(unittest.TestCase):
             (CryptoSigner.generate_rsa, "rsa", "rsassa-pss-sha256"),
             (CryptoSigner.generate_ecdsa, "ecdsa", "ecdsa-sha2-nistp256"),
             (CryptoSigner.generate_ed25519, "ed25519", "ed25519"),
+            (CryptoSigner.generate_mldsa, "ml-dsa", "ml-dsa-65/1"),
         ]
         for generate, keytype, default_scheme in test_data:
             signer = generate()
@@ -758,7 +833,7 @@ class TestCryptoSigner(unittest.TestCase):
         """Test private_bytes -> from_priv_key_uri"""
         with tempfile.TemporaryDirectory() as tempdir:
             priv_key_path = os.path.join(tempdir, "privkey.pem")
-            for pem in ["rsa", "ecdsa", "ed25519"]:
+            for pem in ["rsa", "ecdsa", "ed25519", "mldsa65"]:
                 with open(PEMS_DIR / f"{pem}_private.pem", "rb") as f:
                     privkey = load_pem_private_key(f.read(), None)
                     signer = CryptoSigner(privkey)
@@ -773,7 +848,7 @@ class TestCryptoSigner(unittest.TestCase):
 
     def test_custom_crypto_signer(self):
         # setup
-        key = self.keys[0]
+        key = self.keys["rsa"]
         pubkey = SSlibKey.from_crypto(key.public_key())
 
         class CustomSigner(CryptoSigner):
