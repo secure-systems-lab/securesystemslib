@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import logging
 from urllib import parse
 
@@ -10,6 +9,7 @@ from securesystemslib.exceptions import UnsupportedLibraryError
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import SecretsHandler, Signer
+from securesystemslib.signer._utils import get_mldsa_payload
 
 TKEY_IMPORT_ERROR = None
 try:
@@ -161,10 +161,6 @@ class TKeySigner(Signer):
     def sign(self, payload: bytes) -> Signature:
         """Signs payload with Tillitis TKey."""
 
-        # Use TUF-specific message prefix and digest as payload
-        digest = hashlib.sha512(payload).digest()
-        msg = b"tuf" + bytes([1]) + digest
-
         # Provide the pub key bytes for mu calculation
         pk_pem = self.public_key.keyval["public"].encode("utf-8")
         public_key = serialization.load_pem_public_key(pk_pem)
@@ -173,5 +169,6 @@ class TKeySigner(Signer):
             format=serialization.PublicFormat.Raw,
         )
 
-        sig_bytes = self._tkey.sign(msg, key_bytes)
+        # Use TUF-specific message prefix and digest as payload
+        sig_bytes = self._tkey.sign(get_mldsa_payload(payload, 1), key_bytes)
         return Signature(self.public_key.keyid, sig_bytes.hex())
