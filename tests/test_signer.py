@@ -484,6 +484,31 @@ class TestSigner(unittest.TestCase):
         self.assertEqual(hash(sig_obj), hash(sig_obj_2))
         self.assertEqual(len({sig_obj, sig_obj_2}), 1)
 
+    def test_signature_hash_equal_for_equal_field_values(self):
+        """Values that compare equal must hash equally.
+
+        Python treats 1, 1.0 and True as equal, so unrecognized fields that
+        differ only in those types make two equal Signatures, which have to
+        share a hash.
+        """
+        for first, second in [
+            ({"extra": 1}, {"extra": True}),
+            ({"extra": 1}, {"extra": 1.0}),
+            ({"extra": [{"nested": 1}]}, {"extra": [{"nested": True}]}),
+        ]:
+            with self.subTest(first=first, second=second):
+                sig = Signature("aa", "bb", first)
+                sig_2 = Signature("aa", "bb", second)
+
+                self.assertEqual(sig, sig_2)
+                self.assertEqual(hash(sig), hash(sig_2))
+
+    def test_signature_hash_non_json_field_value(self):
+        """Unrecognized field values need not be JSON types."""
+        sig = Signature("aa", "bb", {"extra": b"binary"})
+
+        self.assertIsInstance(hash(sig), int)
+
 
 @unittest.skipIf(not have_gpg(), "gpg not found")
 class TestGPGRSA(unittest.TestCase):

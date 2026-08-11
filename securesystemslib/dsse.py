@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from securesystemslib import exceptions
-from securesystemslib._internal.utils import b64dec, b64enc
+from securesystemslib._internal.utils import b64dec, b64enc, make_hashable
 from securesystemslib.signer import Key, Signature, Signer
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ class Envelope:
             (
                 self.payload,
                 self.payload_type,
-                frozenset(self.signatures.items()),
+                make_hashable(self.signatures),
             )
         )
 

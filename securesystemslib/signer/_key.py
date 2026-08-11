@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from abc import ABCMeta, abstractmethod
 from typing import Any, cast
 
+from securesystemslib._internal.utils import make_hashable
 from securesystemslib._vendor.ed25519.ed25519 import (
     SignatureMismatch,
     checkvalid,
@@ -161,8 +161,8 @@ class Key(metaclass=ABCMeta):
                 self.keyid,
                 self.keytype,
                 self.scheme,
-                json.dumps(self.keyval, sort_keys=True),
-                json.dumps(self.unrecognized_fields, sort_keys=True),
+                make_hashable(self.keyval),
+                make_hashable(self.unrecognized_fields),
             )
         )
 
