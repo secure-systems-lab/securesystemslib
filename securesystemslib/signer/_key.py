@@ -6,6 +6,7 @@ import logging
 from abc import ABCMeta, abstractmethod
 from typing import Any, cast
 
+from securesystemslib._internal.utils import make_hashable
 from securesystemslib._vendor.ed25519.ed25519 import (
     SignatureMismatch,
     checkvalid,
@@ -160,8 +161,8 @@ class Key(metaclass=ABCMeta):
                 self.keyid,
                 self.keytype,
                 self.scheme,
-                self.keyval,
-                self.unrecognized_fields,
+                make_hashable(self.keyval),
+                make_hashable(self.unrecognized_fields),
             )
         )
 

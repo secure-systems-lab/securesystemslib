@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from securesystemslib import exceptions
-from securesystemslib._internal.utils import b64dec, b64enc
+from securesystemslib._internal.utils import b64dec, b64enc, make_hashable
 from securesystemslib.signer import Key, Signature, Signer
 
 logger = logging.getLogger(__name__)
@@ -43,7 +43,13 @@ class Envelope:
         )
 
     def __hash__(self) -> int:
-        return hash((self.payload, self.payload_type, self.signatures))
+        return hash(
+            (
+                self.payload,
+                self.payload_type,
+                make_hashable(self.signatures),
+            )
+        )
 
     @classmethod
     def from_dict(cls, data: dict) -> Envelope:
