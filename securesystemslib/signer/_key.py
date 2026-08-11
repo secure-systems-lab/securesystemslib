@@ -108,9 +108,10 @@ class Key(metaclass=ABCMeta):
         keyid: Key identifier that is unique within the metadata it is used in.
             Keyid is not verified to be the hash of a specific representation
             of the key.
-        keytype: Key type, e.g. "rsa", "ed25519" or "ecdsa-sha2-nistp256".
+        keytype: Key type, e.g. ``KEY_TYPE_RSA``, ``KEY_TYPE_ED25519`` or
+            ``KEY_TYPE_ECDSA``.
         scheme: Signature scheme. For example:
-            "rsassa-pss-sha256", "ed25519", and "ecdsa-sha2-nistp256".
+            ``RSASSA_PSS_SHA256``, ``ED25519``, and ``ECDSA_SHA2_NISTP256``.
         keyval: Opaque key content
         unrecognized_fields: Dictionary of all attributes that are not managed
             by Securesystemslib
@@ -368,8 +369,8 @@ class SSlibKey(Key):
         Args:
             public_key: pyca/cryptography public key object.
             keyid: Key identifier. If not passed, a default keyid is computed.
-            scheme: SSlibKey signing scheme. Defaults are "rsassa-pss-sha256",
-                "ecdsa-sha2-nistp256", "ecdsa-sha2-nistp384" and "ed25519"
+            scheme: SSlibKey signing scheme. Defaults are ``RSASSA_PSS_SHA256``,
+                ``ECDSA_SHA2_NISTP256``, ``ECDSA_SHA2_NISTP384`` and ``ED25519``
                 according to the keytype.
 
         Raises:
