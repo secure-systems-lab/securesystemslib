@@ -18,8 +18,6 @@ from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import SecretsHandler, Signer
 
-_KEY_TYPE_ECDSA = "ecdsa"
-
 CRYPTO_IMPORT_ERROR = None
 try:
     from cryptography.hazmat.primitives.asymmetric.ec import (
