@@ -6,6 +6,25 @@ from dataclasses import astuple, dataclass
 from urllib import parse
 
 from securesystemslib.exceptions import UnsupportedLibraryError
+from securesystemslib.signer._constants import (
+    ECDSA_SHA2_NISTP256,
+    ED25519,
+    KEY_TYPE_ECDSA,
+    KEY_TYPE_ED25519,
+    KEY_TYPE_MLDSA,
+    KEY_TYPE_RSA,
+    MLDSA_44_1,
+    MLDSA_65_1,
+    MLDSA_87_1,
+    RSA_PKCS1V15_SHA224,
+    RSA_PKCS1V15_SHA256,
+    RSA_PKCS1V15_SHA384,
+    RSA_PKCS1V15_SHA512,
+    RSASSA_PSS_SHA224,
+    RSASSA_PSS_SHA256,
+    RSASSA_PSS_SHA384,
+    RSASSA_PSS_SHA512,
+)
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import SecretsHandler, Signer
@@ -79,7 +98,7 @@ class _NoSignArgs:
 
 # for backwards compat: use when spec-deprecated keytype ecdsa-sha2-nistp256
 # should be accepted in addition to "ecdsa"
-_ECDSA_KEYTYPES = ["ecdsa", "ecdsa-sha2-nistp256"]
+_ECDSA_KEYTYPES = [KEY_TYPE_ECDSA, ECDSA_SHA2_NISTP256]
 
 
 def _get_rsa_padding(name: str, hash_algorithm: "HashAlgorithm") -> "AsymmetricPadding":
@@ -138,17 +157,17 @@ class CryptoSigner(Signer):
         self._private_key: PrivateKeyTypes
         self._sign_args: _RSASignArgs | _ECDSASignArgs | _NoSignArgs
 
-        if public_key.keytype == "rsa" and public_key.scheme in [
-            "rsassa-pss-sha224",
-            "rsassa-pss-sha256",
-            "rsassa-pss-sha384",
-            "rsassa-pss-sha512",
-            "rsa-pkcs1v15-sha224",
-            "rsa-pkcs1v15-sha256",
-            "rsa-pkcs1v15-sha384",
-            "rsa-pkcs1v15-sha512",
+        if public_key.keytype == KEY_TYPE_RSA and public_key.scheme in [
+            RSASSA_PSS_SHA224,
+            RSASSA_PSS_SHA256,
+            RSASSA_PSS_SHA384,
+            RSASSA_PSS_SHA512,
+            RSA_PKCS1V15_SHA224,
+            RSA_PKCS1V15_SHA256,
+            RSA_PKCS1V15_SHA384,
+            RSA_PKCS1V15_SHA512,
         ]:
-            assert_type("rsa", private_key, RSAPrivateKey)
+            assert_type(KEY_TYPE_RSA, private_key, RSAPrivateKey)
 
             hash_name = public_key.get_hash_algorithm_name()
             hash_algo = get_hash_algorithm(hash_name)
@@ -160,25 +179,25 @@ class CryptoSigner(Signer):
 
         elif (
             public_key.keytype in _ECDSA_KEYTYPES
-            and public_key.scheme == "ecdsa-sha2-nistp256"
+            and public_key.scheme == ECDSA_SHA2_NISTP256
         ):
-            assert_type("ecdsa", private_key, EllipticCurvePrivateKey)
+            assert_type(KEY_TYPE_ECDSA, private_key, EllipticCurvePrivateKey)
             self._sign_args = _ECDSASignArgs(ECDSA(SHA256()))
 
-        elif public_key.keytype == "ed25519" and public_key.scheme == "ed25519":
-            assert_type("ed25519", private_key, Ed25519PrivateKey)
+        elif public_key.keytype == KEY_TYPE_ED25519 and public_key.scheme == ED25519:
+            assert_type(KEY_TYPE_ED25519, private_key, Ed25519PrivateKey)
             self._sign_args = _NoSignArgs()
 
-        elif public_key.keytype == "ml-dsa" and public_key.scheme == "ml-dsa-44/1":
-            assert_type("ml-dsa-44", private_key, MLDSA44PrivateKey)
+        elif public_key.keytype == KEY_TYPE_MLDSA and public_key.scheme == MLDSA_44_1:
+            assert_type(KEY_TYPE_MLDSA, private_key, MLDSA44PrivateKey)
             self._sign_args = _NoSignArgs()
 
-        elif public_key.keytype == "ml-dsa" and public_key.scheme == "ml-dsa-65/1":
-            assert_type("ml-dsa-65", private_key, MLDSA65PrivateKey)
+        elif public_key.keytype == KEY_TYPE_MLDSA and public_key.scheme == MLDSA_65_1:
+            assert_type(KEY_TYPE_MLDSA, private_key, MLDSA65PrivateKey)
             self._sign_args = _NoSignArgs()
 
-        elif public_key.keytype == "ml-dsa" and public_key.scheme == "ml-dsa-87/1":
-            assert_type("ml-dsa-87", private_key, MLDSA87PrivateKey)
+        elif public_key.keytype == KEY_TYPE_MLDSA and public_key.scheme == MLDSA_87_1:
+            assert_type(KEY_TYPE_MLDSA, private_key, MLDSA87PrivateKey)
             self._sign_args = _NoSignArgs()
 
         else:
@@ -280,13 +299,13 @@ class CryptoSigner(Signer):
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
 
         private_key = Ed25519PrivateKey.generate()
-        public_key = SSlibKey.from_crypto(private_key.public_key(), keyid, "ed25519")
+        public_key = SSlibKey.from_crypto(private_key.public_key(), keyid, ED25519)
         return CryptoSigner(private_key, public_key)
 
     @staticmethod
     def generate_rsa(
         keyid: str | None = None,
-        scheme: str | None = "rsassa-pss-sha256",
+        scheme: str | None = RSASSA_PSS_SHA256,
         size: int = 3072,
     ) -> "CryptoSigner":
         """Generate new key pair as rsa signer.
@@ -332,7 +351,7 @@ class CryptoSigner(Signer):
 
         private_key = generate_ec_private_key(SECP256R1())
         public_key = SSlibKey.from_crypto(
-            private_key.public_key(), keyid, "ecdsa-sha2-nistp256"
+            private_key.public_key(), keyid, ECDSA_SHA2_NISTP256
         )
         return CryptoSigner(private_key, public_key)
 
@@ -356,12 +375,12 @@ class CryptoSigner(Signer):
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
 
-        scheme = "ml-dsa-65/1" if scheme is None else scheme
-        if scheme == "ml-dsa-44/1":
+        scheme = MLDSA_65_1 if scheme is None else scheme
+        if scheme == MLDSA_44_1:
             private_key: PrivateKeyTypes = MLDSA44PrivateKey.generate()
-        elif scheme == "ml-dsa-65/1":
+        elif scheme == MLDSA_65_1:
             private_key = MLDSA65PrivateKey.generate()
-        elif scheme == "ml-dsa-87/1":
+        elif scheme == MLDSA_87_1:
             private_key = MLDSA87PrivateKey.generate()
         else:
             raise ValueError(f"Invalid scheme for ML-DSA: {scheme}")
@@ -370,7 +389,7 @@ class CryptoSigner(Signer):
         return CryptoSigner(private_key, public_key)
 
     def sign(self, payload: bytes) -> Signature:
-        if self.public_key.keytype == "ml-dsa":
+        if self.public_key.keytype == KEY_TYPE_MLDSA:
             # ml-dsa keytype specifies a domain-specific hash prefixing scheme
             payload = get_mldsa_payload(payload, 1)
 

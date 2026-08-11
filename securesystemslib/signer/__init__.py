@@ -8,6 +8,27 @@ Some implementations are provided by default but more can be added by users.
 # ruff: noqa: F401
 from securesystemslib.signer._aws_signer import AWSSigner
 from securesystemslib.signer._azure_signer import AzureSigner
+from securesystemslib.signer._constants import (
+    ECDSA_SHA2_NISTP256,
+    ECDSA_SHA2_NISTP384,
+    ECDSA_SHA2_NISTP521,
+    ED25519,
+    KEY_TYPE_ECDSA,
+    KEY_TYPE_ED25519,
+    KEY_TYPE_MLDSA,
+    KEY_TYPE_RSA,
+    MLDSA_44_1,
+    MLDSA_65_1,
+    MLDSA_87_1,
+    RSA_PKCS1V15_SHA224,
+    RSA_PKCS1V15_SHA256,
+    RSA_PKCS1V15_SHA384,
+    RSA_PKCS1V15_SHA512,
+    RSASSA_PSS_SHA224,
+    RSASSA_PSS_SHA256,
+    RSASSA_PSS_SHA384,
+    RSASSA_PSS_SHA512,
+)
 from securesystemslib.signer._crypto_signer import CryptoSigner
 from securesystemslib.signer._gcp_signer import GCPSigner
 from securesystemslib.signer._gpg_signer import GPGKey, GPGSigner
@@ -47,30 +68,30 @@ SIGNER_FOR_URI_SCHEME.update(
 # Register supported key types and schemes, and the Keys implementing them
 KEY_FOR_TYPE_AND_SCHEME.update(
     {
-        ("ecdsa", "ecdsa-sha2-nistp256"): SSlibKey,
-        ("ecdsa", "ecdsa-sha2-nistp384"): SSlibKey,
-        ("ecdsa", "ecdsa-sha2-nistp521"): SSlibKey,
-        ("ecdsa-sha2-nistp256", "ecdsa-sha2-nistp256"): SSlibKey,
-        ("ecdsa-sha2-nistp384", "ecdsa-sha2-nistp384"): SSlibKey,
-        ("ecdsa-sha2-nistp521", "ecdsa-sha2-nistp521"): SSlibKey,
-        ("ed25519", "ed25519"): SSlibKey,
-        ("rsa", "rsassa-pss-sha224"): SSlibKey,
-        ("rsa", "rsassa-pss-sha256"): SSlibKey,
-        ("rsa", "rsassa-pss-sha384"): SSlibKey,
-        ("rsa", "rsassa-pss-sha512"): SSlibKey,
-        ("rsa", "rsa-pkcs1v15-sha224"): SSlibKey,
-        ("rsa", "rsa-pkcs1v15-sha256"): SSlibKey,
-        ("rsa", "rsa-pkcs1v15-sha384"): SSlibKey,
-        ("rsa", "rsa-pkcs1v15-sha512"): SSlibKey,
-        ("rsa", "pgp+rsa-pkcsv1.5"): GPGKey,
+        (KEY_TYPE_ECDSA, ECDSA_SHA2_NISTP256): SSlibKey,
+        (KEY_TYPE_ECDSA, ECDSA_SHA2_NISTP384): SSlibKey,
+        (KEY_TYPE_ECDSA, ECDSA_SHA2_NISTP521): SSlibKey,
+        (ECDSA_SHA2_NISTP256, ECDSA_SHA2_NISTP256): SSlibKey,
+        (ECDSA_SHA2_NISTP384, ECDSA_SHA2_NISTP384): SSlibKey,
+        (ECDSA_SHA2_NISTP521, ECDSA_SHA2_NISTP521): SSlibKey,
+        (KEY_TYPE_ED25519, ED25519): SSlibKey,
+        (KEY_TYPE_RSA, RSASSA_PSS_SHA224): SSlibKey,
+        (KEY_TYPE_RSA, RSASSA_PSS_SHA256): SSlibKey,
+        (KEY_TYPE_RSA, RSASSA_PSS_SHA384): SSlibKey,
+        (KEY_TYPE_RSA, RSASSA_PSS_SHA512): SSlibKey,
+        (KEY_TYPE_RSA, RSA_PKCS1V15_SHA224): SSlibKey,
+        (KEY_TYPE_RSA, RSA_PKCS1V15_SHA256): SSlibKey,
+        (KEY_TYPE_RSA, RSA_PKCS1V15_SHA384): SSlibKey,
+        (KEY_TYPE_RSA, RSA_PKCS1V15_SHA512): SSlibKey,
+        (KEY_TYPE_RSA, "pgp+rsa-pkcsv1.5"): GPGKey,
         ("dsa", "pgp+dsa-fips-180-2"): GPGKey,
         ("eddsa", "pgp+eddsa-ed25519"): GPGKey,
     }
 )
 
 # Keys with currently unstable metadata formats, not supported by default:
-#       ("ml-dsa", "ml-dsa-44/1"): SSlibKey,  # ML-DSA keytype defined in https://github.com/theupdateframework/taps/blob/master/tap21.md
-#       ("ml-dsa", "ml-dsa-65/1"): SSlibKey,
-#       ("ml-dsa", "ml-dsa-87/1"): SSlibKey,
+#       (KEY_TYPE_MLDSA, MLDSA_44_1): SSlibKey,  # ML-DSA keytype defined in https://github.com/theupdateframework/taps/blob/master/tap21.md
+#       (KEY_TYPE_MLDSA, MLDSA_65_1): SSlibKey,
+#       (KEY_TYPE_MLDSA, MLDSA_87_1): SSlibKey,
 #       ("sphincs", "sphincs-shake-128s"): SpxKey,
 #       ("sigstore-oidc", "Fulcio"): SigstoreKey,
