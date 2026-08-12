@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import warnings
 from abc import ABCMeta, abstractmethod
 from typing import Any, cast
 
@@ -418,7 +419,7 @@ class SSlibKey(Key):
         except SignatureMismatch as e:
             raise UnverifiedSignatureError from e
 
-    def _verify(self, signature: bytes, data: bytes) -> None:  # noqa: PLR0915
+    def _verify(self, signature: bytes, data: bytes) -> None:  # noqa: PLR0912, PLR0915
         """Helper to verify signature using pyca/cryptography (default)."""
 
         def _validate_type(key: object, type_: type) -> None:
@@ -455,6 +456,13 @@ class SSlibKey(Key):
                 self.keytype in [KEY_TYPE_ECDSA, ECDSA_SHA2_NISTP256]
                 and self.scheme == ECDSA_SHA2_NISTP256
             ):
+                if self.keytype == ECDSA_SHA2_NISTP256:
+                    warnings.warn(
+                        f"keytype '{ECDSA_SHA2_NISTP256}' is deprecated, "
+                        f"use '{KEY_TYPE_ECDSA}' instead",
+                        DeprecationWarning,
+                        stacklevel=2,
+                    )
                 key = cast(EllipticCurvePublicKey, self._crypto_key())
                 _validate_type(key, EllipticCurvePublicKey)
                 _validate_curve(key, SECP256R1)
@@ -464,6 +472,13 @@ class SSlibKey(Key):
                 self.keytype in [KEY_TYPE_ECDSA, ECDSA_SHA2_NISTP384]
                 and self.scheme == ECDSA_SHA2_NISTP384
             ):
+                if self.keytype == ECDSA_SHA2_NISTP384:
+                    warnings.warn(
+                        f"keytype '{ECDSA_SHA2_NISTP384}' is deprecated, "
+                        f"use '{KEY_TYPE_ECDSA}' instead",
+                        DeprecationWarning,
+                        stacklevel=2,
+                    )
                 key = cast(EllipticCurvePublicKey, self._crypto_key())
                 _validate_type(key, EllipticCurvePublicKey)
                 _validate_curve(key, SECP384R1)
@@ -473,6 +488,13 @@ class SSlibKey(Key):
                 self.keytype in [KEY_TYPE_ECDSA, ECDSA_SHA2_NISTP521]
                 and self.scheme == ECDSA_SHA2_NISTP521
             ):
+                if self.keytype == ECDSA_SHA2_NISTP521:
+                    warnings.warn(
+                        f"keytype '{ECDSA_SHA2_NISTP521}' is deprecated, "
+                        f"use '{KEY_TYPE_ECDSA}' instead",
+                        DeprecationWarning,
+                        stacklevel=2,
+                    )
                 key = cast(EllipticCurvePublicKey, self._crypto_key())
                 _validate_type(key, EllipticCurvePublicKey)
                 _validate_curve(key, SECP521R1)
