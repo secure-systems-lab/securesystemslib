@@ -8,14 +8,10 @@
 asn1crypto==1.5.1
     # via python-pkcs11
 cffi==2.1.1
-    # via
-    #   cryptography
-    #   pyspx
+    # via cryptography
 cryptography==50.0.0
     # via -r requirements.txt
 pycparser==3.0
     # via cffi
-pyspx==0.5.0 ; platform_system != "Windows"
-    # via -r requirements.txt
 python-pkcs11==0.9.4
     # via -r requirements.txt
