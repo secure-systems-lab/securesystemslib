@@ -2,11 +2,11 @@
 #    uv pip compile requirements.txt -o requirements-pinned.txt
 asn1crypto==1.5.1
     # via -r requirements.txt
-cffi==2.1.0
+cffi==2.1.1
     # via
     #   cryptography
     #   pyspx
-cryptography==49.0.0
+cryptography==50.0.0
     # via
     #   -r requirements.txt
     #   keylet

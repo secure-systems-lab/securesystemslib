@@ -76,3 +76,52 @@ API documentation
 .. autoclass:: securesystemslib.signer.Signer
 .. autoclass:: securesystemslib.signer.Key
 .. autoclass:: securesystemslib.signer.Signature
+
+Key type constants
+~~~~~~~~~~~~~~~~~~
+
+.. autodata:: securesystemslib.signer._constants.KEY_TYPE_RSA
+   :noindex:
+.. autodata:: securesystemslib.signer._constants.KEY_TYPE_ECDSA
+   :noindex:
+.. autodata:: securesystemslib.signer._constants.KEY_TYPE_ED25519
+   :noindex:
+.. autodata:: securesystemslib.signer._constants.KEY_TYPE_MLDSA
+   :noindex:
+
+Signing scheme constants
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autodata:: securesystemslib.signer._constants.ECDSA_SHA2_NISTP256
+   :noindex:
+.. autodata:: securesystemslib.signer._constants.ECDSA_SHA2_NISTP384
+   :noindex:
+.. autodata:: securesystemslib.signer._constants.ECDSA_SHA2_NISTP521
+   :noindex:
+.. autodata:: securesystemslib.signer._constants.RSASSA_PSS_SHA224
+   :noindex:
+.. autodata:: securesystemslib.signer._constants.RSASSA_PSS_SHA256
+   :noindex:
+.. autodata:: securesystemslib.signer._constants.RSASSA_PSS_SHA384
+   :noindex:
+.. autodata:: securesystemslib.signer._constants.RSASSA_PSS_SHA512
+   :noindex:
+.. autodata:: securesystemslib.signer._constants.RSA_PKCS1V15_SHA224
+   :noindex:
+.. autodata:: securesystemslib.signer._constants.RSA_PKCS1V15_SHA256
+   :noindex:
+.. autodata:: securesystemslib.signer._constants.RSA_PKCS1V15_SHA384
+   :noindex:
+.. autodata:: securesystemslib.signer._constants.RSA_PKCS1V15_SHA512
+   :noindex:
+.. autodata:: securesystemslib.signer._constants.ED25519
+   :noindex:
+.. autodata:: securesystemslib.signer._constants.MLDSA_44_1
+   :noindex:
+.. autodata:: securesystemslib.signer._constants.MLDSA_65_1
+   :noindex:
+.. autodata:: securesystemslib.signer._constants.MLDSA_87_1
+   :noindex:
+
+
+

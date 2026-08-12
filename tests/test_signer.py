@@ -5,6 +5,7 @@ import os
 import shutil
 import tempfile
 import unittest
+import warnings
 from contextlib import suppress
 from pathlib import Path
 from typing import Any
@@ -34,6 +35,7 @@ from securesystemslib.signer import (
 from securesystemslib.signer._utils import compute_default_keyid
 
 PEMS_DIR = Path(__file__).parent / "data" / "pems"
+SHA224_SCHEMES = ("rsassa-pss-sha224", "rsa-pkcs1v15-sha224")
 
 
 class TestKey(unittest.TestCase):
@@ -77,6 +79,21 @@ class TestKey(unittest.TestCase):
         finally:
             del KEY_FOR_TYPE_AND_SCHEME[("ml-dsa", "ml-dsa-65/1")]
 
+    def test_key_hash(self):
+        """Keys should be hashable, even with dict keyval and extra fields."""
+        keydict = {
+            "keytype": "ed25519",
+            "scheme": "ed25519",
+            "extra": "somedata",
+            "keyval": {"public": "pubkeyval", "foo": "bar"},
+        }
+        key = Key.from_dict("aa", copy.deepcopy(keydict))
+        key_2 = Key.from_dict("aa", copy.deepcopy(keydict))
+
+        # Equal keys hash equally and collapse in a set.
+        self.assertEqual(hash(key), hash(key_2))
+        self.assertEqual(len({key, key_2}), 1)
+
     def test_sslib_key_from_dict_invalid(self):
         """Test from_dict for invalid data"""
         invalid_dicts = [
@@ -93,6 +110,30 @@ class TestKey(unittest.TestCase):
         for keydict in invalid_dicts:
             with self.assertRaises((KeyError, ValueError)):
                 Key.from_dict("aa", keydict)
+
+    def test_sha224_schemes_require_explicit_registration(self):
+        """SHA-224 keys require callers to opt into the registry."""
+        for scheme in SHA224_SCHEMES:
+            key_type_scheme = ("rsa", scheme)
+            key_dict = {
+                "keytype": "rsa",
+                "scheme": scheme,
+                "keyval": {"public": "pubkeyval"},
+            }
+
+            self.assertNotIn(key_type_scheme, KEY_FOR_TYPE_AND_SCHEME)
+            with self.assertRaisesRegex(
+                ValueError, f"Unsupported public key rsa/{scheme}"
+            ):
+                Key.from_dict("aa", copy.deepcopy(key_dict))
+
+            try:
+                KEY_FOR_TYPE_AND_SCHEME[key_type_scheme] = SSlibKey
+                key = Key.from_dict("aa", copy.deepcopy(key_dict))
+                self.assertIsInstance(key, SSlibKey)
+                self.assertDictEqual(key_dict, key.to_dict())
+            finally:
+                KEY_FOR_TYPE_AND_SCHEME.pop(key_type_scheme, None)
 
     def test_key_verify_signature(self):
         ed25519_keyid = (
@@ -228,16 +269,17 @@ class TestKey(unittest.TestCase):
             ),
         ]
         for keyid, keytype, scheme, pub, sig in key_sig_data:
-            key = Key.from_dict(
-                keyid,
-                {
-                    "keytype": keytype,
-                    "scheme": scheme,
-                    "keyval": {
-                        "public": pub,
-                    },
+            key_dict = {
+                "keytype": keytype,
+                "scheme": scheme,
+                "keyval": {
+                    "public": pub,
                 },
-            )
+            }
+            if scheme in SHA224_SCHEMES:
+                key = SSlibKey.from_dict(keyid, key_dict)
+            else:
+                key = Key.from_dict(keyid, key_dict)
 
             sig = Signature.from_dict(  # noqa: PLW2901
                 {
@@ -249,6 +291,48 @@ class TestKey(unittest.TestCase):
             key.verify_signature(sig, b"DATA")
             with self.assertRaises(UnverifiedSignatureError, msg=scheme):
                 key.verify_signature(sig, b"NOT DATA")
+
+    def test_verify_signature_legacy_ecdsa_keytype_deprecated(self):
+        """Legacy ecdsa keytypes (keytype == scheme) verify but warn (#363)."""
+        keyid = "985171ff9ee901fbab17aa6f57347933aeae9d194f0f93e83e5c3dbc1755e754"
+        pub = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEsYJfSlYU3UlYbGOZfE/yOHkayWWq\nLPR/NeCa83szZmnJGc9wwCRPvJS87K+eDGIhhhKueTyrLqXQqmyHioQbOQ==\n-----END PUBLIC KEY-----\n"
+        sig = Signature.from_dict(
+            {
+                "keyid": keyid,
+                "sig": "304502207d0058b745b2259501204c2ba287ba3769ec2420e12463a325c59670c24df9b6022100836ca63a1b870f755c1596711a003a505e72e25cb0970e823a331e044adc63ec",
+            }
+        )
+
+        # Creating a key with the legacy keytype still works
+        legacy_key = Key.from_dict(
+            keyid,
+            {
+                "keytype": "ecdsa-sha2-nistp256",
+                "scheme": "ecdsa-sha2-nistp256",
+                "keyval": {"public": pub},
+            },
+        )
+
+        # Verifying with the legacy keytype emits a DeprecationWarning
+        with self.assertWarns(DeprecationWarning):
+            legacy_key.verify_signature(sig, b"DATA")
+
+        # The correct "ecdsa" keytype verifies without a DeprecationWarning
+        key = Key.from_dict(
+            keyid,
+            {
+                "keytype": "ecdsa",
+                "scheme": "ecdsa-sha2-nistp256",
+                "keyval": {"public": pub},
+            },
+        )
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            key.verify_signature(sig, b"DATA")
+        self.assertEqual(
+            [w for w in caught if issubclass(w.category, DeprecationWarning)],
+            [],
+        )
 
     def test_unsupported_key(self):
         keydict = {
@@ -454,6 +538,45 @@ class TestSigner(unittest.TestCase):
         # Assert that making sig_obj_2 None will make the objects not equal.
         sig_obj_2 = None
         self.assertNotEqual(sig_obj, sig_obj_2)
+
+    def test_signature_hash(self):
+        """Signatures should be hashable, even with unrecognized fields."""
+        signature_dict = {
+            "sig": "30460221009342e4566528fcecf6a7a5d53ebacdb1df151e242f55f8775883469cb01dbc6602210086b426cc826709acfa2c3f9214610cb0a832db94bbd266fd7c5939a48064a851",
+            "keyid": "11fa391a0ed7a447cbfeb4b2667e286fc248f64d5e6d0eeed2e5e23f97f9f714",
+            "extra": "unrecognized",
+        }
+        sig_obj = Signature.from_dict(copy.deepcopy(signature_dict))
+        sig_obj_2 = Signature.from_dict(copy.deepcopy(signature_dict))
+
+        # Equal signatures hash equally and collapse in a set.
+        self.assertEqual(hash(sig_obj), hash(sig_obj_2))
+        self.assertEqual(len({sig_obj, sig_obj_2}), 1)
+
+    def test_signature_hash_equal_for_equal_field_values(self):
+        """Values that compare equal must hash equally.
+
+        Python treats 1, 1.0 and True as equal, so unrecognized fields that
+        differ only in those types make two equal Signatures, which have to
+        share a hash.
+        """
+        for first, second in [
+            ({"extra": 1}, {"extra": True}),
+            ({"extra": 1}, {"extra": 1.0}),
+            ({"extra": [{"nested": 1}]}, {"extra": [{"nested": True}]}),
+        ]:
+            with self.subTest(first=first, second=second):
+                sig = Signature("aa", "bb", first)
+                sig_2 = Signature("aa", "bb", second)
+
+                self.assertEqual(sig, sig_2)
+                self.assertEqual(hash(sig), hash(sig_2))
+
+    def test_signature_hash_non_json_field_value(self):
+        """Unrecognized field values need not be JSON types."""
+        sig = Signature("aa", "bb", {"extra": b"binary"})
+
+        self.assertIsInstance(hash(sig), int)
 
 
 @unittest.skipIf(not have_gpg(), "gpg not found")

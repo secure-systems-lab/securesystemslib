@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from securesystemslib._internal.utils import make_hashable
+
 logger = logging.getLogger(__name__)
 
 
@@ -56,7 +58,13 @@ class Signature:
         )
 
     def __hash__(self) -> int:
-        return hash((self.keyid, self.signature, self.unrecognized_fields))
+        return hash(
+            (
+                self.keyid,
+                self.signature,
+                make_hashable(self.unrecognized_fields),
+            )
+        )
 
     @classmethod
     def from_dict(cls, signature_dict: dict) -> Signature:
