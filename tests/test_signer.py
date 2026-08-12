@@ -34,6 +34,7 @@ from securesystemslib.signer import (
 from securesystemslib.signer._utils import compute_default_keyid
 
 PEMS_DIR = Path(__file__).parent / "data" / "pems"
+SHA224_SCHEMES = ("rsassa-pss-sha224", "rsa-pkcs1v15-sha224")
 
 
 class TestKey(unittest.TestCase):
@@ -108,6 +109,30 @@ class TestKey(unittest.TestCase):
         for keydict in invalid_dicts:
             with self.assertRaises((KeyError, ValueError)):
                 Key.from_dict("aa", keydict)
+
+    def test_sha224_schemes_require_explicit_registration(self):
+        """SHA-224 keys require callers to opt into the registry."""
+        for scheme in SHA224_SCHEMES:
+            key_type_scheme = ("rsa", scheme)
+            key_dict = {
+                "keytype": "rsa",
+                "scheme": scheme,
+                "keyval": {"public": "pubkeyval"},
+            }
+
+            self.assertNotIn(key_type_scheme, KEY_FOR_TYPE_AND_SCHEME)
+            with self.assertRaisesRegex(
+                ValueError, f"Unsupported public key rsa/{scheme}"
+            ):
+                Key.from_dict("aa", copy.deepcopy(key_dict))
+
+            try:
+                KEY_FOR_TYPE_AND_SCHEME[key_type_scheme] = SSlibKey
+                key = Key.from_dict("aa", copy.deepcopy(key_dict))
+                self.assertIsInstance(key, SSlibKey)
+                self.assertDictEqual(key_dict, key.to_dict())
+            finally:
+                KEY_FOR_TYPE_AND_SCHEME.pop(key_type_scheme, None)
 
     def test_key_verify_signature(self):
         ed25519_keyid = (
@@ -243,16 +268,17 @@ class TestKey(unittest.TestCase):
             ),
         ]
         for keyid, keytype, scheme, pub, sig in key_sig_data:
-            key = Key.from_dict(
-                keyid,
-                {
-                    "keytype": keytype,
-                    "scheme": scheme,
-                    "keyval": {
-                        "public": pub,
-                    },
+            key_dict = {
+                "keytype": keytype,
+                "scheme": scheme,
+                "keyval": {
+                    "public": pub,
                 },
-            )
+            }
+            if scheme in SHA224_SCHEMES:
+                key = SSlibKey.from_dict(keyid, key_dict)
+            else:
+                key = Key.from_dict(keyid, key_dict)
 
             sig = Signature.from_dict(  # noqa: PLW2901
                 {
