@@ -125,3 +125,40 @@ Signing scheme constants
 
 
 
+Signer implementations
+~~~~~~~~~~~~~~~~~~~~~~
+
+All signers implement the `Signer` interface: only the unique API specific to
+each signer is documented below.
+
+.. autoclass:: securesystemslib.signer.CryptoSigner
+   :exclude-members: sign, public_key, from_priv_key_uri
+
+.. autoclass:: securesystemslib.signer.AWSSigner
+   :members: import_
+   :exclude-members: sign, public_key, from_priv_key_uri
+
+.. autoclass:: securesystemslib.signer.AzureSigner
+   :members: import_
+   :exclude-members: sign, public_key, from_priv_key_uri
+
+.. autoclass:: securesystemslib.signer.GCPSigner
+   :members: import_
+   :exclude-members: sign, public_key, from_priv_key_uri
+
+.. autoclass:: securesystemslib.signer.HSMSigner
+   :members: import_
+   :exclude-members: sign, public_key, from_priv_key_uri
+
+.. autoclass:: securesystemslib.signer.TKeySigner
+   :members: import_
+   :exclude-members: sign, public_key, from_priv_key_uri
+
+.. autoclass:: securesystemslib.signer.VaultSigner
+   :members: import_
+   :exclude-members: sign, public_key, from_priv_key_uri
+
+.. autoclass:: securesystemslib.signer.SigstoreSigner
+   :members: import_, import_via_auth, import_github_actions
+   :exclude-members: sign, public_key, from_priv_key_uri
+

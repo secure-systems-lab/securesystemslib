@@ -120,20 +120,16 @@ class SigstoreSigner(Signer):
         signature = signer.sign(b"data")
         public_key.verify_signature(signature, b"data")
 
-    The private key URI scheme is "sigstore:?<PARAMS>", where PARAMS is
+    The private key URI scheme is ``sigstore:?<PARAMS>``, where PARAMS is
     optional and toggles ambient credential usage. Example URIs:
 
-    * "sigstore:":
+    * ``sigstore:``:
         Sign with ambient credentials.
-    * "sigstore:?ambient=false":
+    * ``sigstore:?ambient=false``:
         Sign with OAuth2 + OpenID via browser login.
 
-    Arguments:
-        token: The OIDC identity token used for signing.
-        public_key: The related public key instance.
-
     Raises:
-        UnsupportedLibraryError: sigstore library not found.
+        UnsupportedLibraryError: If sigstore library is not installed.
     """
 
     SCHEME = "sigstore"

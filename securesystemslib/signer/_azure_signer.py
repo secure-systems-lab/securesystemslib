@@ -62,26 +62,32 @@ class UnsupportedKeyType(Exception):  # noqa: N818
 
 
 class AzureSigner(Signer):
-    """Azure Key Vault Signer
+    """Azure Key Vault Signer.
 
     This Signer uses Azure Key Vault to sign.
-    Currently this signer only supports signing with EC keys.
-    RSA support will be added in a separate pull request.
+    Currently this signer supports signing with EC keys (NIST curves P-256, P-384,
+    and P-521).
+
+    The private key URI scheme is:
+    ``azurekms://<vault-name>.vault.azure.net/keys/<key-name>/<version>``
+
+    Authentication uses ambient credentials via
+    ``azure.identity.DefaultAzureCredential`` (such as environment variables
+    ``AZURE_CLIENT_ID``, ``AZURE_CLIENT_SECRET``, ``AZURE_TENANT_ID``, managed
+    identities, or Azure CLI login).
 
     The specific permissions that AzureSigner needs are:
-    * "Key Vault Crypto User" for import() and sign()
 
-    See https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-guide?tabs=azure-cli
-    for a list of all built-in Azure Key Vault roles
+    * "Key Vault Crypto User" (or equivalent custom RBAC role) for
+      ``AzureSigner.import_()`` and ``Signer.sign()``
 
-    Arguments:
-        az_key_uri: Fully qualified Azure Key Vault name, like
-            https://<vault-name>.vault.azure.net/keys/<key-name>/<version>
-        public_key: public key object
+    See `Azure Key Vault RBAC guide
+    <https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-guide?tabs=azure-cli>`_
+    for a list of all built-in Azure Key Vault roles.
 
     Raises:
-        Various errors from azure.identity
-        Various errors from azure.keyvault.keys
+        UnsupportedLibraryError: If azure-identity, azure-keyvault-keys, or
+            cryptography are not installed.
     """
 
     SCHEME = "azurekms"

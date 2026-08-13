@@ -50,23 +50,27 @@ except ImportError:
 
 
 class HSMSigner(Signer):
-    """Hardware Security Module (HSM) Signer.
+    """Hardware Security Key Signer.
 
-    Supports signing schemes ECDSA_SHA2_NISTP256 and ECDSA_SHA2_NISTP384.
+    HSMSigner uses PKCS#11 API to sign with hardware security keys like YubiKeys.
+    It Supports signing schemes ECDSA_SHA2_NISTP256 and ECDSA_SHA2_NISTP384.
 
-    HSMSigners should be instantiated with Signer.from_priv_key_uri() as in the usage
-    example below.
+    The environment variable ``PYKCS11LIB`` must be set to the path of the PKCS#11
+    shared library module for the hardware token (for example,
+    ``/usr/lib/x86_64-linux-gnu/libykcs11.so`` or
+    ``/usr/local/lib/libykcs11.dylib``).
 
-    The private key URI scheme is: "hsm:[<KEYID>][?label=<LABEL>]" where both KEYID and
+    The private key URI scheme is: ``hsm:[<KEYID>][?label=<LABEL>]`` where both KEYID and
     LABEL are optional. Example URIs:
-    * "hsm:":
+
+    * ``hsm:``:
       Sign with a key with default keyid 2 (PIV digital signature slot 9c) on the
       only token/smartcard available.
-    * "hsm:2?label=YubiKey+PIV+%2315835999":
+    * ``hsm:2?label=YubiKey+PIV+%2315835999``:
       Sign with key with keyid 2 (PIV slot 9c) on a token with label
-      "YubiKey+PIV+%2315835999"
+      "YubiKey+PIV+%2315835999".
 
-    Requires environment variable PYKCS11LIB to contain path to PKCS#11 module.
+    Requires environment variable ``PYKCS11LIB`` to contain path to PKCS#11 module.
 
     Usage::
 
@@ -74,25 +78,13 @@ class HSMSigner(Signer):
         # slot 9c is selected.
         uri, pubkey = HSMSigner.import_()
 
-        # later, use the uri and pubkey to sign
+        # Later, use the uri and pubkey to sign (providing PIN via SecretsHandler)
         def pin_handler(secret: str) -> str:
             return getpass(f"Enter {secret}: ")
 
         signer = Signer.from_priv_key_uri(uri, pubkey, pin_handler)
         sig = signer.sign(b"DATA")
         pubkey.verify_signature(sig, b"DATA")
-
-    Arguments:
-        hsm_keyid: Key identifier on the token.
-        public_key: The related public key instance.
-        pin_handler: A function that returns the HSM user login pin, needed for
-                signing. It receives the string argument "pin".
-        token_label: Optional token label to filter by.
-
-    Raises:
-        UnsupportedLibraryError: ``python-pkcs11`` and ``cryptography``
-            libraries not found.
-        ValueError: ``public_key.scheme`` not supported.
     """
 
     SCHEME_KEYID = 2
@@ -187,8 +179,7 @@ class HSMSigner(Signer):
         Either only one cryptographic token must be present when importing or a
         token_label that matches a single token must be provided.
 
-        Returns a private key URI (for Signer.from_priv_key_uri()) and a public
-        key. import_() should be called once and the returned URI and public
+        import_() should be called once and the returned URI and public
         key should be stored for later use.
 
         Arguments:

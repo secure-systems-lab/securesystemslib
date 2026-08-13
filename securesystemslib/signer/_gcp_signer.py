@@ -94,34 +94,24 @@ except ImportError:
 
 
 class GCPSigner(Signer):
-    """Google Cloud KMS Signer
+    """Google Cloud KMS Signer.
 
-    This Signer uses Google Cloud KMS to sign: the payload is hashed locally,
+    This Signer uses Google Cloud KMS to sign. The payload is hashed locally,
     but the signature is created on the KMS.
 
-    The signer uses "ambient" credentials: typically environment var
-    GOOGLE_APPLICATION_CREDENTIALS that points to a file with valid
-    credentials. These will be found by google.cloud.kms, see
+    The private key URI scheme is: ``gcpkms:<gcp_keyid>``, where ``<gcp_keyid>``
+    is the fully qualified GCP KMS key name:
+    ``projects/<project>/locations/<location>/keyRings/<keyRing>/cryptoKeys/<key>/cryptoKeyVersions/<version>``.
+
+    Authentication uses ambient credentials (typically the environment variable
+    ``GOOGLE_APPLICATION_CREDENTIALS`` pointing to a service account key file,
+    or Google Application Default Credentials):
     https://cloud.google.com/docs/authentication/getting-started.
-    Some practical authentication options include:
-    * GitHub Action: https://github.com/google-github-actions/auth
-    * gcloud CLI: https://cloud.google.com/sdk/gcloud
 
-    The specific permissions that GCPSigner needs are:
-    * roles/cloudkms.signer for sign()
-    * roles/cloudkms.publicKeyViewer for import()
+    The specific Google Cloud IAM roles that GCPSigner needs are:
 
-    Arguments:
-        gcp_keyid: Fully qualified GCP KMS key name, like
-            projects/python-tuf-kms/locations/global/keyRings/securesystemslib-tests/cryptoKeys/ecdsa-sha2-nistp256/cryptoKeyVersions/1
-        public_key: The related public key instance
-
-    Raises:
-        UnsupportedAlgorithmError: The payload hash algorithm is unsupported.
-        UnsupportedLibraryError: google.cloud.kms was not found
-        Various errors from google.cloud modules: e.g.
-            google.auth.exceptions.DefaultCredentialsError if ambient
-            credentials are not found
+    * ``roles/cloudkms.publicKeyViewer`` for ``GCPSigner.import_()``
+    * ``roles/cloudkms.signer`` for ``Signer.sign()``
     """
 
     SCHEME = "gcpkms"
@@ -166,8 +156,16 @@ class GCPSigner(Signer):
     def import_(cls, gcp_keyid: str) -> tuple[str, SSlibKey]:
         """Load key and signer details from KMS
 
-        Returns the private key uri and the public key. This method should only
-        be called once per key: the uri and Key should be stored for later use.
+        This method should only be called once per key: the uri and
+        Key should be stored for later use.
+
+        Requires ``roles/cloudkms.publicKeyViewer`` role on Google Cloud.
+
+        Args:
+            gcp_id: Fully qualified GCP KMS key name
+                (``projects/<P>/locations/<L>/keyRings/<R>/cryptoKeys/<K>/cryptoKeyVersions/<V>``).
+        Returns:
+            Tuple with private key URI and the public key
         """
         if GCP_IMPORT_ERROR:
             raise exceptions.UnsupportedLibraryError(GCP_IMPORT_ERROR)
@@ -192,17 +190,6 @@ class GCPSigner(Signer):
         return f"{cls.SCHEME}:{gcp_keyid}", public_key
 
     def sign(self, payload: bytes) -> Signature:
-        """Signs payload with Google Cloud KMS.
-
-        Arguments:
-            payload: bytes to be signed.
-
-        Raises:
-            Various errors from google.cloud modules.
-
-        Returns:
-            Signature.
-        """
         # NOTE: request and response can contain CRC32C of the digest/sig:
         # Verifying could be useful but would require another dependency...
 

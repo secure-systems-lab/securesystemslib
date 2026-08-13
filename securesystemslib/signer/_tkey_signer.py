@@ -25,24 +25,24 @@ logger = logging.getLogger(__name__)
 
 
 class TKeySigner(Signer):
-    """Tillitis TKey Signer.
+    """Post-Quantum signer for the Tillitis TKey security token.
 
     Supports signing scheme MLDSA_44_1.
 
-    The private key URI is
-        tkey:[device_path]?digest=<hex_prefix>&[passphrase=true]
+    The private key URI is: ``tkey:[device_path]?digest=<hex_prefix>&[passphrase=true]``
 
-    digest is required in the URI: The device binary (identified by its
-    digest hash prefix) is part of the private key seed. A key can only
-    be used with the same exact binary.
-
-    device_path is not required and is not typically useful as the device association
-    may be dynamic.
+        * ``digest`` is required in the URI: The device binary (identified by its
+          digest hash prefix) is part of the private key seed. A key can only
+          be used with the same exact binary.
+        * ``device_path`` is optional and not typically needed as device detection is
+          automatic.
+        * If ``passphrase=true`` is present in the URI, a ``secrets_handler`` must be
+          provided to ``Signer.from_priv_key_uri()`` to supply the passphrase secret.
 
     Examples:
-        tkey:?digest=7c75714
-        tkey:?digest=7c75714&passphrase=true
-        tkey:/dev/ttyACM0?digest=7c75714&passphrase=true
+        * ``tkey:?digest=7c75714``
+        * ``tkey:?digest=7c75714&passphrase=true``
+        * ``tkey:/dev/ttyACM0?digest=7c75714&passphrase=true``
     """
 
     SCHEME = "tkey"
@@ -132,11 +132,15 @@ class TKeySigner(Signer):
         """Import public key and signer details from a TKey device.
 
         Args:
-            digest: Optional digest or digest prefix of device binary.
+            digest: Optional digest or digest prefix of device binary. If not given,
+                the current default device binary is used.
             device_path: Optional COM port path. Typically not useful as the port may
                 be dynamic
             passphrase: Optional "User Supplied Secret". Will be used as part of the
                 seed for the private key
+
+        Returns:
+            Tuple of private key URI string and public key
         """
         if TKEY_IMPORT_ERROR:
             raise UnsupportedLibraryError(TKEY_IMPORT_ERROR)
