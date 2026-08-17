@@ -57,8 +57,8 @@ class HSMSigner(Signer):
     HSMSigners should be instantiated with Signer.from_priv_key_uri() as in the usage
     example below.
 
-    The private key URI scheme is: "hsm:<KEYID>?<FILTERS>" where both KEYID and
-    FILTERS are optional. Example URIs:
+    The private key URI scheme is: "hsm:[<KEYID>][?label=<LABEL>]" where both KEYID and
+    LABEL are optional. Example URIs:
     * "hsm:":
       Sign with a key with default keyid 2 (PIV digital signature slot 9c) on the
       only token/smartcard available.
@@ -196,6 +196,7 @@ class HSMSigner(Signer):
                 Default is 2 (meaning PIV key slot 9c).
             token_label: Token label to filter the correct cryptographic token.
                 If no label is provided one is built from the token found.
+            secrets_handler: Will be called if reading the public key requires PIN.
 
         Raises:
             UnsupportedLibraryError: ``python-pkcs11`` and ``cryptography``
