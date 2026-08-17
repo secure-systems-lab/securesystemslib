@@ -6,6 +6,7 @@ import logging
 from urllib import parse
 
 from securesystemslib.exceptions import UnsupportedLibraryError
+from securesystemslib.signer._constants import MLDSA_44_1
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import SecretsHandler, Signer
@@ -26,7 +27,7 @@ logger = logging.getLogger(__name__)
 class TKeySigner(Signer):
     """Tillitis TKey Signer.
 
-    Supports signing scheme "ml-dsa-44/1".
+    Supports signing scheme MLDSA_44_1.
 
     The private key URI is
         tkey:[device_path]?digest=<hex_prefix>&[passphrase=true]
@@ -63,7 +64,7 @@ class TKeySigner(Signer):
 
         # key derivation depends on passphrase: compare keys to make sure
         raw_pubkey = self._tkey.get_pubkey()
-        if public_key.scheme == "ml-dsa-44/1":
+        if public_key.scheme == MLDSA_44_1:
             key = SSlibKey.from_crypto(MLDSA44PublicKey.from_public_bytes(raw_pubkey))
         else:
             raise ValueError(f"unsupported scheme {public_key.scheme}")
@@ -101,7 +102,7 @@ class TKeySigner(Signer):
         if "digest" in query_params:
             digest = query_params["digest"][0]
 
-        if digest is None:
+        if not digest:
             raise ValueError("TKey URI must include 'digest'")
 
         pass_str = query_params.get("passphrase", ["false"])[0]
