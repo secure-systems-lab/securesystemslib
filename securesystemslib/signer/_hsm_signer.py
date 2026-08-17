@@ -264,7 +264,7 @@ class HSMSigner(Signer):
         pin = self.pin_handler(self.SECRETS_HANDLER_MSG)
         token = self._find_token(self.token_label)
 
-        with token.open(rw=True, user_pin=pin) as session:
+        with token.open(user_pin=pin) as session:
             key = self._find_signing_key(session, self.hsm_keyid)
             signature = key.sign(hasher.digest(), mechanism=pkcs11.Mechanism.ECDSA)
 
