@@ -1,2 +1,2 @@
-boto3~=1.43.63
-botocore~=1.43.63
+boto3~=1.43.68
+botocore~=1.43.68
