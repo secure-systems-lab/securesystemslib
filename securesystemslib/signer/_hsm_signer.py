@@ -39,7 +39,12 @@ PKCS11_IMPORT_ERROR = None
 try:
     import pkcs11
     import pkcs11.util.ec
-    from pkcs11.exceptions import NoSuchKey, NoSuchToken
+    from pkcs11.exceptions import (
+        MultipleObjectsReturned,
+        MultipleTokensReturned,
+        NoSuchKey,
+        NoSuchToken,
+    )
 except ImportError:
     PKCS11_IMPORT_ERROR = "'python-pkcs11' required"
 
@@ -132,6 +137,9 @@ class HSMSigner(Signer):
         except NoSuchToken:
             label_str = f" for label {token_label}" if token_label else ""
             raise ValueError(f"No PKCS#11 token found{label_str}")
+        except MultipleTokensReturned:
+            label_str = f" for label {token_label}" if token_label else ""
+            raise ValueError(f"Multiple PKCS#11 tokens found{label_str}")
 
     @staticmethod
     def _find_pub_key(session: pkcs11.Session, keyid: int) -> EllipticCurvePublicKey:
@@ -142,6 +150,8 @@ class HSMSigner(Signer):
             pkcs11_key = session.get_key(object_class, pkcs11.KeyType.EC, id=id_bytes)
         except NoSuchKey:
             raise ValueError("could not find ECDSA key on the PKCS#11 token")
+        except MultipleObjectsReturned:
+            raise ValueError("found multiple ECDSA keys on the PKCS#11 token")
 
         if not isinstance(pkcs11_key, pkcs11.PublicKey):
             raise AssertionError("PKCS key is not a public key")
@@ -159,6 +169,8 @@ class HSMSigner(Signer):
             pkcs11_key = session.get_key(object_class, pkcs11.KeyType.EC, id=id_bytes)
         except NoSuchKey:
             raise ValueError("could not find ECDSA private key on the PKCS#11 token")
+        except MultipleObjectsReturned:
+            raise ValueError("found multiple ECDSA private keys on the PKCS#11 token")
         if not isinstance(pkcs11_key, pkcs11.SignMixin):
             raise AssertionError("Found private key cannot be used for signing")
         return pkcs11_key
