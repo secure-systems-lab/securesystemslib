@@ -17,5 +17,5 @@ pycparser==3.0
     # via cffi
 pyspx==0.5.0 ; platform_system != "Windows"
     # via -r requirements.txt
-python-pkcs11==0.9.4
+python-pkcs11==0.9.5
     # via -r requirements.txt
