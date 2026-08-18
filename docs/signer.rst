@@ -36,33 +36,85 @@ register its own.
 
 Usage
 -----
-The signer API is streamlined for the following series of user events,
-which may happen on different systems and at different points in time:
+The signer API is designed around a 4-step lifecycle.
 
-1. **Generate** key pair (signature provider -specific)
+Crucially, **steps 1 and 2 are one-time setup operations** specific to the
+chosen signing technology (e.g. a hardware token or a Cloud KMS).
 
-   Typically, this is done outside of the signer API, e.g. by using a Cloud KMS
-   web UI or an HSM console.
+In contrast, **steps 3 and 4 are completely technology-agnostic**: the exact
+same signing and verification code works for all signers and public keys.
 
-2. **Configure** public key and signer access URI
+1. **Generate key pair** *(technology-specific, one-time)*
 
-   The public key for a signer must be available in the signing context,
-   in order to express its eligibility.
+   Typically done out-of-band using tooling specific to the signing technology
+   (for example, generating a key on a Yubikey with Yubico Authenticator,
+   or creating a signing key via a Cloud KMS console / CLI).
 
-   Some of the existing signer implementations have methods to import a public
-   key from a signature provider and to build the related signer access URI.
+2. **Configure public key and signer details** *(signer-specific, one-time)*
 
-   The public key can then be serialized with interface methods for use
-   in the signing context and in the verification context.
+   Signer implementations provide an ``import_()`` class method to read the
+   public key and construct the corresponding private key URI required to access
+   the signer. Both the private key URI and the public key should be stored for
+   later use.
 
-3. **Sign**, given a configured public key and signer access URI
+3. **Sign** *(generic, repeatable)*
 
-4. **Verify**, given a configured public key
+   Load any signer uniformly using :meth:`Signer.from_priv_key_uri` with the
+   stored private key URI and the public key. Signers that require user secrets
+   (such as an HSM PIN or passphrase) accept an optional
+   :data:`SecretsHandler` callback.
+
+4. **Verify** *(generic, repeatable)*
+
+   Deserialize the public key with :meth:`Key.from_dict` and call
+   :meth:`Key.verify_signature`. The verifying application does not need to
+   know where or how the signature was created.
+
+
+Example
+~~~~~~~
+
+The following example illustrates the full lifecycle using :class:`HSMSigner`
+(a PKCS#11 hardware token such as a YubiKey):
+
+.. code-block:: python
+
+    # --- Steps 1 & 2: Technology-specific one-time setup ---
+
+    # Step 1 (out-of-band): Generate key pair on the hardware token (e.g.
+    # using Yubico Authenticator)
+
+    # Step 2: Import public key and private key URI from the hardware token
+    from securesystemslib.signer import HSMSigner
+
+    uri, public_key = HSMSigner.import_()
+    # Save the URI string and serialized public key for later use
+    # uri -> "hsm:2?label=YubiKey+PIV+%2315835999"
+    public_key_dict = public_key.to_dict()
+
+
+    # --- Steps 3 & 4: technology-agnostic signing and verification ---
+    # The code below works identically for ANY signer
+    from getpass import getpass
+    from securesystemslib.signer import Key, Signer
+
+    # Step 3: Sign using generic Signer interface
+    # In the Yubikey case, user may be asked for a PIN
+    def pin_handler(secret_name: str) -> str:
+        return getpass(f"Enter {secret_name}: ")
+
+    # Load the stored public key and signer
+    signer = Signer.from_priv_key_uri(uri, public_key, secrets_handler=pin_handler)
+    signature = signer.sign(b"data to sign")
+
+    # Step 4: Verify using generic Key interface
+    public_key.verify_signature(signature, b"data to sign")
+
 
 .. note::
 
    See `'New Signer API' <https://theupdateframework.github.io/python-tuf/2023/01/24/securesystemslib-signer-api.html>`_ blog post
-   for background infos.
+   for background information.
 
 API documentation
 -----------------
