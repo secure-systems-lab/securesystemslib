@@ -60,8 +60,8 @@ class HSMSigner(Signer):
     ``/usr/lib/x86_64-linux-gnu/libykcs11.so`` or
     ``/usr/local/lib/libykcs11.dylib``).
 
-    The private key URI scheme is: ``hsm:[<KEYID>][?label=<LABEL>]`` where both KEYID and
-    LABEL are optional. Example URIs:
+    The private key URI scheme is: ``hsm:[<KEYID>][?label=<LABEL>]`` where both KEYID
+    and LABEL are optional. Example URIs:
 
     * ``hsm:``:
       Sign with a key with default keyid 2 (PIV digital signature slot 9c) on the
