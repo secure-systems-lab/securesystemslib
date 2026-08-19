@@ -11,10 +11,13 @@ KEY_TYPE_RSA = "rsa"
 #: ECDSA key type.
 KEY_TYPE_ECDSA = "ecdsa"
 
-#: Ed25519 key type.
+#: Ed25519 key type. Note that Ed25519 is unsupported on many signer backends:
+#: The payload cannot be hashed before signing so hardware tokens and cloud
+#: KMSs generally do not support it because of payload size limitations.
 KEY_TYPE_ED25519 = "ed25519"
 
-#: ML-DSA key type.
+#: ML-DSA key type. Keytype defines pre-signing hashing with SHA-512. See
+#: https://github.com/theupdateframework/taps/blob/master/tap21.md
 KEY_TYPE_MLDSA = "ml-dsa"
 
 #: ECDSA signature scheme over NIST P-256 with SHA-256. Supported with key type
