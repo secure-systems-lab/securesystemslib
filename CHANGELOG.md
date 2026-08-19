@@ -2,10 +2,39 @@
 
 ## Unreleased
 
+## 1.5.0
+
+### Added
+
+* Post-quantum ML-DSA (ML-DSA-44, ML-DSA-65, ML-DSA-87) support in
+  `CryptoSigner`, `GCPSigner`, and `SSlibKey` (#1124)
+* TKeySigner: Support Tillitis TKey hardware token as a ML-DSA-44
+  signer (URI scheme `tkey:`) (#1149)
+* CryptoSigner: Support `ecdsa-sha2-nistp384` and `ecdsa-sha2-nistp521`
+  schemes in key generation and signing (#1181)
+* Named constants for key types and signing schemes in `signer` module (#1137)
+
+### Changed
+
+* HSMSigner: Switch backend library to `python-pkcs11` (#1156)
+* HSMSigner: Allow token login during `import_()` (#1109, #1156)
+
 ### Deprecated
 
 * `ecdsa-sha2-nistp256`, `ecdsa-sha2-nistp384`, and `ecdsa-sha2-nistp521` as
-  keytype values. Use `ecdsa` instead. (#363)
+  keytype values. Use `ecdsa` instead. (#363, #1138)
+
+### Removed
+
+* Drop SHA-224 RSA schemes (`rsassa-pss-sha224` and `rsa-pkcs1v15-sha224`) from
+  the default verification registry (#1171)
+
+### Fixed
+
+* Make `Key`, `Signature`, and `Envelope` hashable (#1163)
+* Fix GPG homedir path handling on Windows with native `gpg.exe` (#1140)
+* Fix redefined loop variable in `Envelope.from_dict` (#1139)
+
 
 ## securesystemslib v1.4.0
 
