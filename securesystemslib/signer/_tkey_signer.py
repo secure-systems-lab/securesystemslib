@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from urllib import parse
 
-from securesystemslib.exceptions import UnsupportedLibraryError
+from securesystemslib.exceptions import KeyMismatchError, UnsupportedLibraryError
 from securesystemslib.signer._constants import MLDSA_44_1
 from securesystemslib.signer._key import Key, SSlibKey
 from securesystemslib.signer._signature import Signature
@@ -70,7 +70,7 @@ class TKeySigner(Signer):
             raise ValueError(f"unsupported scheme {public_key.scheme}")
 
         if key.keyval != self.public_key.keyval:
-            raise RuntimeError(
+            raise KeyMismatchError(
                 "TKey public key does not match: This could mean incorrect Passphrase."
             )
 
