@@ -18,6 +18,7 @@
 
 * HSMSigner: Switch backend library to `python-pkcs11` (#1156)
 * HSMSigner: Allow token login during `import_()` (#1109, #1156)
+* GitHub releases are now immutable (#1098, #1188)
 
 ### Deprecated
 
