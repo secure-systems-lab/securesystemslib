@@ -2,7 +2,7 @@ import hashlib
 import unittest
 from unittest.mock import MagicMock, patch
 
-from securesystemslib.exceptions import UnsupportedLibraryError
+from securesystemslib.exceptions import KeyMismatchError, UnsupportedLibraryError
 from securesystemslib.signer import SSlibKey, TKeySigner
 
 
@@ -69,7 +69,7 @@ class TestTKeySigner(unittest.TestCase):
 
         self.mock_public_key.keyval = "expected_keyval"
 
-        with self.assertRaises(RuntimeError) as ctx:
+        with self.assertRaises(KeyMismatchError) as ctx:
             TKeySigner(
                 device_path="/dev/ttyACM0",
                 public_key=self.mock_public_key,
