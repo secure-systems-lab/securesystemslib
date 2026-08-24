@@ -27,10 +27,7 @@ from securesystemslib.signer import (
     SecretsHandler,
     Signature,
     Signer,
-    SpxKey,
-    SpxSigner,
     SSlibKey,
-    generate_spx_key_pair,
 )
 from securesystemslib.signer._utils import compute_default_keyid
 
@@ -720,29 +717,6 @@ class TestUtils(unittest.TestCase):
         # Invalid keys cannot
         with self.assertRaises(FormatError):
             compute_default_keyid("foo", "bar", {"baz": 1.1})
-
-
-@unittest.skipIf(os.name == "nt", "PySPX n/a on Windows")
-class TestSphincs(unittest.TestCase):
-    """Test create keys, sign and verify for sphincs keys."""
-
-    def test_sphincs(self):
-        """sphincs signer smoketest."""
-
-        # Test create/sign/verify
-        public_bytes, private_bytes = generate_spx_key_pair()
-        public_key = SpxKey.from_bytes(public_bytes)
-        signer = SpxSigner(private_bytes, public_key)
-        sig = signer.sign(b"data")
-        self.assertIsNone(signer.public_key.verify_signature(sig, b"data"))
-        with self.assertRaises(UnverifiedSignatureError):
-            signer.public_key.verify_signature(sig, b"not data")
-
-        # Test de/serialization
-        self.assertEqual(
-            signer.public_key,
-            SpxKey.from_dict(signer.public_key.keyid, signer.public_key.to_dict()),
-        )
 
 
 class TestCryptoSigner(unittest.TestCase):

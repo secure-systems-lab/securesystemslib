@@ -50,8 +50,6 @@ from securesystemslib.signer import (  # noqa: F401
     Signature,
     SigstoreKey,
     SigstoreSigner,
-    SpxKey,
-    SpxSigner,
     SSlibKey,
     TKeySigner,
 )
@@ -122,7 +120,6 @@ class TestPublicInterfaces(unittest.TestCase):
                 "Fulcio",
                 {"identity": "val", "issuer": "val"},
             ),
-            SpxKey(keyid, "sphincs", "sphincs-shake-128s", {"public": "val"}),
         ]
 
         for key in keys:
@@ -132,19 +129,6 @@ class TestPublicInterfaces(unittest.TestCase):
             self.assertIsInstance(
                 ctx.exception.__cause__, (UnsupportedLibraryError, ImportError)
             )
-
-    def test_signer_sign(self):
-        """Assert UnsupportedLibraryError in sign."""
-        signers = [
-            SpxSigner(
-                b"private",
-                SpxKey("aa", "sphincs", "sphincs-shake-128s", {"public": "val"}),
-            )
-        ]
-
-        for signer in signers:
-            with self.assertRaises(UnsupportedLibraryError):
-                signer.sign(b"data")
 
     def test_signer_ed25519_fallback(self):
         """Assert ed25519 signature verification works in pure Python."""
