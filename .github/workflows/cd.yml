@@ -64,24 +64,25 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            fs = require('fs')
-            res = await github.rest.repos.createRelease({
+            const fs = require('fs')
+            const res = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               name: process.env.REF_NAME + '-rc',
               tag_name: process.env.REF,
               body: 'Release waiting for review...',
+              draft: true,
             });
 
-            fs.readdirSync('dist/').forEach(file => {
-              github.rest.repos.uploadReleaseAsset({
+            for (const file of fs.readdirSync('dist/')) {
+              await github.rest.repos.uploadReleaseAsset({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 release_id: res.data.id,
                 name: file,
                 data: fs.readFileSync('dist/' + file),
               });
-            });
+            }
             return res.data.id
         env:
           REF_NAME: ${{ github.ref_name }}
@@ -111,15 +112,17 @@ jobs:
       - name: Finalize GitHub release
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          script: | # zizmor: ignore[template-injection]
-            github.rest.repos.updateRelease({
+          script: |
+            await github.rest.repos.updateRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              release_id: '${{ needs.candidate_release.outputs.release_id }}',
+              release_id: Number(process.env.RELEASE_ID),
               name: process.env.REF_NAME,
               body: 'See [CHANGELOG.md](https://github.com/' +
                      context.repo.owner + '/' + context.repo.repo +
-                    '/blob/' + process.env.REF_NAME + '/CHANGELOG.md) for details.'
+                    '/blob/' + process.env.REF_NAME + '/CHANGELOG.md) for details.',
+              draft: false,
             })
         env:
+          RELEASE_ID: ${{ needs.candidate_release.outputs.release_id }}
           REF_NAME: ${{ github.ref_name }}

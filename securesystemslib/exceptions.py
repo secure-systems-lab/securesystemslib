@@ -34,6 +34,10 @@ class UnsupportedLibraryError(Error):
     """Indicate that a supported library could not be located or imported."""
 
 
+class KeyMismatchError(ValueError):
+    """Indicate that a private key does not match the expected public key."""
+
+
 class StorageError(Error):
     """Indicate an error occured during interaction with an abstracted storage
     backend."""

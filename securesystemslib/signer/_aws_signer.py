@@ -38,39 +38,29 @@ except ImportError:
 
 
 class AWSSigner(Signer):
-    """AWS Key Management Service Signer
+    """AWS Key Management Service Signer.
 
-    This Signer uses AWS KMS to sign and supports signing with RSA/EC keys and
-    uses "ambient" credentials typically environment variables such as
-    AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_SESSION_TOKEN. These will
-    be recognized by the boto3 SDK, which underlies the aws_kms Python module.
-
+    This Signer uses AWS KMS to sign, supporting RSA and EC keys.
     The signer computes hash digests locally and sends only the digest to AWS KMS.
 
-    For more details on AWS authentication, refer to the AWS Command Line
-    Interface User Guide:
-        https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
+    The private key URI scheme is: ``awskms:<AWS_KEY_ID>``, where ``<AWS_KEY_ID>``
+    can be a key ID, key ARN, alias name, or alias ARN.
 
-    Some practical authentication options include:
-        AWS CLI: https://aws.amazon.com/cli/
-        AWS SDKs: https://aws.amazon.com/tools/
+    Authentication uses ambient credentials (typically environment variables such as
+    ``AWS_ACCESS_KEY_ID``, ``AWS_SECRET_ACCESS_KEY``, and ``AWS_SESSION_TOKEN``)
+    recognized by the boto3 SDK.
 
-    The specific permissions that AWS KMS signer needs are:
-        kms:Sign for sign()
-        kms:GetPublicKey for import()
+    For more details on AWS authentication, refer to the `AWS Command Line
+    Interface User Guide
+    <https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html>`_.
 
-    Arguments:
-        aws_key_id (str): AWS KMS key ID or alias.
-        public_key (Key): The related public key instance.
+    The specific IAM permissions that AWSSigner needs are:
 
-    Returns:
-        AWSSigner: An instance of the AWSSigner class.
+    * ``kms:GetPublicKey`` for ``AWSSigner.import_()``
+    * ``kms:Sign`` for ``Signer.sign()``
 
     Raises:
-        UnsupportedAlgorithmError: If the payload hash algorithm is unsupported.
-        BotoCoreError: Errors from the botocore.exceptions library.
-        ClientError: Errors related to AWS KMS client.
-        UnsupportedLibraryError: If necessary libraries for AWS KMS are not available.
+        UnsupportedLibraryError: If boto3 or cryptography are not installed.
     """
 
     SCHEME = "awskms"
@@ -146,20 +136,18 @@ class AWSSigner(Signer):
         be called once per key: the uri and Key should be stored for later use.
 
         Arguments:
-            aws_key_id (str): AWS KMS key ID.
-            local_scheme (Optional[str]): The Secure Systems Library RSA/ECDSA scheme.
-            Defaults to 'rsassa-pss-sha256' if not provided and RSA.
-
-        Returns:
-            Tuple[str, SSlibKey]: A tuple where the first element is a string
-            representing the private key URI, and the second element is an
-            instance of the public key.
+            aws_key_id: AWS KMS key ID.
+            local_scheme: securesystemslib key scheme.
+                Defaults to 'rsassa-pss-sha256' if not provided.
 
         Raises:
             UnsupportedAlgorithmError: If the AWS KMS signing algorithm is
-            unsupported.
+                unsupported.
             BotoCoreError: Errors from the botocore library.
             ClientError: Errors related to AWS KMS client.
+
+        Returns:
+            A tuple of private key URI string and public key.
         """
         if AWS_IMPORT_ERROR:
             raise UnsupportedLibraryError(AWS_IMPORT_ERROR)

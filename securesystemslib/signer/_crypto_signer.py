@@ -146,24 +146,21 @@ def _get_rsa_padding(name: str, hash_algorithm: HashAlgorithm) -> AsymmetricPadd
 
 
 class CryptoSigner(Signer):
-    """PYCA/cryptography Signer implementations.
+    """File-based signer using the cryptography (pyca/cryptography) library.
 
-    A CryptoSigner can be created from:
+    Supports signing with RSA, ECDSA, Ed25519, and ML-DSA keys.
 
-        a. private key file -- see ``Signer.from_priv_key_uri()``
+    The private key URI scheme is: ``file2:<PATH>``, where ``<PATH>`` is the filesystem
+    path to a PEM-encoded PKCS#8 private key file. If the ``CRYPTO_SIGNER_PATH_PREFIX``
+    environment variable is set, the path will be resolved relative to that prefix.
 
-          This is the generic (not CryptoSigner specific) way to
-          create a signer: use this when you already have a private
-          key  (and a private key URI) you can use.
+    A CryptoSigner can be instantiated with:
 
-        b. newly generated key pair -- see ``CryptoSigner.generate_*()``
-
-          Use this when you need a brand new private key pair.
-
-        c. existing pyca/cryptography private key object -- ``CryptoSigner()``
-
-          Use this if you need a brand new private key pair and option
-          b is not flexible enough for your case.
+    * ``Signer.from_priv_key_uri("file2:<PATH>", public_key)``:
+      Generic way to load from an existing private key file.
+    * ``CryptoSigner.generate_*()`` factory methods generate new key pairs
+    * ``CryptoSigner(privkey, pubkey)``: Direct instantiation using existing
+      pyca/cryptography private key objects.
     """
 
     SCHEME = "file2"
@@ -288,14 +285,12 @@ class CryptoSigner(Signer):
         is to allow PATH to only encode an identifier (e.g. filename) while allowing
         the signing system to store the private keys whereever it wants at runtime.
 
-        Additionally raises:
-            UnsupportedLibraryError: pyca/cryptography not installed
-            OSError: file cannot be read
-            ValueError: various errors passed arguments
-            ValueError, TypeError, \
-                    cryptography.exceptions.UnsupportedAlgorithm:
-                pyca/cryptography deserialization failed
-
+        Raises:
+            UnsupportedLibraryError: pyca/cryptography not installed.
+            OSError: File cannot be read.
+            ValueError: Invalid passed arguments.
+            cryptography.exceptions.UnsupportedAlgorithm: pyca/cryptography
+                deserialization failed.
         """
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
@@ -333,9 +328,6 @@ class CryptoSigner(Signer):
 
         Raises:
             UnsupportedLibraryError: pyca/cryptography not installed
-
-        Returns:
-            ED25519Signer
         """
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
@@ -359,9 +351,6 @@ class CryptoSigner(Signer):
 
         Raises:
             UnsupportedLibraryError: pyca/cryptography not installed
-
-        Returns:
-            CryptoSigner
         """
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
@@ -388,9 +377,6 @@ class CryptoSigner(Signer):
         Raises:
             UnsupportedLibraryError: pyca/cryptography not installed
             ValueError: Invalid scheme
-
-        Returns:
-            CryptoSigner
         """
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
@@ -417,9 +403,6 @@ class CryptoSigner(Signer):
 
         Raises:
             UnsupportedLibraryError: pyca/cryptography not installed
-
-        Returns:
-            CryptoSigner
         """
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)

@@ -41,6 +41,7 @@ from securesystemslib.signer._signer import (
     Signer,
 )
 from securesystemslib.signer._sigstore_signer import SigstoreKey, SigstoreSigner
+from securesystemslib.signer._tkey_signer import TKeySigner
 from securesystemslib.signer._vault_signer import VaultSigner
 
 # Register supported private key uri schemes and the Signers implementing them
@@ -53,6 +54,7 @@ SIGNER_FOR_URI_SCHEME.update(
         AzureSigner.SCHEME: AzureSigner,
         AWSSigner.SCHEME: AWSSigner,
         VaultSigner.SCHEME: VaultSigner,
+        TKeySigner.SCHEME: TKeySigner,
     }
 )
 

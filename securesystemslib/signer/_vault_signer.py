@@ -21,21 +21,16 @@ except ImportError:
 
 
 class VaultSigner(Signer):
-    """Signer for HashiCorp Vault Transit secrets engine
+    """Signer for HashiCorp Vault Transit secrets engine.
 
-    The signer uses "ambient" credentials to connect to vault, most notably
+    The signer uses ambient credentials to connect to Vault, most notably
     the environment variables ``VAULT_ADDR`` and ``VAULT_TOKEN`` must be set:
     https://developer.hashicorp.com/vault/docs/commands#environment-variables
 
-    Priv key uri format is: ``hv:<KEY NAME>/<KEY VERSION>``.
-
-    Arguments:
-        hv_key_name: Name of vault key used for signing.
-        public_key: Related public key instance.
-        hv_key_version: Version of vault key used for signing.
+    The private key URI scheme is: ``hv:<KEY NAME>/<KEY VERSION>``.
 
     Raises:
-        UnsupportedLibraryError: hvac or cryptography are not installed.
+        UnsupportedLibraryError: If hvac or cryptography are not installed.
     """
 
     SCHEME = "hv"
