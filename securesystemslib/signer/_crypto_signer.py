@@ -244,8 +244,7 @@ class CryptoSigner(Signer):
                 f"unsupported public key {public_key.keytype}/{public_key.scheme}"
             )
 
-        derived_public_key = SSlibKey.from_crypto(private_key.public_key())
-        if derived_public_key.keyval != public_key.keyval:
+        if public_key._crypto_key() != private_key.public_key():
             raise KeyMismatchError("CryptoSigner private key does not match public key")
 
         self._private_key = private_key
