@@ -16,7 +16,11 @@ from cryptography.hazmat.primitives.serialization import (
 )
 
 from securesystemslib._gpg.constants import have_gpg
-from securesystemslib.exceptions import FormatError, UnverifiedSignatureError
+from securesystemslib.exceptions import (
+    FormatError,
+    KeyMismatchError,
+    UnverifiedSignatureError,
+)
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
     SIGNER_FOR_URI_SCHEME,
@@ -775,6 +779,24 @@ class TestCryptoSigner(unittest.TestCase):
             # Re-init with passed public key
             signer2 = CryptoSigner(private_key, signer.public_key)
             self.assertEqual(keytype, signer2.public_key.keytype)
+
+    def test_init_key_mismatch(self):
+        """Test that private and public keys must belong to the same key pair."""
+        generators = [
+            CryptoSigner.generate_rsa,
+            CryptoSigner.generate_ecdsa,
+            CryptoSigner.generate_ed25519,
+            CryptoSigner.generate_mldsa,
+        ]
+        for generate in generators:
+            with self.subTest(generator=generate.__name__):
+                signer = generate()
+                other_signer = generate()
+                with self.assertRaisesRegex(
+                    KeyMismatchError,
+                    "CryptoSigner private key does not match public key",
+                ):
+                    CryptoSigner(signer._private_key, other_signer.public_key)
 
     def test_sign(self):
         for name, private_key in self.keys.items():
