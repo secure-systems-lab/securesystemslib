@@ -8,7 +8,7 @@ from dataclasses import astuple, dataclass
 from typing import cast
 from urllib import parse
 
-from securesystemslib.exceptions import UnsupportedLibraryError
+from securesystemslib.exceptions import KeyMismatchError, UnsupportedLibraryError
 from securesystemslib.signer._constants import (
     ECDSA_SHA2_NISTP256,
     ECDSA_SHA2_NISTP384,
@@ -244,6 +244,10 @@ class CryptoSigner(Signer):
                 f"unsupported public key {public_key.keytype}/{public_key.scheme}"
             )
 
+        derived_public_key = SSlibKey.from_crypto(private_key.public_key())
+        if derived_public_key.keyval != public_key.keyval:
+            raise KeyMismatchError("CryptoSigner private key does not match public key")
+
         self._private_key = private_key
         self._public_key = public_key
 
@@ -287,6 +291,7 @@ class CryptoSigner(Signer):
 
         Raises:
             UnsupportedLibraryError: pyca/cryptography not installed.
+            KeyMismatchError: Private key does not match public key.
             OSError: File cannot be read.
             ValueError: Invalid passed arguments.
             cryptography.exceptions.UnsupportedAlgorithm: pyca/cryptography
