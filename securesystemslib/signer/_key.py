@@ -314,6 +314,10 @@ class SSlibKey(Key):
 
     def _crypto_key(self) -> PublicKeyTypes:
         """Helper to get a `cryptography` public key for this SSlibKey."""
+        if self.keytype == KEY_TYPE_ED25519:
+            return Ed25519PublicKey.from_public_bytes(
+                bytes.fromhex(self.keyval["public"])
+            )
         public_bytes = self.keyval["public"].encode("utf-8")
         return load_pem_public_key(public_bytes)
 
@@ -501,8 +505,8 @@ class SSlibKey(Key):
                 key.verify(signature, data, ECDSA(SHA512()))
 
             elif self.keytype == KEY_TYPE_ED25519 and self.scheme == ED25519:
-                public_bytes = bytes.fromhex(self.keyval["public"])
-                key = Ed25519PublicKey.from_public_bytes(public_bytes)
+                key = cast(Ed25519PublicKey, self._crypto_key())
+                _validate_type(key, Ed25519PublicKey)
                 key.verify(signature, data)
 
             elif self.keytype == KEY_TYPE_MLDSA and self.scheme == MLDSA_44_1:

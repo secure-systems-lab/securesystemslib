@@ -452,6 +452,7 @@ class TestSSlibKey(unittest.TestCase):
             self.assertEqual(key.keytype, keytype)
             self.assertEqual(key.scheme, default_scheme)
             self.assertEqual(key.keyid, default_keyid)
+            self.assertEqual(key._crypto_key(), crypto_key)
 
         # Test with non-default scheme/keyid
         crypto_key = _from_file(PEMS_DIR / "rsa_public.pem")
@@ -797,6 +798,29 @@ class TestCryptoSigner(unittest.TestCase):
                     "CryptoSigner private key does not match public key",
                 ):
                     CryptoSigner(signer._private_key, other_signer.public_key)
+
+    def test_init_pem_formatting_variations(self):
+        """Test that CryptoSigner accepts public keys with PEM formatting variations."""
+        for name in ["rsa", "ecdsa", "mldsa65", "ed25519"]:
+            with self.subTest(key=name):
+                private_key = self.keys[name]
+                signer = CryptoSigner(private_key)
+                pem = signer.public_key.keyval["public"]
+
+                # Test without trailing newline
+                pubkey_no_newline = copy.deepcopy(signer.public_key)
+                pubkey_no_newline.keyval["public"] = pem.rstrip("\n")
+                CryptoSigner(private_key, pubkey_no_newline)
+
+                # Test with CRLF line endings
+                pubkey_crlf = copy.deepcopy(signer.public_key)
+                pubkey_crlf.keyval["public"] = pem.replace("\n", "\r\n")
+                CryptoSigner(private_key, pubkey_crlf)
+
+                # Test with extra surrounding whitespace
+                pubkey_whitespace = copy.deepcopy(signer.public_key)
+                pubkey_whitespace.keyval["public"] = f"  \n{pem}\n\n"
+                CryptoSigner(private_key, pubkey_whitespace)
 
     def test_sign(self):
         for name, private_key in self.keys.items():
