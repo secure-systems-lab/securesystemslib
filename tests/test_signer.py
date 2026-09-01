@@ -9,7 +9,6 @@ import warnings
 from contextlib import suppress
 from pathlib import Path
 from typing import Any
-from unittest.mock import patch
 
 from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
@@ -36,6 +35,7 @@ from securesystemslib.signer import (
     Signer,
     SSlibKey,
 )
+from securesystemslib.signer._key import MLDSA_IMPORT_ERROR
 from securesystemslib.signer._utils import compute_default_keyid
 
 PEMS_DIR = Path(__file__).parent / "data" / "pems"
@@ -755,10 +755,15 @@ class TestCryptoSigner(unittest.TestCase):
             ("ecdsa_secp384r1", "ecdsa", ["ecdsa-sha2-nistp384"]),
             ("ecdsa_secp521r1", "ecdsa", ["ecdsa-sha2-nistp521"]),
             ("ed25519", "ed25519", ["ed25519"]),
-            ("mldsa44", "ml-dsa", ["ml-dsa-44/1"]),
-            ("mldsa65", "ml-dsa", ["ml-dsa-65/1"]),
-            ("mldsa87", "ml-dsa", ["ml-dsa-87/1"]),
         ]
+        if MLDSA_IMPORT_ERROR is None:
+            key_info.extend(
+                [
+                    ("mldsa44", "ml-dsa", ["ml-dsa-44/1"]),
+                    ("mldsa65", "ml-dsa", ["ml-dsa-65/1"]),
+                    ("mldsa87", "ml-dsa", ["ml-dsa-87/1"]),
+                ]
+            )
 
         for name, keytype, schemes in key_info:
             path = PEMS_DIR / f"{name}_private.pem"
@@ -790,8 +795,10 @@ class TestCryptoSigner(unittest.TestCase):
             CryptoSigner.generate_rsa,
             CryptoSigner.generate_ecdsa,
             CryptoSigner.generate_ed25519,
-            CryptoSigner.generate_mldsa,
         ]
+        if MLDSA_IMPORT_ERROR is None:
+            generators.append(CryptoSigner.generate_mldsa)
+
         for generate in generators:
             with self.subTest(generator=generate.__name__):
                 signer = generate()
@@ -804,7 +811,11 @@ class TestCryptoSigner(unittest.TestCase):
 
     def test_init_pem_formatting_variations(self):
         """Test that CryptoSigner accepts public keys with PEM formatting variations."""
-        for name in ["rsa", "ecdsa", "mldsa65", "ed25519"]:
+        names = ["rsa", "ecdsa", "ed25519"]
+        if MLDSA_IMPORT_ERROR is None:
+            names.append("mldsa65")
+
+        for name in names:
             with self.subTest(key=name):
                 private_key = self.keys[name]
                 signer = CryptoSigner(private_key)
@@ -847,8 +858,9 @@ class TestCryptoSigner(unittest.TestCase):
                 "ecdsa-sha2-nistp256",  # keytype deprecated in TUF spec, tested for backwards compat with older metadata
             ),
             ("ed25519_public.pem", "ed25519_private.pem", None),
-            ("mldsa65_public.pem", "mldsa65_private.pem", None),
         ]
+        if MLDSA_IMPORT_ERROR is None:
+            test_data.append(("mldsa65_public.pem", "mldsa65_private.pem", None))
 
         for pub_fname, priv_fname, keytype_override in test_data:
             pub_crypto_key = load_pem_public_key((PEMS_DIR / pub_fname).read_bytes())
@@ -885,8 +897,9 @@ class TestCryptoSigner(unittest.TestCase):
             (CryptoSigner.generate_rsa, "rsa", "rsassa-pss-sha256"),
             (CryptoSigner.generate_ecdsa, "ecdsa", "ecdsa-sha2-nistp256"),
             (CryptoSigner.generate_ed25519, "ed25519", "ed25519"),
-            (CryptoSigner.generate_mldsa, "ml-dsa", "ml-dsa-65/1"),
         ]
+        if MLDSA_IMPORT_ERROR is None:
+            test_data.append((CryptoSigner.generate_mldsa, "ml-dsa", "ml-dsa-65/1"))
         for generate, keytype, default_scheme in test_data:
             signer = generate()
             self.assertEqual(signer.public_key.keytype, keytype)
@@ -931,7 +944,11 @@ class TestCryptoSigner(unittest.TestCase):
         """Test private_bytes -> from_priv_key_uri"""
         with tempfile.TemporaryDirectory() as tempdir:
             priv_key_path = os.path.join(tempdir, "privkey.pem")
-            for pem in ["rsa", "ecdsa", "ed25519", "mldsa65"]:
+            pems = ["rsa", "ecdsa", "ed25519"]
+            if MLDSA_IMPORT_ERROR is None:
+                pems.append("mldsa65")
+
+            for pem in pems:
                 with open(PEMS_DIR / f"{pem}_private.pem", "rb") as f:
                     privkey = load_pem_private_key(f.read(), None)
                     signer = CryptoSigner(privkey)
@@ -975,24 +992,17 @@ class TestCryptoSigner(unittest.TestCase):
         with self.assertRaises(UnverifiedSignatureError):
             pubkey.verify_signature(sig, b"NOT DATA")
 
+    @unittest.skipIf(MLDSA_IMPORT_ERROR is None, "ML-DSA is supported")
     def test_mldsa_unsupported_library(self):
         """Test ML-DSA operations when ML-DSA support is missing in cryptography."""
-        with patch(
-            "securesystemslib.signer._crypto_signer.MLDSA_IMPORT_ERROR",
-            "cryptography>=48.0.0 required",
-        ):
-            with self.assertRaises(UnsupportedLibraryError):
-                CryptoSigner.generate_mldsa()
+        with self.assertRaises(UnsupportedLibraryError):
+            CryptoSigner.generate_mldsa()
 
-        with patch(
-            "securesystemslib.signer._key.MLDSA_IMPORT_ERROR",
-            "cryptography>=48.0.0 required",
-        ):
-            key = SSlibKey("mldsa_id", "ml-dsa", "ml-dsa-65/1", {"public": "some-pem"})
-            sig = Signature("mldsa_id", "1234")
-            with self.assertRaises(VerificationError) as ctx:
-                key.verify_signature(sig, b"data")
-            self.assertIsInstance(ctx.exception.__cause__, UnsupportedLibraryError)
+        key = SSlibKey("mldsa_id", "ml-dsa", "ml-dsa-65/1", {"public": "some-pem"})
+        sig = Signature("mldsa_id", "1234")
+        with self.assertRaises(VerificationError) as ctx:
+            key.verify_signature(sig, b"data")
+        self.assertIsInstance(ctx.exception.__cause__, UnsupportedLibraryError)
 
 
 # Run the unit tests.
