@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 1.5.1
+
+### Fixed
+
+* The `crypto` extra correctly depends on cryptography 48 but some
+  users depend on cryptography directly instea of the extra. Add
+  runtime workaround to be more compatible with older cryptography.
+  (#1205)
+
 ## 1.5.0
 
 ### Added
