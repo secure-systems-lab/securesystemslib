@@ -42,6 +42,7 @@ from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._utils import compute_default_keyid, get_mldsa_payload
 
 CRYPTO_IMPORT_ERROR = None
+MLDSA_IMPORT_ERROR = None
 try:
     from cryptography.exceptions import InvalidSignature
     from cryptography.hazmat.primitives.asymmetric.ec import (
@@ -54,11 +55,6 @@ try:
     )
     from cryptography.hazmat.primitives.asymmetric.ed25519 import (
         Ed25519PublicKey,
-    )
-    from cryptography.hazmat.primitives.asymmetric.mldsa import (
-        MLDSA44PublicKey,
-        MLDSA65PublicKey,
-        MLDSA87PublicKey,
     )
     from cryptography.hazmat.primitives.asymmetric.padding import (
         MGF1,
@@ -86,6 +82,18 @@ try:
 
 except ImportError:
     CRYPTO_IMPORT_ERROR = "'pyca/cryptography' library required"
+
+try:
+    from cryptography.hazmat.primitives.asymmetric.mldsa import (
+        MLDSA44PublicKey,
+        MLDSA65PublicKey,
+        MLDSA87PublicKey,
+    )
+except ImportError:
+    MLDSA_IMPORT_ERROR = "'cryptography>=48.0.0' required for ML-DSA support"
+    MLDSA44PublicKey = None  # type: ignore[assignment, misc]
+    MLDSA65PublicKey = None  # type: ignore[assignment, misc]
+    MLDSA87PublicKey = None  # type: ignore[assignment, misc]
 
 
 logger = logging.getLogger(__name__)
@@ -352,11 +360,11 @@ class SSlibKey(Key):
                 raise ValueError(f"unsupported curve '{public_key.curve.name}'")
         elif isinstance(public_key, Ed25519PublicKey):
             ret = (KEY_TYPE_ED25519, ED25519, _raw())
-        elif isinstance(public_key, MLDSA44PublicKey):
+        elif MLDSA44PublicKey is not None and isinstance(public_key, MLDSA44PublicKey):
             ret = (KEY_TYPE_MLDSA, MLDSA_44_1, _pem())
-        elif isinstance(public_key, MLDSA65PublicKey):
+        elif MLDSA65PublicKey is not None and isinstance(public_key, MLDSA65PublicKey):
             ret = (KEY_TYPE_MLDSA, MLDSA_65_1, _pem())
-        elif isinstance(public_key, MLDSA87PublicKey):
+        elif MLDSA87PublicKey is not None and isinstance(public_key, MLDSA87PublicKey):
             ret = (KEY_TYPE_MLDSA, MLDSA_87_1, _pem())
         else:
             raise ValueError(f"unsupported key '{type(public_key)}'")
@@ -435,6 +443,9 @@ class SSlibKey(Key):
         ) -> None:
             if not isinstance(key.curve, curve):
                 raise ValueError(f"bad curve {key.curve} for {self.scheme}")
+
+        if self.keytype == KEY_TYPE_MLDSA and MLDSA_IMPORT_ERROR:
+            raise UnsupportedLibraryError(MLDSA_IMPORT_ERROR)
 
         try:
             key: PublicKeyTypes

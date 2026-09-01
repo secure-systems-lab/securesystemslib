@@ -9,6 +9,7 @@ import warnings
 from contextlib import suppress
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
@@ -19,7 +20,9 @@ from securesystemslib._gpg.constants import have_gpg
 from securesystemslib.exceptions import (
     FormatError,
     KeyMismatchError,
+    UnsupportedLibraryError,
     UnverifiedSignatureError,
+    VerificationError,
 )
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
@@ -971,6 +974,25 @@ class TestCryptoSigner(unittest.TestCase):
         pubkey.verify_signature(sig, b"DATA")
         with self.assertRaises(UnverifiedSignatureError):
             pubkey.verify_signature(sig, b"NOT DATA")
+
+    def test_mldsa_unsupported_library(self):
+        """Test ML-DSA operations when ML-DSA support is missing in cryptography."""
+        with patch(
+            "securesystemslib.signer._crypto_signer.MLDSA_IMPORT_ERROR",
+            "cryptography>=48.0.0 required",
+        ):
+            with self.assertRaises(UnsupportedLibraryError):
+                CryptoSigner.generate_mldsa()
+
+        with patch(
+            "securesystemslib.signer._key.MLDSA_IMPORT_ERROR",
+            "cryptography>=48.0.0 required",
+        ):
+            key = SSlibKey("mldsa_id", "ml-dsa", "ml-dsa-65/1", {"public": "some-pem"})
+            sig = Signature("mldsa_id", "1234")
+            with self.assertRaises(VerificationError) as ctx:
+                key.verify_signature(sig, b"data")
+            self.assertIsInstance(ctx.exception.__cause__, UnsupportedLibraryError)
 
 
 # Run the unit tests.
