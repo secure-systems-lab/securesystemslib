@@ -360,6 +360,7 @@ class SSlibKey(Key):
                 raise ValueError(f"unsupported curve '{public_key.curve.name}'")
         elif isinstance(public_key, Ed25519PublicKey):
             ret = (KEY_TYPE_ED25519, ED25519, _raw())
+        # ML-DSA key types may be None as fallback for cryptography < 48
         elif MLDSA44PublicKey is not None and isinstance(public_key, MLDSA44PublicKey):
             ret = (KEY_TYPE_MLDSA, MLDSA_44_1, _pem())
         elif MLDSA65PublicKey is not None and isinstance(public_key, MLDSA65PublicKey):
