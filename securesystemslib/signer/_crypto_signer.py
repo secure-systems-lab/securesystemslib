@@ -36,6 +36,7 @@ from securesystemslib.signer._signer import SecretsHandler, Signer
 from securesystemslib.signer._utils import get_mldsa_payload
 
 CRYPTO_IMPORT_ERROR = None
+MLDSA_IMPORT_ERROR = None
 try:
     from cryptography.hazmat.primitives.asymmetric.ec import (
         ECDSA,
@@ -50,11 +51,6 @@ try:
     )
     from cryptography.hazmat.primitives.asymmetric.ed25519 import (
         Ed25519PrivateKey,
-    )
-    from cryptography.hazmat.primitives.asymmetric.mldsa import (
-        MLDSA44PrivateKey,
-        MLDSA65PrivateKey,
-        MLDSA87PrivateKey,
     )
     from cryptography.hazmat.primitives.asymmetric.padding import (
         MGF1,
@@ -86,6 +82,20 @@ try:
 
 except ImportError:
     CRYPTO_IMPORT_ERROR = "'pyca/cryptography' library required"
+
+# Handle ML-DSA support separately for cryptography 48 dependency:
+# This should not be needed but https://github.com/secure-systems-lab/securesystemslib/issues/1203
+try:
+    from cryptography.hazmat.primitives.asymmetric.mldsa import (
+        MLDSA44PrivateKey,
+        MLDSA65PrivateKey,
+        MLDSA87PrivateKey,
+    )
+except ImportError:
+    MLDSA_IMPORT_ERROR = "'cryptography>=48.0.0' required for ML-DSA support"
+    MLDSA44PrivateKey = None  # type: ignore[assignment, misc]
+    MLDSA65PrivateKey = None  # type: ignore[assignment, misc]
+    MLDSA87PrivateKey = None  # type: ignore[assignment, misc]
 
 logger = logging.getLogger(__name__)
 
@@ -182,6 +192,9 @@ class CryptoSigner(Signer):
 
         if public_key is None:
             public_key = SSlibKey.from_crypto(private_key.public_key())
+
+        if public_key.keytype == KEY_TYPE_MLDSA and MLDSA_IMPORT_ERROR:
+            raise UnsupportedLibraryError(MLDSA_IMPORT_ERROR)
 
         self._private_key: PrivateKeyTypes
         self._sign_args: _RSASignArgs | _ECDSASignArgs | _NoSignArgs
@@ -406,6 +419,8 @@ class CryptoSigner(Signer):
         """
         if CRYPTO_IMPORT_ERROR:
             raise UnsupportedLibraryError(CRYPTO_IMPORT_ERROR)
+        if MLDSA_IMPORT_ERROR:
+            raise UnsupportedLibraryError(MLDSA_IMPORT_ERROR)
 
         scheme = MLDSA_65_1 if scheme is None else scheme
         if scheme == MLDSA_44_1:

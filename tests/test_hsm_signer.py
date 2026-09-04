@@ -7,18 +7,27 @@ import tempfile
 import unittest
 from unittest import mock
 
-import pkcs11
-from asn1crypto.keys import (
-    ECDomainParameters,
-    NamedCurve,
-)
+try:
+    import pkcs11
+    from asn1crypto.keys import (
+        ECDomainParameters,
+        NamedCurve,
+    )
+
+    HAVE_PKCS11 = True
+except ImportError:
+    HAVE_PKCS11 = False
+
 from cryptography.hazmat.primitives.asymmetric.ec import SECP256R1, SECP384R1
 
 from securesystemslib.exceptions import UnverifiedSignatureError
 from securesystemslib.signer import HSMSigner, Signer
 
 
-@unittest.skipUnless(os.environ.get("PYKCS11LIB"), "set PYKCS11LIB to SoftHSM lib path")
+@unittest.skipUnless(
+    HAVE_PKCS11 and os.environ.get("PYKCS11LIB"),
+    "set PYKCS11LIB to SoftHSM lib path and install python-pkcs11",
+)
 class TestHSM(unittest.TestCase):
     """Test HSMSigner with SoftHSM
 

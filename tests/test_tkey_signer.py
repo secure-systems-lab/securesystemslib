@@ -4,6 +4,10 @@ from unittest.mock import MagicMock, patch
 
 from securesystemslib.exceptions import KeyMismatchError, UnsupportedLibraryError
 from securesystemslib.signer import SSlibKey, TKeySigner
+from securesystemslib.signer._tkey_signer import TKEY_IMPORT_ERROR
+
+if TKEY_IMPORT_ERROR is not None:
+    raise unittest.SkipTest(f"TKeySigner unavailable: {TKEY_IMPORT_ERROR}")
 
 
 class TestTKeySigner(unittest.TestCase):
