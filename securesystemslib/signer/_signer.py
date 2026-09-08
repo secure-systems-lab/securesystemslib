@@ -5,14 +5,14 @@ from __future__ import annotations
 import importlib
 import logging
 from abc import ABCMeta, abstractmethod
-from collections.abc import Callable, Iterator, MutableMapping
+from collections.abc import Callable
 
 from securesystemslib.signer._key import Key
 from securesystemslib.signer._signature import Signature
 
 logger = logging.getLogger(__name__)
 
-_BUILTIN_SIGNERS = {
+_DEFAULT_SIGNERS = {
     "awskms": ("securesystemslib.signer._aws_signer", "AWSSigner"),
     "azurekms": ("securesystemslib.signer._azure_signer", "AzureSigner"),
     "file2": ("securesystemslib.signer._crypto_signer", "CryptoSigner"),
@@ -24,77 +24,14 @@ _BUILTIN_SIGNERS = {
 }
 
 
-class _LazySignerRegistry(MutableMapping[str, type]):
-    """Mutable signer registry that resolves built-ins on first access."""
+SIGNER_FOR_URI_SCHEME: dict[str, type] = {}
+"""Custom signers and cached implementations for ``Signer.from_priv_key_uri()``.
 
-    def __init__(self, builtins: dict[str, tuple[str, str]]) -> None:
-        self._builtins = builtins
-        self._loaded: dict[str, type] = {}
-        self._disabled: set[str] = set()
-
-    def __getitem__(self, scheme: str) -> type:
-        try:
-            return self._loaded[scheme]
-        except KeyError:
-            pass
-
-        if scheme in self._disabled:
-            raise KeyError(scheme)
-
-        try:
-            module_name, class_name = self._builtins[scheme]
-        except KeyError as e:
-            raise KeyError(scheme) from e
-
-        signer = getattr(importlib.import_module(module_name), class_name)
-        self._loaded[scheme] = signer
-        return signer
-
-    def __setitem__(self, scheme: str, signer: type) -> None:
-        self._loaded[scheme] = signer
-        self._disabled.discard(scheme)
-
-    def __delitem__(self, scheme: str) -> None:
-        if scheme in self._loaded:
-            del self._loaded[scheme]
-        elif scheme not in self._builtins or scheme in self._disabled:
-            raise KeyError(scheme)
-
-        if scheme in self._builtins:
-            self._disabled.add(scheme)
-
-    def __iter__(self) -> Iterator[str]:
-        yield from self._loaded
-        yield from (
-            scheme
-            for scheme in self._builtins
-            if scheme not in self._loaded and scheme not in self._disabled
-        )
-
-    def __len__(self) -> int:
-        return len(self._loaded) + sum(
-            scheme not in self._loaded and scheme not in self._disabled
-            for scheme in self._builtins
-        )
-
-    def __contains__(self, scheme: object) -> bool:
-        return scheme in self._loaded or (
-            scheme in self._builtins and scheme not in self._disabled
-        )
-
-    def copy(self) -> dict[str, type]:
-        """Return a regular dict, resolving all remaining built-ins."""
-        return dict(self.items())
-
-
-# The registry keeps built-in schemes visible while loading their implementations
-# only when callers request a value. Users can add or replace entries as before.
-SIGNER_FOR_URI_SCHEME: MutableMapping[str, type] = _LazySignerRegistry(_BUILTIN_SIGNERS)
-"""Signer dispatch table for ``Signer.from_priv_key()``
-
-Built-in implementations are loaded on first access. See
-``securesystemslib.signer.SIGNER_FOR_URI_SCHEME`` for how to register custom
-implementations.
+Built-in implementations are added on first use through the URI factory.
+Entries registered by applications take precedence over built-ins. Iteration
+and copies contain only registered or cached entries, not all supported schemes.
+Deleting an entry clears its override or cache: a built-in can be loaded again
+on the next factory call.
 """
 
 # SecretsHandler is a function the calling code can provide to Signer:
@@ -118,7 +55,7 @@ class Signer(metaclass=ABCMeta):
     Applications should use generic try-except here if unexpected raises are
     not an option.
 
-    See ``SIGNER_FOR_URI_SCHEME`` for supported private key URI schemes.
+    See each signer implementation for its supported private key URI scheme.
 
     Interactive applications may also define a secrets handler that allows
     asking for user secrets if they are needed::
@@ -165,7 +102,7 @@ class Signer(metaclass=ABCMeta):
         """Factory constructor for a given private key URI
 
         Returns a specific Signer instance based on the private key URI and the
-        supported uri schemes listed in ``SIGNER_FOR_URI_SCHEME``.
+        built-in URI schemes or custom entries in ``SIGNER_FOR_URI_SCHEME``.
 
         Args:
             priv_key_uri: URI that identifies the private key
@@ -181,10 +118,14 @@ class Signer(metaclass=ABCMeta):
         """
 
         scheme, _, _ = priv_key_uri.partition(":")
-        try:
-            signer = SIGNER_FOR_URI_SCHEME[scheme]
-        except KeyError as e:
-            raise ValueError(f"Unsupported private key scheme {scheme}") from e
+        signer = SIGNER_FOR_URI_SCHEME.get(scheme)
+        if signer is None:
+            if scheme not in _DEFAULT_SIGNERS:
+                raise ValueError(f"Unsupported private key scheme {scheme}")
+
+            module_name, class_name = _DEFAULT_SIGNERS[scheme]
+            signer = getattr(importlib.import_module(module_name), class_name)
+            SIGNER_FOR_URI_SCHEME[scheme] = signer
 
         return signer.from_priv_key_uri(priv_key_uri, public_key, secrets_handler)  # type: ignore
 

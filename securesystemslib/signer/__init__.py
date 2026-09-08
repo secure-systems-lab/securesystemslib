@@ -33,7 +33,7 @@ from securesystemslib.signer._gpg_signer import GPGKey, GPGSigner
 from securesystemslib.signer._key import KEY_FOR_TYPE_AND_SCHEME, Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import (
-    _BUILTIN_SIGNERS,
+    _DEFAULT_SIGNERS,
     SIGNER_FOR_URI_SCHEME,
     SecretsHandler,
     Signer,
@@ -51,7 +51,7 @@ if TYPE_CHECKING:
 
 _LAZY_IMPORTS = {
     class_name: (module_name, class_name)
-    for module_name, class_name in _BUILTIN_SIGNERS.values()
+    for module_name, class_name in _DEFAULT_SIGNERS.values()
 }
 _LAZY_IMPORTS.update(
     {
