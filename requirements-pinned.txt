@@ -14,5 +14,5 @@ pycparser==3.0
     # via cffi
 pyserial==3.5
     # via keylet
-python-pkcs11==0.9.5
+python-pkcs11==0.10.0
     # via -r requirements.txt
