@@ -19,8 +19,9 @@ generic *load* methods:
 
 * ``Signer.from_priv_key_uri`` -  Loads any specific signer from a URI. The
   specific signer implementation itself is responsible for the URI format and
-  resolution. To become discoverable, signers and their URI schemes are
-  registered in the ``SIGNER_FOR_URI_SCHEME`` lookup table.
+  resolution. Built-in signers are loaded on demand. Applications can register
+  custom signers or override built-ins in ``SIGNER_FOR_URI_SCHEME``. This table
+  contains custom entries and cached implementations, not all supported schemes.
 
 * ``Key.from_dict`` - Loads any specific key from a serialized format. The
   specific key implementation is responsible for the public key format and
