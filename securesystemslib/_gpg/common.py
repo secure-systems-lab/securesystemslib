@@ -338,14 +338,30 @@ def _assign_certified_key_info(bundle):
     validity_period = None
     sig_creation_time = None
 
+    # Construct primary key packet hash preimage (RFC 4880 Section 5.2.4)
+    _, primary_header_len, primary_body_len, _ = gpg_util.parse_packet_header(
+        bundle[PACKET_TYPE_PRIMARY_KEY]["packet"]
+    )
+    primary_key_body = bundle[PACKET_TYPE_PRIMARY_KEY]["packet"][
+        primary_header_len : primary_header_len + primary_body_len
+    ]
+    primary_key_preimage = (
+        b"\x99" + struct.pack(">H", len(primary_key_body)) + primary_key_body
+    )
+
     # Verify User ID signatures to gather information about primary key
     # (see Notes about certification signatures in RFC 4880 5.2.3.3.)
     for user_id_packet, packet_data in bundle[PACKET_TYPE_USER_ID].items():
         # Construct signed content (see RFC4880 section 5.2.4. paragraph 4)
+        user_id_body = user_id_packet[
+            packet_data["header_len"] : packet_data["header_len"]
+            + packet_data["body_len"]
+        ]
         signed_content = (
-            bundle[PACKET_TYPE_PRIMARY_KEY]["packet"]
-            + b"\xb4\x00\x00\x00"
-            + user_id_packet[1:]
+            primary_key_preimage
+            + b"\xb4"
+            + struct.pack(">I", len(user_id_body))
+            + user_id_body
         )
         for signature_packet in packet_data["signatures"]:
             try:
@@ -471,6 +487,17 @@ def _get_verified_subkeys(bundle):
     # Create handler shortcut
     handler = SIGNATURE_HANDLERS[bundle[PACKET_TYPE_PRIMARY_KEY]["key"]["type"]]
 
+    # Construct primary key packet hash preimage (RFC 4880 Section 5.2.4)
+    _, primary_header_len, primary_body_len, _ = gpg_util.parse_packet_header(
+        bundle[PACKET_TYPE_PRIMARY_KEY]["packet"]
+    )
+    primary_key_body = bundle[PACKET_TYPE_PRIMARY_KEY]["packet"][
+        primary_header_len : primary_header_len + primary_body_len
+    ]
+    primary_key_preimage = (
+        b"\x99" + struct.pack(">H", len(primary_key_body)) + primary_key_body
+    )
+
     # Verify subkey binding signatures and only keep verified keys
     # See notes about subkey binding signature in RFC4880 5.2.3.3
     verified_subkeys = {}
@@ -487,8 +514,15 @@ def _get_verified_subkeys(bundle):
             continue
 
         # Construct signed content (see RFC4880 section 5.2.4. paragraph 3)
+        subkey_body = subkey_packet[
+            packet_data["header_len"] : packet_data["header_len"]
+            + packet_data["body_len"]
+        ]
         signed_content = (
-            bundle[PACKET_TYPE_PRIMARY_KEY]["packet"] + b"\x99" + subkey_packet[1:]
+            primary_key_preimage
+            + b"\x99"
+            + struct.pack(">H", len(subkey_body))
+            + subkey_body
         )
 
         # Filter sub key binding signature from other signatures, e.g. subkey

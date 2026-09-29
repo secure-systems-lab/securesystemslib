@@ -3,6 +3,7 @@
 import copy
 import os
 import shutil
+import subprocess
 import tempfile
 import unittest
 import warnings
@@ -705,6 +706,116 @@ class TestGPGRSA(unittest.TestCase):
 
         other_key = SSlibKey("aa", "rsa", "rsassa-pss-sha256", {"public": "val"})
         self.assertNotEqual(key1, other_key)
+
+
+@unittest.skipIf(not have_gpg(), "gpg not found")
+class TestGPGEd25519(unittest.TestCase):
+    """Test Ed25519 GPG signature creation and verification with subkeys."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.working_dir = os.getcwd()
+        cls.test_dir = os.path.realpath(tempfile.mkdtemp())
+        cls.gnupg_home = os.path.join(cls.test_dir, "eddsa")
+        os.makedirs(cls.gnupg_home, mode=0o700)
+        os.chdir(cls.test_dir)
+
+        cls.test_data = b"test_data"
+        cls.wrong_data = b"something malicious"
+
+        gpg = [
+            "gpg",
+            "--homedir",
+            cls.gnupg_home,
+            "--batch",
+            "--pinentry-mode",
+            "loopback",
+            "--passphrase",
+            "",
+        ]
+        try:
+            subprocess.run(
+                gpg
+                + [
+                    "--quick-generate-key",
+                    "ed25519-test@example.com",
+                    "ed25519",
+                    "cert",
+                    "never",
+                ],
+                check=True,
+                capture_output=True,
+            )
+            res = subprocess.run(
+                gpg + ["--with-colons", "--list-keys", "ed25519-test@example.com"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            fprs = [
+                line.split(":")[9].lower()
+                for line in res.stdout.splitlines()
+                if line.startswith("fpr:")
+            ]
+            cls.default_keyid = fprs[0]
+
+            subprocess.run(
+                gpg
+                + [
+                    "--quick-add-key",
+                    cls.default_keyid,
+                    "ed25519",
+                    "sign",
+                    "never",
+                ],
+                check=True,
+                capture_output=True,
+            )
+            res = subprocess.run(
+                gpg + ["--with-colons", "--list-keys", "ed25519-test@example.com"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            fprs = [
+                line.split(":")[9].lower()
+                for line in res.stdout.splitlines()
+                if line.startswith("fpr:")
+            ]
+            cls.signing_subkey_keyid = fprs[1]
+            cls.keys_generated = True
+        except Exception:
+            cls.keys_generated = False
+
+    @classmethod
+    def tearDownClass(cls):
+        os.chdir(cls.working_dir)
+        shutil.rmtree(cls.test_dir)
+
+    def test_gpg_sign_and_verify_object(self):
+        """Create a signature using an Ed25519 signing subkey on the keyring."""
+        if not self.keys_generated:
+            self.skipTest("Failed to generate Ed25519 test keys with gpg")
+
+        uri, public_key = GPGSigner.import_(
+            self.signing_subkey_keyid, self.gnupg_home
+        )
+
+        signer = Signer.from_priv_key_uri(uri, public_key)
+        sig = signer.sign(self.test_data)
+
+        public_key.verify_signature(sig, self.test_data)
+
+        with self.assertRaises(UnverifiedSignatureError):
+            public_key.verify_signature(sig, self.wrong_data)
+
+    def test_gpg_import_primary_key(self):
+        """Import Ed25519 primary key."""
+        if not self.keys_generated:
+            self.skipTest("Failed to generate Ed25519 test keys with gpg")
+
+        uri, public_key = GPGSigner.import_(self.default_keyid, self.gnupg_home)
+        self.assertEqual(public_key.keyid, self.default_keyid)
 
 
 class TestUtils(unittest.TestCase):
