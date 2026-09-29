@@ -8,7 +8,7 @@ cryptography==50.0.1
     # via
     #   -r requirements.txt
     #   keylet
-keylet==0.7.0
+keylet==1.0.0
     # via -r requirements.txt
 pycparser==3.0
     # via cffi
