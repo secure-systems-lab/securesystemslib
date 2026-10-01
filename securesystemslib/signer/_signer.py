@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import logging
 from abc import ABCMeta, abstractmethod
 from collections.abc import Callable
@@ -11,13 +12,26 @@ from securesystemslib.signer._signature import Signature
 
 logger = logging.getLogger(__name__)
 
-# NOTE Signer dispatch table is defined here so it's usable by Signer,
-# but is populated in __init__.py (and can be appended by users).
-SIGNER_FOR_URI_SCHEME: dict[str, type] = {}
-"""Signer dispatch table for ``Signer.from_priv_key()``
+_DEFAULT_SIGNERS = {
+    "awskms": ("securesystemslib.signer._aws_signer", "AWSSigner"),
+    "azurekms": ("securesystemslib.signer._azure_signer", "AzureSigner"),
+    "file2": ("securesystemslib.signer._crypto_signer", "CryptoSigner"),
+    "gcpkms": ("securesystemslib.signer._gcp_signer", "GCPSigner"),
+    "gnupg": ("securesystemslib.signer._gpg_signer", "GPGSigner"),
+    "hsm": ("securesystemslib.signer._hsm_signer", "HSMSigner"),
+    "hv": ("securesystemslib.signer._vault_signer", "VaultSigner"),
+    "tkey": ("securesystemslib.signer._tkey_signer", "TKeySigner"),
+}
 
-See ``securesystemslib.signer.SIGNER_FOR_URI_SCHEME`` for default URI schemes,
-and how to register custom implementations.
+
+SIGNER_FOR_URI_SCHEME: dict[str, type] = {}
+"""Custom signers and cached implementations for ``Signer.from_priv_key_uri()``.
+
+Built-in implementations are added on first use through the URI factory.
+Entries registered by applications take precedence over built-ins. Iteration
+and copies contain only registered or cached entries, not all supported schemes.
+Deleting an entry clears its override or cache: a built-in can be loaded again
+on the next factory call.
 """
 
 # SecretsHandler is a function the calling code can provide to Signer:
@@ -41,7 +55,7 @@ class Signer(metaclass=ABCMeta):
     Applications should use generic try-except here if unexpected raises are
     not an option.
 
-    See ``SIGNER_FOR_URI_SCHEME`` for supported private key URI schemes.
+    See each signer implementation for its supported private key URI scheme.
 
     Interactive applications may also define a secrets handler that allows
     asking for user secrets if they are needed::
@@ -88,7 +102,7 @@ class Signer(metaclass=ABCMeta):
         """Factory constructor for a given private key URI
 
         Returns a specific Signer instance based on the private key URI and the
-        supported uri schemes listed in ``SIGNER_FOR_URI_SCHEME``.
+        built-in URI schemes or custom entries in ``SIGNER_FOR_URI_SCHEME``.
 
         Args:
             priv_key_uri: URI that identifies the private key
@@ -104,10 +118,15 @@ class Signer(metaclass=ABCMeta):
         """
 
         scheme, _, _ = priv_key_uri.partition(":")
-        if scheme not in SIGNER_FOR_URI_SCHEME:
-            raise ValueError(f"Unsupported private key scheme {scheme}")
+        signer = SIGNER_FOR_URI_SCHEME.get(scheme)
+        if signer is None:
+            if scheme not in _DEFAULT_SIGNERS:
+                raise ValueError(f"Unsupported private key scheme {scheme}")
 
-        signer = SIGNER_FOR_URI_SCHEME[scheme]
+            module_name, class_name = _DEFAULT_SIGNERS[scheme]
+            signer = getattr(importlib.import_module(module_name), class_name)
+            SIGNER_FOR_URI_SCHEME[scheme] = signer
+
         return signer.from_priv_key_uri(priv_key_uri, public_key, secrets_handler)  # type: ignore
 
     @property
