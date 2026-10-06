@@ -1,16 +1,26 @@
-"""Test cases for "metadata.py"."""
+"""Test cases for native DSSE envelopes and cross-language signing bytes."""
 
+import base64
 import copy
+import hashlib
+import json
 import unittest
 from pathlib import Path
 
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.hazmat.primitives.serialization import (
+    load_pem_private_key,
+    load_pem_public_key,
+)
 
 from securesystemslib.dsse import Envelope
 from securesystemslib.exceptions import VerificationError
-from securesystemslib.signer import CryptoSigner, Signature
+from securesystemslib.signer import CryptoSigner, Signature, SSlibKey
 
 PEMS_DIR = Path(__file__).parent / "data" / "pems"
+DSSE_VECTORS = Path(__file__).parent / "data" / "dsse" / "cross_lang_signing.json"
+DSSE_VECTORS_SHA256 = "f5f6c8e991ecb452d73b6289eef8632666dbb50c7f1ef25827b28e869e16152c"
+DSSE_VECTOR_COUNT = 11
 
 
 class TestEnvelope(unittest.TestCase):
@@ -165,6 +175,113 @@ class TestEnvelope(unittest.TestCase):
         duplicate_keys = key_list + key_list
         with self.assertRaises(VerificationError):
             envelope_obj.verify(duplicate_keys, 4)  # 3 unique keys, threshold 4.
+
+
+class TestCrossLanguageEnvelope(unittest.TestCase):
+    """Replay pinned Go signing bytes through the native DSSE public APIs."""
+
+    @classmethod
+    def setUpClass(cls):
+        raw = DSSE_VECTORS.read_bytes()
+        if hashlib.sha256(raw).hexdigest() != DSSE_VECTORS_SHA256:
+            raise ValueError("DSSE reference fixture digest does not match")
+        cls.vectors = json.loads(raw)
+        cls.fixtures = cls.vectors["fixtures"]
+        cls.key_id = cls.vectors["key_id"]
+        public_key = load_pem_public_key(cls.vectors["public_key_pem"].encode())
+        cls.key = SSlibKey.from_crypto(public_key, keyid=cls.key_id)
+        private_key = Ed25519PrivateKey.from_private_bytes(
+            bytes.fromhex(cls.vectors["test_seed_hex"])
+        )
+        cls.signer = CryptoSigner(private_key, cls.key)
+
+    def test_reference_pae_bytes(self):
+        self.assertEqual(len(self.fixtures), DSSE_VECTOR_COUNT)
+        for fixture in self.fixtures:
+            with self.subTest(case=fixture["name"]):
+                envelope = Envelope.from_dict(copy.deepcopy(fixture["envelope"]))
+                self.assertEqual(envelope.pae(), base64.b64decode(fixture["pae_b64"]))
+
+    def test_reference_signatures_verify(self):
+        for fixture in self.fixtures:
+            with self.subTest(case=fixture["name"]):
+                envelope = Envelope.from_dict(copy.deepcopy(fixture["envelope"]))
+                self.assertEqual(
+                    envelope.verify([self.key], 1), {self.key_id: self.key}
+                )
+
+    def test_native_signer_reproduces_reference(self):
+        for fixture in self.fixtures:
+            with self.subTest(case=fixture["name"]):
+                envelope = Envelope(
+                    base64.b64decode(fixture["canonical_b64"]),
+                    fixture["payload_type"],
+                    {},
+                )
+                signature = envelope.sign(self.signer)
+                self.assertEqual(
+                    bytes.fromhex(signature.signature),
+                    base64.b64decode(fixture["signature_b64"]),
+                )
+                self.assertEqual(envelope.to_dict(), fixture["envelope"])
+                self.assertEqual(
+                    envelope.verify([self.key], 1), {self.key_id: self.key}
+                )
+
+    def test_changed_payload_refused(self):
+        for fixture in self.fixtures:
+            with self.subTest(case=fixture["name"]):
+                envelope = Envelope.from_dict(copy.deepcopy(fixture["envelope"]))
+                envelope.payload += b"\x00"
+                with self.assertRaises(VerificationError):
+                    envelope.verify([self.key], 1)
+
+    def test_changed_payload_type_refused(self):
+        for fixture in self.fixtures:
+            with self.subTest(case=fixture["name"]):
+                envelope = Envelope.from_dict(copy.deepcopy(fixture["envelope"]))
+                envelope.payload_type += "\u00e9"
+                with self.assertRaises(VerificationError):
+                    envelope.verify([self.key], 1)
+
+    def test_changed_signature_refused(self):
+        for fixture in self.fixtures:
+            with self.subTest(case=fixture["name"]):
+                envelope = Envelope.from_dict(copy.deepcopy(fixture["envelope"]))
+                signature = bytearray(base64.b64decode(fixture["signature_b64"]))
+                signature[0] ^= 1
+                envelope.signatures[self.key_id] = Signature(
+                    self.key_id, signature.hex()
+                )
+                with self.assertRaises(VerificationError):
+                    envelope.verify([self.key], 1)
+
+    def test_wrong_key_with_same_keyid_refused(self):
+        wrong_private_key = Ed25519PrivateKey.from_private_bytes(bytes(32))
+        wrong_key = SSlibKey.from_crypto(
+            wrong_private_key.public_key(), keyid=self.key_id
+        )
+        for fixture in self.fixtures:
+            with self.subTest(case=fixture["name"]):
+                envelope = Envelope.from_dict(copy.deepcopy(fixture["envelope"]))
+                with self.assertRaises(VerificationError):
+                    envelope.verify([wrong_key], 1)
+
+    def test_character_length_preimage_refused(self):
+        fixture = next(
+            item for item in self.fixtures if item["name"] == "unicode_payload_type"
+        )
+        envelope = Envelope.from_dict(copy.deepcopy(fixture["envelope"]))
+        character_length_pae = b"DSSEv1 %d %b %d %b" % (
+            len(envelope.payload_type),
+            envelope.payload_type.encode("utf-8"),
+            len(envelope.payload),
+            envelope.payload,
+        )
+        self.assertNotEqual(character_length_pae, base64.b64decode(fixture["pae_b64"]))
+        envelope.signatures[self.key_id] = self.signer.sign(character_length_pae)
+        with self.assertRaises(VerificationError):
+            envelope.verify([self.key], 1)
 
 
 # Run the unit tests.
