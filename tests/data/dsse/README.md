@@ -5,6 +5,11 @@
 Its SHA-256 is
 `f5f6c8e991ecb452d73b6289eef8632666dbb50c7f1ef25827b28e869e16152c`.
 
+The fixture's `.gitattributes` rule keeps LF line endings on every checkout,
+including Windows with `core.autocrlf=true`. The raw-byte digest binds the copy
+to the referenced producer file; checkout conversion must not change those
+bytes. The PAE and signature checks remain separate from that provenance check.
+
 The producer used the reference Go DSSE implementation at
 `github.com/secure-systems-lab/go-securesystemslib/dsse` version `v0.11.1`,
 as recorded in the file. The eleven cases include empty and binary payloads,
