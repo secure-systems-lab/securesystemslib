@@ -33,11 +33,14 @@ from securesystemslib.signer._gpg_signer import GPGKey, GPGSigner
 from securesystemslib.signer._key import KEY_FOR_TYPE_AND_SCHEME, Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import (
-    _DEFAULT_SIGNERS,
+    _LAZY_SIGNER_IMPORTS,
     SIGNER_FOR_URI_SCHEME,
     SecretsHandler,
     Signer,
 )
+
+# GPG is imported eagerly above and is therefore represented by its class.
+SIGNER_FOR_URI_SCHEME["gnupg"] = GPGSigner
 
 if TYPE_CHECKING:
     from securesystemslib.signer._aws_signer import AWSSigner
@@ -50,16 +53,12 @@ if TYPE_CHECKING:
     from securesystemslib.signer._vault_signer import VaultSigner
 
 _LAZY_IMPORTS = {
-    class_name: (module_name, class_name)
-    for module_name, class_name in _DEFAULT_SIGNERS.values()
+    class_name: module_name for module_name, class_name in _LAZY_SIGNER_IMPORTS.values()
 }
 _LAZY_IMPORTS.update(
     {
-        "SigstoreKey": ("securesystemslib.signer._sigstore_signer", "SigstoreKey"),
-        "SigstoreSigner": (
-            "securesystemslib.signer._sigstore_signer",
-            "SigstoreSigner",
-        ),
+        "SigstoreKey": "securesystemslib.signer._sigstore_signer",
+        "SigstoreSigner": "securesystemslib.signer._sigstore_signer",
     }
 )
 
@@ -107,17 +106,17 @@ __all__ = [
 def __getattr__(name: str) -> Any:
     """Load optional signer implementations only when they are requested."""
     try:
-        module_name, class_name = _LAZY_IMPORTS[name]
+        module_name = _LAZY_IMPORTS[name]
     except KeyError as e:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}") from e
 
-    value = getattr(import_module(module_name), class_name)
+    value = getattr(import_module(module_name), name)
     globals()[name] = value
     return value
 
 
 def __dir__() -> list[str]:
-    return sorted(set(globals()) | _LAZY_IMPORTS.keys())
+    return __all__
 
 
 # Signers with currently unstable metadata formats, not supported by default:

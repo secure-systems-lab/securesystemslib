@@ -12,26 +12,26 @@ from securesystemslib.signer._signature import Signature
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_SIGNERS = {
+_LAZY_SIGNER_IMPORTS = {
     "awskms": ("securesystemslib.signer._aws_signer", "AWSSigner"),
     "azurekms": ("securesystemslib.signer._azure_signer", "AzureSigner"),
     "file2": ("securesystemslib.signer._crypto_signer", "CryptoSigner"),
     "gcpkms": ("securesystemslib.signer._gcp_signer", "GCPSigner"),
-    "gnupg": ("securesystemslib.signer._gpg_signer", "GPGSigner"),
     "hsm": ("securesystemslib.signer._hsm_signer", "HSMSigner"),
     "hv": ("securesystemslib.signer._vault_signer", "VaultSigner"),
     "tkey": ("securesystemslib.signer._tkey_signer", "TKeySigner"),
 }
 
+SIGNER_FOR_URI_SCHEME: dict[str, type | tuple[str, str]] = {
+    scheme: import_info for scheme, import_info in _LAZY_SIGNER_IMPORTS.items()
+}
+"""Enabled signer implementations for ``Signer.from_priv_key_uri()``.
 
-SIGNER_FOR_URI_SCHEME: dict[str, type] = {}
-"""Custom signers and cached implementations for ``Signer.from_priv_key_uri()``.
-
-Built-in implementations are added on first use through the URI factory.
-Entries registered by applications take precedence over built-ins. Iteration
-and copies contain only registered or cached entries, not all supported schemes.
-Deleting an entry clears its override or cache: a built-in can be loaded again
-on the next factory call.
+The mapping contains the enabled built-in URI schemes and application
+registrations. Application registrations take precedence over built-ins.
+Removing a built-in scheme disables it until the application registers it again.
+Built-in entries may be lazy import descriptors until their URI scheme is first
+used. Applications should register signer classes and use the factory to load them.
 """
 
 # SecretsHandler is a function the calling code can provide to Signer:
@@ -118,12 +118,13 @@ class Signer(metaclass=ABCMeta):
         """
 
         scheme, _, _ = priv_key_uri.partition(":")
-        signer = SIGNER_FOR_URI_SCHEME.get(scheme)
-        if signer is None:
-            if scheme not in _DEFAULT_SIGNERS:
-                raise ValueError(f"Unsupported private key scheme {scheme}")
+        try:
+            signer = SIGNER_FOR_URI_SCHEME[scheme]
+        except KeyError as e:
+            raise ValueError(f"Unsupported private key scheme {scheme}") from e
 
-            module_name, class_name = _DEFAULT_SIGNERS[scheme]
+        if isinstance(signer, tuple):
+            module_name, class_name = signer
             signer = getattr(importlib.import_module(module_name), class_name)
             SIGNER_FOR_URI_SCHEME[scheme] = signer
 

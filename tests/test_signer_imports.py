@@ -19,22 +19,28 @@ class TestSignerImports(unittest.TestCase):
             """
 import sys
 from securesystemslib.signer import SIGNER_FOR_URI_SCHEME, Signer
+import securesystemslib.signer as signer_package
 
-optional_modules = {
-    "boto3",
-    "azure.identity",
-    "google.cloud.kms",
-    "hvac",
-    "pkcs11",
-    "sigstore",
+assert dir(signer_package) == sorted(signer_package.__all__)
+
+signer_modules = {
+    "securesystemslib.signer._aws_signer",
+    "securesystemslib.signer._azure_signer",
+    "securesystemslib.signer._crypto_signer",
+    "securesystemslib.signer._gcp_signer",
+    "securesystemslib.signer._hsm_signer",
+    "securesystemslib.signer._sigstore_signer",
+    "securesystemslib.signer._tkey_signer",
+    "securesystemslib.signer._vault_signer",
 }
-loaded = optional_modules.intersection(sys.modules)
+loaded = signer_modules.intersection(sys.modules)
 if loaded:
     raise AssertionError(f"optional signer modules were imported: {sorted(loaded)}")
 
 assert isinstance(SIGNER_FOR_URI_SCHEME, dict)
-assert not SIGNER_FOR_URI_SCHEME
-assert "securesystemslib.signer._crypto_signer" not in sys.modules
+expected_schemes = {"awskms", "azurekms", "file2", "gcpkms", "gnupg", "hsm", "hv", "tkey"}
+assert set(SIGNER_FOR_URI_SCHEME) == expected_schemes
+assert "securesystemslib.signer._gpg_signer" in sys.modules
 """
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -47,7 +53,7 @@ from securesystemslib.signer import AWSSigner, SIGNER_FOR_URI_SCHEME
 
 assert AWSSigner.SCHEME == "awskms"
 assert "securesystemslib.signer._aws_signer" in sys.modules
-assert not SIGNER_FOR_URI_SCHEME
+assert "awskms" in SIGNER_FOR_URI_SCHEME
 """
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -76,31 +82,86 @@ assert "securesystemslib.signer._aws_signer" not in sys.modules
         result = self._run_python(
             """
 import sys
-from unittest.mock import patch, sentinel
+import unittest
+from types import SimpleNamespace
+from unittest.mock import Mock, patch, sentinel
 from securesystemslib.signer import SIGNER_FOR_URI_SCHEME, Signer
-from securesystemslib.signer import _signer
 
 assert "securesystemslib.signer._aws_signer" not in sys.modules
-original_import = _signer.importlib.import_module
 
-with patch.object(_signer.importlib, "import_module", wraps=original_import) as load:
-    with patch("securesystemslib.signer._aws_signer.AWSSigner.from_priv_key_uri", return_value=sentinel.signer) as factory:
-        load.reset_mock()
-        for _ in range(2):
-            assert Signer.from_priv_key_uri("awskms:key", sentinel.key, sentinel.handler) is sentinel.signer
-        factory.assert_called_with("awskms:key", sentinel.key, sentinel.handler)
-        load.assert_called_once_with("securesystemslib.signer._aws_signer")
+class TestSigner:
+    from_priv_key_uri = Mock(return_value=sentinel.signer)
 
-from securesystemslib.signer import AWSSigner
-assert SIGNER_FOR_URI_SCHEME == {"awskms": AWSSigner}
+module = SimpleNamespace(AWSSigner=TestSigner)
+with patch("securesystemslib.signer._signer.importlib.import_module", return_value=module) as load:
+    for _ in range(2):
+        assert Signer.from_priv_key_uri("awskms:key", sentinel.key, sentinel.handler) is sentinel.signer
+    TestSigner.from_priv_key_uri.assert_called_with("awskms:key", sentinel.key, sentinel.handler)
+    load.assert_called_once_with("securesystemslib.signer._aws_signer")
+
+assert SIGNER_FOR_URI_SCHEME["awskms"] is TestSigner
 
 registry_copy = SIGNER_FOR_URI_SCHEME.copy()
-SIGNER_FOR_URI_SCHEME.clear()
-assert registry_copy == {"awskms": AWSSigner}
-with patch.object(AWSSigner, "from_priv_key_uri", return_value=sentinel.signer):
-    assert Signer.from_priv_key_uri("awskms:key", sentinel.key) is sentinel.signer
+assert registry_copy["awskms"] is TestSigner
+assert set(registry_copy) == {"awskms", "azurekms", "file2", "gcpkms", "gnupg", "hsm", "hv", "tkey"}
 assert SIGNER_FOR_URI_SCHEME == registry_copy
 assert "securesystemslib.signer._gcp_signer" not in sys.modules
+
+del SIGNER_FOR_URI_SCHEME["awskms"]
+with patch("securesystemslib.signer._signer.importlib.import_module") as load:
+    with unittest.TestCase().assertRaisesRegex(ValueError, "Unsupported private key scheme awskms"):
+        Signer.from_priv_key_uri("awskms:key", sentinel.key)
+    load.assert_not_called()
+assert registry_copy["awskms"] is TestSigner
+"""
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_registry_removal_disables_builtin(self) -> None:
+        result = self._run_python(
+            """
+from unittest.mock import patch, sentinel
+from securesystemslib.signer import SIGNER_FOR_URI_SCHEME, Signer
+
+del SIGNER_FOR_URI_SCHEME["awskms"]
+with patch("securesystemslib.signer._signer.importlib.import_module") as load:
+    try:
+        Signer.from_priv_key_uri("awskms:key", sentinel.key)
+    except ValueError as error:
+        assert str(error) == "Unsupported private key scheme awskms"
+    else:
+        raise AssertionError("disabled built-in signer was loaded")
+    load.assert_not_called()
+
+SIGNER_FOR_URI_SCHEME.clear()
+with patch("securesystemslib.signer._signer.importlib.import_module") as load:
+    try:
+        Signer.from_priv_key_uri("gcpkms:key", sentinel.key)
+    except ValueError as error:
+        assert str(error) == "Unsupported private key scheme gcpkms"
+    else:
+        raise AssertionError("cleared built-in signer was loaded")
+    load.assert_not_called()
+"""
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_signer_modules_can_be_imported(self) -> None:
+        result = self._run_python(
+            """
+import importlib
+
+for module_name in (
+    "_aws_signer",
+    "_azure_signer",
+    "_crypto_signer",
+    "_gcp_signer",
+    "_hsm_signer",
+    "_sigstore_signer",
+    "_tkey_signer",
+    "_vault_signer",
+):
+    importlib.import_module(f"securesystemslib.signer.{module_name}")
 """
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -109,10 +170,12 @@ assert "securesystemslib.signer._gcp_signer" not in sys.modules
         result = self._run_python(
             """
 import unittest
-from unittest.mock import patch, sentinel
+from types import SimpleNamespace
+from unittest.mock import Mock, patch, sentinel
 from securesystemslib.signer import SIGNER_FOR_URI_SCHEME, Signer
 
 case = unittest.TestCase()
+lazy_entry = SIGNER_FOR_URI_SCHEME["awskms"]
 with patch("securesystemslib.signer._signer.importlib.import_module") as load:
     with case.assertRaisesRegex(ValueError, "Unsupported private key scheme unknown"):
         Signer.from_priv_key_uri("unknown:key", sentinel.key)
@@ -121,7 +184,15 @@ with patch("securesystemslib.signer._signer.importlib.import_module") as load:
     load.side_effect = ImportError("missing optional dependency")
     with case.assertRaisesRegex(ImportError, "missing optional dependency"):
         Signer.from_priv_key_uri("awskms:key", sentinel.key)
-    assert "awskms" not in SIGNER_FOR_URI_SCHEME
+    assert SIGNER_FOR_URI_SCHEME["awskms"] == lazy_entry
+
+    class TestSigner:
+        from_priv_key_uri = Mock(return_value=sentinel.signer)
+
+    load.side_effect = None
+    load.return_value = SimpleNamespace(AWSSigner=TestSigner)
+    assert Signer.from_priv_key_uri("awskms:key", sentinel.key) is sentinel.signer
+    assert SIGNER_FOR_URI_SCHEME["awskms"] is TestSigner
 """
         )
         self.assertEqual(result.returncode, 0, result.stderr)

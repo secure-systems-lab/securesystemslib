@@ -20,8 +20,11 @@ generic *load* methods:
 * ``Signer.from_priv_key_uri`` -  Loads any specific signer from a URI. The
   specific signer implementation itself is responsible for the URI format and
   resolution. Built-in signers are loaded on demand. Applications can register
-  custom signers or override built-ins in ``SIGNER_FOR_URI_SCHEME``. This table
-  contains custom entries and cached implementations, not all supported schemes.
+  custom signers or override built-ins in ``SIGNER_FOR_URI_SCHEME``. The mapping
+  controls which URI schemes are enabled; removing a built-in entry disables that
+  scheme until it is registered again. Built-in entries may contain lazy import
+  descriptors until first use; applications should register signer classes and
+  use the factory to load them.
 
 * ``Key.from_dict`` - Loads any specific key from a serialized format. The
   specific key implementation is responsible for the public key format and
