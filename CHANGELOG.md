@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Fixed
+
+* DSSE `Envelope.pae()` now counts UTF-8 bytes for non-ASCII payload types,
+  as the DSSE protocol requires. ASCII signing bytes are unchanged.
+  Non-ASCII signatures made with the old character-length preimage must be
+  regenerated; verification does not accept that incorrect encoding.
+
 ## 1.5.0
 
 ### Added
