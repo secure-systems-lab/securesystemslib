@@ -9,6 +9,11 @@
   Non-ASCII signatures made with the old character-length preimage must be
   regenerated; verification does not accept that incorrect encoding.
 
+### Changed
+
+* ML-DSA keys are now part of default set of verification keys
+  (KEY_FOR_TYPE_AND_SCHEME)
+
 ## 1.5.0
 
 ### Added

@@ -63,26 +63,6 @@ class TestKey(unittest.TestCase):
             self.assertIsInstance(key, key_impl)
             self.assertDictEqual(keydict, key.to_dict())
 
-    def test_mldsa_key_from_to_dict(self):
-        """Test to/from_dict for ml-dsa until it's officially supported."""
-        # Temporarily enable ml-dsa keys so they can be parsed for this test.
-        # TODO: Remove this once ml-dsa is supported by default.
-        KEY_FOR_TYPE_AND_SCHEME[("ml-dsa", "ml-dsa-65/1")] = SSlibKey
-        try:
-            keydict = {
-                "keytype": "ml-dsa",
-                "scheme": "ml-dsa-65/1",
-                "keyval": {
-                    "public": "pubkeyval",
-                },
-            }
-
-            key = Key.from_dict("aa", copy.deepcopy(keydict))
-            self.assertIsInstance(key, SSlibKey)
-            self.assertDictEqual(keydict, key.to_dict())
-        finally:
-            del KEY_FOR_TYPE_AND_SCHEME[("ml-dsa", "ml-dsa-65/1")]
-
     def test_key_hash(self):
         """Keys should be hashable, even with dict keyval and extra fields."""
         keydict = {
@@ -272,6 +252,16 @@ class TestKey(unittest.TestCase):
                 "3081880242019c9621491de75e9b89c4956f6571840528923db953a0fdcf88f9c0221e8c181459af1d9f4e420ad7b971c5c429e457f1f67cfc968c655ea569c3185bfeb2bd943f024201bd2d51bee9ae0bbeb79c99c7bc1758dd256ce7caad9020fb2e2873efc80613826a45b96be25eab11dc521942b92af5820ddde08797d9d6ae236aa54036b41e1152",
             ),
         ]
+        if MLDSA_IMPORT_ERROR is None:
+            key_sig_data.append(
+                (
+                    "aebf451cd50cf521b4b5accfc70e679ea8d5c18644fb87582e022fbb9c4bb3c4",
+                    "ml-dsa",
+                    "ml-dsa-65/1",
+                    (PEMS_DIR / "mldsa65_public.pem").read_text(),
+                    "2d0595831dd4eb9af0ef52404d609532fc237e1081f696c45100d83d890b90e76fb753bfa33cd9f0d478f4170566d5a6000719588de8b2c07171543f17878a151466909c23f0a0b162d1ecfe77fecd2a12403a4d3acdccd7f2225bcc2de4b02194b3863d7a082d74c1aa1b9302800c521e7a9ae3c1c87e80ae732225dd1d935afb568c76dbd05e742a3450e95642a2d66193f46c1bc93e48a13c2c4e37c34964358a6205f80051778efede4d551f897e58a4d0ece2fdc45d0b5e8f960f9844b7464369407ec274ecd6728101934b999998f6aff7e3c79bbf4b44b5656c82f949aca453d89794acdfd8cfcca38192b4a043d29ff9738cc59a58923275a974d1a408ae7ef741e4c01d2a55fbc2a739dff1c9ac1660209c1463813fd418a75da88e2313e7e90e212756f15fe15a9d960f2c2733d1366355bb70bc635560af9bc9a9e7dc300118313614e62d4901b0f5e9c5de8e0f33c1d8248f8d6ca1866eed44582d853ddf4d94852ecfed0fbd8425af9c3eddc2ad9915d645ee88338a44d97256535b948eb62d4b27ab11fdb1743c641f23b53178891a43b24861af0106f05066f489c2522d623099b3e305fe153af9aaa9b607a1ceb73028ae862c43fda9bf9752ccf1d6d05d88869e0bf8e7c532f08ea335d7996ca283119032558e35c43bb62e0a8d83737bb58ed757624ce4731943174b4af2d041e2db2bd6809c3288af5fcfe36a5d3b5fd1ce6efe41a3dc03c5995b814dd8dc3e5859ea1d85041272ed712eb33c3718a70dc0a261a312e1cfd92a3a1be8449c74f0f3d926f12fe699047506421d1944802081ad6c0baafc13c41e8a992943364259a1ab10a53ac1a5c878597e768d250dd9d0c4ec33aa82b840df443fa495e5c5a9bc77b6f5c990f31d9a3ce54a8c2ea5065bdc87ff5ec4ec6689a644b997f1fdc3fd9e69462ee687b7d8ae03f11ba6e6895787d3b0f28a9f3097df90285f204274ede3b9f449f113931a4150d9f974398424c774e7b0ed99c8dbe48cdb5144910308b50d0a4b6f09b54af8f4ec33d94e13424f82a5aa28a47d4365ea2c54c94b7dc7b5abc1bace1ce664e8d62c32c4ab8724f12ddca01e9ee5bc5dc3f4246e3e1fa7b9729bb6390244aebd9d4f9463b4ba23fc568e568577584eebcbe6142803020fa5a83a4b7477def351a7a26e60a47e9e12fa1aad5b92a1ab55f2a2803a38a2371c42cd6f45f02bc51418ef3a7caa33bb82f02460c208161b97bb60e43e7a34df3f1e1e6837edef079f42582657233ae479f352b18fd3764a7a9bc415917a0918a4e7c98a7d56770c24f66779c09a7f015dc0434c273a8d9ceefa3b03352338b3f65bf6fd0506a8396a6e89752771589a85ca256caa850f94f3bacb20ba96435571066f046e57a94e4f21ee7c4bca7a120d802b1d836767e51c2048b644b7eb069dcd1aa9f52c08fda541678341541b39eeaeea7d12a0666b43ef10d6cc9bfcef8646e15bd8b131f5ed67626387fedf057dd9342f4b8088dd79924de5f2cb230bbab979dd4304d0333256dd0277a0e89d90aecb1f824d2f983f5a6aca81abd1e886ebcf335ead6b1e6eef56f785ddfc44b24cd6a6fa82d869228d890c6e72616fb6305c5d189cabd44bec0ed81b49cef659492cad13709cedafabb2c84bac6cc2bb4e53dfe47c890761fa0c38b751a601c3ac942c4cfe91ba210c28b02812468dc5aebbd155244b9af94530a6890ca91cece11e7de5ab0844a6b210e5427986bc537e5edb2ebaf412fffb42e4434d0075e4fb6e6f798a10c3f16cc6b393391b6fb732d53117b3c60fdb3031802aea9a5e86fc987d4a221321ee43a458b9c72c29e5762c2f54d67d502983f9d3fe74ca3710bc9a79dd32bc574326d880ffdd8436bacd1d4fcd08286ad5d5127affdfedff013188edaa78a13d92c3abb4cb432585092a794687ab1a7c2bf90175c74aee1a4c2e97ea18827faaa99c089281f785b914e035a7de728abc9ff0d5524e33030c568744b6ce8778387856ce15959b161f4b689602f8ea981ef6344ca9e2328a01d46c507a8d88e8a41fb72bb2c28fd409c24e5b453dbbfa17821dbbe71681f894ec2bb9b7136bf5781c4fcc0f96b5cff3bc75b4028b77c042b1db035dad96097deed729c52d3365c225d16574bb90fd0ec151abe7ff63a70d541e84608f9de3040cd65fcc0eeff4cac1dd94746a08ee5dd314d288e9311cabfa4008e26b3bba4dae830d4c8e876b4b323e5acf4f286fac5f174199d51593022f90f0f3024a059d445089c25178a3101ec8d94ddc4e75345807bcf87d237e05492fafc6b5f40ab7cbc6e2e0c805b7fddf03983930ea035ebae7d75fb5c111388fd29723d667dcc217cbee3080133dace3d788ab71a137d4070fad0ac3fcb4a48fadb9f026b351c1a352beb1151822bf4a3f62ea1c0a83f7997c8be9de1905167707bbd5ee79dc4fd1b6e32aad6292ccdf9dcec9f26a1737c2064c1d1922f979cbef4e6e2447b0d2f783d4c9d3244ec7b394fec6005a2b1926fe5addd56e81e6c991c3d23c9286afbc14ad121dcdd78e6dda9e0bb81893ed62896b1022ea95d03fab524302cc1a379eb27fc49cad580e23a696392cdf59058ed3f5d08060a6465edbcb8a7685cd6a449a9a4f5937fff46ef22988996ce77903753450e1b928d605b12998b64926f1ed23b45c6cffbd6d939da6643449db2cd999c3bda9e8ed781a65b0c384ba222ff3d9ece364acf52244657d1fbbd63dba445070cc75092add45ea2973f5371b97fd82ac5780db9a327f9217c59f7115ac7f2a9b13e3b87cc84909e07cdbde3aa626ce4de46454edb4fdf3b32cbfa184c0f8e8b052c427cf7b14462f7e7fbd35e3c41445acdb74993641024a36004f35e490e85fe420df2458b319cd86f6c15183454e261de22a64e96999011435d720f46e9b8d8441a934965ad487b07a2c3f3895b2b8f6f2cbc95c9aeb91bf2caf097dc3b1a0d31c58d9b931f747c2995cf70fb60b45046c259026aa9719bbda9586f8104590d002db2f4b51a8acba6b48cd94f3665cdcd4645638e72adb87671814862ec4764a7b908ff318d50eb7f4c0c565205200ebcbcc6b5f12668b39a19f12612b30dad66142d1abe923dd0075d641f5917f145d6d9689364a63a8cd0024d6682457f46926d99339de094da75539ab658d0c40cdd08f3abb0521e819e92e2edef74326f36db5da237cd26c4bfad1580fc186d87e8d17c4394c98ba35218f9c112122ef3cd98c71febe39f3d0f7299352beeb88b880a85526f25bac1e5d0fa62c97aa8264cd77857ec8a3d8f986c649036d286d32d2616e59027e83cd5da29e9e95e101da83feb6556705a239830eb06b7b14abf2bb423ee7937323522a90a060f841825f251134050bf4fb9302563c57208b3fe1cd2cf8aa4a034c56fc8cfb271e20de9c8408f46e31a349810479e8c553de9b1cd8a527073ab540c9b14f77ae91bcc194f6750e0f213002e4feebf4b51c17bd32f0c5037e004990b7efc8be9658f7ce44fcfa33c3147667c9eeb549d4498abb5023e4a40a89b1d1f2416e6052b1c78e96f454530404764b523857964ecd9680e51351a5b2bb2ddf56da1429a70a2cedc812cf30f5eb0172344fb9c2015eac6b22e11458129fa98bac6ff06008cb182505e19f1f6ed18bcb962fd34a480073210ce61b5e16c03845eba02a49a495124a5ce6df382e337d74ae5663783e78faa9a94f1ea7c948ffdd533d4c3e87d0dca2d28d70b3229880df9ae41e29413ce899a255bf37d98109c66e5aa66bf425da2422263a0eabf608dfd750bc18aaaeb5016933765e6e3c05fe0c2d0befe25a214b703ee7b3c37b1479e77c290788ccd52c29c92aa5f770ea95160db79de808addc0d3baedf37babea47324fb0448b5f08eb290c6d83978118eab78a8a524289a6a646a13fb41f7194ac1d52ce6918e8736f804e21aacf282f716286bce8b640fb9ac73736a92fc6e7360bca51b9bba7d26fd501fd5a66b63d8c36b057f8d48baa778f79ffa1e47ee99795500cba509391c86447c7c57859e0342fb09f1a508d92b31bf39133aaaa8d83fe43bf29eeac4c9d000411004a93ed2fcb040e5eb2f840a042030fac4f5dee355a28d0c6ff20ba9428e53fa92487b0b2208bbd017170355b06c8813e49f6ebd86a369f761c5901ee6e27f57174b3a22271d4b6008b5d3a319835a954ba5ef92adc2d2e5fd3b1907c14d872e6f60ee048b6253e9e58586eec12c20bc71d90506b6cff35075bee951b2e248ba5a8418e4399ff72bd8f0b65e8da7bb3935374a67d32fdc6c39c94a0d36fde5949af3cb6cd83464b3945424b5e4b5d5b2120ee31d29c72def090457772cb0420afa8ea29764bb6dad170c9612845a7260e0212ac192c6ce616b0bcdef5f3fbc7b78953dedec7e58f0909b5bdb36351ea1bd244c5a617e97d1e22807688cb7e6e25900a5f1ce6924c230bd14793e04a1e71c2f4d125470f20ec95f77b91a0166ca69d8670491c1f75e1066555bd3dec066e8510add94068e53999194d91341d87c403862c5d371c053410734916b8cc5ef50f12a00a5725395cfddcb8b7c29b22327177784878e918688a1beccd7f5f9636baac60d15323bb24afa2425556ba0daddecf8ff0000000000000000000000000000000000000000060e12171923",
+                )
+            )
         for keyid, keytype, scheme, pub, sig in key_sig_data:
             key_dict = {
                 "keytype": keytype,
@@ -441,6 +431,15 @@ class TestSSlibKey(unittest.TestCase):
                 "ed25519_public.pem",
             ),
         ]
+        if MLDSA_IMPORT_ERROR is None:
+            test_data.append(
+                (
+                    "ml-dsa",
+                    "ml-dsa-65/1",
+                    "aebf451cd50cf521b4b5accfc70e679ea8d5c18644fb87582e022fbb9c4bb3c4",
+                    "mldsa65_public.pem",
+                )
+            )
 
         def _from_file(path):
             with open(path, "rb") as f:
@@ -473,6 +472,7 @@ class TestSSlibKey(unittest.TestCase):
         ecdsa_nistp256 = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEsYJfSlYU3UlYbGOZfE/yOHkayWWq\nLPR/NeCa83szZmnJGc9wwCRPvJS87K+eDGIhhhKueTyrLqXQqmyHioQbOQ==\n-----END PUBLIC KEY-----\n"
         ecdsa_nistp384 = "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEksAG80nLUksODTEUBTPJJPYN0bfxhkrr\n2hlyokfRG4kDYsRRN86vWwxDTW7qhWNZPFhJMJxHmvHsCbLz/IF7hdo8Xv/vRO4M\nVHbwq0fiWznUvkZowHC5fH2EEvNF1R5t\n-----END PUBLIC KEY-----\n"
         ecdsa_nistp521 = "-----BEGIN PUBLIC KEY-----\nMIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQBXxFGyw9J9C43woa6huZ3IwrEZhku\neHDNZ1UqnHcFhNYFhM7witKxgv6OUpwlwPsPSUjqcBxkkpay4rT4UTwIP94AdsQL\nq3DQ+BuwrEELjAAMxvQGfoMlLJ5fHM4p4KhlKwpk2HiBQp4r1bjuA6MFq7s5yF0C\nnb9TH+ZZwV5/cjCewxY=\n-----END PUBLIC KEY-----"
+        mldsa65 = (PEMS_DIR / "mldsa65_public.pem").read_text()
 
         test_data = [
             # bad keytype / scheme
@@ -489,6 +489,14 @@ class TestSSlibKey(unittest.TestCase):
             ("ecdsa", "ecdsa-sha2-nistp384", ecdsa_nistp256),
             ("ecdsa", "ecdsa-sha2-nistp521", ecdsa_nistp256),
         ]
+        if MLDSA_IMPORT_ERROR is None:
+            test_data.extend(
+                [
+                    ("ml-dsa", "ed25519", mldsa65),
+                    ("ml-dsa", "ml-dsa-65/1", ecdsa_nistp256),
+                    ("ml-dsa", "ml-dsa-44/1", mldsa65),
+                ]
+            )
 
         for keytype, scheme, val in test_data:
             key = SSlibKey("fake", keytype, scheme, {"public": val})

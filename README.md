@@ -20,7 +20,7 @@ signature creation, `securesystemslib` can be installed with *extras*. See
 [pyproject.toml](pyproject.toml) for available *optional dependencies*.
 
 ```bash
-# Install with ed25519, RSA, ECDSA sign and verify support
+# Install with ed25519, RSA, ECDSA, ML-DSA sign and verify support
 pip install securesystemslib[crypto]
 ```
 
