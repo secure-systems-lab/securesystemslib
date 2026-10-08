@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* ML-DSA keys are now part of default set of verification keys
+  (KEY_FOR_TYPE_AND_SCHEME)
+
 ## 1.5.0
 
 ### Added
