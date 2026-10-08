@@ -72,6 +72,10 @@ KEY_FOR_TYPE_AND_SCHEME.update(
         (ECDSA_SHA2_NISTP384, ECDSA_SHA2_NISTP384): SSlibKey,
         (ECDSA_SHA2_NISTP521, ECDSA_SHA2_NISTP521): SSlibKey,
         (KEY_TYPE_ED25519, ED25519): SSlibKey,
+        # ML-DSA keytype defined in https://github.com/theupdateframework/taps/blob/master/tap21.md
+        (KEY_TYPE_MLDSA, MLDSA_44_1): SSlibKey,
+        (KEY_TYPE_MLDSA, MLDSA_65_1): SSlibKey,
+        (KEY_TYPE_MLDSA, MLDSA_87_1): SSlibKey,
         (KEY_TYPE_RSA, RSASSA_PSS_SHA256): SSlibKey,
         (KEY_TYPE_RSA, RSASSA_PSS_SHA384): SSlibKey,
         (KEY_TYPE_RSA, RSASSA_PSS_SHA512): SSlibKey,
@@ -85,7 +89,4 @@ KEY_FOR_TYPE_AND_SCHEME.update(
 )
 
 # Keys with currently unstable metadata formats, not supported by default:
-#       (KEY_TYPE_MLDSA, MLDSA_44_1): SSlibKey,  # ML-DSA keytype defined in https://github.com/theupdateframework/taps/blob/master/tap21.md
-#       (KEY_TYPE_MLDSA, MLDSA_65_1): SSlibKey,
-#       (KEY_TYPE_MLDSA, MLDSA_87_1): SSlibKey,
 #       ("sigstore-oidc", "Fulcio"): SigstoreKey,
