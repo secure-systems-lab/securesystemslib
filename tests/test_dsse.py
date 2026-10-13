@@ -114,6 +114,17 @@ class TestEnvelope(unittest.TestCase):
         # Checking for Pre-Auth-Encoding generated is correct.
         self.assertEqual(self.pae, envelope_obj.pae())
 
+    def test_preauthencoding_non_ascii_payload_type(self):
+        """Test that Pre-Auth-Encoding counts payload type length in bytes."""
+
+        envelope_obj = Envelope(b"hello world", "application/vnd.caf\u00e9+json", {})
+
+        # 25 characters, 26 bytes in UTF-8.
+        self.assertEqual(
+            b"DSSEv1 26 application/vnd.caf\xc3\xa9+json 11 hello world",
+            envelope_obj.pae(),
+        )
+
     def test_sign_and_verify(self):
         """Test for creating and verifying DSSE signatures."""
 

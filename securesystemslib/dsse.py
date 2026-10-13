@@ -98,9 +98,10 @@ class Envelope:
     def pae(self) -> bytes:
         """Pre-Auth-Encoding byte sequence of self."""
 
+        payload_type = self.payload_type.encode("utf-8")
         return b"DSSEv1 %d %b %d %b" % (
-            len(self.payload_type),
-            self.payload_type.encode("utf-8"),
+            len(payload_type),
+            payload_type,
             len(self.payload),
             self.payload,
         )
