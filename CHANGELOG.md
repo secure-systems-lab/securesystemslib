@@ -2,17 +2,31 @@
 
 ## Unreleased
 
-### Fixed
-
-* DSSE `Envelope.pae()` now counts UTF-8 bytes for non-ASCII payload types,
-  as the DSSE protocol requires. ASCII signing bytes are unchanged.
-  Non-ASCII signatures made with the old character-length preimage must be
-  regenerated; verification does not accept that incorrect encoding.
+## 1.6.0
 
 ### Changed
 
 * ML-DSA keys are now part of default set of verification keys
-  (KEY_FOR_TYPE_AND_SCHEME)
+  (`KEY_FOR_TYPE_AND_SCHEME`) (#1222)
+* `CryptoSigner` now raises `KeyMismatchError` if initialized with a public key
+  that does not match the private key (#1196, #1197)
+
+### Removed
+
+* Removed experimental `SpxSigner` and `SpxKey` (`pyspx`) support (#1182)
+
+### Fixed
+
+* DSSE `Envelope.pae()` now uses UTF-8 byte length instead of character length
+  for payload type as spec requires (#1221)
+
+## 1.5.1
+
+### Fixed
+
+The crypto extra correctly depends on cryptography 48 but some users depend on
+cryptography directly instead of the extra. Add runtime workaround to be more
+compatible with older cryptography. (#1205)
 
 ## 1.5.0
 
