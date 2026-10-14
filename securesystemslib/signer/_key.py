@@ -252,7 +252,7 @@ class Key(metaclass=ABCMeta):
 
 
 class SSlibKey(Key):
-    """Key implementation for RSA, Ed25519, ECDSA keys"""
+    """Key implementation for RSA, Ed25519, ECDSA and ML-DSA keys"""
 
     def __init__(
         self,
@@ -384,9 +384,8 @@ class SSlibKey(Key):
         Args:
             public_key: pyca/cryptography public key object.
             keyid: Key identifier. If not passed, a default keyid is computed.
-            scheme: SSlibKey signing scheme. Defaults are ``RSASSA_PSS_SHA256``,
-                ``ECDSA_SHA2_NISTP256``, ``ECDSA_SHA2_NISTP384`` and ``ED25519``
-                according to the keytype.
+            scheme: SSlibKey signing scheme. If not passed, default value is decided
+                based on the public key content.
 
         Raises:
             UnsupportedLibraryError: pyca/cryptography not installed
