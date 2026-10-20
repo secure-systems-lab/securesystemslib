@@ -10,7 +10,7 @@ cryptography==50.0.2
     #   keylet
 keylet==1.0.0
     # via -r requirements.txt
-pycparser==3.0
+pycparser==3.11
     # via cffi
 pyserial==3.5
     # via keylet
