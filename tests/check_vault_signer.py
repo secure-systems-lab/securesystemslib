@@ -13,7 +13,10 @@ class TestVaultSigner(unittest.TestCase):
         # Test full signer flow with vault
         # - see tests/scripts/init-vault.sh for how keys are created
         # - see tox.ini for how credentials etc. are passed via env vars
-        keys_and_schemes = [("test-key-ed25519", 1, "ed25519")]
+        keys_and_schemes = [
+            ("test-key-ed25519", 1, "ed25519"),
+            ("test-key-ed25519-rotated", 11, "ed25519"),
+        ]
         for name, version, scheme in keys_and_schemes:
             # Test import
             uri, public_key = VaultSigner.import_(name)

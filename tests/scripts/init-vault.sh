@@ -21,3 +21,10 @@ done
 vault secrets enable transit
 
 vault write -force transit/keys/test-key-ed25519 type=ed25519
+
+# A key with more than nine versions, so that importing it covers the case
+# where the version numbers no longer sort the same way as strings.
+vault write -force transit/keys/test-key-ed25519-rotated type=ed25519
+for _ in {1..10}; do
+    vault write -force transit/keys/test-key-ed25519-rotated/rotate >/dev/null
+done
