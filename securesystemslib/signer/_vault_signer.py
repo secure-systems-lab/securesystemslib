@@ -119,8 +119,11 @@ class VaultSigner(Signer):
         client = hvac.Client()
         resp = client.secrets.transit.read_key(hv_key_name)
 
-        # Pick key with highest version number
-        version, key_info = sorted(resp["data"]["keys"].items())[-1]
+        # Pick key with highest version number. Vault returns the versions as
+        # dict keys, so they are strings and must be compared as numbers.
+        version, key_info = max(
+            resp["data"]["keys"].items(), key=lambda item: int(item[0])
+        )
 
         crypto_key = Ed25519PublicKey.from_public_bytes(
             b64decode(key_info["public_key"])
