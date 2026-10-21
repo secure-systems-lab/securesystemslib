@@ -5,9 +5,9 @@ This module provides extensible interfaces for public keys and signers:
 Some implementations are provided by default but more can be added by users.
 """
 
-# ruff: noqa: F401
-from securesystemslib.signer._aws_signer import AWSSigner
-from securesystemslib.signer._azure_signer import AzureSigner
+from importlib import import_module
+from typing import TYPE_CHECKING, Any
+
 from securesystemslib.signer._constants import (
     ECDSA_SHA2_NISTP256,
     ECDSA_SHA2_NISTP384,
@@ -29,34 +29,95 @@ from securesystemslib.signer._constants import (
     RSASSA_PSS_SHA384,
     RSASSA_PSS_SHA512,
 )
-from securesystemslib.signer._crypto_signer import CryptoSigner
-from securesystemslib.signer._gcp_signer import GCPSigner
 from securesystemslib.signer._gpg_signer import GPGKey, GPGSigner
-from securesystemslib.signer._hsm_signer import HSMSigner
 from securesystemslib.signer._key import KEY_FOR_TYPE_AND_SCHEME, Key, SSlibKey
 from securesystemslib.signer._signature import Signature
 from securesystemslib.signer._signer import (
+    _LAZY_SIGNER_IMPORTS,
     SIGNER_FOR_URI_SCHEME,
     SecretsHandler,
     Signer,
 )
-from securesystemslib.signer._sigstore_signer import SigstoreKey, SigstoreSigner
-from securesystemslib.signer._tkey_signer import TKeySigner
-from securesystemslib.signer._vault_signer import VaultSigner
 
-# Register supported private key uri schemes and the Signers implementing them
-SIGNER_FOR_URI_SCHEME.update(
+# GPG is imported eagerly above and is therefore represented by its class.
+SIGNER_FOR_URI_SCHEME["gnupg"] = GPGSigner
+
+if TYPE_CHECKING:
+    from securesystemslib.signer._aws_signer import AWSSigner
+    from securesystemslib.signer._azure_signer import AzureSigner
+    from securesystemslib.signer._crypto_signer import CryptoSigner
+    from securesystemslib.signer._gcp_signer import GCPSigner
+    from securesystemslib.signer._hsm_signer import HSMSigner
+    from securesystemslib.signer._sigstore_signer import SigstoreKey, SigstoreSigner
+    from securesystemslib.signer._tkey_signer import TKeySigner
+    from securesystemslib.signer._vault_signer import VaultSigner
+
+_LAZY_IMPORTS = {
+    class_name: module_name for module_name, class_name in _LAZY_SIGNER_IMPORTS.values()
+}
+_LAZY_IMPORTS.update(
     {
-        CryptoSigner.SCHEME: CryptoSigner,
-        GCPSigner.SCHEME: GCPSigner,
-        HSMSigner.SCHEME: HSMSigner,
-        GPGSigner.SCHEME: GPGSigner,
-        AzureSigner.SCHEME: AzureSigner,
-        AWSSigner.SCHEME: AWSSigner,
-        VaultSigner.SCHEME: VaultSigner,
-        TKeySigner.SCHEME: TKeySigner,
+        "SigstoreKey": "securesystemslib.signer._sigstore_signer",
+        "SigstoreSigner": "securesystemslib.signer._sigstore_signer",
     }
 )
+
+__all__ = [
+    "AWSSigner",
+    "AzureSigner",
+    "CryptoSigner",
+    "ECDSA_SHA2_NISTP256",
+    "ECDSA_SHA2_NISTP384",
+    "ECDSA_SHA2_NISTP521",
+    "ED25519",
+    "GCPSigner",
+    "GPGKey",
+    "GPGSigner",
+    "HSMSigner",
+    "KEY_FOR_TYPE_AND_SCHEME",
+    "KEY_TYPE_ECDSA",
+    "KEY_TYPE_ED25519",
+    "KEY_TYPE_MLDSA",
+    "KEY_TYPE_RSA",
+    "Key",
+    "MLDSA_44_1",
+    "MLDSA_65_1",
+    "MLDSA_87_1",
+    "RSA_PKCS1V15_SHA224",
+    "RSA_PKCS1V15_SHA256",
+    "RSA_PKCS1V15_SHA384",
+    "RSA_PKCS1V15_SHA512",
+    "RSASSA_PSS_SHA224",
+    "RSASSA_PSS_SHA256",
+    "RSASSA_PSS_SHA384",
+    "RSASSA_PSS_SHA512",
+    "SIGNER_FOR_URI_SCHEME",
+    "SSlibKey",
+    "SecretsHandler",
+    "Signature",
+    "Signer",
+    "SigstoreKey",
+    "SigstoreSigner",
+    "TKeySigner",
+    "VaultSigner",
+]
+
+
+def __getattr__(name: str) -> Any:
+    """Load optional signer implementations only when they are requested."""
+    try:
+        module_name = _LAZY_IMPORTS[name]
+    except KeyError as e:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}") from e
+
+    value = getattr(import_module(module_name), name)
+    globals()[name] = value
+    return value
+
+
+def __dir__() -> list[str]:
+    return __all__
+
 
 # Signers with currently unstable metadata formats, not supported by default:
 #   SigstoreSigner
