@@ -1,6 +1,7 @@
 """Test cases for "signer.py"."""
 
 import copy
+import json
 import os
 import shutil
 import tempfile
@@ -38,7 +39,8 @@ from securesystemslib.signer import (
 from securesystemslib.signer._key import MLDSA_IMPORT_ERROR
 from securesystemslib.signer._utils import compute_default_keyid
 
-PEMS_DIR = Path(__file__).parent / "data" / "pems"
+DATA_DIR = Path(__file__).parent / "data"
+PEMS_DIR = DATA_DIR / "pems"
 SHA224_SCHEMES = ("rsassa-pss-sha224", "rsa-pkcs1v15-sha224")
 
 
@@ -120,171 +122,44 @@ class TestKey(unittest.TestCase):
                 KEY_FOR_TYPE_AND_SCHEME.pop(key_type_scheme, None)
 
     def test_key_verify_signature(self):
-        ed25519_keyid = (
-            "fc3920f44a1deec695ed9327f70513909a36f51ad19774167ddf28a12f8bbbed"
-        )
-        ed25519_pub = "50a5768a7a577483c28e57a6742b4d2170b9be628a961355ef127c45f2aefdc5"
-        rsa_keyid = "b7c94258646e970d336b779eea6b90ef931ea56e2d356ce487201f6bb776e94b"
-        rsa_pub = "-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAsDqUoiFJZX+5gm5pyI1l\nVc/N3yjJVOIl9GyiK0mRyzV3IzUQzhjq8nhk0eLfzXw2XwIAYOJC6dR/tGRG4JDx\nJkez5FFH4zLosr/XzT7CG5zxJ3kKICLD1v9rZQr5ZgARQDOpkxzPz46rGnE0sHd7\nMpnpPMScA1pMIzwM1RoPS4ntZipI1cl9M7HMQ6mkBp8/DNKCqaDWixJqaGgWrhhK\nhI/1mzBliMKriNxPKSCGVlOk/QpZft+y1fs42s0DMd5BOFBo+ZcoXLYRncg9S3A2\nxx/jT69Bt3ceiAZqnp7f6M+ZzoUifSelaoL7QIYg/GkEl+0oxTD0yRphGiCKwn9c\npSbn7NgnbjqSgIMeEtlf/5Coyrs26pyFf/9GbusddPSxxxwIJ/7IJuF7P1Yy0WpZ\nkMeY83h9n2IdnEYi+rpdbLJPQd7Fpu2xrdA3Fokj8AvCpcmxn8NIXZuK++r8/xsE\nAUL30HH7dgVn50AvdPaJnqAORT3OlabW0DK9prcwKnyzAgMBAAE=\n-----END PUBLIC KEY-----"
-        ecdsa_keyid = "985171ff9ee901fbab17aa6f57347933aeae9d194f0f93e83e5c3dbc1755e754"
-        ecdsa_pub = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEsYJfSlYU3UlYbGOZfE/yOHkayWWq\nLPR/NeCa83szZmnJGc9wwCRPvJS87K+eDGIhhhKueTyrLqXQqmyHioQbOQ==\n-----END PUBLIC KEY-----\n"
-        ecdsa_nistp384_keyid = (
-            "0155661bdf705f621a74f55eef36c9ae041e456141eced7a45d4a1f75ded9ac0"
-        )
-        ecdsa_nistp384_pub = "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEksAG80nLUksODTEUBTPJJPYN0bfxhkrr\n2hlyokfRG4kDYsRRN86vWwxDTW7qhWNZPFhJMJxHmvHsCbLz/IF7hdo8Xv/vRO4M\nVHbwq0fiWznUvkZowHC5fH2EEvNF1R5t\n-----END PUBLIC KEY-----\n"
-        ecdsa_nistp521_keyid = (
-            "3dddef3c311b151c5fe12f5fcfa3d9795e2b5fe1a6746c2691befacb13a6af4a"
-        )
-        ecdsa_nistp521_pub = "-----BEGIN PUBLIC KEY-----\nMIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQBXxFGyw9J9C43woa6huZ3IwrEZhku\neHDNZ1UqnHcFhNYFhM7witKxgv6OUpwlwPsPSUjqcBxkkpay4rT4UTwIP94AdsQL\nq3DQ+BuwrEELjAAMxvQGfoMlLJ5fHM4p4KhlKwpk2HiBQp4r1bjuA6MFq7s5yF0C\nnb9TH+ZZwV5/cjCewxY=\n-----END PUBLIC KEY-----"
+        """Verify known signatures for all supported keytype/scheme combos.
 
-        key_sig_data = [
-            (
-                ed25519_keyid,
-                "ed25519",
-                "ed25519",
-                ed25519_pub,
-                "dbea1238620949daeb806b0347ffd9f28f8e481edc9ffb4dd8189715c0219f195f68f91ea72769fd8892d6b0af8884b4ad49ea09510201dae6ed0995075ea103",
-            ),
-            (
-                rsa_keyid,
-                "rsa",
-                "rsassa-pss-sha224",
-                rsa_pub,
-                "78fb3c56142868a5de1bd965af37f204763eac4755ea9b79911bac89159a98679987a8b99356987524cd9108a5f373f367aac8ba970d7b690a67b8fb79893d07fcf4a66569fcc479578c633302a95e7e4640f6f88d5e0d5e26af7497f613f6417bc30df6377137f63f167ee886d2e4c32a2a945a3e08a8d68630c9d9e57e8650cf5e501516b61bdb4d00de3b4046ae413e5a583ac2dbd885e40b8d8180e51ebfaab2f5d2b95e6b5b093e2511e5893997adb8f9ee233a4e40e902d60d6fbab7df04b97d9872df6081661b2e2bd0663019daee059eacaa9cebf8efde9ca9f1a22e7cfb6b907bcab29c4d4318e214d91b1ca1eb5977ecec45219472189a6720ec956e29716a0d82b9ba3c4a2c5d2187295c4f7a4e20b622081b38b2c2e315f168aea7bd864c5b8c30f07235145682de98c0f28784c515ae096dd68548107fc7c5b7a01286625dd40870338921036dfa07932cad4f6e42a939867b8aaf7e8e3e0ba03a1005412832ce3f53d9576b68938d57b87d0455d0de0d97e12132ac4f8dee2b",
-            ),
-            (
-                rsa_keyid,
-                "rsa",
-                "rsassa-pss-sha256",
-                rsa_pub,
-                "2f3ed7aa4d18fdb2a677d7a772f3b1283947b09b834a6d523a66b734404552ce4966e1984d4f4a46bc20f5effbc509bbf953469feb6eda5230e5bbe3399839e0d5c601e853918427849f2d90939a843527193932aef4711b65db353bc4adf76d4ec67886d6cbb2e2b315148deee649be7489fb09439a0d22b1abf4b4faa118dd8682f7be173ea398ecf0905eb8eb7232909492ceed1a3134fb678c10b0307ac9f5924b73399d7ac6e729c8e91eca6a0e541dafd22d5fc774fa900c18e38b854884342864951d05b519abf7cee8afe761334c546491b9a09545a9eb5a4096ac5e4be35b794fb9cb8c5204ddbc5eb7d1fc92c2f221d99d49909a41cd747e7f436c07480efb7e94f52d8a8641f9a32d2fa9e2e7f862537b66fa07ba56f44ce7d1f2ad7637ebd8c454d904eea09121977633bcef5748ccc843bc4ebe720878ad9caca97c714aeafeffffd9d1c0cd92218e78691c3abab43958f2defd39381bde71ed73de23044bf44791f8717e1d2150bb5fe7fe0184d089042c284e9ca5779276fc",
-            ),
-            # Test sig with max salt length (briefly available in v0.24.0)
-            (
-                rsa_keyid,
-                "rsa",
-                "rsassa-pss-sha256",
-                rsa_pub,
-                "392c5017fd389863649fcda8ba054e1bb346c2ed5cc9959c897a731fc37cd3401c15d77ed17f040a70517c9256f2682181da9aedca08bf3c2aac26658d3064c7df73365da6b47b8f02cb18813cb899e26a101b82e45752cba556e9fa8ad224bb363efa1db9209873ec82ca74bcb7109facfc29f45e5521a6a856803b1a221609f711da2b93915a65d6bfb1f5635a5bc7bdb98510b824fad243c0eaa4ac6674e492d10c25a9e442e9ec6e72871b5d67dfc20b1d5a76ab5f357a6cba4ae9587009744a8023a71c9da38e7ed9c1264c649664c8b72593b79ecc4d0f76d9ad539ace51dd73e9bbf11535f17d6d4caae576f67d1b203a08d35a823eb7c2df99675d4b6651d647f29a6e179263e1a18eb03a6c9209d1daf40c465c19052d46e8e6f5bb480309b91b064e127ea20812e5c0b4fc7ddd98f401a1b920866543335ac31ea8cd650341ef321ce98c3ba48c2ea9172da3a614b8791f98ac7dffd6e2e8506694df100903d60dffa6cf4f6723724ba71aba462229d5f62b7e007553b8af54dabc",
-            ),
-            (
-                rsa_keyid,
-                "rsa",
-                "rsassa-pss-sha384",
-                rsa_pub,
-                "1c2613ec1f07eacc74b77d0d390eccd25f035d5e973c31471b0521adc3ed3344cdb86a4cf7b73eacabc302198c1b064d4deea60b57dcff5d6b2717d37fff18fb8aa49d7fe07665f452c8a91e7aca11623a314262b3f829930fe65e574e12373737cfa2e15c72931309cb63624d93f62e4819ca449d33cdbfbdb737fe52f24c1bcf1d52b7b9bedd0770f8722ce5b0e273258450b2524d620c44d120a4a42a744880ecc9fbdee831374e9dd968128c10963ae2f43b53355ca5fb389d63895ffd318752ea4293fde548f50c06b9a71b4064f2646f2f10f1ee0df5f3a93ae0bd89e44dd9f595591ca79e9aa8a72b983de1019bbeb2746dbb4895154bcdd4b8bca8626b558b4e83aefdc2dbf5f7c5cd930303f18a49ddd52f41a8b4aaef61cc832f7d33def162e9a4a405ee4212bcde1cf7b186032f1edc4e089ff502e200282e2242e09771f0e6fa4e754150330f5f68df1ce58c85a1617b5f1cedfe9e7f1f1fa1e1ae8429bab86d8f17757daee028c9c38190dee71372a7a4003971f147f27bc75b",
-            ),
-            (
-                rsa_keyid,
-                "rsa",
-                "rsassa-pss-sha512",
-                rsa_pub,
-                "050f41edfd08249c9824f9940ef25ba1c2fae475bf4700bff3b4c2f209b5651e583892c5d3aa4b79d8f5e1d5b1805195fc96b7664e349509d2f5da366ac5a93641b46accc7571ecacb5472b8bdd16e2128ba237e6688244e3d65bbe3417d14e86ab4ff7e8b13e3fe0632c6c8222449986bdc432b0816cfc59c439e408492b63668269d300da7a59f6e4bcb541414b6b4bafdee62d7c9a6390c52a077a3c1585243bf1bc4319972cdb27e790461309ca83d607c37690b546489e7710fadb0c454ca0b2dc32c2d8c2ac210f5bfe1b278f2879f77186d0f3d228b9fa7d4eff7d89939eddc3acc37f513221d12ed7f84aeeb51516b7e001eae1ffb2046c0ea663f15cdfc5eb7651c9b7bee6468c25606e077cde95ade93a79d2c2ad42dec358e839582a3fd9b196a5dd0e20585f1d8c7c99692bc95ee5d33e064651bb0d70d1605390dfca5f907499897630a3a5229532c7cd6a57db102566bc2644485ba7aba5b40eee91d1fa64421a618fed90fc29168e5098ee1f27f893eb758f5c4087bd94b10",
-            ),
-            (
-                rsa_keyid,
-                "rsa",
-                "rsa-pkcs1v15-sha224",
-                rsa_pub,
-                "9d4eb41f187a44f384b0555bfef170428b0a46c6111f67104fec8843a9a3c91b8522b36f5bbfd5240a9871ffdc4f44faf33a4870c3daa5c2377ebcbeeab6aeb991d13840abd68f166631fe356e6dc0411af05a94a263d52805eacfe2c5fd3ce291898c6550427cd2ef79155331714eb553209bfb49f921c7aea46a2fa113bb5771a51f569dcb3c5766a8e0867172e9b1a914a0f1235145c33afb9532f63dc04f919c99347c7fca5eac6e3ab338a2a73b3c9e0ba19bb1454cd10b6ebbfe274daa8121681de84fa3d30a70e168e342748ab5d95f82a2bc74d287e89ef4031b7fc4b0fc59a5e5cdd792ae9c569d2de9463d09b45abc16ee4578bafeb32771aee4f5d777e597ec40fa155f2c8d05460ca32f0ae8e97e958420dc830ba33c3a53b0f3f4e68dfd0675f9b2eb71df9dbee695cb7700f05db0cecc6803cafa152774c0edca6617a734c4453248a584c35b2ec2aa0b8dfb196e67c5241c924d67586085a38b0f0210dbac724973a625cadce95527815bd01e1c1bbd9fd63e7da920f7850f",
-            ),
-            (
-                rsa_keyid,
-                "rsa",
-                "rsa-pkcs1v15-sha256",
-                rsa_pub,
-                "0c8ec1336540b7e04a2cef460597c54a586766725c532cbd13b3c7071018179e666b75f3165f805c677c5a6169097b4c20175fbea8a0aa4879ecb465cebe2040f6b8db4caa0965b56a20e39bea0c5a8f3746284e41239cd0ab998c5d70b7a0a26f1f5c2909461ab74941f8dcde8faa4d360be710cc405664e5b7a62b54509b32a80ac58b4c494e54270a9d51f8861c7eeb984898414507365bf4bf2f07e4e0507c1f01ee6560dca6f27bef79abd2c9e18bc7cf8820d017f3ad51ce82f6d9bc57e7c3ffc1ca13a9c83a8163c1c0850a7145b577d1db99634435e7b74de6fb29ec68ee13a79e16e5c00eae0d9a15b6cb4e81770fd8d0c40a80f3df4c6d2b9c29c4b35645914263d0aa91d6700ae6f23a7c16d3ab6095c7b736b34ea6b971937f49fad55145e41c6a77e67fbabd2870c8707e0b36fc6bcb8eba9889231df7153951a03e81478eb9bacde6e77eaa683f2133186bb7987f670b602d3902068b8a4a50e1de8334eeb411530599fa35ee37d1f678bf5277bf46cd30ea7bfe79e5161560",
-            ),
-            (
-                rsa_keyid,
-                "rsa",
-                "rsa-pkcs1v15-sha384",
-                rsa_pub,
-                "7eb62b42cafda8fadfbc957d759a3f09089c28132389e1a1d2fb50a8cdb7491e07bf351f03a442e36d7a5abe0daeec621a1e414827dbeac4bd8f6ede709801afec1969b903212995f56f7c544b35719f8819a340872530b4f087ab8159bb052e6d0a99ed65ed2114de0044a38cbb017a67fe3f41854fb95e5218d8d4d77d3e51192075b4f8bd38926484116642545225f7389b5bcd61baa49bdddaf8f499a1c3ef72a4e2e71767f56863416a13f4d5c4fb2a876a89e8c40ac12f7b188b971257a7fc4c48c6f4942e85120402e3c4c2c4761638a57c3f59cf4e136e64a755c68075ec85d49cb89d8f6ec2b348c40f3e46cf3fd9d93e5721e26bdd9ee2eadcc13a757cdf5d5ca40e59bf48e737e5341708adf9d306d123c50f08ebba1bec5cc233b9fd2dc5bffee179f40cf88648218710ec2bf273fb0d6f02cee3eedd19a0ca0b64f60991f9d4dff97cc088d6db9106c176cf48e12183c3ca3ff0acf2948e3fec8c82582d84e70342b0767c7b62aa2d92b9441b2bbdf7a00ec827fa0084361f92",
-            ),
-            (
-                rsa_keyid,
-                "rsa",
-                "rsa-pkcs1v15-sha512",
-                rsa_pub,
-                "16f7e8877944cedc0bb8cf45c04a2dcee7e844f8aed71e8d10c8950b509be9959a3b0b7ad41db44bfaeebc1e00fc9d25fc05c477ae0eebc49aaba4a6f2f06e768452d2e3c6dd3401b78f945402a72390729de99fc3ef414f9cb9f9ed3052e26615517d3a82c30ac531a516a391867329f48fd6cbacb0ae4532bd9146879abd677a871bd80d45bdc596ce828d6a2bb6f40c8390978b336cc9d32634d2653f6a4f96f38799cd96931a9a0ac23834cc73de19ca804d683abff0c962cd77573b4f6df71a136be2f7eb3fd80e3d7eb74c3b56a21db49b3e3ac355492ba3a63c73f94533fc5c8567380e64b056a2199212fc3cf5f92a6b8514773bf2847b6598b3433297d282a74cdf21108dcd995761b47655be41dcefbb6e223778f6de8ade781d53f44c9767d77b3c41d43ddb9cc01eaa4db79a4698a30b5d8d00b8e7c7106a58d8dc9c2bb0a35f2fc11647727b2fd1ab254b288f1120ef8bf66b73617a7de4a7e3943e2ca921f55e08ffb7ed1138bd2e61f922659e1fe8bd21b9e39fe98ecf273c",
-            ),
-            (
-                ecdsa_keyid,
-                "ecdsa",
-                "ecdsa-sha2-nistp256",
-                ecdsa_pub,
-                "3045022100b3db1e5ca53226ee27f93a3b2f5e1534f4a4c51f872aa1b6efd0b37be27f483602204f793f7ad7c25188ad55eb6a8a8d142f89b0b0090815de47d9a24389872b02e3",
-            ),
-            (
-                ecdsa_nistp384_keyid,
-                "ecdsa",
-                "ecdsa-sha2-nistp384",
-                ecdsa_nistp384_pub,
-                "30650230747ffab40d894dcacfa2da613a312b2423aa744c7b2365345467819c2af210983c5a7ce6810db995f2e6c90f90f9ad1c023100fdde5013796916af1989b757b64f2fad8496fa7b2b19e9568260868d4a670e6feb123b3337179a4d06b5fbe42b6937fb",
-            ),
-            (
-                ecdsa_nistp521_keyid,
-                "ecdsa",
-                "ecdsa-sha2-nistp521",
-                ecdsa_nistp521_pub,
-                "3081880242019c9621491de75e9b89c4956f6571840528923db953a0fdcf88f9c0221e8c181459af1d9f4e420ad7b971c5c429e457f1f67cfc968c655ea569c3185bfeb2bd943f024201bd2d51bee9ae0bbeb79c99c7bc1758dd256ce7caad9020fb2e2873efc80613826a45b96be25eab11dc521942b92af5820ddde08797d9d6ae236aa54036b41e1152",
-            ),
-            (
-                ecdsa_keyid,
-                "ecdsa-sha2-nistp256",
-                "ecdsa-sha2-nistp256",
-                ecdsa_pub,
-                "304502207d0058b745b2259501204c2ba287ba3769ec2420e12463a325c59670c24df9b6022100836ca63a1b870f755c1596711a003a505e72e25cb0970e823a331e044adc63ec",
-            ),
-            (
-                ecdsa_nistp384_keyid,
-                "ecdsa-sha2-nistp384",
-                "ecdsa-sha2-nistp384",
-                ecdsa_nistp384_pub,
-                "30650230747ffab40d894dcacfa2da613a312b2423aa744c7b2365345467819c2af210983c5a7ce6810db995f2e6c90f90f9ad1c023100fdde5013796916af1989b757b64f2fad8496fa7b2b19e9568260868d4a670e6feb123b3337179a4d06b5fbe42b6937fb",
-            ),
-            (
-                ecdsa_nistp521_keyid,
-                "ecdsa-sha2-nistp521",
-                "ecdsa-sha2-nistp521",
-                ecdsa_nistp521_pub,
-                "3081880242019c9621491de75e9b89c4956f6571840528923db953a0fdcf88f9c0221e8c181459af1d9f4e420ad7b971c5c429e457f1f67cfc968c655ea569c3185bfeb2bd943f024201bd2d51bee9ae0bbeb79c99c7bc1758dd256ce7caad9020fb2e2873efc80613826a45b96be25eab11dc521942b92af5820ddde08797d9d6ae236aa54036b41e1152",
-            ),
-        ]
-        if MLDSA_IMPORT_ERROR is None:
-            key_sig_data.append(
-                (
-                    "aebf451cd50cf521b4b5accfc70e679ea8d5c18644fb87582e022fbb9c4bb3c4",
-                    "ml-dsa",
-                    "ml-dsa-65/1",
-                    (PEMS_DIR / "mldsa65_public.pem").read_text(),
-                    "2d0595831dd4eb9af0ef52404d609532fc237e1081f696c45100d83d890b90e76fb753bfa33cd9f0d478f4170566d5a6000719588de8b2c07171543f17878a151466909c23f0a0b162d1ecfe77fecd2a12403a4d3acdccd7f2225bcc2de4b02194b3863d7a082d74c1aa1b9302800c521e7a9ae3c1c87e80ae732225dd1d935afb568c76dbd05e742a3450e95642a2d66193f46c1bc93e48a13c2c4e37c34964358a6205f80051778efede4d551f897e58a4d0ece2fdc45d0b5e8f960f9844b7464369407ec274ecd6728101934b999998f6aff7e3c79bbf4b44b5656c82f949aca453d89794acdfd8cfcca38192b4a043d29ff9738cc59a58923275a974d1a408ae7ef741e4c01d2a55fbc2a739dff1c9ac1660209c1463813fd418a75da88e2313e7e90e212756f15fe15a9d960f2c2733d1366355bb70bc635560af9bc9a9e7dc300118313614e62d4901b0f5e9c5de8e0f33c1d8248f8d6ca1866eed44582d853ddf4d94852ecfed0fbd8425af9c3eddc2ad9915d645ee88338a44d97256535b948eb62d4b27ab11fdb1743c641f23b53178891a43b24861af0106f05066f489c2522d623099b3e305fe153af9aaa9b607a1ceb73028ae862c43fda9bf9752ccf1d6d05d88869e0bf8e7c532f08ea335d7996ca283119032558e35c43bb62e0a8d83737bb58ed757624ce4731943174b4af2d041e2db2bd6809c3288af5fcfe36a5d3b5fd1ce6efe41a3dc03c5995b814dd8dc3e5859ea1d85041272ed712eb33c3718a70dc0a261a312e1cfd92a3a1be8449c74f0f3d926f12fe699047506421d1944802081ad6c0baafc13c41e8a992943364259a1ab10a53ac1a5c878597e768d250dd9d0c4ec33aa82b840df443fa495e5c5a9bc77b6f5c990f31d9a3ce54a8c2ea5065bdc87ff5ec4ec6689a644b997f1fdc3fd9e69462ee687b7d8ae03f11ba6e6895787d3b0f28a9f3097df90285f204274ede3b9f449f113931a4150d9f974398424c774e7b0ed99c8dbe48cdb5144910308b50d0a4b6f09b54af8f4ec33d94e13424f82a5aa28a47d4365ea2c54c94b7dc7b5abc1bace1ce664e8d62c32c4ab8724f12ddca01e9ee5bc5dc3f4246e3e1fa7b9729bb6390244aebd9d4f9463b4ba23fc568e568577584eebcbe6142803020fa5a83a4b7477def351a7a26e60a47e9e12fa1aad5b92a1ab55f2a2803a38a2371c42cd6f45f02bc51418ef3a7caa33bb82f02460c208161b97bb60e43e7a34df3f1e1e6837edef079f42582657233ae479f352b18fd3764a7a9bc415917a0918a4e7c98a7d56770c24f66779c09a7f015dc0434c273a8d9ceefa3b03352338b3f65bf6fd0506a8396a6e89752771589a85ca256caa850f94f3bacb20ba96435571066f046e57a94e4f21ee7c4bca7a120d802b1d836767e51c2048b644b7eb069dcd1aa9f52c08fda541678341541b39eeaeea7d12a0666b43ef10d6cc9bfcef8646e15bd8b131f5ed67626387fedf057dd9342f4b8088dd79924de5f2cb230bbab979dd4304d0333256dd0277a0e89d90aecb1f824d2f983f5a6aca81abd1e886ebcf335ead6b1e6eef56f785ddfc44b24cd6a6fa82d869228d890c6e72616fb6305c5d189cabd44bec0ed81b49cef659492cad13709cedafabb2c84bac6cc2bb4e53dfe47c890761fa0c38b751a601c3ac942c4cfe91ba210c28b02812468dc5aebbd155244b9af94530a6890ca91cece11e7de5ab0844a6b210e5427986bc537e5edb2ebaf412fffb42e4434d0075e4fb6e6f798a10c3f16cc6b393391b6fb732d53117b3c60fdb3031802aea9a5e86fc987d4a221321ee43a458b9c72c29e5762c2f54d67d502983f9d3fe74ca3710bc9a79dd32bc574326d880ffdd8436bacd1d4fcd08286ad5d5127affdfedff013188edaa78a13d92c3abb4cb432585092a794687ab1a7c2bf90175c74aee1a4c2e97ea18827faaa99c089281f785b914e035a7de728abc9ff0d5524e33030c568744b6ce8778387856ce15959b161f4b689602f8ea981ef6344ca9e2328a01d46c507a8d88e8a41fb72bb2c28fd409c24e5b453dbbfa17821dbbe71681f894ec2bb9b7136bf5781c4fcc0f96b5cff3bc75b4028b77c042b1db035dad96097deed729c52d3365c225d16574bb90fd0ec151abe7ff63a70d541e84608f9de3040cd65fcc0eeff4cac1dd94746a08ee5dd314d288e9311cabfa4008e26b3bba4dae830d4c8e876b4b323e5acf4f286fac5f174199d51593022f90f0f3024a059d445089c25178a3101ec8d94ddc4e75345807bcf87d237e05492fafc6b5f40ab7cbc6e2e0c805b7fddf03983930ea035ebae7d75fb5c111388fd29723d667dcc217cbee3080133dace3d788ab71a137d4070fad0ac3fcb4a48fadb9f026b351c1a352beb1151822bf4a3f62ea1c0a83f7997c8be9de1905167707bbd5ee79dc4fd1b6e32aad6292ccdf9dcec9f26a1737c2064c1d1922f979cbef4e6e2447b0d2f783d4c9d3244ec7b394fec6005a2b1926fe5addd56e81e6c991c3d23c9286afbc14ad121dcdd78e6dda9e0bb81893ed62896b1022ea95d03fab524302cc1a379eb27fc49cad580e23a696392cdf59058ed3f5d08060a6465edbcb8a7685cd6a449a9a4f5937fff46ef22988996ce77903753450e1b928d605b12998b64926f1ed23b45c6cffbd6d939da6643449db2cd999c3bda9e8ed781a65b0c384ba222ff3d9ece364acf52244657d1fbbd63dba445070cc75092add45ea2973f5371b97fd82ac5780db9a327f9217c59f7115ac7f2a9b13e3b87cc84909e07cdbde3aa626ce4de46454edb4fdf3b32cbfa184c0f8e8b052c427cf7b14462f7e7fbd35e3c41445acdb74993641024a36004f35e490e85fe420df2458b319cd86f6c15183454e261de22a64e96999011435d720f46e9b8d8441a934965ad487b07a2c3f3895b2b8f6f2cbc95c9aeb91bf2caf097dc3b1a0d31c58d9b931f747c2995cf70fb60b45046c259026aa9719bbda9586f8104590d002db2f4b51a8acba6b48cd94f3665cdcd4645638e72adb87671814862ec4764a7b908ff318d50eb7f4c0c565205200ebcbcc6b5f12668b39a19f12612b30dad66142d1abe923dd0075d641f5917f145d6d9689364a63a8cd0024d6682457f46926d99339de094da75539ab658d0c40cdd08f3abb0521e819e92e2edef74326f36db5da237cd26c4bfad1580fc186d87e8d17c4394c98ba35218f9c112122ef3cd98c71febe39f3d0f7299352beeb88b880a85526f25bac1e5d0fa62c97aa8264cd77857ec8a3d8f986c649036d286d32d2616e59027e83cd5da29e9e95e101da83feb6556705a239830eb06b7b14abf2bb423ee7937323522a90a060f841825f251134050bf4fb9302563c57208b3fe1cd2cf8aa4a034c56fc8cfb271e20de9c8408f46e31a349810479e8c553de9b1cd8a527073ab540c9b14f77ae91bcc194f6750e0f213002e4feebf4b51c17bd32f0c5037e004990b7efc8be9658f7ce44fcfa33c3147667c9eeb549d4498abb5023e4a40a89b1d1f2416e6052b1c78e96f454530404764b523857964ecd9680e51351a5b2bb2ddf56da1429a70a2cedc812cf30f5eb0172344fb9c2015eac6b22e11458129fa98bac6ff06008cb182505e19f1f6ed18bcb962fd34a480073210ce61b5e16c03845eba02a49a495124a5ce6df382e337d74ae5663783e78faa9a94f1ea7c948ffdd533d4c3e87d0dca2d28d70b3229880df9ae41e29413ce899a255bf37d98109c66e5aa66bf425da2422263a0eabf608dfd750bc18aaaeb5016933765e6e3c05fe0c2d0befe25a214b703ee7b3c37b1479e77c290788ccd52c29c92aa5f770ea95160db79de808addc0d3baedf37babea47324fb0448b5f08eb290c6d83978118eab78a8a524289a6a646a13fb41f7194ac1d52ce6918e8736f804e21aacf282f716286bce8b640fb9ac73736a92fc6e7360bca51b9bba7d26fd501fd5a66b63d8c36b057f8d48baa778f79ffa1e47ee99795500cba509391c86447c7c57859e0342fb09f1a508d92b31bf39133aaaa8d83fe43bf29eeac4c9d000411004a93ed2fcb040e5eb2f840a042030fac4f5dee355a28d0c6ff20ba9428e53fa92487b0b2208bbd017170355b06c8813e49f6ebd86a369f761c5901ee6e27f57174b3a22271d4b6008b5d3a319835a954ba5ef92adc2d2e5fd3b1907c14d872e6f60ee048b6253e9e58586eec12c20bc71d90506b6cff35075bee951b2e248ba5a8418e4399ff72bd8f0b65e8da7bb3935374a67d32fdc6c39c94a0d36fde5949af3cb6cd83464b3945424b5e4b5d5b2120ee31d29c72def090457772cb0420afa8ea29764bb6dad170c9612845a7260e0212ac192c6ce616b0bcdef5f3fbc7b78953dedec7e58f0909b5bdb36351ea1bd244c5a617e97d1e22807688cb7e6e25900a5f1ce6924c230bd14793e04a1e71c2f4d125470f20ec95f77b91a0166ca69d8670491c1f75e1066555bd3dec066e8510add94068e53999194d91341d87c403862c5d371c053410734916b8cc5ef50f12a00a5725395cfddcb8b7c29b22327177784878e918688a1beccd7f5f9636baac60d15323bb24afa2425556ba0daddecf8ff0000000000000000000000000000000000000000060e12171923",
-                )
-            )
-        for keyid, keytype, scheme, pub, sig in key_sig_data:
-            key_dict = {
-                "keytype": keytype,
-                "scheme": scheme,
-                "keyval": {
-                    "public": pub,
-                },
-            }
-            if scheme in SHA224_SCHEMES:
-                key = SSlibKey.from_dict(keyid, key_dict)
-            else:
-                key = Key.from_dict(keyid, key_dict)
+        Signature fixtures are stored outside the sources, in
+        tests/data/key_verify_signature.json. Public keys are either
+        embedded in the fixture or referenced from tests/data/pems/.
+        """
+        vectors = json.loads((DATA_DIR / "key_verify_signature.json").read_text())
+        for vector in vectors:
+            with self.subTest(keytype=vector["keytype"], scheme=vector["scheme"]):
+                if vector.get("requires_mldsa") and MLDSA_IMPORT_ERROR is not None:
+                    self.skipTest(MLDSA_IMPORT_ERROR)
 
-            sig = Signature.from_dict(  # noqa: PLW2901
-                {
-                    "keyid": keyid,
-                    "sig": sig,
+                public = vector.get("public")
+                if public is None:
+                    public = (PEMS_DIR / vector["public_file"]).read_text()
+
+                key_dict = {
+                    "keytype": vector["keytype"],
+                    "scheme": vector["scheme"],
+                    "keyval": {
+                        "public": public,
+                    },
                 }
-            )
+                if vector["scheme"] in SHA224_SCHEMES:
+                    key = SSlibKey.from_dict(vector["keyid"], key_dict)
+                else:
+                    key = Key.from_dict(vector["keyid"], key_dict)
 
-            key.verify_signature(sig, b"DATA")
-            with self.assertRaises(UnverifiedSignatureError, msg=scheme):
-                key.verify_signature(sig, b"NOT DATA")
+                sig = Signature.from_dict(
+                    {
+                        "keyid": vector["keyid"],
+                        "sig": vector["signature"],
+                    }
+                )
+
+                key.verify_signature(sig, b"DATA")
+                with self.assertRaises(UnverifiedSignatureError, msg=vector["scheme"]):
+                    key.verify_signature(sig, b"NOT DATA")
 
     def test_verify_signature_legacy_ecdsa_keytype_deprecated(self):
         """Legacy ecdsa keytypes (keytype == scheme) verify but warn (#363)."""
