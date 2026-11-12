@@ -17,12 +17,12 @@ jobs:
 
     steps:
       - name: Checkout securesystemslib
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        uses: actions/setup-python@v7.1.0
         with:
           python-version: '3.x'
           cache: 'pip'
@@ -34,7 +34,7 @@ jobs:
           pip install --upgrade tox
 
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        uses: google-github-actions/auth@v3.0.0
         with:
           token_format: access_token
           workload_identity_provider: projects/843741030650/locations/global/workloadIdentityPools/securesystemslib-tests/providers/securesystemslib-tests
@@ -44,7 +44,7 @@ jobs:
 
       - name: File an issue on failure
         if: ${{ failure() }}
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        uses: actions/github-script@v9.0.0
         with:
           script: |
               const repo = context.repo.owner + "/" + context.repo.repo
