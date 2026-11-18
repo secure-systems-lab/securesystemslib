@@ -11,6 +11,7 @@ permissions:
   pull-requests: read
   issues: read
 engine: agy
+model: gemini-2.5-flash
 timeout-minutes: 5
 max-ai-credits: 50
 max-daily-ai-credits: 200
